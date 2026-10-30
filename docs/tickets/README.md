@@ -10,7 +10,7 @@ file `TE-0xx-<slug>.md` with one concrete outcome, sized so one session finishes
 | Field | Meaning |
 | ----- | ------- |
 | ID | `TE-0xx`, sequential in execution order: every ticket depends only on lower IDs, so ID order is a valid order for one developer |
-| Title | The line after `[TE-0xx]` in the file's heading; with the prefix it is the commit message, unchanged: `[TE-001] Scaffold, toolchain and CI` on branch `te-001` (RULES 11) |
+| Title | The line after `[TE-0xx]` in the file's heading; with the prefix it is the commit message, unchanged: `[TE-001] Scaffold, toolchain and CI` on branch `te-001` (RULES 11, 12) |
 | Milestone | A group of related tickets; milestones overlap in time, dependencies alone order the work |
 | Size | S ≤ 1 day · M 2–3 days · L 4–6 days for one developer |
 | Depends on | Tickets that must be Done before this one starts; dependencies implied through another listed ticket are not repeated |

@@ -46,7 +46,12 @@ Binding for every implementer (human or agent). Docs index: [docs/README.md](doc
     and tell the owner to wait before the next step.
 11. **Commits:** only when asked, using the `/commit` skill. One commit per step, one-line
     message prefixed with the step ID: `[TE-015] Stamp brush`, `[S1] Live-tier spike`.
-    One branch per step (`te-015`). The owner pushes, merges, tags and deploys.
-12. **Report at the end of a step:** files added and changed; each acceptance item met (test
+    The owner pushes, merges, tags and deploys.
+12. **Branches:** one branch per ticket or issue, cut from an up-to-date `main` and merged into
+    `main` when it is Done; the next ticket starts a new branch from `main` after that merge.
+    No pull requests. Names are short, lowercase and flat: the ticket ID (`te-015`) or a few
+    words for other work (`fix-ci-shards`). No `/` in a name, and never `agent`, `claude` or
+    `codex`, in any letter case.
+13. **Report at the end of a step:** files added and changed; each acceptance item met (test
     or measurement) or not met (reason); anything done differently from the docs and why;
     decisions taken under rule 1; measurements left for reference hardware.

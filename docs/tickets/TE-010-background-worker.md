@@ -47,6 +47,6 @@ Unaffected.
 
 ## Completion handoff
 
-Report per [RULES 12](../../RULES.md): files added and changed; each acceptance item with the
+Report per [RULES 13](../../RULES.md): files added and changed; each acceptance item with the
 test or measurement that backs it, or why it is not met; anything done differently from the docs
 and why; decisions taken under RULES 1; measurements left for reference hardware.

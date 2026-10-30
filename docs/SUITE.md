@@ -217,7 +217,7 @@ space; every name carries the app prefix.
 ## 8. Repo conventions
 
 - Tickets `TE-0xx`, one branch `te-0xx` per ticket, one commit per ticket with the one-line
-  message `[TE-0xx] Title`, the ticket's title unchanged (RULES 11).
+  message `[TE-0xx] Title`, the ticket's title unchanged (RULES 11, 12).
 - `AGENTS.md` adapted from `se/AGENTS.md`: doc roles, scope is binding, stop on doc
   conflicts, never edit docs to fit code, dependencies only as listed in §5, layer
   boundaries, never weaken tests, perf files under `tests/perf/`, numbers recorded only on

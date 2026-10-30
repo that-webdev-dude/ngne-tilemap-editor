@@ -66,12 +66,12 @@ Binding rules: [RULES.md](RULES.md). This file says how to apply them to a ticke
 
 ## Report at the end of a ticket
 
-RULES 12: files added and changed; each acceptance item met (test name or measurement) or not
+RULES 13: files added and changed; each acceptance item met (test name or measurement) or not
 met (reason); anything done differently from the docs and why; decisions taken under RULES 1;
 measurements left for reference hardware.
 
 ## Commits
 
-Only when asked, with the `/commit` skill (RULES 11): one commit per ticket, the one-line message
+Only when asked, with the `/commit` skill (RULES 11, 12): one commit per ticket, the one-line message
 `[TE-0xx] Title` taken unchanged from the ticket's heading, on branch `te-0xx`. The owner pushes,
 merges, tags and deploys.
