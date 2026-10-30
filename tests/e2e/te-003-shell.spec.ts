@@ -217,7 +217,7 @@ test("regions carry their landmarks and are empty placeholders until their ticke
     );
     await expect(page.getByRole("contentinfo")).toHaveAttribute("data-region", "status-bar");
 
-    for (const id of ["menu-bar", "tool-rail", "context-bar", "viewport", "status-bar"] as const) {
+    for (const id of ["tool-rail", "context-bar", "viewport", "status-bar"] as const) {
         await expect(region(page, id), id).toBeEmpty();
     }
 });

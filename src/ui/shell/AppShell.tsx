@@ -1,4 +1,5 @@
 import type { CSSProperties, ReactNode } from "react";
+import { useBottomPanel } from "../../app/shell/bottomPanel";
 import { useWindowHeight } from "../platform/useWindowSize";
 import { Splitter } from "../primitives/Splitter";
 import {
@@ -54,9 +55,11 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
     );
     const setDockWidth = useLayout((state) => state.setDockWidth);
     const setPanelHeight = useLayout((state) => state.setTimelineHeight);
+    // Tab toggles the bottom panel (DESIGN §10.3, TE-007); hidden, its row of the grid is empty.
+    const panelVisible = useBottomPanel((state) => state.visible);
     const sizes = {
         "--shell-dock-width": `${dockWidth}px`,
-        "--shell-panel-height": `${panelHeight}px`,
+        "--shell-panel-height": panelVisible ? `${panelHeight}px` : "0px",
     } as CSSProperties;
 
     return (
@@ -91,7 +94,12 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
                     <RegionBoundary name="Panels">{regions.dock ?? <Dock />}</RegionBoundary>
                 </div>
             </aside>
-            <section className="shell-panel" data-region="bottom-panel" aria-label="Bottom panel">
+            <section
+                className="shell-panel"
+                data-region="bottom-panel"
+                aria-label="Bottom panel"
+                hidden={!panelVisible}
+            >
                 <Splitter
                     className="shell-panel__splitter"
                     orientation="horizontal"

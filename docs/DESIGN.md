@@ -100,7 +100,7 @@ reports it and a ticket takes the new versions deliberately.
 | `ui/pwa/updateToast.ts`, `app/pwa/updates.ts` | PWA update flow |
 | `app/notices/notices.ts`, `app/platform/storage.ts` | Notices, storage access |
 | `app/commands/chord.ts`, `menuModel.ts`, `registry.ts` | Command registry |
-| `app/keymap/keyClasses.ts`, `resolve.ts`, `regions.ts`, `regions.commands.ts` | Key resolution, F6 regions |
+| `app/keymap/keyClasses.ts`, `regions.ts`, `regions.commands.ts` | Key classes, F6 regions |
 | `app/commandPalette/fuzzy.ts`, `paletteModel.ts` | Command palette model |
 | `ui/commands/Chord.tsx` | Key chord display |
 | `ui/menubar/MenubarItems.tsx` + CSS | Menus from the registry |
@@ -123,7 +123,7 @@ PNG codec, zip container and strict JSON reader come from `core/sprite` (§3.1).
 | `app/pwa/precache.ts`, `app/pwa/sw.ts` | Cache and message names `ngne-tilemap-editor-*` (SUITE §7) |
 | `ui/shell/notices/WebGpuRequired.tsx` | Product name |
 | `app/commands/types.ts` | `MENU_BAR` = this editor's menus (§5) |
-| `app/keymap/contextState.ts`, `app/keymap/environment.ts` | This editor's contexts (§10.1): `markers` and `panel` instead of `floating` and `timeline` |
+| `app/keymap/contextState.ts`, `app/keymap/environment.ts`, `app/keymap/resolve.ts` | This editor's contexts (§10.1): `markers` and `panel` instead of `floating` and `timeline` |
 | `app/commands/invoke.ts` | Drop the playback-state dependency |
 | `app/commands/appCommands.ts` | Bind to this editor's session store |
 | `ui/commands/runCommand.ts`, `useCommands.ts`, `useEditorKeymap.ts`, `contextMenu.ts` | Follow the adapted `appCommands` |
@@ -213,7 +213,7 @@ Order and items. Keys are §10. Every item is a registered command; disabled ite
 | Layer | New Tile Layer, New Marker Layer, New Image Layer…, New Group · Group Layers, Ungroup · Duplicate Layer, Delete Layer, Rename Layer · Layer Properties… · Move Layer Up, Move Layer Down, Select Layer Above, Select Layer Below · Show/Hide Other Layers, Lock/Unlock Other Layers |
 | Tileset | Tileset Properties…, Update Tileset from Source…, Delete Tileset · Edit Collision…, Edit Animation… (selected tile) · Previous Tileset, Next Tileset · Flip Stamp Horizontally, Flip Stamp Vertically, Rotate Stamp Right, Rotate Stamp Left |
 | Select | Select All, Select None, Invert Selection |
-| View | Zoom In, Zoom Out, Fit, 100% · Show Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Next Region, Previous Region |
+| View | Zoom In, Zoom Out, Fit, 100% · Show Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region |
 
 ## 6. Tool rail
 
@@ -402,7 +402,7 @@ marker tool.
 | Ctrl+S †, Ctrl+Shift+S †, Ctrl+O † | global | Save, save as, open | sprite editor |
 | Ctrl+Alt+N †, Ctrl+Alt+M † | global | New project, new map | sprite editor (new sprite); new (Ctrl+N is browser-reserved) |
 | Alt+W † | global | Close map tab | sprite editor (close document) |
-| Ctrl+E †, Ctrl+Shift+E † | global | Export, export again | sprite editor |
+| Ctrl+E †, Ctrl+Shift+X † | global | Export, export again | sprite editor; new (Ctrl+Shift+E is taken by the Redux DevTools extension in Chrome and by Tiled's Export As; Ctrl+Alt+E is AltGr+E, "€" on UK and most European layouts) |
 | Ctrl+K † | global | Command palette | sprite editor |
 | ? | canvas | Shortcut sheet | sprite editor |
 | F6, Shift+F6 † | global | Next, previous region | sprite editor |

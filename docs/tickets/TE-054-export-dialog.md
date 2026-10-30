@@ -12,7 +12,7 @@ re-export with one key or on every save (SPEC §10.2, DESIGN §9).
 - [SPEC.md](../SPEC.md) §10.2 (Export…, Export Again, Export on Save), §3 (export settings make
   the project dirty, no history entry).
 - [DESIGN.md](../DESIGN.md) §3.3 row `ui/export/AtlasThumbnail.tsx`; §3.4 row
-  `ui/export/ExportDialog.tsx`; §9 (Export row); §10.3 (Ctrl+E, Ctrl+Shift+E).
+  `ui/export/ExportDialog.tsx`; §9 (Export row); §10.3 (Ctrl+E, Ctrl+Shift+X).
 - Export pipeline (TE-053), file workflows (TE-047).
 
 ## Required work

@@ -19,9 +19,29 @@ rows.
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); no favicon link until the icons exist (TE-066) |
 | `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `0.0.0`, description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
+| `src/app/commands/appCommands.ts` | `src/app/commands/appCommands.ts` | adapt | `ea5c91d` | | Refreshes on the session store and the key-context store; no editor store |
+| `src/app/commands/chord.ts` | `src/app/commands/chord.ts` | verbatim | `ea5c91d` | `a4af3b93d1fc355074f329aac1ca3fdcc65a54ce5cbbdf0074a75fc5212d1d66` | |
+| `src/app/commands/invoke.ts` | `src/app/commands/invoke.ts` | adapt | `ea5c91d` | | No playback state to stop |
+| `src/app/commands/menuModel.ts` | `src/app/commands/menuModel.ts` | verbatim | `ea5c91d` | `32c9403fdf2f5467c1c78af7e0750cdcd579ebb4fbf3bf0084c7022aff10e6a7` | |
+| `src/app/commands/planned.commands.ts` | `src/app/commands/planned.commands.ts` | adapt | `ea5c91d` | | The menus and items of DESIGN §5; the Open Recent submenu holds a placeholder item until TE-047 |
+| `src/app/commands/registry.ts` | `src/app/commands/registry.ts` | verbatim | `ea5c91d` | `acd66e0e604dd887ce3e79fbf6e92b61403981418bce8cc18da8e4fa5da70281` | |
+| `src/app/commands/types.ts` | `src/app/commands/types.ts` | adapt | `ea5c91d` | | `KEY_CONTEXTS` of DESIGN §10.1 (`markers`, `panel`); `MENU_BAR` of DESIGN §5 |
 | `src/app/dialogs/dialogRequests.ts` | `src/app/dialogs/dialogRequests.ts` | verbatim | `ea5c91d` | `514a85c12e26dc3c93a169ac55c68f75b64b15ae2268b9c76127d7eeec67c781` | |
+| `src/app/keymap/contextState.ts` | `src/app/keymap/contextState.ts` | adapt | `ea5c91d` | | Contexts `gesture` and `markers` (DESIGN §10.1) |
+| `src/app/keymap/environment.ts` | `src/app/keymap/environment.ts` | adapt | `ea5c91d` | | `inPanel` from `PANEL_SELECTOR` (the bottom panel region or `data-keymap-panel`) instead of `inTimeline`; `markers` instead of `floating` |
+| `src/app/keymap/install.ts` | `src/app/keymap/install.ts` | adapt | `ea5c91d` | | No change: it reads the contexts through contextState.ts and environment.ts |
+| `src/app/keymap/keyClasses.ts` | `src/app/keymap/keyClasses.ts` | verbatim | `ea5c91d` | `f8a26308a617fffec31cd268ffe309d19c8adc1400f35d9ecf1ef2f0db60020b` | |
+| `src/app/keymap/regions.commands.ts` | `src/app/keymap/regions.commands.ts` | verbatim | `ea5c91d` | `4abaeb31767f3ac6e0b9b9027df5edd9b13a44aba035a6e2cece364711b27e93` | |
+| `src/app/keymap/regions.ts` | `src/app/keymap/regions.ts` | verbatim | `ea5c91d` | `6d180e5dc433fd882b16133ef66d834ac11e25c23fe4c5f628a9d46221df19fb` | |
+| `src/app/keymap/resolve.ts` | `src/app/keymap/resolve.ts` | adapt | `ea5c91d` | | `KeyEnvironment.inPanel` and `markers` instead of `inTimeline` and `floating`; `applicableContexts` lists the contexts of DESIGN §10.1 |
 | `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
+| `src/app/shell/bottomPanel.commands.ts` | `src/app/timeline/timeline.commands.ts` | adapt | `ea5c91d` | | `view.bottomPanel` toggles the bottom panel (Hide / Show Bottom Panel, Tab in `canvas`); refreshes the registry on its store |
+| `src/app/shell/bottomPanel.ts` | `src/app/timeline/timelineState.ts` | adapt | `ea5c91d` | | Only `visible`, for the bottom panel |
+| `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection |
+| `src/app/state/session.ts` | `src/app/state/sessions.ts` | adapt | `ea5c91d` | | One `ProjectSession` with its `History` per window (SPEC §3, §10.1) instead of a list of documents: `replace`, `touch`, `revision`; no views, saved state or reference sources |
+| `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
+| `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context and bottom-panel stores and the registry; `assertInvariants` on the project |
 | `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
 | `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
 | `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
@@ -92,8 +112,14 @@ rows.
 | `src/import-meta.d.ts` | `src/import-meta.d.ts` | adapt | `ea5c91d` | | No `SERVICE_WORKER` flag until the PWA build defines it (TE-066) |
 | `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders `App` in a root that sets `<html data-app-ready>` once committed; no service worker |
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
-| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route only; test hooks, keymap, file workflows, surfaces and the pixel-memory warning are left out |
+| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); file workflows, surfaces and the pixel-memory warning are left out |
 | `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
+| `src/ui/commands/Chord.tsx` | `src/ui/commands/Chord.tsx` | verbatim | `ea5c91d` | `4e74f7638162b047e17049c7b21c20900542365c11707aa892ca1695652b93c7` | |
+| `src/ui/commands/chord.css` | `src/ui/commands/chord.css` | verbatim | `ea5c91d` | `c94a08c100868e5877de06530839692722ba17c41cf6eb21580213fbce21020d` | |
+| `src/ui/commands/contextMenu.ts` | `src/ui/commands/contextMenu.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
+| `src/ui/commands/runCommand.ts` | `src/ui/commands/runCommand.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
+| `src/ui/commands/useCommands.ts` | `src/ui/commands/useCommands.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` keeps its exports |
+| `src/ui/commands/useEditorKeymap.ts` | `src/ui/commands/useEditorKeymap.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `install` keep their exports |
 | `src/ui/dialogs/DialogHost.tsx` | `src/ui/dialogs/DialogHost.tsx` | verbatim | `ea5c91d` | `d80f3e296fc4dce2ccb5dd09023ec782594b82a47e0e3bf1261e7055bb2c23df` | |
 | `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | verbatim | `ea5c91d` | `432ee32ed5a734072855bcb6c90f41c143e67d01dc76f5f6b344f8398a232006` | |
 | `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
@@ -103,6 +129,8 @@ rows.
 | `src/ui/focus/modality.ts` | `src/ui/focus/modality.ts` | verbatim | `ea5c91d` | `6ac8166dda8f7ccca4277d23bc58b945e9393590c33eec26044835948ee50917` | |
 | `src/ui/gallery/Gallery.tsx` | `src/ui/gallery/Gallery.tsx` | verbatim | `ea5c91d` | `085dec68931e95f663140458010ad08f9bb84a9ecfc29054462e7b1b06a43f2f` | |
 | `src/ui/gallery/gallery.css` | `src/ui/gallery/gallery.css` | verbatim | `ea5c91d` | `b6aded6922dd700c06b8da53d87435cdc16537094512bf52d98458e2f23ff521` | |
+| `src/ui/menubar/MenubarItems.tsx` | `src/ui/menubar/MenubarItems.tsx` | verbatim | `ea5c91d` | `2cd89ca6bc084dd4f26cfb91572643d87bf22167383aa1d4f8505df5bd1c9363` | |
+| `src/ui/menubar/menubar.css` | `src/ui/menubar/menubar.css` | verbatim | `ea5c91d` | `402568c9b9500b5442d2ca215b0deeb78efba6671f8e46f135fd6974e6e970e6` | |
 | `src/ui/platform/useWindowSize.ts` | `src/ui/platform/useWindowSize.ts` | verbatim | `ea5c91d` | `0d968743a68821e6aeac5cc7a2e3cef3943505b7be6b682134d7254833630f63` | |
 | `src/ui/platform/webgpu.ts` | `src/ui/platform/webgpu.ts` | verbatim | `ea5c91d` | `63b6d488de30d8d14099ca7ce40a2d74772d806a125d1dc54052a85b2fa8bef1` | |
 | `src/ui/primitives/Button.tsx` | `src/ui/primitives/Button.tsx` | verbatim | `ea5c91d` | `94c7181e08d9b0a8f073280f147998cd74bdd29e86d8979be4558db0e337d105` | |
@@ -132,7 +160,7 @@ rows.
 | `src/ui/primitives/splitter.css` | `src/ui/primitives/splitter.css` | verbatim | `ea5c91d` | `30d83973bf1d68795fb5d9bdaae723fcebe7a7a9d161aacc8f33e8d430ef7536` | |
 | `src/ui/primitives/splitterMath.ts` | `src/ui/primitives/splitterMath.ts` | verbatim | `ea5c91d` | `1d96ac72cd69f2ead655db2d6e09a51427a5489a51e1034f36176ed814fec385` | |
 | `src/ui/primitives/tooltip.css` | `src/ui/primitives/tooltip.css` | verbatim | `ea5c91d` | `52bef1c6e98304457ef16e054f81ecb1dbc72d0f5952ea258482785406071dec` | |
-| `src/ui/shell/AppShell.tsx` | `src/ui/shell/AppShell.tsx` | adapt | `ea5c91d` | | Region `bottom-panel` ("Bottom panel", splitter "Resize bottom panel") in the timeline's slot and sizes; always shown until the Tab toggle (TE-007) |
+| `src/ui/shell/AppShell.tsx` | `src/ui/shell/AppShell.tsx` | adapt | `ea5c91d` | | Region `bottom-panel` ("Bottom panel", splitter "Resize bottom panel") in the timeline's slot and sizes, hidden by the bottom-panel store (Tab, TE-007) |
 | `src/ui/shell/RailFrame.tsx` | `src/ui/shell/RailFrame.tsx` | adapt | `ea5c91d` | | Column count from `groups` and `footer` props, none passed yet (the tool set is TE-016's, the stamp preview TE-017's), instead of the sprite tool registry |
 | `src/ui/shell/RegionBoundary.tsx` | `src/ui/shell/RegionBoundary.tsx` | verbatim | `ea5c91d` | `c94eaf58d754b2ae325946afc92a024b46a71fab8ad155a8935dcc4fa3301eed` | |
 | `src/ui/shell/layout.ts` | `src/ui/shell/layout.ts` | verbatim | `ea5c91d` | `3ac6fc4d0345c669786c6a2af179b251fa4ff1a686500597b62da5a5ad1c61ac` | |
@@ -144,7 +172,7 @@ rows.
 | `src/ui/shell/regions/BottomPanel.tsx` | `src/ui/shell/regions/Timeline.tsx` | adapt | `ea5c91d` | | In the timeline's place: tabs Tilesets and Terrains (DESIGN §2), panels empty until TE-025 and TE-043 |
 | `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool options (TE-016) |
 | `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
-| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the menus (TE-007) and map tabs (TE-031) |
+| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus only; map tabs (TE-031) and the command palette trigger (TE-008) are left out |
 | `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the status fields (TE-014) |
 | `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
 | `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Empty placeholder until the viewport host (TE-013) |
@@ -159,11 +187,20 @@ rows.
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
 | `tests/e2e/harness/te-003-boundary.html` | `tests/e2e/harness/se-006-boundary.html` | adapt | `ea5c91d` | | Ticket name |
 | `tests/e2e/harness/te-003-boundary.tsx` | `tests/e2e/harness/se-006-boundary.tsx` | adapt | `ea5c91d` | | Ticket name; `window.te003Repaired` declared |
+| `tests/e2e/harness/te-007-chords.html` | `tests/e2e/harness/se-007-keymap.html` | adapt | `ea5c91d` | | Ticket name |
+| `tests/e2e/harness/te-007-chords.tsx` | `tests/e2e/harness/se-007-keymap.tsx` | adapt | `ea5c91d` | | Probes of DESIGN §10.3 with the layer-kind and marker-selection conditions; a bottom-panel cell instead of a timeline cell; `?probe` mode for the owner check lists the chords received |
+| `tests/e2e/harness/te-007-design-keys.ts` | `tests/e2e/se-007-spec-keys.ts` | adapt | `ea5c91d` | | Parses the Key / Context / Action / Source table of DESIGN §10.3: this editor's contexts, the layer-kind and marker-selection conditions, digit ranges, `[ ]`; pure, for the browser |
 | `tests/e2e/support/wait.ts` | `tests/e2e/se-006-support.ts`, `se-012-support.ts`, `se-022-support.ts` | adapt | `ea5c91d` | | `openShell` → `openApp` on `data-app-ready`; `afterFrames` as is; `framesSubmitted` and `stableSize` added |
 | `tests/e2e/te-001-smoke.spec.ts` | `tests/e2e/se-001-smoke.spec.ts` | adapt | `ea5c91d` | | App start on `data-app-ready`, title and the shell's seven regions in `#root`; engine version 0.3.0; TE-001 harness and both far edges |
 | `tests/e2e/te-003-boundary.spec.ts` | `tests/e2e/se-006-boundary.spec.ts` | adapt | `ea5c91d` | | This shell's regions; the bottom panel, the Maps section and the dock splitter checked in place of the timeline, palette, tool rail and empty state |
 | `tests/e2e/te-003-notices.spec.ts` | `tests/e2e/se-006-notices.spec.ts` | adapt | `ea5c91d` | | Product name checked; the Maps section for the kept state; no fixed-time waits |
 | `tests/e2e/te-003-support.ts` | `tests/e2e/se-006-support.ts` | adapt | `ea5c91d` | | This shell's regions; waits through `openApp`; axe helper for serious and critical violations; only the helpers TE-003 uses |
+| `tests/e2e/te-007-chords.spec.ts` | `tests/e2e/se-007-keymap.spec.ts` | adapt | `ea5c91d` | | DESIGN §10.3 table; the bottom panel for the `panel` context; gesture and marker cases; `[`, `]` keys |
+| `tests/e2e/te-007-design-keys.ts` | `tests/e2e/se-007-spec-keys.ts` | adapt | `ea5c91d` | | Reads docs/DESIGN.md for the parser in `harness/te-007-design-keys.ts` |
+| `tests/e2e/te-007-focus.spec.ts` | `tests/e2e/se-007-focus.spec.ts` | adapt | `ea5c91d` | | Bottom panel among the regions with controls; the Tab toggle of the bottom panel added |
+| `tests/e2e/te-007-menus.spec.ts` | `tests/e2e/se-007-menus.spec.ts` | adapt | `ea5c91d` | | DESIGN §5 menus and items checked in full; Hide Bottom Panel from the menu; no planned-item takeover or late-close cases |
+| `tests/e2e/te-007-support.ts` | `tests/e2e/se-007-support.ts` | adapt | `ea5c91d` | | One project per window: `rename` runs on the app's history, no `openSession`; `addViewportFocus`, `settleTimers` |
+| `tests/e2e/te-007-undo.spec.ts` | `tests/e2e/se-007-undo.spec.ts` | adapt | `ea5c91d` | | On the app's project; a transaction on a tile layer of a map |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14 |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
@@ -173,6 +210,7 @@ rows.
 | `tests/unit/te-006-history.test.ts` | `tests/unit/se-004-history.test.ts` | adapt | `ea5c91d` | | Project session and cell patches instead of a document and pixel patches; map of each entry, verifier, composite and `mergeTouched` cases added |
 | `tests/unit/te-006-support.ts` | `tests/unit/se-004-support.ts` | adapt | `ea5c91d` | | Session with one map, one tile layer and one tileset; `paintRect` writes cells; allocators return `ArrayBuffer` |
 | `tests/unit/te-006-transaction.test.ts` | `tests/unit/se-004-transaction.test.ts` | adapt | `ea5c91d` | | Cell writes on a tile layer instead of pixels on a cel image: 12 bytes a changed cell, no clip mask or cel creation; invariant-breaking commit and `cellPatchCommand` cases added |
+| `tests/unit/te-007-resolve.test.ts` | `tests/unit/se-007-keymap.test.ts` | adapt | `ea5c91d` | | Contexts `markers` and `panel` of DESIGN §10.1; every † chord of DESIGN §10.3 in the text context; `PANEL_SELECTOR` |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |
