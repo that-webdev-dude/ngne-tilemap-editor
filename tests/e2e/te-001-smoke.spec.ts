@@ -5,7 +5,7 @@ import { openApp } from "./support/wait";
 test("the app starts from the dev server", async ({ page }) => {
     await openApp(page);
     await expect(page).toHaveTitle("NGNE Tilemap Editor");
-    await expect(page.locator("#root")).toBeEmpty();
+    await expect(page.locator("#root [data-region]")).toHaveCount(7);
 });
 
 test("NGNE 0.3.0 draws a rect on a WebGPU canvas and readCanvas returns its pixels", async ({

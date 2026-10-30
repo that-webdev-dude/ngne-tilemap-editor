@@ -71,7 +71,7 @@ Dependencies are listed without the `TE-` prefix.
 | **M0** | **Foundation** | | | |
 | [TE-001](TE-001-scaffold-toolchain-ci.md) | Scaffold, toolchain and CI | L | — | Done |
 | [TE-002](TE-002-sprite-core-subtree-drift.md) | Sprite core subtree, provenance and drift report | M | 001 | Done |
-| [TE-003](TE-003-design-system-shell.md) | Design system, primitives and app shell | L | 002 | To do |
+| [TE-003](TE-003-design-system-shell.md) | Design system, primitives and app shell | L | 002 | Done |
 | [TE-004](TE-004-cell-store-orientation.md) | Cell store and orientation algebra | M | 001 | To do |
 | [TE-005](TE-005-project-model.md) | Project model and invariants | M | 004 | To do |
 | [TE-006](TE-006-commands-history.md) | Commands, transactions and project history | L | 005 | To do |

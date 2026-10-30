@@ -70,4 +70,39 @@ describe("provenance", () => {
             .sort();
         expect(recorded).toEqual(files);
     });
+
+    // TE-003: the design system, primitives, shell and services copied from the sprite editor
+    // (DESIGN §3.2, §3.3). Every file of these directories, and the files directly in src/ui,
+    // is a copy with a row; src/ui/panels holds this editor's own dock sections.
+    it("records every file of the copied interface directories", () => {
+        const root = fileURLToPath(ROOT);
+        const directories = [
+            "src/app/dialogs",
+            "src/app/notices",
+            "src/app/platform",
+            "src/ui/dialogs",
+            "src/ui/dock",
+            "src/ui/focus",
+            "src/ui/gallery",
+            "src/ui/platform",
+            "src/ui/primitives",
+            "src/ui/shell",
+            "src/ui/styles",
+            "src/ui/theme",
+            "src/ui/toast",
+        ];
+        const files = [
+            ...readdirSync(join(root, "src/ui"), { withFileTypes: true }),
+            ...directories.flatMap((directory) =>
+                readdirSync(join(root, directory), { recursive: true, withFileTypes: true }),
+            ),
+        ]
+            .filter((entry) => entry.isFile())
+            .map((entry) => relative(root, join(entry.parentPath, entry.name)))
+            .map((path) => path.replaceAll("\\", "/"))
+            .sort();
+        expect(files.length).toBeGreaterThan(40);
+        const recorded = new Set(rows.map((row) => row.path));
+        expect(files.filter((path) => !recorded.has(path))).toEqual([]);
+    });
 });

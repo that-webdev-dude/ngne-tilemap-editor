@@ -19,6 +19,9 @@ rows.
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); no favicon link until the icons exist (TE-066) |
 | `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `0.0.0`, description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
+| `src/app/dialogs/dialogRequests.ts` | `src/app/dialogs/dialogRequests.ts` | verbatim | `ea5c91d` | `514a85c12e26dc3c93a169ac55c68f75b64b15ae2268b9c76127d7eeec67c781` | |
+| `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
+| `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
 | `src/core/sprite/animation/expandTag.ts` | `src/core/animation/expandTag.ts` | verbatim | `ea5c91d` | `b72b0e96d9ed95b79d090f436e7b070752fb28438f162fcbccda5ca84cdadf0b` | |
 | `src/core/sprite/animation/index.ts` | `src/core/animation/index.ts` | verbatim | `ea5c91d` | `4f38e8b4add97270be649f06776753a8fa0d2d01fee8f27bfdee2f9bbde93897` | |
 | `src/core/sprite/animation/playbackClock.ts` | `src/core/animation/playbackClock.ts` | verbatim | `ea5c91d` | `b2d057b570c42f31d91f6cffb436f2287904224ad07eaaedaee7e8959cf30d9b` | |
@@ -80,17 +83,86 @@ rows.
 | `src/core/sprite/tags/tagList.ts` | `src/core/tags/tagList.ts` | verbatim | `ea5c91d` | `2645ecaec4b30ada632365a047357c797a1ede9145dee5ebc18d7c1e91ddcdf6` | |
 | `src/engine/testing/readCanvas.ts` | `src/engine/testing/readCanvas.ts` | verbatim | `ea5c91d` | `27de8812f006a47624b87f2095afcf25c353461832890a3afea774af1951f7f0` | |
 | `src/import-meta.d.ts` | `src/import-meta.d.ts` | adapt | `ea5c91d` | | No `SERVICE_WORKER` flag until the PWA build defines it (TE-066) |
-| `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders an empty root that sets `<html data-app-ready>`; no `App`, no service worker |
+| `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders `App` in a root that sets `<html data-app-ready>` once committed; no service worker |
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
+| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route only; test hooks, keymap, file workflows, surfaces and the pixel-memory warning are left out |
+| `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
+| `src/ui/dialogs/DialogHost.tsx` | `src/ui/dialogs/DialogHost.tsx` | verbatim | `ea5c91d` | `d80f3e296fc4dce2ccb5dd09023ec782594b82a47e0e3bf1261e7055bb2c23df` | |
+| `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | verbatim | `ea5c91d` | `432ee32ed5a734072855bcb6c90f41c143e67d01dc76f5f6b344f8398a232006` | |
+| `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
+| `src/ui/dock/registry.ts` | `src/ui/dock/registry.ts` | verbatim | `ea5c91d` | `33534c61332600daa37db50256fe7df3ebfc23776000ba3dd2379e07cb3d6036` | |
+| `src/ui/focus/inertOutside.ts` | `src/ui/focus/inertOutside.ts` | verbatim | `ea5c91d` | `b6a211b7c790c44abf0cc688082b60da14552729402fcfea43c108fa60377b32` | |
+| `src/ui/focus/menuOpener.ts` | `src/ui/focus/menuOpener.ts` | verbatim | `ea5c91d` | `b61a40a2721132e675858320c17f49c84f72947e52fd85fe3b7afda8c584f572` | |
+| `src/ui/focus/modality.ts` | `src/ui/focus/modality.ts` | verbatim | `ea5c91d` | `6ac8166dda8f7ccca4277d23bc58b945e9393590c33eec26044835948ee50917` | |
+| `src/ui/gallery/Gallery.tsx` | `src/ui/gallery/Gallery.tsx` | verbatim | `ea5c91d` | `085dec68931e95f663140458010ad08f9bb84a9ecfc29054462e7b1b06a43f2f` | |
+| `src/ui/gallery/gallery.css` | `src/ui/gallery/gallery.css` | verbatim | `ea5c91d` | `b6aded6922dd700c06b8da53d87435cdc16537094512bf52d98458e2f23ff521` | |
+| `src/ui/platform/useWindowSize.ts` | `src/ui/platform/useWindowSize.ts` | verbatim | `ea5c91d` | `0d968743a68821e6aeac5cc7a2e3cef3943505b7be6b682134d7254833630f63` | |
+| `src/ui/platform/webgpu.ts` | `src/ui/platform/webgpu.ts` | verbatim | `ea5c91d` | `63b6d488de30d8d14099ca7ce40a2d74772d806a125d1dc54052a85b2fa8bef1` | |
+| `src/ui/primitives/Button.tsx` | `src/ui/primitives/Button.tsx` | verbatim | `ea5c91d` | `94c7181e08d9b0a8f073280f147998cd74bdd29e86d8979be4558db0e337d105` | |
+| `src/ui/primitives/ContextMenu.tsx` | `src/ui/primitives/ContextMenu.tsx` | verbatim | `ea5c91d` | `ba7a3d39cc4d379ad6157f5bd4074381e618cf2dd332d899be91bd01c7cee054` | |
+| `src/ui/primitives/Dialog.tsx` | `src/ui/primitives/Dialog.tsx` | verbatim | `ea5c91d` | `9fd508dca089ce0cf8a1af005c5eb616293df0a0d503a300929f2d29070348a1` | |
+| `src/ui/primitives/Icon.tsx` | `src/ui/primitives/Icon.tsx` | verbatim | `ea5c91d` | `f7c27316615e66a05c00270e3d6615b3b180aaab42f9a3b4ae3633998aa2357f` | |
+| `src/ui/primitives/IconButton.tsx` | `src/ui/primitives/IconButton.tsx` | verbatim | `ea5c91d` | `b38c89ed66acddfd2aa9e131eb56239aca7ae542d12d9a46781bd72669db5e33` | |
+| `src/ui/primitives/NumberField.tsx` | `src/ui/primitives/NumberField.tsx` | verbatim | `ea5c91d` | `6ee366248b2019e4ee39e217a5f24fb296a158835174bc0bf4598e00264e36e4` | |
+| `src/ui/primitives/Popover.tsx` | `src/ui/primitives/Popover.tsx` | verbatim | `ea5c91d` | `e8769d39a6be68ddd10f7dd7d008012a89584cb1d30c6f9a98125548a53441b0` | |
+| `src/ui/primitives/SegmentedControl.tsx` | `src/ui/primitives/SegmentedControl.tsx` | verbatim | `ea5c91d` | `e61cb8a91ec9ff70acdfec6585826e23e0cb4670e4481b0d1040a4fcc5edb325` | |
+| `src/ui/primitives/Select.tsx` | `src/ui/primitives/Select.tsx` | verbatim | `ea5c91d` | `41c5e516455e64b941ca037b67410fa2773c57a927729b7a95dc0899b2c72bcf` | |
+| `src/ui/primitives/Slider.tsx` | `src/ui/primitives/Slider.tsx` | verbatim | `ea5c91d` | `d3ce469e4f7bfd1a8028bd5fb5db1a992fe6efc5d756c94103d685ff09685a23` | |
+| `src/ui/primitives/Splitter.tsx` | `src/ui/primitives/Splitter.tsx` | verbatim | `ea5c91d` | `fe56d4ea3ca80fd704372685939755b309f339397ac2aea6cd7da25d60631f3a` | |
+| `src/ui/primitives/Toggle.tsx` | `src/ui/primitives/Toggle.tsx` | verbatim | `ea5c91d` | `71964da3c9b1c5cf714a3cb288f17a8ad32c2151fd60d09f34602efb16d9127a` | |
+| `src/ui/primitives/ToolButton.tsx` | `src/ui/primitives/ToolButton.tsx` | verbatim | `ea5c91d` | `3f4695638f60c83d30da8a740f665a2c11226820f540270f63040999e1734803` | |
+| `src/ui/primitives/Tooltip.tsx` | `src/ui/primitives/Tooltip.tsx` | verbatim | `ea5c91d` | `1efd8acbba3d945d79dc6df77197913670a8c743bfaeb5f5d3ddda66df92e2bf` | |
+| `src/ui/primitives/button.css` | `src/ui/primitives/button.css` | verbatim | `ea5c91d` | `c0fc31e1d0d78205a93a5e29e18cdee606c2d526069c273d6592d028cd965005` | |
+| `src/ui/primitives/cx.ts` | `src/ui/primitives/cx.ts` | verbatim | `ea5c91d` | `3ce0dd21751abb604d32f1f8fd9a336a49774f30dbc77e25af23095a5f51855a` | |
+| `src/ui/primitives/dialog.css` | `src/ui/primitives/dialog.css` | verbatim | `ea5c91d` | `0c3243ab13549f14c74bfbc44b292a1d16348b96835814b9d00a6d9e81c55fba` | |
+| `src/ui/primitives/field.css` | `src/ui/primitives/field.css` | verbatim | `ea5c91d` | `f45e33085ddb81249f75265e2d8e8c835f268a208af81abb858bb3ec2218b5d9` | |
+| `src/ui/primitives/index.ts` | `src/ui/primitives/index.ts` | verbatim | `ea5c91d` | `831b294148cd5d492e3840958dec91ece88171ef5baf6e429d07da2d9cfd9207` | |
+| `src/ui/primitives/menu.css` | `src/ui/primitives/menu.css` | verbatim | `ea5c91d` | `d3c2ae35ccc5c875fb10c375854e9157f2f4d86cc49fddacb47bc81b806657ec` | |
+| `src/ui/primitives/numberMath.ts` | `src/ui/primitives/numberMath.ts` | verbatim | `ea5c91d` | `a0c2be7e59af3b5a20c26f3884f0834118d88bb607afe88f1f1fcc1eee3e0384` | |
+| `src/ui/primitives/popover.css` | `src/ui/primitives/popover.css` | verbatim | `ea5c91d` | `cd3b0aa92827424d083cef85018e3dc43dd8a444527fee93badef930226a81e3` | |
+| `src/ui/primitives/segmented.css` | `src/ui/primitives/segmented.css` | verbatim | `ea5c91d` | `ac1ea1139e3168fd4bb425a174596d2837e058567ba531d14e835fcb47debf9f` | |
+| `src/ui/primitives/slider.css` | `src/ui/primitives/slider.css` | verbatim | `ea5c91d` | `ead0846ed348fa18abb706978d9a4cace5fddc84950f147e5f4f6bd5a4af5de5` | |
+| `src/ui/primitives/splitter.css` | `src/ui/primitives/splitter.css` | verbatim | `ea5c91d` | `30d83973bf1d68795fb5d9bdaae723fcebe7a7a9d161aacc8f33e8d430ef7536` | |
+| `src/ui/primitives/splitterMath.ts` | `src/ui/primitives/splitterMath.ts` | verbatim | `ea5c91d` | `1d96ac72cd69f2ead655db2d6e09a51427a5489a51e1034f36176ed814fec385` | |
+| `src/ui/primitives/tooltip.css` | `src/ui/primitives/tooltip.css` | verbatim | `ea5c91d` | `52bef1c6e98304457ef16e054f81ecb1dbc72d0f5952ea258482785406071dec` | |
+| `src/ui/shell/AppShell.tsx` | `src/ui/shell/AppShell.tsx` | adapt | `ea5c91d` | | Region `bottom-panel` ("Bottom panel", splitter "Resize bottom panel") in the timeline's slot and sizes; always shown until the Tab toggle (TE-007) |
+| `src/ui/shell/RailFrame.tsx` | `src/ui/shell/RailFrame.tsx` | adapt | `ea5c91d` | | Column count from `groups` and `footer` props, none passed yet (the tool set is TE-016's, the stamp preview TE-017's), instead of the sprite tool registry |
+| `src/ui/shell/RegionBoundary.tsx` | `src/ui/shell/RegionBoundary.tsx` | verbatim | `ea5c91d` | `c94eaf58d754b2ae325946afc92a024b46a71fab8ad155a8935dcc4fa3301eed` | |
+| `src/ui/shell/layout.ts` | `src/ui/shell/layout.ts` | verbatim | `ea5c91d` | `3ac6fc4d0345c669786c6a2af179b251fa4ff1a686500597b62da5a5ad1c61ac` | |
+| `src/ui/shell/layoutStore.ts` | `src/ui/shell/layoutStore.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.layout` (SUITE §7) |
+| `src/ui/shell/notices/WebGpuRequired.tsx` | `src/ui/shell/notices/WebGpuRequired.tsx` | adapt | `ea5c91d` | | Product name (SUITE §1) |
+| `src/ui/shell/notices/WindowTooSmall.tsx` | `src/ui/shell/notices/WindowTooSmall.tsx` | verbatim | `ea5c91d` | `3a83708aa6a40a370af0f79d9afda9a2966acf7fa6e3df952d1364a552fb9311` | |
+| `src/ui/shell/notices/notice.css` | `src/ui/shell/notices/notice.css` | verbatim | `ea5c91d` | `76af4099e674df54d8626c6f16e47b44a30f32d5b35823c41a20cae9a9600008` | |
+| `src/ui/shell/regionBoundary.css` | `src/ui/shell/regionBoundary.css` | verbatim | `ea5c91d` | `d3a067d3f16a58dc4a46d342fe9daf5fdbdc2eb0664da85ba1965a112527a5a8` | |
+| `src/ui/shell/regions/BottomPanel.tsx` | `src/ui/shell/regions/Timeline.tsx` | adapt | `ea5c91d` | | In the timeline's place: tabs Tilesets and Terrains (DESIGN §2), panels empty until TE-025 and TE-043 |
+| `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool options (TE-016) |
+| `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
+| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the menus (TE-007) and map tabs (TE-031) |
+| `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the status fields (TE-014) |
+| `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
+| `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Empty placeholder until the viewport host (TE-013) |
+| `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
+| `src/ui/styles/base.css` | `src/ui/styles/base.css` | verbatim | `ea5c91d` | `cb79b6d9a9383a0d114a3453f2fe19471ae3f657472d0f6d7186553ef92c8d87` | |
+| `src/ui/styles/tokens.css` | `src/ui/styles/tokens.css` | verbatim | `ea5c91d` | `a8d0de7b7cefa647152a2a27811adfa1f8db544b9443201647ea132fc05b3917` | |
+| `src/ui/theme/theme.ts` | `src/ui/theme/theme.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.theme` (SUITE §7) |
+| `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
+| `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |
+| `src/ui/toast/toast.ts` | `src/ui/toast/toast.ts` | verbatim | `ea5c91d` | `35cdddcdfb41732710dea2c026a5c22c443c2b16fcf6a3fdb5701b594cce70e7` | |
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
+| `tests/e2e/harness/te-003-boundary.html` | `tests/e2e/harness/se-006-boundary.html` | adapt | `ea5c91d` | | Ticket name |
+| `tests/e2e/harness/te-003-boundary.tsx` | `tests/e2e/harness/se-006-boundary.tsx` | adapt | `ea5c91d` | | Ticket name; `window.te003Repaired` declared |
 | `tests/e2e/support/wait.ts` | `tests/e2e/se-006-support.ts`, `se-012-support.ts`, `se-022-support.ts` | adapt | `ea5c91d` | | `openShell` → `openApp` on `data-app-ready`; `afterFrames` as is; `framesSubmitted` and `stableSize` added |
-| `tests/e2e/te-001-smoke.spec.ts` | `tests/e2e/se-001-smoke.spec.ts` | adapt | `ea5c91d` | | App start on `data-app-ready`, title and empty `#root`; engine version 0.3.0; TE-001 harness and both far edges |
+| `tests/e2e/te-001-smoke.spec.ts` | `tests/e2e/se-001-smoke.spec.ts` | adapt | `ea5c91d` | | App start on `data-app-ready`, title and the shell's seven regions in `#root`; engine version 0.3.0; TE-001 harness and both far edges |
+| `tests/e2e/te-003-boundary.spec.ts` | `tests/e2e/se-006-boundary.spec.ts` | adapt | `ea5c91d` | | This shell's regions; the bottom panel, the Maps section and the dock splitter checked in place of the timeline, palette, tool rail and empty state |
+| `tests/e2e/te-003-notices.spec.ts` | `tests/e2e/se-006-notices.spec.ts` | adapt | `ea5c91d` | | Product name checked; the Maps section for the kept state; no fixed-time waits |
+| `tests/e2e/te-003-support.ts` | `tests/e2e/se-006-support.ts` | adapt | `ea5c91d` | | This shell's regions; waits through `openApp`; axe helper for serious and critical violations; only the helpers TE-003 uses |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14 |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
 | `tests/unit/te-001-layers.test.ts` | `tests/unit/se-001-lint-boundaries.test.ts` | adapt | `ea5c91d` | | RULES 4 cases; the same code passes in `src/engine` |
 | `tests/unit/te-002-fixtures/golden-v1.ngsprite` | `tests/unit/se-040-fixtures/golden-v1.ngsprite` | verbatim | `ea5c91d` | `9e1e15076393d05f99322dfdd866133d191fe6e0cca3cdefd0b710b55ee05044` | |
+| `tests/unit/te-003-tokens.test.ts` | `tests/unit/se-006-tokens.test.ts` | adapt | `ea5c91d` | | Colour table of `se-design` §3.1 written out (DESIGN §1 inherits it unrepeated); SUITE §2 dark values |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |
