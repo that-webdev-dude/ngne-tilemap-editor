@@ -25,6 +25,46 @@ const ngne = {
     message: "Only src/engine imports @ngne/core (SPEC §5).",
 };
 
+const spriteCore = {
+    regex: "(^|/)core/sprite(/|$)",
+    message: "Only src/core imports src/core/sprite (DESIGN §3.1).",
+};
+
+// src/core/sprite imports itself, fflate and fast-png only (DESIGN §3.1). A relative import
+// leaves the subtree when it climbs more directories than the file sits below it; one that
+// climbs back after descending, or a dynamic import, cannot be checked and is refused.
+const spriteSubtree = [0, 1, 2, 3, 4, 5, 6, 7].map((depth) => ({
+    files: [`src/core/sprite/${"*/".repeat(depth)}*.{ts,tsx}`],
+    rules: {
+        "no-restricted-imports": [
+            "error",
+            {
+                patterns: [
+                    {
+                        regex: "^(?!\\.\\.?/)(?!(fflate|fast-png)$)",
+                        message: "src/core/sprite imports no package but fflate and fast-png.",
+                    },
+                    {
+                        regex: `^(\\./)?(\\.\\./){${depth}}\\.\\.(/|$)`,
+                        message: "src/core/sprite imports nothing from outside itself.",
+                    },
+                    {
+                        regex: "(^|/)(?!\\.\\.?(/|$))[^/]+/\\.\\.(/|$)",
+                        message: "src/core/sprite imports by normalized paths only.",
+                    },
+                ],
+            },
+        ],
+        "no-restricted-syntax": [
+            "error",
+            {
+                selector: "ImportExpression",
+                message: "src/core/sprite imports nothing dynamically.",
+            },
+        ],
+    },
+}));
+
 export default tseslint.config(
     // `.claude` holds agent worktrees: whole copies of the repository.
     {
@@ -54,7 +94,11 @@ export default tseslint.config(
     {
         files: ["src/**/*.{ts,tsx}"],
         ignores: ["src/engine/**", "src/core/**"],
-        rules: { "no-restricted-imports": ["error", { patterns: [ngne] }] },
+        rules: { "no-restricted-imports": ["error", { patterns: [ngne, spriteCore] }] },
+    },
+    {
+        files: ["src/engine/**/*.{ts,tsx}"],
+        rules: { "no-restricted-imports": ["error", { patterns: [spriteCore] }] },
     },
     {
         files: ["src/core/**/*.{ts,tsx}"],
@@ -84,4 +128,5 @@ export default tseslint.config(
             ],
         },
     },
+    ...spriteSubtree,
 );

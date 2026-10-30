@@ -58,6 +58,47 @@ describe("layer boundaries", { timeout: 60_000 }, () => {
         }
     });
 
+    it("rejects imports of src/core/sprite outside src/core", async () => {
+        for (const filePath of ["src/app/probe.ts", "src/ui/probe.tsx", "src/engine/probe.ts"]) {
+            const source = 'import "../core/sprite/model";\n';
+            expect(await ruleIds(filePath, source), filePath).toEqual(["no-restricted-imports"]);
+        }
+    });
+
+    it("allows imports of src/core/sprite in src/core", async () => {
+        const source = 'import "../sprite/model";\n';
+        expect(await ruleIds("src/core/model/probe.ts", source)).toEqual([]);
+    });
+
+    it("rejects imports from src/core/sprite into the rest of src/core", async () => {
+        const cases: [string, string][] = [
+            ["src/core/sprite/model/probe.ts", 'import "../../model";\n'],
+            ["src/core/sprite/model/probe.ts", 'import "../../../app/x";\n'],
+            ["src/core/sprite/probe.ts", 'import "../cells";\n'],
+            ["src/core/sprite/a/b/probe.ts", 'import "../../../model";\n'],
+            ["src/core/sprite/a/b/c/d/probe.ts", 'import "../../../../../model";\n'],
+            ["src/core/sprite/project/probe.ts", 'import "../x/../../model";\n'],
+            ["src/core/sprite/project/probe.ts", 'import "/src/core/model";\n'],
+        ];
+        for (const [filePath, source] of cases) {
+            expect(await ruleIds(filePath, source), source).toEqual(["no-restricted-imports"]);
+        }
+        const dynamic = 'export const a = import("../../model");\n';
+        expect(await ruleIds("src/core/sprite/project/probe.ts", dynamic)).toEqual([
+            "no-restricted-syntax",
+        ]);
+    });
+
+    it("allows src/core/sprite its own files, fflate and fast-png only", async () => {
+        const allowed = 'import "../model";\nimport "./x";\nimport "fflate";\nimport "fast-png";\n';
+        expect(await ruleIds("src/core/sprite/project/probe.ts", allowed)).toEqual([]);
+        for (const source of [NGNE, REACT, 'import "zustand";\n']) {
+            expect(await ruleIds("src/core/sprite/project/probe.ts", source), source).toEqual([
+                "no-restricted-imports",
+            ]);
+        }
+    });
+
     it("allows the same code in src/engine", async () => {
         for (const source of [NGNE, REACT, ...DOM_GLOBALS]) {
             expect(await ruleIds("src/engine/probe.ts", source), source).toEqual([]);
