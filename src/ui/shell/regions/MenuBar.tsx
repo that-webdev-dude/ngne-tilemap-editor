@@ -1,5 +1,6 @@
 import { Menubar } from "radix-ui";
 import { MENU_BAR } from "../../../app/commands/types";
+import { CommandPaletteTrigger } from "../../commandPalette/CommandPaletteTrigger";
 import { MenubarItems } from "../../menubar/MenubarItems";
 import "../../primitives/menu.css";
 import "../../menubar/menubar.css";
@@ -28,10 +29,15 @@ function Menus() {
 }
 
 /**
- * Menu bar content: the menus. The map tabs fill its centre (TE-031) and the command palette
- * trigger its right end (TE-008). The dialogs the menus open are shown by the dialog host at
- * the root of the app.
+ * Menu bar content: the menus and the command palette trigger at the right (TE-008). The map
+ * tabs fill its centre (TE-031). The dialogs the menus open are shown by the dialog host at the
+ * root of the app.
  */
 export function MenuBar() {
-    return <Menus />;
+    return (
+        <>
+            <Menus />
+            <CommandPaletteTrigger />
+        </>
+    );
 }

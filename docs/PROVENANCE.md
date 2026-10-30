@@ -19,6 +19,10 @@ rows.
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); no favicon link until the icons exist (TE-066) |
 | `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `0.0.0`, description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
+| `src/app/commandPalette/commandPalette.commands.ts` | `src/app/commandPalette/commandPalette.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 instead of the sprite editor's SPEC §7.8 |
+| `src/app/commandPalette/fuzzy.ts` | `src/app/commandPalette/fuzzy.ts` | verbatim | `ea5c91d` | `da142574be46c0eba4988a74649e3e1778b9dd0cf98c4df3a29e231c822e50b1` | |
+| `src/app/commandPalette/paletteModel.ts` | `src/app/commandPalette/paletteModel.ts` | verbatim | `ea5c91d` | `176c165b0cbd1f323ee156432ce67ee68a0298b13bc318d96ea796285fa9578a` | |
+| `src/app/commandPalette/recentCommands.ts` | `src/app/commandPalette/recentCommands.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.recent-commands` (SUITE §7) |
 | `src/app/commands/appCommands.ts` | `src/app/commands/appCommands.ts` | adapt | `ea5c91d` | | Refreshes on the session store and the key-context store; no editor store |
 | `src/app/commands/chord.ts` | `src/app/commands/chord.ts` | verbatim | `ea5c91d` | `a4af3b93d1fc355074f329aac1ca3fdcc65a54ce5cbbdf0074a75fc5212d1d66` | |
 | `src/app/commands/invoke.ts` | `src/app/commands/invoke.ts` | adapt | `ea5c91d` | | No playback state to stop |
@@ -36,12 +40,16 @@ rows.
 | `src/app/keymap/resolve.ts` | `src/app/keymap/resolve.ts` | adapt | `ea5c91d` | | `KeyEnvironment.inPanel` and `markers` instead of `inTimeline` and `floating`; `applicableContexts` lists the contexts of DESIGN §10.1 |
 | `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
+| `src/app/preferences/preferences.commands.ts` | `src/app/preferences/preferences.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
+| `src/app/preferences/preferences.ts` | `src/app/preferences/preferences.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.preferences`; sections `checkerboard`, `grid` (colour `"theme"` or 0xRRGGBB, opacity in percent), `highlight` (opacity in percent, default 25) and `autosave` instead of the sprite editor's grid, onion and import defaults; `ColourChoice` and the `percent` range |
 | `src/app/shell/bottomPanel.commands.ts` | `src/app/timeline/timeline.commands.ts` | adapt | `ea5c91d` | | `view.bottomPanel` toggles the bottom panel (Hide / Show Bottom Panel, Tab in `canvas`); refreshes the registry on its store |
 | `src/app/shell/bottomPanel.ts` | `src/app/timeline/timelineState.ts` | adapt | `ea5c91d` | | Only `visible`, for the bottom panel |
+| `src/app/shortcuts/shortcutSheet.ts` | `src/app/shortcuts/shortcutSheet.ts` | verbatim | `ea5c91d` | `607f13dc68fc72037b0a6cc77812bb0cb5656947d48d81933f76767f04f28e49` | |
+| `src/app/shortcuts/shortcuts.commands.ts` | `src/app/shortcuts/shortcuts.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
 | `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection |
 | `src/app/state/session.ts` | `src/app/state/sessions.ts` | adapt | `ea5c91d` | | One `ProjectSession` with its `History` per window (SPEC §3, §10.1) instead of a list of documents: `replace`, `touch`, `revision`; no views, saved state or reference sources |
 | `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
-| `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context and bottom-panel stores and the registry; `assertInvariants` on the project |
+| `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project |
 | `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
 | `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
 | `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
@@ -112,8 +120,11 @@ rows.
 | `src/import-meta.d.ts` | `src/import-meta.d.ts` | adapt | `ea5c91d` | | No `SERVICE_WORKER` flag until the PWA build defines it (TE-066) |
 | `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders `App` in a root that sets `<html data-app-ready>` once committed; no service worker |
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
-| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); file workflows, surfaces and the pixel-memory warning are left out |
+| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); the surfaces (TE-008); file workflows and the pixel-memory warning are left out |
 | `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
+| `src/ui/commandPalette/CommandPalette.tsx` | `src/ui/commandPalette/CommandPalette.tsx` | verbatim | `ea5c91d` | `0b28da9e42ce9e91c73f1b8a6d0873801cc319c4f921fde16a0d359871373723` | |
+| `src/ui/commandPalette/CommandPaletteTrigger.tsx` | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | verbatim | `ea5c91d` | `414b2165c6eac389f9797a4371f24e64171daf524c636262c1ca5b7f1c01b4f6` | |
+| `src/ui/commandPalette/commandPalette.css` | `src/ui/commandPalette/commandPalette.css` | verbatim | `ea5c91d` | `c4cc79edc7940ebaa46b4424c69756ea1033cf1f01101c2559f73c785983da98` | |
 | `src/ui/commands/Chord.tsx` | `src/ui/commands/Chord.tsx` | verbatim | `ea5c91d` | `4e74f7638162b047e17049c7b21c20900542365c11707aa892ca1695652b93c7` | |
 | `src/ui/commands/chord.css` | `src/ui/commands/chord.css` | verbatim | `ea5c91d` | `c94a08c100868e5877de06530839692722ba17c41cf6eb21580213fbce21020d` | |
 | `src/ui/commands/contextMenu.ts` | `src/ui/commands/contextMenu.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
@@ -133,6 +144,9 @@ rows.
 | `src/ui/menubar/menubar.css` | `src/ui/menubar/menubar.css` | verbatim | `ea5c91d` | `402568c9b9500b5442d2ca215b0deeb78efba6671f8e46f135fd6974e6e970e6` | |
 | `src/ui/platform/useWindowSize.ts` | `src/ui/platform/useWindowSize.ts` | verbatim | `ea5c91d` | `0d968743a68821e6aeac5cc7a2e3cef3943505b7be6b682134d7254833630f63` | |
 | `src/ui/platform/webgpu.ts` | `src/ui/platform/webgpu.ts` | verbatim | `ea5c91d` | `63b6d488de30d8d14099ca7ce40a2d74772d806a125d1dc54052a85b2fa8bef1` | |
+| `src/ui/preferences/PreferencesDialog.tsx` | `src/ui/preferences/PreferencesDialog.tsx` | adapt | `ea5c91d` | | Sections Theme, Checkerboard, Grid (Theme / Custom colour, opacity, swatch), Highlight current layer (opacity) and Autosave (DESIGN §3.3); no onion-skin or import sections |
+| `src/ui/preferences/hexColour.ts` | `src/ui/preferences/hexColour.ts` | verbatim | `ea5c91d` | `7114bc877518563f9db0091f1fa1cb7511e1bbcf5b855b1a58f8c3258fb2b1a4` | |
+| `src/ui/preferences/preferences.css` | `src/ui/preferences/preferences.css` | adapt | `ea5c91d` | | Adds `.preferences__swatch` and `.preferences__swatch-colour` for the grid colour preview; header comment cites DESIGN §9 |
 | `src/ui/primitives/Button.tsx` | `src/ui/primitives/Button.tsx` | verbatim | `ea5c91d` | `94c7181e08d9b0a8f073280f147998cd74bdd29e86d8979be4558db0e337d105` | |
 | `src/ui/primitives/ContextMenu.tsx` | `src/ui/primitives/ContextMenu.tsx` | verbatim | `ea5c91d` | `ba7a3d39cc4d379ad6157f5bd4074381e618cf2dd332d899be91bd01c7cee054` | |
 | `src/ui/primitives/Dialog.tsx` | `src/ui/primitives/Dialog.tsx` | verbatim | `ea5c91d` | `9fd508dca089ce0cf8a1af005c5eb616293df0a0d503a300929f2d29070348a1` | |
@@ -172,13 +186,16 @@ rows.
 | `src/ui/shell/regions/BottomPanel.tsx` | `src/ui/shell/regions/Timeline.tsx` | adapt | `ea5c91d` | | In the timeline's place: tabs Tilesets and Terrains (DESIGN §2), panels empty until TE-025 and TE-043 |
 | `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool options (TE-016) |
 | `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
-| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus only; map tabs (TE-031) and the command palette trigger (TE-008) are left out |
+| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus and the command palette trigger (TE-008); map tabs (TE-031) are left out |
 | `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the status fields (TE-014) |
 | `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
 | `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Empty placeholder until the viewport host (TE-013) |
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
+| `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
+| `src/ui/shortcuts/shortcuts.css` | `src/ui/shortcuts/shortcuts.css` | verbatim | `ea5c91d` | `4af0e022d12297df189fdb6ebb3283063b1538f538c497e75c3d69c641600a6d` | |
 | `src/ui/styles/base.css` | `src/ui/styles/base.css` | verbatim | `ea5c91d` | `cb79b6d9a9383a0d114a3453f2fe19471ae3f657472d0f6d7186553ef92c8d87` | |
 | `src/ui/styles/tokens.css` | `src/ui/styles/tokens.css` | verbatim | `ea5c91d` | `a8d0de7b7cefa647152a2a27811adfa1f8db544b9443201647ea132fc05b3917` | |
+| `src/ui/surfaces/AppSurfaces.tsx` | `src/ui/surfaces/AppSurfaces.tsx` | verbatim | `ea5c91d` | `7e3cb942466f81c3e0e1cb6fc899b98b589347294b3f00c26cb5ee28b63ba079` | |
 | `src/ui/theme/theme.ts` | `src/ui/theme/theme.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.theme` (SUITE §7) |
 | `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
 | `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |
@@ -201,6 +218,10 @@ rows.
 | `tests/e2e/te-007-menus.spec.ts` | `tests/e2e/se-007-menus.spec.ts` | adapt | `ea5c91d` | | DESIGN §5 menus and items checked in full; Hide Bottom Panel from the menu; no planned-item takeover or late-close cases |
 | `tests/e2e/te-007-support.ts` | `tests/e2e/se-007-support.ts` | adapt | `ea5c91d` | | One project per window: `rename` runs on the app's history, no `openSession`; `addViewportFocus`, `settleTimers` |
 | `tests/e2e/te-007-undo.spec.ts` | `tests/e2e/se-007-undo.spec.ts` | adapt | `ea5c91d` | | On the app's project; a transaction on a tile layer of a map |
+| `tests/e2e/te-008-palette.spec.ts` | `tests/e2e/se-064-command-palette.spec.ts` | adapt | `ea5c91d` | | This editor's commands (`file.newProject` first, Undo on the app's project); probes `te008.*`; no document or New Sprite cases |
+| `tests/e2e/te-008-preferences.spec.ts` | `tests/e2e/se-064-preferences.spec.ts` | adapt | `ea5c91d` | | This editor's sections (Theme, Checkerboard, Grid, Highlight current layer, Autosave) and the grid swatch; the view preferences of SPEC §3 added |
+| `tests/e2e/te-008-sheet.spec.ts` | `tests/e2e/se-064-shortcut-sheet.spec.ts` | adapt | `ea5c91d` | | DESIGN §5 menus; probes `te008.*`; Preferences stands in for the New Sprite dialog |
+| `tests/e2e/te-008-support.ts` | `tests/e2e/se-064-support.ts`, `se-008-support.ts` | adapt | `ea5c91d` | | This editor's keys (SUITE §7); `field`, `setNumber`, `dialogButton` from se-008-support; no `spyOnCommands`, themes or audit |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14 |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
@@ -211,6 +232,8 @@ rows.
 | `tests/unit/te-006-support.ts` | `tests/unit/se-004-support.ts` | adapt | `ea5c91d` | | Session with one map, one tile layer and one tileset; `paintRect` writes cells; allocators return `ArrayBuffer` |
 | `tests/unit/te-006-transaction.test.ts` | `tests/unit/se-004-transaction.test.ts` | adapt | `ea5c91d` | | Cell writes on a tile layer instead of pixels on a cel image: 12 bytes a changed cell, no clip mask or cel creation; invariant-breaking commit and `cellPatchCommand` cases added |
 | `tests/unit/te-007-resolve.test.ts` | `tests/unit/se-007-keymap.test.ts` | adapt | `ea5c91d` | | Contexts `markers` and `panel` of DESIGN §10.1; every † chord of DESIGN §10.3 in the text context; `PANEL_SELECTOR` |
+| `tests/unit/te-008-commands.test.ts` | `tests/unit/se-064-commands.test.ts`, `se-064-palette.test.ts`, `se-064-shortcut-sheet.test.ts` | adapt | `ea5c91d` | | DESIGN §10.3 chords checked on the registry (no key-table parser); `inPanel` and `markers`; the palette and sheet models over the app's registry only |
+| `tests/unit/te-008-preferences.test.ts` | `tests/unit/se-064-preferences.test.ts` | adapt | `ea5c91d` | | This editor's fields, ranges and defaults; corrupt and older records; the view preferences of SPEC §3 |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |
