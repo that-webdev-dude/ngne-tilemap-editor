@@ -1,0 +1,768 @@
+{
+  "gpu": "rtx-4060",
+  "adapter": {
+    "vendor": "nvidia",
+    "architecture": "lovelace",
+    "description": ""
+  },
+  "recorded": "2026-10-30T09:26:59.549Z",
+  "quick": false,
+  "machine": {
+    "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+    "os": "Windows 10.0.26200",
+    "chrome": "156.0.8078.74",
+    "powerPlan": "Balanced",
+    "onAC": "True",
+    "refreshHz": "144"
+  },
+  "results": {
+    "s1-dpr1": {
+      "spike": "S1",
+      "adapter": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "",
+        "description": ""
+      },
+      "dpr": 1.0000000149011612,
+      "width": 1920,
+      "height": 1080,
+      "levels": [
+        {
+          "target": 32768,
+          "zoom": 22.5,
+          "quads": {
+            "n": 721,
+            "median": 33712,
+            "p95": 34104,
+            "p99": 34104,
+            "max": 34104,
+            "mean": 33843.03
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 721,
+            "median": 3.6,
+            "p95": 4.5,
+            "p99": 5,
+            "max": 6,
+            "mean": 3.71
+          },
+          "emitMs": {
+            "n": 721,
+            "median": 2.4,
+            "p95": 3.3,
+            "p99": 3.6,
+            "max": 4.8,
+            "mean": 2.48
+          },
+          "renderMs": {
+            "n": 721,
+            "median": 1.2,
+            "p95": 1.4,
+            "p99": 1.5,
+            "max": 1.7,
+            "mean": 1.24
+          },
+          "intervalMs": {
+            "n": 721,
+            "median": 6.9,
+            "p95": 7.2,
+            "p99": 7.3,
+            "max": 7.5,
+            "mean": 6.94
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 65536,
+          "zoom": 15.91,
+          "quads": {
+            "n": 721,
+            "median": 67344,
+            "p95": 67344,
+            "p99": 67344,
+            "max": 67344,
+            "mean": 67017.51
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 721,
+            "median": 6.5,
+            "p95": 7,
+            "p99": 7.3,
+            "max": 8.9,
+            "mean": 6.53
+          },
+          "emitMs": {
+            "n": 721,
+            "median": 4.2,
+            "p95": 4.6,
+            "p99": 4.9,
+            "max": 5.6,
+            "mean": 4.21
+          },
+          "renderMs": {
+            "n": 721,
+            "median": 2.3,
+            "p95": 2.7,
+            "p99": 2.9,
+            "max": 3.3,
+            "mean": 2.32
+          },
+          "intervalMs": {
+            "n": 721,
+            "median": 6.9,
+            "p95": 7.1,
+            "p99": 7.1,
+            "max": 7.2,
+            "mean": 6.94
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 98304,
+          "zoom": 12.99,
+          "quads": {
+            "n": 570,
+            "median": 100128,
+            "p95": 101320,
+            "p99": 101320,
+            "max": 101320,
+            "mean": 100146.37
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 570,
+            "median": 8.5,
+            "p95": 9.1,
+            "p99": 9.5,
+            "max": 10.4,
+            "mean": 8.59
+          },
+          "emitMs": {
+            "n": 570,
+            "median": 6.3,
+            "p95": 6.8,
+            "p99": 7.1,
+            "max": 7.8,
+            "mean": 6.37
+          },
+          "renderMs": {
+            "n": 570,
+            "median": 2.2,
+            "p95": 2.5,
+            "p99": 2.7,
+            "max": 2.9,
+            "mean": 2.22
+          },
+          "intervalMs": {
+            "n": 570,
+            "median": 6.9,
+            "p95": 14,
+            "p99": 14.1,
+            "max": 14.3,
+            "mean": 8.8
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 131072,
+          "zoom": 11.25,
+          "quads": {
+            "n": 427,
+            "median": 133472,
+            "p95": 133472,
+            "p99": 133472,
+            "max": 133472,
+            "mean": 133212.12
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 427,
+            "median": 11.4,
+            "p95": 12.3,
+            "p99": 13.7,
+            "max": 17.1,
+            "mean": 11.51
+          },
+          "emitMs": {
+            "n": 427,
+            "median": 8.4,
+            "p95": 9,
+            "p99": 10.4,
+            "max": 13.2,
+            "mean": 8.51
+          },
+          "renderMs": {
+            "n": 427,
+            "median": 3,
+            "p95": 3.5,
+            "p99": 3.8,
+            "max": 6.3,
+            "mean": 3.01
+          },
+          "intervalMs": {
+            "n": 427,
+            "median": 13.9,
+            "p95": 14,
+            "p99": 14.1,
+            "max": 20.9,
+            "mean": 11.73
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 196608,
+          "zoom": 9.19,
+          "quads": {
+            "n": 294,
+            "median": 199920,
+            "p95": 199920,
+            "p99": 200872,
+            "max": 200872,
+            "mean": 199193.28
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 294,
+            "median": 16.7,
+            "p95": 17.9,
+            "p99": 18.6,
+            "max": 19,
+            "mean": 16.8
+          },
+          "emitMs": {
+            "n": 294,
+            "median": 12.3,
+            "p95": 13.2,
+            "p99": 13.9,
+            "max": 14.2,
+            "mean": 12.31
+          },
+          "renderMs": {
+            "n": 294,
+            "median": 4.5,
+            "p95": 5,
+            "p99": 5.2,
+            "max": 5.3,
+            "mean": 4.49
+          },
+          "intervalMs": {
+            "n": 294,
+            "median": 14,
+            "p95": 21,
+            "p99": 21,
+            "max": 21,
+            "mean": 17.05
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 262144,
+          "zoom": 7.95,
+          "quads": {
+            "n": 194,
+            "median": 265232,
+            "p95": 266328,
+            "p99": 266328,
+            "max": 266328,
+            "mean": 265120.87
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 194,
+            "median": 25.6,
+            "p95": 26.6,
+            "p99": 28.2,
+            "max": 28.3,
+            "mean": 25.56
+          },
+          "emitMs": {
+            "n": 194,
+            "median": 17.1,
+            "p95": 18,
+            "p99": 18.2,
+            "max": 19.2,
+            "mean": 17.07
+          },
+          "renderMs": {
+            "n": 194,
+            "median": 8.5,
+            "p95": 9.1,
+            "p99": 9.3,
+            "max": 10.4,
+            "mean": 8.49
+          },
+          "intervalMs": {
+            "n": 194,
+            "median": 27.7,
+            "p95": 27.9,
+            "p99": 34.7,
+            "max": 41.7,
+            "mean": 25.91
+          },
+          "dropped": 139,
+          "percent": 71.65
+        }
+      ]
+    },
+    "s1-dpr1.25": {
+      "spike": "S1",
+      "adapter": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "",
+        "description": ""
+      },
+      "dpr": 1.25,
+      "width": 2400,
+      "height": 1350,
+      "levels": [
+        {
+          "target": 32768,
+          "zoom": 28.13,
+          "quads": {
+            "n": 720,
+            "median": 33712,
+            "p95": 34104,
+            "p99": 34104,
+            "max": 34104,
+            "mean": 33843.21
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 720,
+            "median": 3.6,
+            "p95": 4.7,
+            "p99": 5.3,
+            "max": 6.5,
+            "mean": 3.76
+          },
+          "emitMs": {
+            "n": 720,
+            "median": 2.4,
+            "p95": 3.5,
+            "p99": 4.1,
+            "max": 5.3,
+            "mean": 2.51
+          },
+          "renderMs": {
+            "n": 720,
+            "median": 1.2,
+            "p95": 1.4,
+            "p99": 1.6,
+            "max": 1.9,
+            "mean": 1.25
+          },
+          "intervalMs": {
+            "n": 720,
+            "median": 6.9,
+            "p95": 7.2,
+            "p99": 7.3,
+            "max": 14.1,
+            "mean": 6.96
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 65536,
+          "zoom": 19.89,
+          "quads": {
+            "n": 716,
+            "median": 67344,
+            "p95": 67344,
+            "p99": 67344,
+            "max": 67344,
+            "mean": 67027.82
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 716,
+            "median": 6.7,
+            "p95": 7.2,
+            "p99": 7.7,
+            "max": 8.2,
+            "mean": 6.73
+          },
+          "emitMs": {
+            "n": 716,
+            "median": 4.3,
+            "p95": 4.6,
+            "p99": 4.9,
+            "max": 5.6,
+            "mean": 4.3
+          },
+          "renderMs": {
+            "n": 716,
+            "median": 2.4,
+            "p95": 2.8,
+            "p99": 3.3,
+            "max": 4.3,
+            "mean": 2.44
+          },
+          "intervalMs": {
+            "n": 716,
+            "median": 6.9,
+            "p95": 7.1,
+            "p99": 7.2,
+            "max": 20.7,
+            "mean": 6.99
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 98304,
+          "zoom": 16.24,
+          "quads": {
+            "n": 548,
+            "median": 100128,
+            "p95": 101320,
+            "p99": 101320,
+            "max": 101320,
+            "mean": 100141.09
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 548,
+            "median": 8.9,
+            "p95": 9.5,
+            "p99": 9.9,
+            "max": 10.1,
+            "mean": 8.94
+          },
+          "emitMs": {
+            "n": 548,
+            "median": 6.6,
+            "p95": 7.1,
+            "p99": 7.4,
+            "max": 7.9,
+            "mean": 6.63
+          },
+          "renderMs": {
+            "n": 548,
+            "median": 2.3,
+            "p95": 2.6,
+            "p99": 2.9,
+            "max": 3.6,
+            "mean": 2.31
+          },
+          "intervalMs": {
+            "n": 548,
+            "median": 7,
+            "p95": 14,
+            "p99": 14.1,
+            "max": 14.4,
+            "mean": 9.15
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 131072,
+          "zoom": 14.06,
+          "quads": {
+            "n": 416,
+            "median": 133472,
+            "p95": 133472,
+            "p99": 133472,
+            "max": 133472,
+            "mean": 133208.98
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 416,
+            "median": 11.8,
+            "p95": 12.6,
+            "p99": 13.1,
+            "max": 13.5,
+            "mean": 11.85
+          },
+          "emitMs": {
+            "n": 416,
+            "median": 8.7,
+            "p95": 9.4,
+            "p99": 9.7,
+            "max": 10.2,
+            "mean": 8.77
+          },
+          "renderMs": {
+            "n": 416,
+            "median": 3.1,
+            "p95": 3.5,
+            "p99": 3.7,
+            "max": 4,
+            "mean": 3.08
+          },
+          "intervalMs": {
+            "n": 416,
+            "median": 13.9,
+            "p95": 14,
+            "p99": 14.1,
+            "max": 14.2,
+            "mean": 12.05
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 196608,
+          "zoom": 11.48,
+          "quads": {
+            "n": 278,
+            "median": 198240,
+            "p95": 199920,
+            "p99": 199920,
+            "max": 199920,
+            "mean": 199077.35
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 278,
+            "median": 17.8,
+            "p95": 18.8,
+            "p99": 19.6,
+            "max": 20,
+            "mean": 17.79
+          },
+          "emitMs": {
+            "n": 278,
+            "median": 13.1,
+            "p95": 14.1,
+            "p99": 14.3,
+            "max": 14.6,
+            "mean": 13.1
+          },
+          "renderMs": {
+            "n": 278,
+            "median": 4.7,
+            "p95": 5.2,
+            "p99": 5.4,
+            "max": 5.4,
+            "mean": 4.69
+          },
+          "intervalMs": {
+            "n": 278,
+            "median": 20.7,
+            "p95": 21,
+            "p99": 21,
+            "max": 21,
+            "mean": 18.09
+          },
+          "dropped": 0,
+          "percent": 0
+        },
+        {
+          "target": 262144,
+          "zoom": 9.94,
+          "quads": {
+            "n": 189,
+            "median": 265232,
+            "p95": 266328,
+            "p99": 266328,
+            "max": 266328,
+            "mean": 265028.7
+          },
+          "drawCalls": 14,
+          "submitMs": {
+            "n": 189,
+            "median": 26.4,
+            "p95": 27.5,
+            "p99": 29,
+            "max": 29.3,
+            "mean": 26.36
+          },
+          "emitMs": {
+            "n": 189,
+            "median": 17.7,
+            "p95": 18.7,
+            "p99": 18.9,
+            "max": 19.1,
+            "mean": 17.59
+          },
+          "renderMs": {
+            "n": 189,
+            "median": 8.7,
+            "p95": 9.5,
+            "p99": 10.3,
+            "max": 11.7,
+            "mean": 8.76
+          },
+          "intervalMs": {
+            "n": 189,
+            "median": 27.8,
+            "p95": 27.9,
+            "p99": 28,
+            "max": 34.7,
+            "mean": 26.64
+          },
+          "dropped": 157,
+          "percent": 83.07
+        }
+      ]
+    },
+    "s2-dpr1": {
+      "spike": "S2",
+      "adapter": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "",
+        "description": ""
+      },
+      "dpr": 1.0000000149011612,
+      "width": 1920,
+      "height": 1080,
+      "texelsPerTile": 8,
+      "chunkTexels": 256,
+      "perLayer": {
+        "sets": [
+          "l0",
+          "l1",
+          "l2",
+          "l3",
+          "l4",
+          "l5",
+          "l6",
+          "l7"
+        ],
+        "chunks": 512,
+        "compositeWallMs": 1493,
+        "compositeAndUploadMs": 1496,
+        "sliceMs": {
+          "n": 512,
+          "median": 0.7,
+          "p95": 0.8,
+          "p99": 1,
+          "max": 2,
+          "mean": 0.69
+        },
+        "gpuMB": 128,
+        "retainedCpuMB": 128
+      },
+      "flattened": {
+        "sets": [
+          "flat",
+          "l7"
+        ],
+        "chunks": 128,
+        "compositeWallMs": 634,
+        "compositeAndUploadMs": 637,
+        "sliceMs": {
+          "n": 128,
+          "median": 0.9,
+          "p95": 5,
+          "p99": 5.7,
+          "max": 6.1,
+          "mean": 2.73
+        },
+        "gpuMB": 32,
+        "retainedCpuMB": 32
+      },
+      "paint": {
+        "singleCellPatchMs": {
+          "n": 200,
+          "median": 3.6,
+          "p95": 4.5,
+          "p99": 5,
+          "max": 8.9,
+          "mean": 3.67
+        },
+        "stamp16PatchMs": {
+          "n": 102,
+          "median": 9.5,
+          "p95": 13.1,
+          "p99": 13.6,
+          "max": 13.8,
+          "mean": 9.88
+        },
+        "frameSubmitMs": {
+          "n": 400,
+          "median": 0.3,
+          "p95": 0.9,
+          "p99": 1.1,
+          "max": 1.7,
+          "mean": 0.42
+        },
+        "maxLiveCells": 256
+      },
+      "recomposite": {
+        "wallMs": 351,
+        "sliceMs": {
+          "n": 128,
+          "median": 1,
+          "p95": 5,
+          "p99": 5.1,
+          "max": 5.5,
+          "mean": 2.7
+        }
+      }
+    },
+    "s4-1920x1080": {
+      "spike": "S4",
+      "adapter": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "",
+        "description": ""
+      },
+      "logical": "1920x1080",
+      "scale": 1,
+      "cssScale": 1,
+      "renderMs": {
+        "n": 1289,
+        "median": 7.5,
+        "p95": 8.2,
+        "p99": 8.6,
+        "max": 9.2,
+        "mean": 7.54
+      },
+      "frameMs": {
+        "n": 1289,
+        "median": 7.5,
+        "p95": 8.2,
+        "p99": 8.6,
+        "max": 9.2,
+        "mean": 7.55
+      },
+      "sprites": 66871,
+      "drawCalls": 15
+    },
+    "s4-480x270x3": {
+      "spike": "S4",
+      "adapter": {
+        "vendor": "nvidia",
+        "architecture": "lovelace",
+        "device": "",
+        "description": ""
+      },
+      "logical": "480x270",
+      "scale": 1,
+      "cssScale": 3,
+      "renderMs": {
+        "n": 1441,
+        "median": 1.8,
+        "p95": 3.7,
+        "p99": 4.4,
+        "max": 5,
+        "mean": 1.98
+      },
+      "frameMs": {
+        "n": 1441,
+        "median": 1.8,
+        "p95": 3.7,
+        "p99": 4.4,
+        "max": 5,
+        "mean": 1.99
+      },
+      "sprites": 4664,
+      "drawCalls": 15
+    }
+  }
+}
