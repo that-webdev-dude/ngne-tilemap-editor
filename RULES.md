@@ -55,3 +55,8 @@ Binding for every implementer (human or agent). Docs index: [docs/README.md](doc
 13. **Report at the end of a step:** files added and changed; each acceptance item met (test
     or measurement) or not met (reason); anything done differently from the docs and why;
     decisions taken under rule 1; measurements left for reference hardware.
+14. **Review findings are candidates until verified.** Before proposing a fix, check each one:
+    reachable from a real entry point today, not behaviour the docs or rule 1 settle, and
+    re-checked by an independent reviewer given the code, not the verdict. Report a verdict
+    with evidence (file:line, doc section, test or measurement) per finding; fix only what the
+    owner picks, starting from a failing test or a measurement. False alarms get no change.
