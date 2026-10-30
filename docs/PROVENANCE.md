@@ -22,6 +22,13 @@ rows.
 | `src/app/dialogs/dialogRequests.ts` | `src/app/dialogs/dialogRequests.ts` | verbatim | `ea5c91d` | `514a85c12e26dc3c93a169ac55c68f75b64b15ae2268b9c76127d7eeec67c781` | |
 | `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
+| `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
+| `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
+| `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
+| `src/core/history/errors.ts` | `src/core/history/errors.ts` | adapt | `ea5c91d` | | Message says history memory, not pixel memory |
+| `src/core/history/history.ts` | `src/core/history/history.ts` | adapt | `ea5c91d` | | One history per project: `markSaved` and `dirty` (SPEC §3), `undoMapId`/`redoMapId`, memory limit and one warning per crossing (SPEC §2.2), a `verify` option that runs `assertInvariants` in development and tests and reverses a failing step; no cel limits or ID generator |
+| `src/core/history/index.ts` | `src/core/history/index.ts` | adapt | `ea5c91d` | | Exports of this editor's history: cell patch, `Touched`, memory warning listener, verifier; no chained command or pixel patch |
+| `src/core/history/transaction.ts` | `src/core/history/transaction.ts` | adapt | `ea5c91d` | | Target is a tile layer of a map; `begin` snapshots nothing, `set` records `(index, before, after)` on a cell's first write, `commit` stores 12 bytes a cell through `cellPatchCommand`; no clip mask, no cel creation |
 | `src/core/sprite/animation/expandTag.ts` | `src/core/animation/expandTag.ts` | verbatim | `ea5c91d` | `b72b0e96d9ed95b79d090f436e7b070752fb28438f162fcbccda5ca84cdadf0b` | |
 | `src/core/sprite/animation/index.ts` | `src/core/animation/index.ts` | verbatim | `ea5c91d` | `4f38e8b4add97270be649f06776753a8fa0d2d01fee8f27bfdee2f9bbde93897` | |
 | `src/core/sprite/animation/playbackClock.ts` | `src/core/animation/playbackClock.ts` | verbatim | `ea5c91d` | `b2d057b570c42f31d91f6cffb436f2287904224ad07eaaedaee7e8959cf30d9b` | |
@@ -163,6 +170,9 @@ rows.
 | `tests/unit/te-001-layers.test.ts` | `tests/unit/se-001-lint-boundaries.test.ts` | adapt | `ea5c91d` | | RULES 4 cases; the same code passes in `src/engine` |
 | `tests/unit/te-002-fixtures/golden-v1.ngsprite` | `tests/unit/se-040-fixtures/golden-v1.ngsprite` | verbatim | `ea5c91d` | `9e1e15076393d05f99322dfdd866133d191fe6e0cca3cdefd0b710b55ee05044` | |
 | `tests/unit/te-003-tokens.test.ts` | `tests/unit/se-006-tokens.test.ts` | adapt | `ea5c91d` | | Colour table of `se-design` §3.1 written out (DESIGN §1 inherits it unrepeated); SUITE §2 dark values |
+| `tests/unit/te-006-history.test.ts` | `tests/unit/se-004-history.test.ts` | adapt | `ea5c91d` | | Project session and cell patches instead of a document and pixel patches; map of each entry, verifier, composite and `mergeTouched` cases added |
+| `tests/unit/te-006-support.ts` | `tests/unit/se-004-support.ts` | adapt | `ea5c91d` | | Session with one map, one tile layer and one tileset; `paintRect` writes cells; allocators return `ArrayBuffer` |
+| `tests/unit/te-006-transaction.test.ts` | `tests/unit/se-004-transaction.test.ts` | adapt | `ea5c91d` | | Cell writes on a tile layer instead of pixels on a cel image: 12 bytes a changed cell, no clip mask or cel creation; invariant-breaking commit and `cellPatchCommand` cases added |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |
