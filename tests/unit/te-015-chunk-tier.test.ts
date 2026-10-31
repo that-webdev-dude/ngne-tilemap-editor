@@ -798,6 +798,48 @@ describe("chunk tier review follow-ups", () => {
         expect(tier.ready).toBe(true);
         expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
     });
+
+    it("no map shown releases every chunk; the map shown again is planned and built anew", async () => {
+        const project = filledProject(128, 8);
+        const { tier, renderer, map, settleAll } = setUp(project);
+        await settleAll();
+        expect(renderer.textures.size).toBe(16);
+        tier.clear();
+        expect(renderer.textures.size).toBe(0);
+        expect(tier.stats.chunks).toBe(0);
+        expect(tier.stats.bytes).toBe(0);
+        expect(tier.ready).toBe(false);
+        // A command while no map is shown changes nothing.
+        tier.noteTouched({
+            mapId: map.id,
+            layerIds: [map.layers[0]!.id],
+            cellRects: [{ x: 0, y: 0, width: 1, height: 1 }],
+            tilesetIds: [],
+            structure: false,
+        });
+        await settleAll();
+        expect(renderer.textures.size).toBe(0);
+        tier.sync(project, map, { width: 400, height: 300 });
+        await settleAll();
+        expect(tier.ready).toBe(true);
+        expect(renderer.textures.size).toBe(16);
+        expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
+    });
+
+    it("no map shown during a build leaves no texture once the work under way settles", async () => {
+        const project = filledProject(128, 8);
+        const { tier, renderer, slices, settleAll } = setUp(project);
+        await flush();
+        slices.jobs.shift()!();
+        await flush();
+        slices.jobs.shift()!();
+        expect(renderer.updates.length).toBe(1);
+        tier.clear();
+        await settleAll();
+        expect(renderer.textures.size).toBe(0);
+        expect(tier.stats.chunks).toBe(0);
+        expect(tier.stats.pending).toBe(0);
+    });
 });
 
 function changesOf(tier: ChunkTier) {

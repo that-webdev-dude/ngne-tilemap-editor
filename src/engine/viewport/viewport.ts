@@ -307,6 +307,7 @@ export class Viewport {
             }
             stats.tileQuads = counts.tileQuads;
         } else {
+            this.#chunks.clear();
             this.#frame.reset();
             this.#frame.scene(this.#camera, 1);
         }

@@ -322,6 +322,15 @@ export class ChunkTier {
         this.#plan(project, map, plans, signature, size);
     }
 
+    /** No map is shown (the last one closed): every chunk is released (ENGINE §3, map close). */
+    clear(): void {
+        if (this.#disposed || this.#map === null) return;
+        this.#releaseAll();
+        this.#project = null;
+        this.#map = null;
+        this.#compositor = null;
+    }
+
     /**
      * A command changed the document (`Command.touched`, SPEC §3): the chunks under changed
      * cells are patched, a changed tileset rebuilds every chunk, a structural change plans anew.
