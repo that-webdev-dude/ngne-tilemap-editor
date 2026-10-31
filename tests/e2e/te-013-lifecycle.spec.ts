@@ -1,5 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
+import { collectErrors } from "./te-003-support";
 import { installDeviceToolkit } from "./te-013-devices";
 import {
     canvasSizes,
@@ -163,11 +164,7 @@ test("a tileset texture is released when the last open map using it closes", asy
 test("a window too small to show the shell leaves the renderer alone and it draws again after", async ({
     page,
 }) => {
-    const errors: string[] = [];
-    page.on("console", (message) => {
-        if (message.type() === "error") errors.push(message.text());
-    });
-    page.on("pageerror", (error) => errors.push(error.message));
+    const errors = collectErrors(page);
     await openEditor(page);
     const geometry = await loadScene(page, VIEW);
     const renderersBefore = await renderers(page);
