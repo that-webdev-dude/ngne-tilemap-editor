@@ -1,0 +1,29 @@
+{
+    "id": "te-015-initial-build-task",
+    "ticket": "TE-015",
+    "measurement": "Initial chunk build of the reference map after it opens, longest main-thread task; Intel UHD, window 1920 × 1080, DPR 1",
+    "statistic": "longest gap of a message loop from the first frame of the map at 100% to the tier ready",
+    "budgetMs": 16,
+    "resultMs": 33.900000005960464,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "canvas": [
+            1612,
+            784
+        ],
+        "texelsPerCell": 8,
+        "chunks": 128,
+        "chunkBuildMs": 666.6000000089407,
+        "maxSliceMs": 9.900000005960464,
+        "totalMs": 665.5999999940395
+    },
+    "pass": false,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:27:40.477Z"
+}

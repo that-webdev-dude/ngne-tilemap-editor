@@ -1,0 +1,29 @@
+{
+    "id": "te-015-memory",
+    "ticket": "TE-015",
+    "measurement": "Chunk-tier GPU memory of the reference map in MB; Intel UHD, window 1920 × 1080, DPR 1",
+    "statistic": "chunk textures × (32 T)² × 4 bytes",
+    "unit": "count",
+    "budgetMs": 64,
+    "resultMs": 32,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "canvas": [
+            1612,
+            784
+        ],
+        "texelsPerCell": 8,
+        "chunks": 128,
+        "chunkBuildMs": 666.6000000089407,
+        "maxSliceMs": 9.900000005960464
+    },
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:27:40.478Z"
+}

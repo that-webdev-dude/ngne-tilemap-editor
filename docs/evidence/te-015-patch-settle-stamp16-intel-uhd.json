@@ -1,0 +1,23 @@
+{
+    "id": "te-015-patch-settle-stamp16",
+    "ticket": "TE-015",
+    "measurement": "Chunk patch settled after painting a 16 × 16 stamp at overview, command to patch settled; Intel UHD, window 1920 × 1080, DPR 1",
+    "statistic": "p95 of 100 paints",
+    "budgetMs": 100,
+    "resultMs": 34.1000000089407,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "medianMs": 25.900000005960464,
+        "maxMs": 48.70000000298023,
+        "frameP95Ms": 15.400000005960464
+    },
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:27:45.940Z"
+}

@@ -1,0 +1,23 @@
+{
+    "id": "te-015-patch-settle-cell",
+    "ticket": "TE-015",
+    "measurement": "Chunk patch settled after painting one cell at overview, command to patch settled; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "p95 of 100 paints",
+    "budgetMs": 100,
+    "resultMs": 21,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 17.200000002980232,
+        "maxMs": 31.5,
+        "frameP95Ms": 14.700000002980232
+    },
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:28:59.764Z"
+}

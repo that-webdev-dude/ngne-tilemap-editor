@@ -142,13 +142,17 @@ tickets that build the feature.
 | Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | 0% / 0% |
 | Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | — |
 | Paint at overview: painted cells visible | next frame | by design (live quads); frame submit p95 1.6 / 0.9 ms |
-| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 72 / 4.5 ms (16×16 stamp: 76 / 13 ms) |
-| Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | 32 MB |
-| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 336 / 351 ms, max task 5.5 ms |
-| Initial overview build after a map opens (background) | no task > 16 ms | 0.83 / 0.64 s total, max task 6.1 ms |
+| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | TE-015: 19.9 / 21.0 ms (16×16 stamp: 34.1 / 25.5 ms) |
+| Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | TE-015: 32 / 32 MB (T = 8, 128 chunks) |
+| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | TE-015: 456 / 356 ms, longest build slice 4.0 / 3.9 ms; the live-tier frame drawn meanwhile 126 / 116 ms (§4) |
+| Initial overview build after a map opens (background) | no task > 16 ms | TE-015: 0.67 / 0.57 s total, longest task 33.9 / 53.2 ms, **over budget** (NGNE's first `updateTexture` readback; build slices ≤ 9.9 / 10.4 ms) |
 | Tab switch to an open map: first frame submitted | ≤ 100 ms | — |
 | Idle editor: frames submitted per second | 0 | — |
 | Cold load to interactive (production build, local) | ≤ 2 s | — |
+
+TE-015 rows: 2026-10-31, Chrome 156.0.8078.80, i7-12650H, Balanced power plan with the Best
+performance power mode, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784). Raw data: `te-015-*-intel-uhd.json` and
+`te-015-*-rtx-4060.json` in [evidence/](evidence/).
 
 ### Game runtime budget
 
@@ -186,6 +190,7 @@ reads this table; costs are filled in from spike and ticket measurements.
 | Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime |
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor |
+| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU: 33.9 / 53.2 ms (TE-015, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles | editor, runtime |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor |

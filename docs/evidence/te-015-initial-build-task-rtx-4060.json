@@ -1,0 +1,29 @@
+{
+    "id": "te-015-initial-build-task",
+    "ticket": "TE-015",
+    "measurement": "Initial chunk build of the reference map after it opens, longest main-thread task; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "longest gap of a message loop from the first frame of the map at 100% to the tier ready",
+    "budgetMs": 16,
+    "resultMs": 53.19999998807907,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "canvas": [
+            1612,
+            784
+        ],
+        "texelsPerCell": 8,
+        "chunks": 128,
+        "chunkBuildMs": 571.4000000059605,
+        "maxSliceMs": 10.400000005960464,
+        "totalMs": 570.7000000029802
+    },
+    "pass": false,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:28:57.268Z"
+}

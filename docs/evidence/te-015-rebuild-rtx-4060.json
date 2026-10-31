@@ -1,0 +1,31 @@
+{
+    "id": "te-015-rebuild",
+    "ticket": "TE-015",
+    "measurement": "Overview rebuild after a layer opacity change of the reference map; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "one rebuild, change to tier ready",
+    "budgetMs": 500,
+    "resultMs": 355.90000000596046,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "canvas": [
+            1612,
+            784
+        ],
+        "texelsPerCell": 8,
+        "chunks": 128,
+        "chunkBuildMs": 353.3999999910593,
+        "maxSliceMs": 3.9000000059604645,
+        "maxGapMs": 116.59999999403954,
+        "liveFrames": 1,
+        "longestLiveFrameMs": 115.59999999403954
+    },
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:28:57.632Z"
+}

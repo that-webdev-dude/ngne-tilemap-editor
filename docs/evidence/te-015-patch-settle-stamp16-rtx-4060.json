@@ -1,0 +1,23 @@
+{
+    "id": "te-015-patch-settle-stamp16",
+    "ticket": "TE-015",
+    "measurement": "Chunk patch settled after painting a 16 × 16 stamp at overview, command to patch settled; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "p95 of 100 paints",
+    "budgetMs": 100,
+    "resultMs": 25.5,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 20.600000008940697,
+        "maxMs": 26.700000002980232,
+        "frameP95Ms": 15.299999997019768
+    },
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-10-31T20:29:02.215Z"
+}
