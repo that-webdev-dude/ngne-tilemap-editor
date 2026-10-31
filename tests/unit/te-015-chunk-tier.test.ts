@@ -1,3 +1,4 @@
+import type { Camera, Frame } from "@ngne/core";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { CHUNK_SIZE, CellStore, cellValue } from "../../src/core/cells";
@@ -5,6 +6,8 @@ import type { CellRect, Orientation } from "../../src/core/cells";
 import { compositeMap, cellScale } from "../../src/core/compositor";
 import type { PixelBuffer, Project, ProjectMap, TileLayer } from "../../src/core/model";
 import { createTileLayer } from "../../src/core/model";
+import { packTileset } from "../../src/core/pack";
+import type { SpriteLike } from "../../src/core/runtime/emit";
 import {
     CHUNK_MEMORY_LIMIT,
     LIVE_LIMIT,
@@ -19,6 +22,12 @@ import {
 import type { Tier } from "../../src/engine/viewport/chunkPlan";
 import { ChunkTier, chunkTextureId } from "../../src/engine/viewport/chunkTier";
 import type { ChunkRegion, ChunkTarget } from "../../src/engine/viewport/chunkTier";
+import { clipQuad } from "../../src/engine/viewport/clipQuad";
+import type { DeviceRect } from "../../src/engine/viewport/clipQuad";
+import { toDevice } from "../../src/engine/viewport/geometry";
+import { EmitterCache, sceneCamera } from "../../src/engine/viewport/liveTier";
+import type { ViewportScene } from "../../src/engine/viewport/liveTier";
+import { tilesetTextureId } from "../../src/engine/viewport/textures";
 import { createReferenceProject } from "../support/referenceProject";
 import { mapOf, projectOf, tilesetOf } from "./te-012-support";
 
@@ -940,5 +949,208 @@ describe("compositor fast path", () => {
         const under = compositeMap(project, map, { ...request, layerIds: new Set([6]) });
         const at = (16 * 64 + 16) * 4;
         expect([...holed.data.subarray(at, at + 4)]).toEqual([...under.data.subarray(at, at + 4)]);
+    });
+});
+
+/** The axis-aligned box a quad covers on screen, as NGNE places its corners. */
+function quadBox(s: SpriteLike): DeviceRect {
+    const c = Math.cos(s.rotation);
+    const n = Math.sin(s.rotation);
+    const ix = c * s.width;
+    const iy = n * s.width;
+    const jx = -n * s.height;
+    const jy = c * s.height;
+    const ox = s.x - (ix + jx) / 2;
+    const oy = s.y - (iy + jy) / 2;
+    const xs = [ox, ox + ix, ox + jx, ox + ix + jx];
+    const ys = [oy, oy + iy, oy + jy, oy + iy + jy];
+    return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
+}
+
+/** Where a device point falls in a quad: its texture coordinates, or null outside it. */
+function sampleQuad(s: SpriteLike, px: number, py: number): { u: number; v: number } | null {
+    const c = Math.cos(s.rotation);
+    const n = Math.sin(s.rotation);
+    const ix = c * s.width;
+    const iy = n * s.width;
+    const jx = -n * s.height;
+    const jy = c * s.height;
+    const ox = s.x - (ix + jx) / 2;
+    const oy = s.y - (iy + jy) / 2;
+    const det = ix * jy - iy * jx;
+    const a = ((px - ox) * jy - (py - oy) * jx) / det;
+    const b = ((py - oy) * ix - (px - ox) * iy) / det;
+    if (a < 0 || a > 1 || b < 0 || b > 1) return null;
+    return { u: s.u + a * s.uw, v: s.v + b * s.vh };
+}
+
+describe("live quads over a patch (ENGINE §4)", () => {
+    const sprite = fc.record({
+        x: fc.integer({ min: -40, max: 40 }),
+        y: fc.integer({ min: -40, max: 40 }),
+        width: fc.integer({ min: 1, max: 30 }).chain((w) => fc.constantFrom(w, -w)),
+        height: fc.integer({ min: 1, max: 30 }).chain((h) => fc.constantFrom(h, -h)),
+        rotation: fc.constantFrom(0, Math.PI / 2),
+        u: fc.double({ min: 0, max: 0.5, noNaN: true }),
+        v: fc.double({ min: 0, max: 0.5, noNaN: true }),
+        uw: fc.double({ min: 0.01, max: 0.5, noNaN: true }),
+        vh: fc.double({ min: 0.01, max: 0.5, noNaN: true }),
+    });
+    const rect = fc
+        .record({
+            x: fc.integer({ min: -50, max: 50 }),
+            y: fc.integer({ min: -50, max: 50 }),
+            w: fc.integer({ min: 1, max: 60 }),
+            h: fc.integer({ min: 1, max: 60 }),
+        })
+        .map(({ x, y, w, h }) => ({ x0: x / 2, y0: y / 2, x1: (x + w) / 2, y1: (y + h) / 2 }));
+
+    it("a cut quad covers what the quad covers inside the rectangle, with the same texels", () => {
+        fc.assert(
+            fc.property(sprite, rect, (fields, clip) => {
+                const s: SpriteLike = {
+                    ...fields,
+                    texture: "t",
+                    alpha: 0.5,
+                    color: 0xffffff,
+                    layer: 3,
+                    depth: 7,
+                };
+                const out = { ...s };
+                const inside = clipQuad(s, clip, out);
+                const box = quadBox(s);
+                const overlapX = Math.min(box.x1, clip.x1) - Math.max(box.x0, clip.x0);
+                const overlapY = Math.min(box.y1, clip.y1) - Math.max(box.y0, clip.y0);
+                // Edges that only touch (cos(π/2) is not quite 0) may count either way.
+                if (overlapX > 1e-9 && overlapY > 1e-9) expect(inside).toBe(true);
+                if (overlapX < -1e-9 || overlapY < -1e-9) expect(inside).toBe(false);
+                if (!inside) return;
+                expect(out).toMatchObject({ texture: "t", alpha: 0.5, layer: 3, depth: 7 });
+                const cut = quadBox(out);
+                expect(cut.x0).toBeGreaterThanOrEqual(clip.x0 - 1e-9);
+                expect(cut.y0).toBeGreaterThanOrEqual(clip.y0 - 1e-9);
+                expect(cut.x1).toBeLessThanOrEqual(clip.x1 + 1e-9);
+                expect(cut.y1).toBeLessThanOrEqual(clip.y1 + 1e-9);
+                // Points on an eighth-pixel grid, off every edge: inside both, the same texel.
+                for (let py = Math.floor(box.y0) - 1; py <= box.y1 + 1; py += 0.25) {
+                    for (let px = Math.floor(box.x0) - 1; px <= box.x1 + 1; px += 0.25) {
+                        const qx = px + 0.125;
+                        const qy = py + 0.125;
+                        const within = qx > clip.x0 && qx < clip.x1 && qy > clip.y0 && qy < clip.y1;
+                        const whole = sampleQuad(s, qx, qy);
+                        const part = sampleQuad(out, qx, qy);
+                        if (!within) {
+                            expect(part).toBeNull();
+                            continue;
+                        }
+                        expect(part === null).toBe(whole === null);
+                        if (whole && part) {
+                            expect(part.u).toBeCloseTo(whole.u, 9);
+                            expect(part.v).toBeCloseTo(whole.v, 9);
+                        }
+                    }
+                }
+            }),
+            { numRuns: 300 },
+        );
+    });
+
+    it("a quad inside the rectangle is drawn as it is", () => {
+        const s: SpriteLike = {
+            x: 10.3,
+            y: 7.1,
+            width: -4,
+            height: 6,
+            rotation: Math.PI / 2,
+            texture: "t",
+            u: 0.1,
+            v: 0.2,
+            uw: 0.3,
+            vh: 0.4,
+            alpha: 1,
+            color: 0xffffff,
+            layer: 1,
+            depth: 2,
+        };
+        const out = { ...s, x: 0 };
+        expect(clipQuad(s, { x0: 0, y0: 0, x1: 20, y1: 20 }, out)).toBe(true);
+        expect(out).toEqual(s);
+    });
+
+    it("live quads over a pending patch stay inside it: offset tiles and a lower set of its own parallax", async () => {
+        const project = filledProject(128, 8);
+        const tileset = project.tilesets[0]!;
+        tileset.offsetX = 3;
+        tileset.offsetY = -1;
+        (project.maps[0]!.layers[0] as TileLayer).parallaxX = 0.5;
+        const { tier, renderer, map, settleAll } = setUp(project);
+        await settleAll();
+        expect(tier.stats.sets).toBe(2);
+        const layer = map.layers[7] as TileLayer;
+        layer.cells.set(40, 40, cellValue(1, 2, 3));
+        tier.noteTouched({
+            mapId: map.id,
+            layerIds: [layer.id],
+            cellRects: [{ x: 40, y: 40, width: 1, height: 1 }],
+            tilesetIds: [],
+            structure: false,
+        });
+        const live = tier.liveCells();
+        expect(live.length).toBeGreaterThan(0);
+        const scene: ViewportScene = {
+            project,
+            map,
+            view: { centreX: 40 * map.tileWidth, centreY: 40 * map.tileHeight, zoom: 3 },
+            dpr: 1,
+            checker: { a: 0x3a3a3a, b: 0x4a4a4a, size: 8 },
+        };
+        const size = { width: 400, height: 300 };
+        const camera = sceneCamera(scene);
+        const emitter = new EmitterCache().emitter(
+            project.tilesets.map((t) => ({
+                tileset: t,
+                texture: tilesetTextureId(t.id),
+                uvTable: packTileset(t).uvTable,
+                version: 1,
+            })),
+        );
+        const sprites: SpriteLike[] = [];
+        const frame = {
+            sprite: (s: SpriteLike) => sprites.push({ ...s }),
+            rect: () => undefined,
+        };
+        const counts = { tileQuads: 0, checkerQuads: 0 };
+        tier.draw(
+            frame as unknown as Frame,
+            { scene, size, camera: {} as Camera, emitter, checkerReady: null },
+            camera,
+            counts,
+            0x202020,
+        );
+        // The top set is not shifted: its patch areas are its cells, in device pixels.
+        const areas = live.map(({ set, cells }) => {
+            expect(set).toBe(1);
+            const at = toDevice(camera, size, cells.x * map.tileWidth, cells.y * map.tileHeight);
+            return {
+                x0: at.x,
+                y0: at.y,
+                x1: at.x + cells.width * map.tileWidth * camera.scale,
+                y1: at.y + cells.height * map.tileHeight * camera.scale,
+            };
+        });
+        const quads = sprites.filter((s) => s.texture === tilesetTextureId(tileset.id));
+        expect(quads.length).toBeGreaterThan(0);
+        expect(renderer.textures.size).toBeGreaterThan(0);
+        for (const quad of quads) {
+            const box = quadBox(quad);
+            const inside = areas.some(
+                (area) =>
+                    box.x0 >= area.x0 - 1e-6 &&
+                    box.y0 >= area.y0 - 1e-6 &&
+                    box.x1 <= area.x1 + 1e-6 &&
+                    box.y1 <= area.y1 + 1e-6,
+            );
+            expect(inside, JSON.stringify(box)).toBe(true);
+        }
     });
 });

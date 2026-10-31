@@ -75,6 +75,20 @@ test("a cell changed by a command at overview shows in the next frame and in the
     expect(settled.mismatches).toBe(0);
 });
 
+test("live quads of tiles with an offset stay inside the patch, off the chunk's pixels around it", async ({
+    page,
+}) => {
+    const geometry = await open(page);
+    // A cell of the rows whose tiles have an offset: around the patch, the base layer's tiles
+    // reach past it, over the half-opacity layer's pixels the chunk holds there.
+    const next = await paint(page, geometry, 100, 5);
+    expect(next.live).toBe(1);
+    expect(next.comparison.patched).toBeGreaterThan(0);
+    expect(next.comparison.tileQuads).toBeGreaterThan(0);
+    expect(next.comparison.first).toEqual([]);
+    expect(next.comparison.mismatches).toBe(0);
+});
+
 test("undo at overview shows the old cell in the next frame and in the chunk", async ({ page }) => {
     const geometry = await open(page);
     await paint(page, geometry, 40, 90);

@@ -438,7 +438,11 @@ export class ChunkTier {
                 drawUnderTiles(frame, inputs, camera, shown, counts, { ...place, workspace });
                 for (const below of this.#sets) {
                     for (const layer of below.layers) {
-                        emitLiveLayer(frame, inputs, camera, layer, shown, { depth, counts });
+                        emitLiveLayer(frame, inputs, camera, layer, shown, {
+                            depth,
+                            counts,
+                            clip: true,
+                        });
                     }
                     if (below === set) break;
                 }

@@ -2,12 +2,14 @@ import type { Camera, Frame } from "@ngne/core";
 import type { GroupLayer, MapView, Project, ProjectMap, TileLayer } from "../../core/model";
 import { effectiveValues, findLayer, walkLayers } from "../../core/model";
 import { QuadEmitter } from "../../core/runtime/emit";
-import type { EmitTileset } from "../../core/runtime/emit";
+import type { EmitTileset, SpriteLike } from "../../core/runtime/emit";
 import { checkerBlockSize, checkerMean, checkerSpec, type ViewportChecker } from "./checker";
 import { deviceScale, intersect, layerShift, toDevice, visibleRect } from "./geometry";
 import type { Camera2D, DeviceSize, MapRect } from "./geometry";
 import { CHECKER_TEXTURE_ID } from "./textures";
 import type { ReadyTileset } from "./textures";
+import { clipQuad } from "./clipQuad";
+import type { DeviceRect } from "./clipQuad";
 
 // The live tier (ENGINE §4): one quad per visible cell, layer by layer, grouped by tileset, one
 // depth per layer, so the frame arrives already ordered. This file builds a `Frame`; the
@@ -202,7 +204,8 @@ function fillRect(
 /**
  * Emits the quads of one tile layer whose tiles overlap `area`, a rectangle in map pixels
  * (the visible part of the map, or cells to draw over a chunk), at the layer's effective
- * opacity, parallax and offset.
+ * opacity, parallax and offset. With `clip`, each quad is cut to `area`: over a chunk, a tile
+ * that reaches past the area would draw again what the chunk holds around it.
  */
 export function emitLiveLayer(
     frame: Frame,
@@ -210,7 +213,13 @@ export function emitLiveLayer(
     camera: Camera2D,
     layer: TileLayer,
     area: MapRect,
-    at: { depth: number; counts: LiveCounts; ancestors?: readonly GroupLayer[]; layer?: number },
+    at: {
+        depth: number;
+        counts: LiveCounts;
+        ancestors?: readonly GroupLayer[];
+        layer?: number;
+        clip?: boolean;
+    },
 ): void {
     const { map } = inputs.scene;
     const entry = at.ancestors ? { layer, ancestors: at.ancestors } : findLayer(map, layer.id);
@@ -222,9 +231,26 @@ export function emitLiveLayer(
     const visible = visibleRect(camera, inputs.size);
     const shift = layerShift(map, camera, values);
     const { counts } = at;
+    let clip: DeviceRect | null = null;
+    if (at.clip) {
+        const from = toDevice(camera, inputs.size, area.x, area.y);
+        clip = {
+            x0: from.x,
+            y0: from.y,
+            x1: from.x + area.width * scale,
+            y1: from.y + area.height * scale,
+        };
+    }
+    const cut: SpriteLike = { ...inputs.emitter.sprite };
     const sink = {
-        sprite(s: Parameters<Frame["sprite"]>[0]): void {
-            frame.sprite(s);
+        sprite(s: SpriteLike): void {
+            if (clip === null) {
+                frame.sprite(s);
+            } else if (clipQuad(s, clip, cut)) {
+                frame.sprite(cut);
+            } else {
+                return;
+            }
             counts.tileQuads += 1;
         },
     };
