@@ -65,6 +65,59 @@ const spriteSubtree = [0, 1, 2, 3, 4, 5, 6, 7].map((depth) => ({
     },
 }));
 
+// src/app/worker imports only src/core and its own folder (SPEC §1): it is the background
+// worker, apart from the app's stores and the DOM. Relative imports are checked as above; it
+// may climb to src only for src/core and the `import.meta` declarations. Its glob imports stay
+// inside the folder and take a plain string, which the rule can read.
+const workerFolder = [0, 1, 2, 3, 4, 5, 6, 7].map((depth) => ({
+    files: [`src/app/worker/${"*/".repeat(depth)}*.{ts,tsx}`],
+    rules: {
+        "no-restricted-imports": [
+            "error",
+            {
+                patterns: [
+                    ngne,
+                    spriteCore,
+                    {
+                        regex: "^(?!\\.\\.?/)",
+                        message: "src/app/worker imports no package.",
+                    },
+                    {
+                        regex:
+                            `^(?!(\\./)?(\\.\\./){${depth + 2}}(core(/|$)|import-meta$))` +
+                            `(\\./)?(\\.\\./){${depth}}\\.\\.(/|$)`,
+                        message: "src/app/worker imports nothing outside src/core and itself.",
+                    },
+                    {
+                        regex: "(^|/)(?!\\.\\.?(/|$))[^/]+/\\.\\.(/|$)",
+                        message: "src/app/worker imports by normalized paths only.",
+                    },
+                ],
+            },
+        ],
+        "no-restricted-syntax": [
+            "error",
+            {
+                selector: "ImportExpression",
+                message: "src/app/worker imports nothing dynamically.",
+            },
+            {
+                selector:
+                    "CallExpression[callee.object.type='MetaProperty']" +
+                    // esquery's regex literal cannot hold "/": it is written \x2F.
+                    "[callee.property.name='glob'] > Literal[value=/^(?!\\.\\x2F)|\\.\\.\\x2F/]",
+                message: "src/app/worker globs inside its own folder only.",
+            },
+            {
+                selector:
+                    "CallExpression[callee.object.type='MetaProperty']" +
+                    "[callee.property.name='glob'] > TemplateLiteral",
+                message: "src/app/worker globs with a plain string only.",
+            },
+        ],
+    },
+}));
+
 export default tseslint.config(
     // `.claude` holds agent worktrees: whole copies of the repository.
     {
@@ -129,4 +182,5 @@ export default tseslint.config(
         },
     },
     ...spriteSubtree,
+    ...workerFolder,
 );

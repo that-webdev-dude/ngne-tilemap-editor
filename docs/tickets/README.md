@@ -79,7 +79,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-008](TE-008-palette-sheet-preferences.md) | Command palette, shortcut sheet and preferences | M | 007 | Done |
 | **M1** | **Viewport** | | | |
 | [TE-009](TE-009-tileset-packing.md) | Tileset packing and packability check | M | 002, 005 | Done |
-| [TE-010](TE-010-background-worker.md) | Background worker | M | 009 | To do |
+| [TE-010](TE-010-background-worker.md) | Background worker | M | 009 | Done |
 | [TE-011](TE-011-quad-emitter.md) | Shared quad emitter and tile placement | M | 005 | To do |
 | [TE-012](TE-012-cpu-compositor.md) | CPU compositor and map thumbnails | M | 005 | To do |
 | [TE-013](TE-013-viewport-live-tier.md) | Viewport renderer and live tier | L | 007, 009, 011, 012 | To do |
