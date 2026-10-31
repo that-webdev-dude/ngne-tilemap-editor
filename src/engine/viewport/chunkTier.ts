@@ -6,7 +6,7 @@ import type { PixelBuffer, Project, ProjectMap, TileLayer } from "../../core/mod
 import {
     chooseResolution,
     chunkBytes,
-    clipToMap,
+    chunkShows,
     grow,
     neededChunks,
     planSets,
@@ -14,6 +14,7 @@ import {
     tileReach,
     visibleCells,
     visibleCount,
+    CHUNK_MEMORY_LIMIT,
     LIVE_LIMIT,
 } from "./chunkPlan";
 import type { ChunkSetPlan, Reach } from "./chunkPlan";
@@ -583,7 +584,11 @@ export class ChunkTier {
         return { x: 0, y: 0, width: side, height: side };
     }
 
-    /** Marks what a change of the cells `rect` of `set`'s layers alters. */
+    /**
+     * Marks what a change of the cells `rect` of `set`'s layers alters. A chunk that shows
+     * something now gets a texture within the memory budget; past it, the next sync plans the
+     * tier again (ENGINE §4, resolution). A chunk that shows nothing any more is released.
+     */
     #patch(set: ChunkSet, rect: CellRect): void {
         const map = this.#map!;
         const area = grow(rect, this.#reach);
@@ -602,13 +607,22 @@ export class ChunkTier {
                 });
                 if (!cells) continue;
                 let chunk = this.#chunks.get(chunkTextureId(set.plan.key, cx, cy));
+                const shows = chunkShows(map, set.layers, this.#reach, cx, cy);
                 if (!chunk) {
                     // A chunk that showed nothing: it gets a texture now, if it shows something.
-                    const inside = clipToMap(map, area);
-                    if (!inside) continue;
+                    if (!shows) continue;
+                    if (chunkBytes(this.#chunks.size + 1, texels) > CHUNK_MEMORY_LIMIT) {
+                        // Past the budget: T is chosen anew, and the live tier draws while the
+                        // tier builds again.
+                        this.#signature = "";
+                        continue;
+                    }
                     chunk = this.#chunk(set, cx, cy);
                     set.chunks.push(chunk);
                     chunk.dirty = this.#fullRect();
+                } else if (!shows) {
+                    this.#evict(chunk);
+                    continue;
                 }
                 chunk.failed = false;
                 chunk.failures = 0;
@@ -838,6 +852,16 @@ export class ChunkTier {
         this.#stats.builds += 1;
         this.#stats.lastBuildMs = this.#now() - this.#buildStarted;
         this.#hooks.onChange();
+    }
+
+    /** Releases a chunk of the plan that shows nothing (ENGINE §3, eviction). */
+    #evict(chunk: Chunk): void {
+        const { chunks } = chunk.set;
+        const at = chunks.indexOf(chunk);
+        if (at >= 0) chunks.splice(at, 1);
+        this.#release(chunk);
+        // The build may have waited for it only.
+        this.#endBuildIfDone();
     }
 
     #release(chunk: Chunk): void {

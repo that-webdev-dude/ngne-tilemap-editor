@@ -169,19 +169,31 @@ export function neededChunks(map: ProjectMap, set: ChunkSetPlan, reach: Reach): 
     const chunks: ChunkCoord[] = [];
     for (let cy = cy0; cy <= cy1; cy += 1) {
         for (let cx = cx0; cx <= cx1; cx += 1) {
-            // The cells whose tiles can land in this chunk, inside the map.
-            const around = clipToMap(map, {
-                x: cx * CHUNK_SIZE - reach.right,
-                y: cy * CHUNK_SIZE - reach.down,
-                width: CHUNK_SIZE + reach.left + reach.right,
-                height: CHUNK_SIZE + reach.up + reach.down,
-            });
-            if (around && layers.some((layer) => layer.cells.countUpperBound(around) > 0)) {
-                chunks.push({ cx, cy });
-            }
+            if (chunkShows(map, layers, reach, cx, cy)) chunks.push({ cx, cy });
         }
     }
     return chunks;
+}
+
+/**
+ * The chunk `cx, cy` of a set of `layers` shows something: a cell-store chunk holding a cell
+ * whose tile can land in it, inside the map, is not empty. O(chunks), no cell scan.
+ */
+export function chunkShows(
+    map: ProjectMap,
+    layers: readonly TileLayer[],
+    reach: Reach,
+    cx: number,
+    cy: number,
+): boolean {
+    // The cells whose tiles can land in this chunk, inside the map.
+    const around = clipToMap(map, {
+        x: cx * CHUNK_SIZE - reach.right,
+        y: cy * CHUNK_SIZE - reach.down,
+        width: CHUNK_SIZE + reach.left + reach.right,
+        height: CHUNK_SIZE + reach.up + reach.down,
+    });
+    return around !== null && layers.some((layer) => layer.cells.countUpperBound(around) > 0);
 }
 
 /** The part of `rect` inside the map; null when none. */

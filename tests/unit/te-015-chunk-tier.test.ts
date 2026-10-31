@@ -849,6 +849,112 @@ describe("chunk tier review follow-ups", () => {
         expect(tier.stats.chunks).toBe(0);
         expect(tier.stats.pending).toBe(0);
     });
+
+    /** Tells the tier that one cell rectangle of `layer` changed. */
+    function touchCells(tier: ChunkTier, map: ProjectMap, layer: TileLayer, rect: CellRect): void {
+        tier.noteTouched({
+            mapId: map.id,
+            layerIds: [layer.id],
+            cellRects: [rect],
+            tilesetIds: [],
+            structure: false,
+        });
+    }
+
+    it("a paint that would take chunk memory past 64 MB plans the tier again at a lower T", () => {
+        // 16 × 16 full chunks fill the budget at T = 8 exactly; the last chunk row is empty.
+        const project = filledProject(512, 1);
+        const map = project.maps[0]!;
+        map.height = 544;
+        const size = { width: 2400, height: 2400 };
+        const { tier } = setUp(project, size);
+        const memory = () => chunkBytes(tier.stats.chunks, tier.stats.texelsPerCell);
+        expect(tier.stats.texelsPerCell).toBe(8);
+        expect(memory()).toBe(CHUNK_MEMORY_LIMIT);
+
+        const layer = map.layers[0] as TileLayer;
+        layer.cells.set(5, 520, cellValue(1, 2));
+        touchCells(tier, map, layer, { x: 5, y: 520, width: 1, height: 1 });
+        // No chunk past the budget: the next frame's sync plans again, and the painted chunk is
+        // part of the new plan.
+        expect(tier.stats.chunks).toBe(256);
+        tier.sync(project, map, size);
+        expect(tier.stats.texelsPerCell).toBe(4);
+        expect(tier.stats.chunks).toBe(257);
+        expect(memory()).toBeLessThanOrEqual(CHUNK_MEMORY_LIMIT);
+    });
+
+    it("a stroke's bounding rectangle creates chunks only where its cells show", async () => {
+        const project = filledProject(128, 8);
+        const map = project.maps[0]!;
+        // Three empty chunks in a row: (0, 1), (1, 1) and (2, 1).
+        for (const layer of map.layers as TileLayer[]) {
+            layer.cells.clear({ x: 0, y: 32, width: 96, height: 32 });
+        }
+        const { tier, renderer, settleAll } = setUp(project);
+        await settleAll();
+        expect(tier.stats.chunks).toBe(13);
+        const layer = map.layers[3] as TileLayer;
+        layer.cells.set(5, 40, cellValue(1, 1));
+        layer.cells.set(90, 40, cellValue(1, 2));
+        touchCells(tier, map, layer, { x: 5, y: 40, width: 86, height: 1 });
+        expect(tier.stats.chunks).toBe(15);
+        await settleAll();
+        expect(renderer.textures.has(chunkTextureId(1, 1, 1))).toBe(false);
+        expect(tier.stats.live).toBe(0);
+        expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
+    });
+
+    it("a change at the map's edge creates no chunk outside it that no tile reaches", async () => {
+        const project = filledProject(128, 8);
+        const map = project.maps[0]!;
+        // Tiles move 3 pixels left: they reach 2 cells into the chunk left of theirs.
+        project.tilesets[0]!.offsetX = -3;
+        // The left chunk column is empty: nothing reaches left of the map.
+        for (const layer of map.layers as TileLayer[]) {
+            layer.cells.clear({ x: 0, y: 0, width: 32, height: 128 });
+        }
+        const { tier, renderer, settleAll } = setUp(project);
+        await settleAll();
+        expect(tier.stats.chunks).toBe(16);
+        const created = renderer.created.length;
+        // An erase of an empty cell at the left edge.
+        touchCells(tier, map, map.layers[3] as TileLayer, { x: 0, y: 5, width: 1, height: 1 });
+        expect(tier.stats.chunks).toBe(16);
+        await settleAll();
+        expect(renderer.created.length).toBe(created);
+        expect(tier.stats.live).toBe(0);
+        expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
+    });
+
+    it("a chunk a paint created is released when the paint is undone", async () => {
+        const project = filledProject(128, 8);
+        const map = project.maps[0]!;
+        for (const layer of map.layers as TileLayer[]) {
+            layer.cells.clear({ x: 96, y: 96, width: 32, height: 32 });
+        }
+        const { tier, renderer, settleAll } = setUp(project);
+        await settleAll();
+        expect(tier.stats.chunks).toBe(15);
+        const layer = map.layers[2] as TileLayer;
+        const id = chunkTextureId(1, 3, 3);
+
+        layer.cells.set(100, 100, cellValue(1, 1));
+        touchCells(tier, map, layer, { x: 100, y: 100, width: 1, height: 1 });
+        await settleAll();
+        expect(renderer.textures.has(id)).toBe(true);
+
+        // Undone: the chunk shows nothing again, so its texture goes.
+        layer.cells.set(100, 100, 0);
+        touchCells(tier, map, layer, { x: 100, y: 100, width: 1, height: 1 });
+        expect(tier.stats.chunks).toBe(15);
+        expect(renderer.released).toContain(id);
+        await settleAll();
+        expect(renderer.textures.has(id)).toBe(false);
+        expect(tier.stats.bytes).toBe(chunkBytes(15, tier.stats.texelsPerCell));
+        expect(tier.stats.live).toBe(0);
+        expect(tier.ready).toBe(true);
+    });
 });
 
 function changesOf(tier: ChunkTier) {

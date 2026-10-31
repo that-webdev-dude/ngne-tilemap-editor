@@ -40,7 +40,7 @@ No polling of status or sprite counters, no renderer re-creation on resize.
 | Content | ID | API | Lifetime |
 | --- | --- | --- | --- |
 | Tileset atlas: the export's packed atlas from `core/pack` (even rectangles, 1 px extrusion; SPEC §10.2), never the stored grid, so viewport, preview and runtime share one emitter and UV table and no fractional zoom or DPR samples a neighbour tile | `ed:ts:<tilesetId>` | `renderer.texture(id, source)` (transactional whole-image replace) | Uploaded when a map using it opens; replaced on "Update tileset from source"; `releaseTexture` when no open map uses it |
-| Overview chunk | `ed:chunk:<layerId>:<cx>:<cy>` | `createTexture(id, w, h)` once, then `updateTexture(id, canvas, region)` per dirty rectangle | Created when the chunk tier first needs it; released on eviction, map close or layer delete |
+| Overview chunk | `ed:chunk:<layerId>:<cx>:<cy>` | `createTexture(id, w, h)` once, then `updateTexture(id, canvas, region)` per dirty rectangle | Created when the chunk tier first needs it; released on eviction (a change leaves it showing nothing, or a new plan drops it or changes T), map close or layer delete |
 | Checkerboard, image layers | `ed:checker`, `ed:img:<layerId>` | `texture()` | As the map |
 
 Editable texture rules (`createTexture` / `updateTexture`):
@@ -104,7 +104,10 @@ Editable texture rules (`createTexture` / `updateTexture`):
     a layer visibility, opacity, parallax or offset change.
   - **Painting at overview:** painted cells draw as live quads over their chunk on the next
     frame; the chunk's dirty rectangle is patched with one `updateTexture` in flight per
-    chunk (later edits coalesce), and the live quads are dropped when it settles.
+    chunk (later edits coalesce), and the live quads are dropped when it settles. A chunk that
+    shows something after a change gets a texture, and one that shows nothing is released. A new
+    chunk that would take chunk memory past 64 MB is not created: the tier is planned again
+    (Resolution) and rebuilt, and the live tier draws meanwhile.
 - **Redraw on demand:** frames are submitted only when the document, view or lifecycle
   changes; an idle editor submits nothing.
 - **Layer opacity** maps to sprite alpha. Tint and blend modes are not drawn (Later / Out).
