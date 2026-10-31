@@ -1,4 +1,4 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { cellValue } from "../../src/core/cells";
 import { createMap, createProjectSession } from "../../src/core/model";
 import type { TileLayer } from "../../src/core/model";
@@ -27,6 +27,24 @@ describe("slotsInMap", () => {
         expect([...slotsInMap(map, [{ x: 19, y: 11, width: 5, height: 5 }])]).toEqual([]);
         // A rectangle reaching outside the map is clipped to it: only cell (0, 0) is read.
         expect([...slotsInMap(map, [{ x: -3, y: -3, width: 4, height: 4 }])]).toEqual([1]);
+    });
+
+    it("reads the rectangles' cells chunk by chunk, not one by one", () => {
+        const map = createMap({ width: 100, height: 100 });
+        const cells = (map.layers[0] as TileLayer).cells;
+        // On either side of the corner of four chunks, and in a chunk further right.
+        cells.set(31, 31, cellValue(1, 0));
+        cells.set(32, 32, cellValue(2, 0));
+        cells.set(70, 5, cellValue(3, 0));
+        const get = vi.spyOn(cells, "get");
+        const slots = (rect: { x: number; y: number; width: number; height: number }) =>
+            [...slotsInMap(map, [rect])].sort();
+        expect(slots({ x: 20, y: 20, width: 12, height: 12 })).toEqual([1]);
+        expect(slots({ x: 31, y: 31, width: 2, height: 2 })).toEqual([1, 2]);
+        expect(slots({ x: 32, y: 0, width: 68, height: 32 })).toEqual([3]);
+        expect(slots({ x: 33, y: 33, width: 30, height: 30 })).toEqual([]);
+        expect(slots({ x: -50, y: -50, width: 1000, height: 1000 })).toEqual([1, 2, 3]);
+        expect(get).not.toHaveBeenCalled();
     });
 
     it("finds nothing in an empty map", () => {

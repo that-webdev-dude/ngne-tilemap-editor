@@ -1,3 +1,4 @@
+import { CHUNK_SIZE } from "../../core/cells";
 import type { CellRect } from "../../core/cells";
 import { walkLayers } from "../../core/model";
 import type { Project, ProjectMap, ProjectSession, Tileset } from "../../core/model";
@@ -28,11 +29,23 @@ export function slotsInMap(map: ProjectMap, rects?: readonly CellRect[]): Set<nu
             continue;
         }
         for (const rect of rects) {
+            // The rectangle inside the map, read from the chunks it touches: absent chunks are
+            // empty, and a chunk's cells are read from its array.
+            const x0 = Math.max(rect.x, 0);
+            const y0 = Math.max(rect.y, 0);
             const x1 = Math.min(rect.x + rect.width, map.width);
             const y1 = Math.min(rect.y + rect.height, map.height);
-            for (let y = Math.max(rect.y, 0); y < y1; y += 1) {
-                for (let x = Math.max(rect.x, 0); x < x1; x += 1) {
-                    addSlot(slots, layer.cells.get(x, y));
+            if (x1 <= x0 || y1 <= y0) continue;
+            const inside = { x: x0, y: y0, width: x1 - x0, height: y1 - y0 };
+            for (const chunk of layer.cells.chunksIn(inside)) {
+                const left = chunk.cx * CHUNK_SIZE;
+                const top = chunk.cy * CHUNK_SIZE;
+                const xEnd = Math.min(x1 - left, CHUNK_SIZE);
+                const yEnd = Math.min(y1 - top, CHUNK_SIZE);
+                for (let y = Math.max(y0 - top, 0); y < yEnd; y += 1) {
+                    for (let x = Math.max(x0 - left, 0); x < xEnd; x += 1) {
+                        addSlot(slots, chunk.cells[x + y * CHUNK_SIZE]!);
+                    }
                 }
             }
         }
