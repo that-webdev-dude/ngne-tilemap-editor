@@ -82,11 +82,14 @@ Editable texture rules (`createTexture` / `updateTexture`):
   map) and the frame arrives already ordered. Cost is CPU-bound and equal on both GPUs;
   about 70% is quad emission, 30% `renderer.render`.
 - **Tier choice:** the visible count is the sum, over visible tile layers, of the non-empty
-  counts of the cell-store chunks the view touches (an upper bound, O(chunks), no cell scan;
-  SPEC §2.2). The viewport enters the chunk tier when the count exceeds 65,536 and the chunk
-  tier is built; it returns to the live tier when the count falls to 58,982 (90%) or below, so a
-  pan at the threshold does not flip tiers every frame. While the chunk tier is still building,
-  the live tier draws, beyond its budget.
+  counts of the cell-store chunks the view touches, each weighted by the share of the chunk the
+  view covers (an estimate, O(chunks), no cell scan; SPEC §2.2). Whole chunk counts would be an
+  upper bound, but a pan that touches one more row or column of chunks moves them by more than
+  the 10% band below, and the tier would flip; the estimate falls short of the true count only
+  where an edge chunk's cells crowd into the part in view. The viewport enters the chunk tier
+  when the count exceeds 65,536 and the chunk tier is built; it returns to the live tier when the
+  count falls to 58,982 (90%) or below, so a pan at the threshold does not flip tiers every
+  frame. While the chunk tier is still building, the live tier draws, beyond its budget.
 - **Chunk tier** (above the threshold): chunks of 32×32 cells composited on the CPU by the
   `core/` compositor and uploaded with `createTexture` + `updateTexture`.
   - **Flattened sets:** all visible layers that share parallax factor and offset are
