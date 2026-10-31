@@ -235,7 +235,8 @@ describe("the shortcut sheet over the app's registry", () => {
         );
         const titles = groups.map((group) => group.title);
         expect(titles.slice(0, 2)).toEqual(["Edit", "View"]);
-        expect(titles).not.toContain(OTHER_SHORTCUTS);
+        // Commands with a key and no menu item (the zoom keys, the pan hold) share the last group.
+        expect(titles.indexOf(OTHER_SHORTCUTS)).toBe(titles.length - 1);
         const edit = groups.find((group) => group.title === "Edit");
         expect(edit?.rows.map((row) => row.command.id)).toEqual([
             "edit.undo",

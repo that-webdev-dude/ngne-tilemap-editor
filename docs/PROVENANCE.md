@@ -39,6 +39,14 @@ rows.
 | `src/app/keymap/regions.ts` | `src/app/keymap/regions.ts` | verbatim | `ea5c91d` | `6d180e5dc433fd882b16133ef66d834ac11e25c23fe4c5f628a9d46221df19fb` | |
 | `src/app/keymap/resolve.ts` | `src/app/keymap/resolve.ts` | adapt | `ea5c91d` | | `KeyEnvironment.inPanel` and `markers` instead of `inTimeline` and `floating`; `applicableContexts` lists the contexts of DESIGN §10.1 |
 | `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
+| `src/app/overlay/draw.ts` | `src/app/overlay/draw.ts` | adapt | `ea5c91d` |  | `fillRects` only (the cell grid needs no clip); `DeviceRect` from `gridLines.ts` |
+| `src/app/overlay/grid.commands.ts` | `src/app/overlay/grid.commands.ts` | adapt | `ea5c91d` |  | `view.grid` toggles the `grid` view preference (SPEC §3) and takes Ctrl+G (DESIGN §10.3); no pixel grid, no document settings |
+| `src/app/overlay/grid.overlay.ts` | `src/app/overlay/grid.overlay.ts` | adapt | `ea5c91d` |  | One layer, `cell-grid` at order 300, from the cell size of the active map; the grid preference's colour and opacity; no pixel grid |
+| `src/app/overlay/gridLines.ts` | `src/app/overlay/gridLines.ts` | adapt | `ea5c91d` |  | Axes from the map's corner and the scale (map pixels, cells); cell lines only, from 4 device pixels per cell; no pixel grid or outline helpers |
+| `src/app/overlay/mountOverlay.ts` | `src/app/overlay/mountOverlay.ts` | adapt | `ea5c91d` |  | Session store of the project; the canvas is sized by the viewport host (no NGNE canvas observation or stretching); probe adds the canvas |
+| `src/app/overlay/overlayController.ts` | `src/app/overlay/overlayController.ts` | adapt | `ea5c91d` |  | Active map, its geometry and view as the redraw key; cursor carries map position and cell; no stretched mapping; theme is the grid ink only |
+| `src/app/overlay/overlayLayers.ts` | `src/app/overlay/overlayLayers.ts` | verbatim | `ea5c91d` | `a9803b719456e99d8a4129e5a39ee071f5fd07f7b112dff2dc7c76b86f1bb4f3` |  |
+| `src/app/overlay/types.ts` | `src/app/overlay/types.ts` | adapt | `ea5c91d` |  | Frame carries the map, a cell mapping and the cursor's cell; theme is the grid ink only |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
 | `src/app/preferences/preferences.commands.ts` | `src/app/preferences/preferences.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
 | `src/app/preferences/preferences.ts` | `src/app/preferences/preferences.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.preferences`; sections `checkerboard`, `grid` (colour `"theme"` or 0xRRGGBB, opacity in percent), `highlight` (opacity in percent, default 25) and `autosave` instead of the sprite editor's grid, onion and import defaults; `ColourChoice` and the `percent` range |
@@ -48,8 +56,18 @@ rows.
 | `src/app/shortcuts/shortcuts.commands.ts` | `src/app/shortcuts/shortcuts.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
 | `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection |
 | `src/app/state/session.ts` | `src/app/state/sessions.ts` | adapt | `ea5c91d` | | One `ProjectSession` with its `History` per window (SPEC §3, §10.1) instead of a list of documents: `replace`, `touch`, `revision`; no views, saved state or reference sources |
+| `src/app/state/status.ts` | `src/app/state/status.ts` | adapt | `ea5c91d` |  | Cursor is the cell under the pointer (DESIGN §8.7); the fields that read it register from `*.status.ts` modules |
 | `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
 | `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project; `viewport`, the probe of the viewport host (frames, textures, renderer count) |
+| `src/app/view/coordinates.ts` | `src/app/view/coordinates.ts` | adapt | `ea5c91d` |  | Client, device, map and cell spaces from the view's centre and zoom (zoom in CSS pixels per map pixel, TE-013); map positions within 1e-9 of a whole pixel are that pixel |
+| `src/app/view/navigate.ts` | `src/app/view/navigate.ts` | adapt | `ea5c91d` |  | Views are centre and zoom; navigation works on the map's origin on the canvas and converts back; pan limit and pixel-exact origin as the sprite editor's |
+| `src/app/view/pointerNavigation.ts` | `src/app/view/pointerNavigation.ts` | adapt | `ea5c91d` |  | Wheel, Shift+wheel, middle drag and Space-held primary drag; the status cursor is the cell under the pointer |
+| `src/app/view/view.commands.ts` | `src/app/view/view.commands.ts` | adapt | `ea5c91d` |  | Adds `view.panHold` (Space, hold); the commands refresh with the viewport's size |
+| `src/app/view/viewNavigation.ts` | `src/app/view/viewNavigation.ts` | adapt | `ea5c91d` |  | Active map of the project session, its view in `MapSession`; `touch` after a change; no document store |
+| `src/app/view/viewPolicy.ts` | `src/app/view/viewPolicy.ts` | adapt | `ea5c91d` |  | Only the pan limit, applied on a resize and a change of the active map; maps are not fitted on opening |
+| `src/app/view/viewportSize.ts` | `src/app/view/viewportSize.ts` | adapt | `ea5c91d` |  | One store the viewport host reports to; no region probe or link |
+| `src/app/view/wheel.ts` | `src/app/view/wheel.ts` | verbatim | `ea5c91d` | `706809d643ccf8ae3d6964a8d577ff219d8e09cb6f0e201a680e6fec21817dd3` |  |
+| `src/app/view/zoom.ts` | `src/app/view/zoom.ts` | adapt | `ea5c91d` |  | Steps 1/32 and 1/16 added below (SPEC §4.1); `fitZoom` in map pixels without rounding |
 | `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
 | `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
 | `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
@@ -188,12 +206,13 @@ rows.
 | `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool options (TE-016) |
 | `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
 | `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus and the command palette trigger (TE-008); map tabs (TE-031) are left out |
-| `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the status fields (TE-014) |
+| `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Renders the fields of the `*.status.ts` registry (cell, tile, zoom with Fit, map size) and the tool hint or feedback on the right |
 | `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
 | `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Hosts the viewport canvas of the active map (TE-013); the empty state joins it later |
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
 | `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
 | `src/ui/shortcuts/shortcuts.css` | `src/ui/shortcuts/shortcuts.css` | verbatim | `ea5c91d` | `4af0e022d12297df189fdb6ebb3283063b1538f538c497e75c3d69c641600a6d` | |
+| `src/ui/status/status.css` | `src/ui/status/status.css` | adapt | `ea5c91d` |  | Widths reserved by the field (inline), not by CSS rules for the cursor field |
 | `src/ui/styles/base.css` | `src/ui/styles/base.css` | verbatim | `ea5c91d` | `cb79b6d9a9383a0d114a3453f2fe19471ae3f657472d0f6d7186553ef92c8d87` | |
 | `src/ui/styles/tokens.css` | `src/ui/styles/tokens.css` | verbatim | `ea5c91d` | `a8d0de7b7cefa647152a2a27811adfa1f8db544b9443201647ea132fc05b3917` | |
 | `src/ui/surfaces/AppSurfaces.tsx` | `src/ui/surfaces/AppSurfaces.tsx` | verbatim | `ea5c91d` | `7e3cb942466f81c3e0e1cb6fc899b98b589347294b3f00c26cb5ee28b63ba079` | |

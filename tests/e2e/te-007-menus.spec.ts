@@ -213,7 +213,8 @@ test("every menu holds the items of DESIGN §5, each a registry entry", async ({
         "Zoom Out",
         "Fit",
         "100%",
-        "Show Grid",
+        // Titled by what choosing it does (the grid is on by default), as the bottom panel's.
+        "Hide Grid",
         "Show Collision",
         "Highlight Current Layer",
         "Snap to Grid",

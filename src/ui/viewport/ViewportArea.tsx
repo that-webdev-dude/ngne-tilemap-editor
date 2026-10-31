@@ -1,8 +1,15 @@
 import { useEffect, useRef, useState } from "react";
+import { VIEWPORT_FOCUS_ATTRIBUTE } from "../../app/keymap/environment";
+import { REGION_FOCUS_ATTRIBUTE } from "../../app/keymap/regions";
 import { notices } from "../../app/notices/notices";
+import { mountOverlay } from "../../app/overlay/mountOverlay";
+import type { MountedOverlay } from "../../app/overlay/mountOverlay";
 import { preferences } from "../../app/preferences/preferences";
 import { sessionStore } from "../../app/state/session";
 import { setViewportProbe } from "../../app/testing/testHooks";
+import { attachViewNavigation } from "../../app/view/pointerNavigation";
+import { connectViewPolicy } from "../../app/view/viewPolicy";
+import { viewportSize } from "../../app/view/viewportSize";
 import { packInWorker } from "../../app/viewport/packTileset";
 import { readScene } from "../../app/viewport/scene";
 import type { ThemeChecker } from "../../app/viewport/scene";
@@ -11,8 +18,20 @@ import { Viewport, rendererCreations } from "../../engine/viewport";
 import type { ViewportStatus } from "../../engine/viewport";
 import { parseHexColour } from "../preferences/hexColour";
 import { Button } from "../primitives";
-import { useTheme } from "../theme/theme";
+import { themeStore, useTheme } from "../theme/theme";
+import type { Theme } from "../theme/theme";
 import "./viewportArea.css";
+
+/** Grid ink of DESIGN §4: white lines in the dark theme, black lines in the light one. */
+const INK: Record<Theme, number> = { dark: 0xffffff, light: 0x000000 };
+
+/** The element's marks: the keymap and the F6 cycle find the viewport by them. */
+const MARKS = {
+    // DESIGN §10.1: only this element counts as "the viewport itself is focused".
+    [VIEWPORT_FOCUS_ATTRIBUTE]: "",
+    // F6 enters the viewport region here.
+    [REGION_FOCUS_ATTRIBUTE]: "",
+};
 
 /** A colour token of the current theme as 0xRRGGBB. */
 function themeColour(name: string): number {
@@ -32,12 +51,19 @@ function deviceSizeOf(entry: ResizeObserverEntry): { width: number; height: numb
 }
 
 /**
- * The viewport host (ENGINE §2): the element the NGNE canvas fills. It creates the viewport
- * with an abort signal, resizes it from a `ResizeObserver` without creating it again, and
- * disposes it when the region unmounts. The overlay canvas of TE-014 joins it as a sibling.
+ * The viewport host (ENGINE §2): the focusable element the NGNE canvas and, above it, the
+ * overlay canvas fill. It creates the viewport with an abort signal, resizes both canvases and
+ * reports the size to view navigation from one `ResizeObserver` without creating the viewport
+ * again, and disposes it when the region unmounts.
+ *
+ * Keyboard focus, the F6 focus region and the pointer listeners of view navigation are on this
+ * element and not on a canvas. Wheel and drags act by pointer location, whatever has focus
+ * (`app/view/pointerNavigation`); their events reach this element from the overlay, the
+ * pointer target, by bubbling.
  */
 export function ViewportArea() {
     const element = useRef<HTMLDivElement>(null);
+    const overlay = useRef<MountedOverlay | null>(null);
     const theme = useTheme();
     const colours = useRef<{ checker: ThemeChecker; workspace: number }>({
         checker: { a: 0, b: 0 },
@@ -53,6 +79,7 @@ export function ViewportArea() {
             workspace: themeColour("--bg-workspace"),
         };
         redraw.current?.();
+        overlay.current?.setTheme({ ink: INK[theme] });
     }, [theme]);
 
     useEffect(() => {
@@ -64,6 +91,18 @@ export function ViewportArea() {
         canvas.style.cssText = "position:absolute;inset:0;display:block;width:100%;height:100%";
         canvas.dataset.viewportCanvas = "";
         host.append(canvas);
+        // The overlay is the pointer target, above the NGNE canvas, in the same box.
+        const overlayCanvas = document.createElement("canvas");
+        overlayCanvas.style.cssText = canvas.style.cssText;
+        overlayCanvas.dataset.viewportOverlay = "";
+        // Chrome only; the viewport element is what assistive technology is told about.
+        overlayCanvas.setAttribute("aria-hidden", "true");
+        host.append(overlayCanvas);
+        const mounted = mountOverlay(overlayCanvas, host);
+        overlay.current = mounted;
+        mounted.setTheme({ ink: INK[themeStore.getState().theme] });
+        const detachNavigation = attachViewNavigation(host);
+        const stopPolicy = connectViewPolicy();
 
         let viewport: Viewport | null = null;
         let unbind: (() => void) | null = null;
@@ -71,6 +110,8 @@ export function ViewportArea() {
             width: Math.max(1, Math.round(host.clientWidth * window.devicePixelRatio)),
             height: Math.max(1, Math.round(host.clientHeight * window.devicePixelRatio)),
         };
+        viewportSize.report(size);
+        mounted.resize(size);
         const reported = new Set<string>();
         const report = (error: unknown) => {
             const message = error instanceof Error ? error.message : String(error);
@@ -83,6 +124,14 @@ export function ViewportArea() {
             const entry = entries[entries.length - 1];
             if (!entry) return;
             size = deviceSizeOf(entry);
+            // A host that is hidden (the window-too-small notice) measures 0 × 0: the canvases
+            // keep their last size until it is back, and navigation has no viewport.
+            if (!(size.width >= 1 && size.height >= 1)) {
+                viewportSize.report({ width: 0, height: 0 });
+                return;
+            }
+            viewportSize.report(size);
+            mounted.resize(size);
             viewport?.resize(size);
         });
         observer.observe(host, { box: "device-pixel-content-box" });
@@ -151,12 +200,29 @@ export function ViewportArea() {
             setViewportProbe(null);
             redraw.current = null;
             viewport?.dispose();
+            stopPolicy();
+            detachNavigation();
+            overlay.current = null;
+            mounted.dispose();
+            viewportSize.report({ width: 0, height: 0 });
+            overlayCanvas.remove();
             canvas.remove();
         };
     }, []);
 
     return (
-        <div className="viewport-area" ref={element} data-viewport="" data-status={status}>
+        <div
+            className="viewport-area"
+            ref={element}
+            tabIndex={0}
+            // A pointer surface with keys of its own, not a control a screen reader operates
+            // (DESIGN §8); the name says what has focus.
+            role="application"
+            aria-label="Canvas"
+            data-viewport=""
+            data-status={status}
+            {...MARKS}
+        >
             {status === "failed" ? (
                 <div className="viewport-failure" role="alert" data-viewport-failure="">
                     <p>The graphics device was lost and could not be recovered.</p>

@@ -20,3 +20,17 @@
     background: var(--bg-workspace);
     color: var(--text);
 }
+
+/* The focus ring is drawn inside the edge: the canvases fill the element. */
+.viewport-area:focus-visible {
+    outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+/* The overlay is the pointer target; its cursor is the viewport's (DESIGN §10.3). */
+.viewport-area[data-pan-ready] {
+    cursor: grab;
+}
+
+.viewport-area[data-panning] {
+    cursor: grabbing;
+}

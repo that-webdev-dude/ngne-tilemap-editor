@@ -217,9 +217,13 @@ test("regions carry their landmarks and are empty placeholders until their ticke
     );
     await expect(page.getByRole("contentinfo")).toHaveAttribute("data-region", "status-bar");
 
-    for (const id of ["tool-rail", "context-bar", "viewport", "status-bar"] as const) {
+    for (const id of ["tool-rail", "context-bar", "viewport"] as const) {
         await expect(region(page, id), id).toBeEmpty();
     }
+    // The status bar holds the fields of TE-014: the size of the project's map.
+    await expect(region(page, "status-bar").locator('[data-status="size"]')).toHaveText(
+        /^\d+ × \d+ cells$/,
+    );
 });
 
 test("splitter sizes persist under ngne-tilemap-editor.layout across a reload", async ({

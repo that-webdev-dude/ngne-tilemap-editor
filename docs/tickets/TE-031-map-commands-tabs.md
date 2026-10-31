@@ -25,6 +25,8 @@ history per project, undoing another map's change must first show that map (SPEC
 - Undo or redo of an entry for another map switches to that map's tab first.
 - Per-map session (view, active layer, selections) kept across tab switches; textures released
   when no open map uses them.
+- A map is fitted (the Fit of View, TE-014) the first time it is shown, once the viewport has a
+  size: when New Map or Duplicate opens it, not on later tab switches, which keep its view.
 
 ## Acceptance criteria
 
@@ -32,7 +34,8 @@ history per project, undoing another map's change must first show that map (SPEC
       harness; deleting the last map is refused.
 - [ ] `tests/e2e/te-031-tabs.spec.ts`: new, duplicate, rename, delete and undo restore; closing
       a tab keeps the map; undo of a change on a closed or inactive map opens its tab first;
-      view and active layer survive a tab switch.
+      view and active layer survive a tab switch; a new map opens fitted and keeps its view when
+      switched away and back.
 - [ ] Measured on reference hardware: tab switch to an open map, first frame submitted ≤ 100 ms
       on the reference map.
 

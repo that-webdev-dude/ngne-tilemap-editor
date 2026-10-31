@@ -213,7 +213,7 @@ Order and items. Keys are §10. Every item is a registered command; disabled ite
 | Layer | New Tile Layer, New Marker Layer, New Image Layer…, New Group · Group Layers, Ungroup · Duplicate Layer, Delete Layer, Rename Layer · Layer Properties… · Move Layer Up, Move Layer Down, Select Layer Above, Select Layer Below · Show/Hide Other Layers, Lock/Unlock Other Layers |
 | Tileset | Tileset Properties…, Update Tileset from Source…, Delete Tileset · Edit Collision…, Edit Animation… (selected tile) · Previous Tileset, Next Tileset · Flip Stamp Horizontally, Flip Stamp Vertically, Rotate Stamp Right, Rotate Stamp Left |
 | Select | Select All, Select None, Invert Selection |
-| View | Zoom In, Zoom Out, Fit, 100% · Show Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region |
+| View | Zoom In, Zoom Out, Fit, 100% · Hide Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region |
 
 ## 6. Tool rail
 

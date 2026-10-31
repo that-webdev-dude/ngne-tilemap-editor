@@ -64,7 +64,8 @@ export function canvasSizes(page: Page) {
         return {
             canvas: [probe.canvas.width, probe.canvas.height] as const,
             host: [box.width * devicePixelRatio, box.height * devicePixelRatio] as const,
-            canvases: host.querySelectorAll("canvas").length,
+            // The NGNE canvas; the overlay canvas of TE-014 is the host's second child.
+            canvases: host.querySelectorAll("canvas:not([data-viewport-overlay])").length,
         };
     });
 }
