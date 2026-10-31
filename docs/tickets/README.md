@@ -78,7 +78,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-007](TE-007-session-commands-keymap-menus.md) | Session store, command registry, keymap and menus | L | 003, 006 | Done |
 | [TE-008](TE-008-palette-sheet-preferences.md) | Command palette, shortcut sheet and preferences | M | 007 | Done |
 | **M1** | **Viewport** | | | |
-| [TE-009](TE-009-tileset-packing.md) | Tileset packing and packability check | M | 002, 005 | To do |
+| [TE-009](TE-009-tileset-packing.md) | Tileset packing and packability check | M | 002, 005 | Done |
 | [TE-010](TE-010-background-worker.md) | Background worker | M | 009 | To do |
 | [TE-011](TE-011-quad-emitter.md) | Shared quad emitter and tile placement | M | 005 | To do |
 | [TE-012](TE-012-cpu-compositor.md) | CPU compositor and map thumbnails | M | 005 | To do |
