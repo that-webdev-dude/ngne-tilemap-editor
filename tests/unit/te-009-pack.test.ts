@@ -444,5 +444,6 @@ describe("packability", () => {
             { numRuns: 80, seed: 9 },
         );
         expect(refusals).toBeGreaterThan(0);
-    });
+        // 80 real packs of up to 2 MB of tile pixels: 2.7 s alone, over 5 s on a loaded CI runner.
+    }, 30_000);
 });
