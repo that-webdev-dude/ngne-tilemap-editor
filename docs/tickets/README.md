@@ -82,7 +82,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-010](TE-010-background-worker.md) | Background worker | M | 009 | Done |
 | [TE-011](TE-011-quad-emitter.md) | Shared quad emitter and tile placement | M | 005 | Done |
 | [TE-012](TE-012-cpu-compositor.md) | CPU compositor and map thumbnails | M | 005 | Done |
-| [TE-013](TE-013-viewport-live-tier.md) | Viewport renderer and live tier | L | 007, 009, 011, 012 | To do |
+| [TE-013](TE-013-viewport-live-tier.md) | Viewport renderer and live tier | L | 007, 009, 011, 012 | Done |
 | [TE-014](TE-014-navigation-overlay-status.md) | View navigation, overlay and status bar | M | 013 | To do |
 | [TE-015](TE-015-chunk-tier.md) | Chunk tier and tier switching | L | 014 | To do |
 | **M2** | **Tile tools** | | | |

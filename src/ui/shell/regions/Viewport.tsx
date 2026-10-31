@@ -1,7 +1,6 @@
-/**
- * Viewport content: empty until the viewport host and the NGNE canvas of the active map
- * (TE-013) and the empty state fill it.
- */
+import { ViewportArea } from "../../viewport/ViewportArea";
+
+/** The Viewport region: the NGNE canvas of the active map (TE-013); the empty state joins it later. */
 export function Viewport() {
-    return null;
+    return <ViewportArea />;
 }

@@ -49,7 +49,7 @@ rows.
 | `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection |
 | `src/app/state/session.ts` | `src/app/state/sessions.ts` | adapt | `ea5c91d` | | One `ProjectSession` with its `History` per window (SPEC §3, §10.1) instead of a list of documents: `replace`, `touch`, `revision`; no views, saved state or reference sources |
 | `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
-| `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project |
+| `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project; `viewport`, the probe of the viewport host (frames, textures, renderer count) |
 | `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
 | `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
 | `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
@@ -117,6 +117,7 @@ rows.
 | `src/core/sprite/tags/index.ts` | `src/core/tags/index.ts` | verbatim | `ea5c91d` | `53cd62d1e8e1e5e8c601723b38f0bb7f67f20e70ee718c2e51c31d15fe779210` | |
 | `src/core/sprite/tags/tagList.ts` | `src/core/tags/tagList.ts` | verbatim | `ea5c91d` | `2645ecaec4b30ada632365a047357c797a1ede9145dee5ebc18d7c1e91ddcdf6` | |
 | `src/engine/testing/readCanvas.ts` | `src/engine/testing/readCanvas.ts` | verbatim | `ea5c91d` | `27de8812f006a47624b87f2095afcf25c353461832890a3afea774af1951f7f0` | |
+| `src/engine/viewport/checker.ts` | `src/engine/viewport/checker.ts` | adapt | `ea5c91d` | | The image is one block of 16 × 16 squares (`ed:checker`, ENGINE §3) drawn as a grid of quads, not the whole document; `ViewportChecker` is defined here; adds `checkerBlock`, `checkerColourAt`, `checkerMean`; `checkerSpec` takes the checker alone |
 | `src/import-meta.d.ts` | `src/import-meta.d.ts` | adapt | `ea5c91d` | | No `SERVICE_WORKER` flag until the PWA build defines it (TE-066) |
 | `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders `App` in a root that sets `<html data-app-ready>` once committed; no service worker |
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
@@ -189,7 +190,7 @@ rows.
 | `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus and the command palette trigger (TE-008); map tabs (TE-031) are left out |
 | `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the status fields (TE-014) |
 | `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
-| `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Empty placeholder until the viewport host (TE-013) |
+| `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Hosts the viewport canvas of the active map (TE-013); the empty state joins it later |
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
 | `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
 | `src/ui/shortcuts/shortcuts.css` | `src/ui/shortcuts/shortcuts.css` | verbatim | `ea5c91d` | `4af0e022d12297df189fdb6ebb3283063b1538f538c497e75c3d69c641600a6d` | |
