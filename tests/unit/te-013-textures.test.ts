@@ -2,9 +2,11 @@ import { describe, expect, it } from "vitest";
 import type { Tileset } from "../../src/core/model";
 import { packTileset } from "../../src/core/pack";
 import type { PackedTileset } from "../../src/core/pack";
+import { EmitterCache } from "../../src/engine/viewport/liveTier";
 import { TilesetTextures, tilesetTextureId } from "../../src/engine/viewport/textures";
 import type { TextureTarget } from "../../src/engine/viewport/textures";
 import { createViewportSceneProject } from "../support/viewportScene";
+import { tilesetOf } from "./te-012-support";
 
 // TE-013: the tileset textures of the viewport (ENGINE §3) against a fake renderer: uploaded
 // once, released when no open map uses them, replaced on change without a gap.
@@ -142,6 +144,45 @@ describe("use", () => {
         // The late result does not make the tileset drawable.
         expect(t.textures.drawable(tilesets)).toEqual([]);
         expect(t.changes).toEqual([]);
+    });
+
+    it("gives a tileset released and used again a new version, so the emitter is made anew", async () => {
+        // Same ID, slot, sizes, offsets and tile count; tiles 0 and 1 share one atlas rect
+        // before and not after, so the UV tables differ.
+        const before = tilesetOf(
+            [
+                ["AB", "CD"],
+                ["AB", "CD"],
+                ["EF", "GH"],
+            ],
+            { slot: 1 },
+        );
+        const after = tilesetOf(
+            [
+                ["AB", "CD"],
+                ["HG", "FE"],
+                ["EF", "GH"],
+            ],
+            { slot: 1 },
+        );
+        const t = setup();
+        const cache = new EmitterCache();
+        t.textures.use([before]);
+        await settle();
+        t.uploads[0]!.release();
+        await settle();
+        const first = t.textures.drawable([before]);
+        const emitter = cache.emitter(first);
+
+        t.textures.use([]);
+        t.textures.use([after]);
+        await settle();
+        t.uploads[1]!.release();
+        await settle();
+        const second = t.textures.drawable([after]);
+        expect(second[0]!.uvTable.uv).not.toEqual(first[0]!.uvTable.uv);
+        expect(second[0]!.version).not.toBe(first[0]!.version);
+        expect(cache.emitter(second)).not.toBe(emitter);
     });
 });
 

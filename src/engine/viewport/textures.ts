@@ -44,13 +44,16 @@ export interface ReadyTileset {
     tileset: Tileset;
     texture: string;
     uvTable: TileUvTable;
-    /** Increases with every upload of the tileset; part of the emitter's cache key. */
+    /**
+     * The upload's number, unique among all uploads of the `TilesetTextures`, so a tileset
+     * released and used again never repeats one; part of the emitter's cache key.
+     */
     version: number;
 }
 
 interface Entry {
     tileset: Tileset;
-    /** Counts requested uploads. */
+    /** The number of the latest requested upload. */
     wanted: number;
     ready: ReadyTileset | null;
     /** Aborts the upload under way. */
@@ -69,6 +72,8 @@ export class TilesetTextures {
     readonly #bitmap: BitmapFn;
     readonly #hooks: TextureSetHooks;
     readonly #entries = new Map<string, Entry>();
+    /** Uploads requested, of every tileset: numbers them. */
+    #uploads = 0;
     #disposed = false;
 
     constructor(target: TextureTarget, pack: PackFn, bitmap: BitmapFn, hooks: TextureSetHooks) {
@@ -142,7 +147,8 @@ export class TilesetTextures {
         entry.abort?.abort();
         const abort = new AbortController();
         entry.abort = abort;
-        entry.wanted += 1;
+        this.#uploads += 1;
+        entry.wanted = this.#uploads;
         const mine = entry.wanted;
         void (async () => {
             const packed = await this.#pack(tileset, abort.signal);
