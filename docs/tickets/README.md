@@ -84,7 +84,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-012](TE-012-cpu-compositor.md) | CPU compositor and map thumbnails | M | 005 | Done |
 | [TE-013](TE-013-viewport-live-tier.md) | Viewport renderer and live tier | L | 007, 009, 011, 012 | Done |
 | [TE-014](TE-014-navigation-overlay-status.md) | View navigation, overlay and status bar | M | 013 | Done |
-| [TE-015](TE-015-chunk-tier.md) | Chunk tier and tier switching | L | 014 | To do |
+| [TE-015](TE-015-chunk-tier.md) | Chunk tier and tier switching | L | 014 | Done |
 | **M2** | **Tile tools** | | | |
 | [TE-016](TE-016-tool-framework.md) | Tool framework and cell pointer pipeline | M | 014 | To do |
 | [TE-017](TE-017-stamp-brush-eraser.md) | Current stamp, stamp brush and eraser | L | 016 | To do |

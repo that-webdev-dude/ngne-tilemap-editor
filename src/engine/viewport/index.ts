@@ -1,5 +1,9 @@
 export { CHECKER_BLOCK, checkerBlock, checkerPixels, checkerSpec } from "./checker";
 export type { ViewportChecker } from "./checker";
+export { LIVE_LIMIT, LIVE_RETURN } from "./chunkPlan";
+export type { Tier } from "./chunkPlan";
+export { chunkTextureId } from "./chunkTier";
+export type { ChunkStats } from "./chunkTier";
 export { deviceScale, layerShift, visibleRect } from "./geometry";
 export type { DeviceSize } from "./geometry";
 export { LAYER, buildLiveFrame } from "./liveTier";

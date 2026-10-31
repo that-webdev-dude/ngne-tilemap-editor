@@ -30,6 +30,7 @@ export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>):
             usage.noteCells(map, touched.cellRects);
         }
         if (touched.tilesetIds.length > 0) viewport.invalidateTilesets(touched.tilesetIds);
+        viewport.noteTouched(touched);
         sync();
     };
 

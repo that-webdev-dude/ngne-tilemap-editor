@@ -21,7 +21,35 @@ export interface ViewportProbe {
         drawCalls: number;
         lastDrawMs: number;
         lastBuildMs: number;
+        /** "live" or "chunk" (ENGINE §4), and how often it changed. */
+        tier: string;
+        tierChanges: number;
+        visibleCount: number;
+        chunkQuads: number;
+        tileQuads: number;
     }>;
+    /** What the chunk tier reports (TE-015). */
+    chunkStats(): Readonly<{
+        texelsPerCell: number;
+        sets: number;
+        chunks: number;
+        ready: boolean;
+        pending: number;
+        live: number;
+        bytes: number;
+        slices: number;
+        maxSliceMs: number;
+        lastBuildMs: number;
+        builds: number;
+        rejected: number;
+    }>;
+    /** Cells drawn as live quads over their chunks, by chunk set index (TE-015). */
+    chunkLiveCells(): {
+        set: number;
+        cells: { x: number; y: number; width: number; height: number };
+    }[];
+    /** Makes the next `count` chunk updates reject; with `drop`, the registration is dropped. */
+    rejectChunkUpdates(count: number, drop?: boolean): void;
     /**
      * Submits a frame now. Read the canvas in the same task: a WebGPU canvas holds its image
      * only until the frame is presented.

@@ -1,11 +1,17 @@
 import { Camera, Frame, WebGPURenderer } from "@ngne/core";
 import type { RendererStatus } from "@ngne/core";
+import type { CellRect } from "../../core/cells";
+import type { Touched } from "../../core/history";
 import type { Tileset } from "../../core/model";
 import { checkerBlock, checkerSpec } from "./checker";
 import type { ViewportChecker } from "./checker";
+import { nextTier } from "./chunkPlan";
+import type { Tier } from "./chunkPlan";
+import { ChunkTier } from "./chunkTier";
+import type { ChunkStats, ChunkTarget } from "./chunkTier";
 import type { DeviceSize } from "./geometry";
-import { EmitterCache, buildLiveFrame } from "./liveTier";
-import type { ViewportScene } from "./liveTier";
+import { EmitterCache, buildLiveFrame, drawMapBase, sceneCamera } from "./liveTier";
+import type { LiveCounts, LiveInputs, ViewportScene } from "./liveTier";
 import { CHECKER_TEXTURE_ID, TilesetTextures, bitmapFromPixels } from "./textures";
 import type { BitmapFn, PackFn, TextureTarget } from "./textures";
 
@@ -47,6 +53,15 @@ export interface ViewportStats {
     lastDrawMs: number;
     /** Of those, the milliseconds that building the frame took (the rest is `render`). */
     lastBuildMs: number;
+    /** The tier of the last frame (ENGINE §4). */
+    tier: Tier;
+    /** Changes of tier between submitted frames. */
+    tierChanges: number;
+    /** The visible count the last frame chose its tier by. */
+    visibleCount: number;
+    /** Chunk and live quads of the last frame. */
+    chunkQuads: number;
+    tileQuads: number;
 }
 
 let creations = 0;
@@ -73,7 +88,15 @@ export class Viewport {
         drawCalls: 0,
         lastDrawMs: 0,
         lastBuildMs: 0,
+        tier: "live",
+        tierChanges: 0,
+        visibleCount: 0,
+        chunkQuads: 0,
+        tileQuads: 0,
     };
+    readonly #chunks: ChunkTier;
+    /** Test seam: `updateTexture` calls of chunks still to reject, and how. */
+    #chunkFaults = { count: 0, drop: false };
     #size: DeviceSize;
     #raf = 0;
     #waitingForReady = false;
@@ -105,6 +128,30 @@ export class Viewport {
         this.#textures = new TilesetTextures(target, options.pack, this.#bitmap, {
             onChange: () => this.requestRedraw(),
             onError: (error) => options.onError(error),
+        });
+        const chunkTarget: ChunkTarget = {
+            createTexture: (id, width, height, signal) =>
+                renderer.createTexture(id, width, height, signal),
+            updateTexture: (id, source, region, signal) => {
+                const faults = this.#chunkFaults;
+                if (faults.count > 0) {
+                    faults.count -= 1;
+                    // As NGNE after a failed copy (drops the registration) or a loss after
+                    // submission (keeps the image it had).
+                    if (faults.drop) target.releaseTexture(id);
+                    return Promise.reject(new Error(`Test: update of ${id} rejected.`));
+                }
+                return renderer.updateTexture(id, source, region, signal);
+            },
+            releaseTexture: target.releaseTexture,
+            has: (id) => this.textureIds().includes(id),
+        };
+        this.#chunks = new ChunkTier({
+            target: chunkTarget,
+            hooks: {
+                onChange: () => this.requestRedraw(),
+                onError: (error) => options.onError(error),
+            },
         });
         // Observers get future transitions only; the callback stays small (ENGINE §2).
         this.#unsubscribe = renderer.onLifecycle((event) => {
@@ -149,9 +196,41 @@ export class Viewport {
         return this.#stats;
     }
 
-    /** IDs of the manual textures on the renderer, for tests. */
+    /** IDs of the manual textures on the renderer (at most 1,000: the inspection's limit). */
     textureIds(): string[] {
-        return this.#renderer.inspect().entries.map((entry) => entry.id);
+        try {
+            return this.#renderer.inspect(1000).entries.map((entry) => entry.id);
+        } catch {
+            // A failed or disposed renderer holds nothing.
+            return [];
+        }
+    }
+
+    /** What the chunk tier reports, for tests and benchmarks. */
+    get chunkStats(): ChunkStats {
+        return this.#chunks.stats;
+    }
+
+    /** The cells the chunk tier draws as live quads over their chunks, for tests. */
+    chunkLiveCells(): { set: number; cells: CellRect }[] {
+        return this.#chunks.liveCells();
+    }
+
+    /**
+     * A command changed the document: chunks under changed cells are patched, and their cells
+     * drawn as live quads until the patch settles (ENGINE §4, painting at overview).
+     */
+    noteTouched(touched: Touched): void {
+        this.#chunks.noteTouched(touched);
+        this.requestRedraw();
+    }
+
+    /**
+     * Test seam: the next `count` chunk updates reject, as after a loss once submitted (the
+     * texture keeps its image) or, with `drop`, a failed copy that drops the registration.
+     */
+    rejectChunkUpdates(count: number, drop = false): void {
+        this.#chunkFaults = { count, drop };
     }
 
     /** Makes exactly these tilesets the ones with a texture; the others are released. */
@@ -196,15 +275,37 @@ export class Viewport {
         if (this.#disposed || renderer.status !== "ready") return false;
         const started = performance.now();
         const scene = this.#options.scene();
+        const stats = this.#stats;
         if (scene) {
             this.#ensureChecker(scene.checker);
-            buildLiveFrame(this.#frame, {
+            const size = { width: renderer.width, height: renderer.height };
+            const inputs: LiveInputs = {
                 scene,
-                size: { width: renderer.width, height: renderer.height },
+                size,
                 camera: this.#camera,
                 emitter: this.#emitters.emitter(this.#textures.drawable(scene.project.tilesets)),
                 checkerReady: this.#checkerReady,
-            });
+            };
+            // The tier from the chunk counts of the view, with hysteresis (ENGINE §4).
+            const chunks = this.#chunks;
+            chunks.sync(scene.project, scene.map, size);
+            const camera = sceneCamera(scene);
+            const count = chunks.visibleCount(camera, size);
+            const tier = nextTier(stats.tier, count, chunks.ready);
+            if (tier !== stats.tier) stats.tierChanges += 1;
+            stats.tier = tier;
+            stats.visibleCount = count;
+            let counts: LiveCounts;
+            if (tier === "chunk") {
+                counts = { tileQuads: 0, checkerQuads: 0 };
+                drawMapBase(this.#frame, inputs, counts);
+                const workspace = this.#options.workspace();
+                stats.chunkQuads = chunks.draw(this.#frame, inputs, camera, counts, workspace);
+            } else {
+                counts = buildLiveFrame(this.#frame, inputs);
+                stats.chunkQuads = 0;
+            }
+            stats.tileQuads = counts.tileQuads;
         } else {
             this.#frame.reset();
             this.#frame.scene(this.#camera, 1);
@@ -228,6 +329,7 @@ export class Viewport {
         this.#abort.abort();
         this.#checkerAbort?.abort();
         this.#textures.dispose();
+        this.#chunks.dispose();
         this.#unsubscribe();
         try {
             this.#renderer.dispose();

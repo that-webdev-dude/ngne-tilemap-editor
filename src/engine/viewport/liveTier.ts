@@ -1,11 +1,11 @@
 import type { Camera, Frame } from "@ngne/core";
-import type { MapView, Project, ProjectMap } from "../../core/model";
-import { effectiveValues, walkLayers } from "../../core/model";
+import type { GroupLayer, MapView, Project, ProjectMap, TileLayer } from "../../core/model";
+import { effectiveValues, findLayer, walkLayers } from "../../core/model";
 import { QuadEmitter } from "../../core/runtime/emit";
 import type { EmitTileset } from "../../core/runtime/emit";
 import { checkerBlockSize, checkerMean, checkerSpec, type ViewportChecker } from "./checker";
 import { deviceScale, intersect, layerShift, toDevice, visibleRect } from "./geometry";
-import type { DeviceSize } from "./geometry";
+import type { Camera2D, DeviceSize, MapRect } from "./geometry";
 import { CHECKER_TEXTURE_ID } from "./textures";
 import type { ReadyTileset } from "./textures";
 
@@ -99,46 +99,11 @@ export interface LiveCounts {
  * visible tile layer. The frame is reset first. Returns what it drew.
  */
 export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
-    const { scene, size, emitter } = inputs;
-    const { map, view } = scene;
-    const scale = deviceScale(view.zoom, scene.dpr);
-    const camera = { centreX: view.centreX, centreY: view.centreY, scale };
-    const visible = visibleRect(camera, size);
+    const { scene } = inputs;
+    const { map } = scene;
     const counts: LiveCounts = { tileQuads: 0, checkerQuads: 0 };
-
-    frame.reset();
-    frame.scene(inputs.camera, 1);
-
-    // The map rectangle, clipped to what the canvas shows.
-    const mapRect = intersect(
-        { x: 0, y: 0, width: map.width * map.tileWidth, height: map.height * map.tileHeight },
-        visible,
-    );
-    if (mapRect) {
-        drawChecker(frame, inputs, camera, mapRect, counts);
-        const background = map.backgroundColor;
-        if (background !== null && (background & 255) !== 0) {
-            const from = toDevice(camera, size, mapRect.x, mapRect.y);
-            const w = mapRect.width * scale;
-            const h = mapRect.height * scale;
-            frame.rect(
-                from.x + w / 2,
-                from.y + h / 2,
-                w,
-                h,
-                background >>> 8,
-                (background & 255) / 255,
-                LAYER.map,
-            );
-        }
-    }
-
-    const sink = {
-        sprite(s: Parameters<Frame["sprite"]>[0]): void {
-            frame.sprite(s);
-            counts.tileQuads += 1;
-        },
-    };
+    const camera = drawMapBase(frame, inputs, counts);
+    const visible = visibleRect(camera, inputs.size);
     let depth = 0;
     for (const { layer, ancestors } of walkLayers(map.layers)) {
         if (layer.type !== "tile") continue;
@@ -146,26 +111,140 @@ export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
         const opacity = Math.max(0, Math.min(255, Math.round(values.opacity)));
         if (!values.visible || opacity === 0) continue;
         depth += 1;
-        const shift = layerShift(map, camera, values);
-        emitter.emitLayer(sink, layer.cells, {
-            width: map.width,
-            height: map.height,
-            gridWidth: map.tileWidth,
-            gridHeight: map.tileHeight,
-            viewX: visible.x - shift.x,
-            viewY: visible.y - shift.y,
-            viewWidth: visible.width,
-            viewHeight: visible.height,
-            translateX: shift.x - visible.x,
-            translateY: shift.y - visible.y,
-            scale,
-            alpha: opacity / 255,
-            color: WHITE,
-            layer: LAYER.tiles,
-            depth,
-        });
+        emitLiveLayer(frame, inputs, camera, layer, visible, { depth, counts, ancestors });
     }
     return counts;
+}
+
+/** The camera of a scene: its view centre and device pixels per map pixel. */
+export function sceneCamera(scene: ViewportScene): Camera2D {
+    const { view } = scene;
+    return {
+        centreX: view.centreX,
+        centreY: view.centreY,
+        scale: deviceScale(view.zoom, scene.dpr),
+    };
+}
+
+/**
+ * Resets `frame` and draws what lies under every tile layer: the checkerboard and the
+ * background colour of the visible part of the map. Returns the scene's camera.
+ */
+export function drawMapBase(frame: Frame, inputs: LiveInputs, counts: LiveCounts): Camera2D {
+    const camera = sceneCamera(inputs.scene);
+    frame.reset();
+    frame.scene(inputs.camera, 1);
+    drawUnderTiles(frame, inputs, camera, visibleRect(camera, inputs.size), counts);
+    return camera;
+}
+
+/** Where quads go in NGNE's order: a layer and a depth in it. */
+export interface Placement {
+    layer: number;
+    depth: number;
+}
+
+/**
+ * The checkerboard and the background colour of the map inside `area` (map pixels). By default
+ * under every tile; with `at`, at that place, and over `workspace` (0xRRGGBB) outside the map, so
+ * that it covers whatever was drawn there before (the chunk tier's patches).
+ */
+export function drawUnderTiles(
+    frame: Frame,
+    inputs: LiveInputs,
+    camera: Camera2D,
+    area: MapRect,
+    counts: LiveCounts,
+    at?: Placement & { workspace: number },
+): void {
+    const { map } = inputs.scene;
+    if (at) fillRect(frame, inputs, camera, area, at.workspace, 1, at);
+    const mapRect = intersect(
+        { x: 0, y: 0, width: map.width * map.tileWidth, height: map.height * map.tileHeight },
+        area,
+    );
+    if (!mapRect) return;
+    drawChecker(frame, inputs, camera, mapRect, counts, at);
+    const background = map.backgroundColor;
+    if (background !== null && (background & 255) !== 0) {
+        fillRect(frame, inputs, camera, mapRect, background >>> 8, (background & 255) / 255, at);
+    }
+}
+
+/** One rectangle of a colour, under the tiles or at `at`. */
+function fillRect(
+    frame: Frame,
+    inputs: LiveInputs,
+    camera: Camera2D,
+    rect: MapRect,
+    color: number,
+    alpha: number,
+    at: Placement | undefined,
+): void {
+    const from = toDevice(camera, inputs.size, rect.x, rect.y);
+    const w = rect.width * camera.scale;
+    const h = rect.height * camera.scale;
+    if (at) {
+        frame.sprite({
+            x: from.x + w / 2,
+            y: from.y + h / 2,
+            width: w,
+            height: h,
+            color,
+            alpha,
+            ...at,
+        });
+    } else {
+        frame.rect(from.x + w / 2, from.y + h / 2, w, h, color, alpha, LAYER.map);
+    }
+}
+
+/**
+ * Emits the quads of one tile layer whose tiles overlap `area`, a rectangle in map pixels
+ * (the visible part of the map, or cells to draw over a chunk), at the layer's effective
+ * opacity, parallax and offset.
+ */
+export function emitLiveLayer(
+    frame: Frame,
+    inputs: LiveInputs,
+    camera: Camera2D,
+    layer: TileLayer,
+    area: MapRect,
+    at: { depth: number; counts: LiveCounts; ancestors?: readonly GroupLayer[]; layer?: number },
+): void {
+    const { map } = inputs.scene;
+    const entry = at.ancestors ? { layer, ancestors: at.ancestors } : findLayer(map, layer.id);
+    if (!entry) return;
+    const values = effectiveValues(layer, entry.ancestors);
+    const opacity = Math.max(0, Math.min(255, Math.round(values.opacity)));
+    if (!values.visible || opacity === 0) return;
+    const { scale } = camera;
+    const visible = visibleRect(camera, inputs.size);
+    const shift = layerShift(map, camera, values);
+    const { counts } = at;
+    const sink = {
+        sprite(s: Parameters<Frame["sprite"]>[0]): void {
+            frame.sprite(s);
+            counts.tileQuads += 1;
+        },
+    };
+    inputs.emitter.emitLayer(sink, layer.cells, {
+        width: map.width,
+        height: map.height,
+        gridWidth: map.tileWidth,
+        gridHeight: map.tileHeight,
+        viewX: area.x - shift.x,
+        viewY: area.y - shift.y,
+        viewWidth: area.width,
+        viewHeight: area.height,
+        translateX: shift.x - visible.x,
+        translateY: shift.y - visible.y,
+        scale,
+        alpha: opacity / 255,
+        color: WHITE,
+        layer: at.layer ?? LAYER.tiles,
+        depth: at.depth,
+    });
 }
 
 /**
@@ -176,18 +255,16 @@ export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
 function drawChecker(
     frame: Frame,
     inputs: LiveInputs,
-    camera: { centreX: number; centreY: number; scale: number },
-    rect: { x: number; y: number; width: number; height: number },
+    camera: Camera2D,
+    rect: MapRect,
     counts: LiveCounts,
+    place?: Placement,
 ): void {
     const { size, checkerReady } = inputs;
     const { checker } = inputs.scene;
     const { scale } = camera;
-    const from = toDevice(camera, size, rect.x, rect.y);
     if (checker.size * scale < MIN_CHECKER_SQUARE || checkerReady !== checkerSpec(checker)) {
-        const w = rect.width * scale;
-        const h = rect.height * scale;
-        frame.rect(from.x + w / 2, from.y + h / 2, w, h, checkerMean(checker), 1, LAYER.map);
+        fillRect(frame, inputs, camera, rect, checkerMean(checker), 1, place);
         counts.checkerQuads += 1;
         return;
     }
@@ -216,7 +293,7 @@ function drawChecker(
                 v: (cut.y - by * block) / block,
                 uw: cut.width / block,
                 vh: cut.height / block,
-                layer: LAYER.map,
+                ...(place ?? { layer: LAYER.map }),
             });
             counts.checkerQuads += 1;
         }

@@ -180,6 +180,9 @@ export function ViewportArea() {
                     },
                     renderNow: () => created.renderNow(),
                     textureIds: () => created.textureIds(),
+                    chunkStats: () => created.chunkStats,
+                    chunkLiveCells: () => created.chunkLiveCells(),
+                    rejectChunkUpdates: (count, drop) => created.rejectChunkUpdates(count, drop),
                     rendererCreations,
                 });
             },
