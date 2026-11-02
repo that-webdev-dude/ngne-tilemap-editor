@@ -1,0 +1,28 @@
+{
+    "id": "te-017-paint-intel-uhd",
+    "ticket": "TE-017",
+    "measurement": "Paint with the stamp brush on the reference map at 100%, pointer event to the frame containing it submitted; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 190 drag moves of one stroke after 10 warm-up moves",
+    "budgetMs": 33,
+    "resultMs": 31.300000000017462,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "pressMs": 14.10000000000582,
+        "medianMs": 19.599999999976717,
+        "maxMs": 42.29999999998836,
+        "tiers": [
+            "live"
+        ],
+        "layerId": 7
+    },
+    "benchmarkId": "te-017-paint",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-02T21:32:29.193Z"
+}

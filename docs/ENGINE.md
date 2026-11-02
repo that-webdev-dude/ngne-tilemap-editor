@@ -143,7 +143,7 @@ tickets that build the feature.
 | --- | --- | --- |
 | Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | 7.7–7.8 / 7.0–7.2 ms |
 | Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | 0% / 0% |
-| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | — |
+| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | TE-017: 31.3 / 27.8 ms (median 19.6 / 16.6 ms, max 42.3 / 42.6 ms) |
 | Paint at overview: painted cells visible | next frame | by design (live quads); frame submit p95 1.6 / 0.9 ms |
 | Overview chunk patch settled after a paint, p95 | ≤ 100 ms | TE-015: 19.9 / 21.0 ms (16×16 stamp: 34.1 / 25.5 ms) |
 | Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | TE-015: 32 / 32 MB (T = 8, 128 chunks) |
@@ -156,6 +156,8 @@ tickets that build the feature.
 TE-015 rows: 2026-10-31, Chrome 156.0.8078.80, i7-12650H, Balanced power plan with the Best
 performance power mode, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784). Raw data: `te-015-*-intel-uhd.json` and
 `te-015-*-rtx-4060.json` in [evidence/](evidence/).
+TE-017 row: 2026-11-02, the same machine, Chrome, power plan, panel and window. Raw data:
+`te-017-paint-intel-uhd.json` and `te-017-paint-rtx-4060.json` in [evidence/](evidence/).
 
 ### Game runtime budget
 

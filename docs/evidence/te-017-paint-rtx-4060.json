@@ -1,0 +1,28 @@
+{
+    "id": "te-017-paint-rtx-4060",
+    "ticket": "TE-017",
+    "measurement": "Paint with the stamp brush on the reference map at 100%, pointer event to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 190 drag moves of one stroke after 10 warm-up moves",
+    "budgetMs": 33,
+    "resultMs": 27.79999999998836,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "pressMs": 19.20000000001164,
+        "medianMs": 16.60000000000582,
+        "maxMs": 42.59999999997672,
+        "tiers": [
+            "live"
+        ],
+        "layerId": 7
+    },
+    "benchmarkId": "te-017-paint",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-02T21:32:41.026Z"
+}
