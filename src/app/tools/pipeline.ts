@@ -6,6 +6,7 @@ import { findLayer } from "../../core/model";
 import type { ProjectSession } from "../../core/model";
 import { pointsOnLine } from "../../core/raster/line";
 import type { PixelPoint } from "../../core/raster/line";
+import { maskHas, tileSelectionOf } from "../../core/selection";
 import type { SessionState } from "../state/session";
 import type { StatusState } from "../state/status";
 import type { ViewMapping } from "../view/coordinates";
@@ -459,6 +460,9 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         const writable = new Set(paintable);
         const inMap = (x: number, y: number) =>
             opened !== null && x >= 0 && y >= 0 && x < opened.map.width && y < opened.map.height;
+        // The map's tile selection as at the press clips the stroke (SPEC §4.1, Tiled's
+        // `TilePainter::paintableRegion`); a selection is a value nobody changes.
+        const selection = opened ? tileSelectionOf(session, opened.mapId) : null;
         const paint: PaintStroke | null = opened && {
             mapId: opened.mapId,
             layerId: opened.layerId,
@@ -470,9 +474,10 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
             },
             set(x, y, value, layer = opened.layerId) {
                 if (!opened.open || !own) return;
-                // Painting is clipped to the map (SPEC §4.1), and to the layers a stroke may
-                // write.
+                // Painting is clipped to the map and the tile selection (SPEC §4.1), and to the
+                // layers a stroke may write.
                 if (!inMap(x, y) || !writable.has(layer)) return;
+                if (selection && !maskHas(selection, x, y)) return;
                 opened.set(x, y, value, layer);
                 own.unreported = union(own.unreported, { x, y, width: 1, height: 1 });
             },

@@ -1,7 +1,9 @@
 import type { Stamp } from "../../../core/cells";
 import { forEachTileFillCell, regionBounds } from "../../../core/fill";
 import type { Region } from "../../../core/fill";
+import type { Region as CellMask } from "../../../core/model";
 import type { PixelPoint } from "../../../core/raster/line";
+import { intersectMask, maskSpans, spansMask } from "../../../core/selection";
 import type { PaintStroke, ToolOptionSpec } from "../types";
 
 // What the bucket and the shape fill paint (SPEC §4.3): the current stamp tiled over a region
@@ -40,4 +42,14 @@ export function paintPlan(paint: PaintStroke, plan: FillPlan): void {
     forEachTileFillCell(plan.stamp, plan.region, plan.origin, (x, y, value) =>
         paint.set(x, y, value),
     );
+}
+
+/**
+ * The part of `plan` inside the tile selection `selection`, the stamp still tiled from the
+ * plan's origin: what a stroke clipped to the selection writes (SPEC §4.1). Null when none of
+ * it is selected.
+ */
+export function selectedPlan(plan: FillPlan, selection: CellMask): FillPlan | null {
+    const region = maskSpans(intersectMask(spansMask(plan.region), selection));
+    return region.length > 0 ? { ...plan, region } : null;
 }

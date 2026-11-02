@@ -1,4 +1,5 @@
 import { regionBounds } from "../../../core/fill";
+import { tileSelectionOf } from "../../../core/selection";
 import { fillRects } from "../../overlay/draw";
 import type { OverlayFrame, OverlayLayer } from "../../overlay/types";
 import { sessionStore } from "../../state/session";
@@ -12,6 +13,7 @@ import { STAMP_PREVIEW_ALPHA } from "../stamp/stampPreview.overlay";
 import { stampCanvas } from "../stamp/stampImage";
 import { activeLayerId } from "../toolSets";
 import { bucketPlan, bucketTool, subscribeBucket } from "./bucket.tools";
+import { selectedPlan } from "./fillPlan";
 import type { FillPlan } from "./fillPlan";
 import {
     ellipseFillTool,
@@ -23,9 +25,9 @@ import {
 // The preview of the bucket and the shape fill (DESIGN §4: fill tools preview their region as
 // the stamp brush its stamp): the stamp tiled over the cells the fill would write at 60%
 // opacity, the empty stamp cells clear, and the bounding box of those cells outlined 1 px in
-// `--accent`. The bucket shows the region of the cell under the pointer (the whole layer with
-// Shift or Whole selection) until it is pressed; the shape fill the shape of its drag, and the
-// cell under the pointer before one. A capture in progress shows its rectangle instead
+// `--accent`. The bucket shows the region of the cell under the pointer (the whole selection or
+// layer with Shift or Whole selection) until it is pressed; the shape fill the part of the
+// shape of its drag inside the tile selection, and the cell under the pointer before one. A capture in progress shows its rectangle instead
 // (`capturePreview.overlay.ts`).
 
 /** Draws `plan` over the map: its spans filled with the tiled stamp, then its outline. */
@@ -76,7 +78,9 @@ function drawFillPreview(frame: OverlayFrame): void {
     if (tool?.id !== rectangleFillTool.id && tool?.id !== ellipseFillTool.id) return;
     if (pressed) {
         const plan = shapeDragPlan(map, cursor.cell, heldModifiers());
-        if (plan) drawPlan(frame, plan);
+        const selection = tileSelectionOf(sessionStore.getState().session, map.id);
+        const shown = plan && selection ? selectedPlan(plan, selection) : plan;
+        if (shown) drawPlan(frame, shown);
         return;
     }
     if (!mapping.contains(cursor.cell)) return;
@@ -90,7 +94,8 @@ export const overlayLayers: OverlayLayer[] = [
         order: 600,
         draw: drawFillPreview,
         // The stamp, the tool and its options, a press or a drag beginning or ending, a capture, the
-        // modifiers (Shift fills the whole layer or squares the shape) and the layer's cells.
+        // modifiers (Shift fills the whole selection or layer, or squares the shape), the layer's
+        // cells and the tile selection.
         watch(redraw) {
             const stops = [
                 currentStampStore.subscribe(redraw),

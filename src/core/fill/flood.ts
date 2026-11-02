@@ -8,7 +8,7 @@ import type { Region, RowSpan } from "./region";
 // on a rectangular grid. From a seed it runs left and right as far as the cells match, takes
 // that run as a span, and queues one seed per run of matching cells in the rows above and below
 // it. The region holds the cells 4-connected to the origin through matching cells, inside the
-// bounds: the map, or a region (the selection, TE-020). Pure.
+// bounds: the map, or a region. Pure.
 
 /** Reads the value of a cell; 0 when it is empty. */
 export type CellReader = (x: number, y: number) => number;

@@ -36,7 +36,13 @@ describe("status field registry", () => {
 
     it("finds the fields of this ticket in the app's own registry", async () => {
         const { statusFields } = await import("../../src/ui/status/statusFields");
-        expect(statusFields.map((each) => each.id)).toEqual(["cell", "tile", "zoom", "size"]);
+        expect(statusFields.map((each) => each.id)).toEqual([
+            "cell",
+            "tile",
+            "zoom",
+            "size",
+            "selection",
+        ]);
     });
 });
 

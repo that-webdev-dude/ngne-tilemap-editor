@@ -85,8 +85,8 @@ export interface PaintStroke {
      */
     get(x: number, y: number, layer?: number): number;
     /**
-     * Writes `value` (0 empties) to a cell of the layer. Painting is clipped to the map
-     * (SPEC §4.1): a cell outside it is left alone. The viewport shows the change before
+     * Writes `value` (0 empties) to a cell of the layer. Painting is clipped to the map and
+     * to its tile selection as at the press (SPEC §4.1): a cell outside them is left alone. The viewport shows the change before
      * the stroke ends. `layer` writes another of `paintableLayers` instead (the eraser's
      * all-layers mode, SPEC §4.3); any other layer is left alone.
      */

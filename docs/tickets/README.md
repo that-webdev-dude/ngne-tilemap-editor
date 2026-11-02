@@ -90,7 +90,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-017](TE-017-stamp-brush-eraser.md) | Current stamp, stamp brush and eraser | L | 016 | Done |
 | [TE-018](TE-018-stamp-transforms-capture.md) | Stamp transforms and capture | M | 017 | Done |
 | [TE-019](TE-019-flood-bucket-shape-fill.md) | Flood fill, bucket fill and shape fill | M | 018 | Done |
-| [TE-020](TE-020-tile-selection-tools.md) | Tile selection tools | M | 019 | To do |
+| [TE-020](TE-020-tile-selection-tools.md) | Tile selection tools | M | 019 | Done |
 | [TE-021](TE-021-cell-clipboard.md) | Cell clipboard | S | 020 | To do |
 | **M3** | **Tilesets** | | | |
 | [TE-022](TE-022-import-grid-png-atlas.md) | Tileset import core: grid PNG and atlas | M | 006, 009 | To do |

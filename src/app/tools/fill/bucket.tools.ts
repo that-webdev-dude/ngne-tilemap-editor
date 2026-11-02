@@ -4,6 +4,13 @@ import type { Region } from "../../../core/fill";
 import { findLayer } from "../../../core/model";
 import type { ProjectMap, ProjectSession } from "../../../core/model";
 import type { PixelPoint } from "../../../core/raster/line";
+import {
+    intersectMask,
+    maskHas,
+    maskSpans,
+    spansMask,
+    tileSelectionOf,
+} from "../../../core/selection";
 import { sessionStore } from "../../state/session";
 import { withCapture } from "../stamp/capture";
 import { currentStamp } from "../stamp/currentStamp";
@@ -19,8 +26,11 @@ import type { FillPlan } from "./fillPlan";
 //
 //   hover: the region the press would fill, previewed
 //   press: fills the 4-connected region of cells equal to the pressed one (tile and flags), in
-//     the map, with the stamp tiled from the region's bounding box top-left (`TileFill`)
-//   Shift, or the context bar's Whole selection: the whole layer (the selection, TE-020)
+//     the map, then only its cells in the tile selection (Tiled's
+//     `computePaintableFillRegion` on a fixed-size map), with the stamp tiled from the
+//     region's bounding box top-left (`TileFill`)
+//   Shift, or the context bar's Whole selection: the whole selection, or the whole layer
+//     without one; the pressed cell must lie in it (Tiled's `BucketFillTool`)
 //
 // The fill is made at the press (SPEC §14 times it press → frame) and is one history entry
 // when the stroke ends; a right click before the release cancels it. A 1 × 1 stamp equal to
@@ -53,9 +63,10 @@ export function subscribeBucket(listener: () => void): () => void {
 }
 
 /**
- * The cells a press on `cell` fills: the flood region of the cell in the active tile layer, or
- * with `whole` the layer's every cell; empty off the map, without a tile layer, or when a 1 × 1
- * stamp equals the cell. Kept between calls while the session's revision, the layer, `whole`
+ * The cells a press on `cell` fills: the flood region of the cell in the active tile layer,
+ * over the map, cut to the map's tile selection when it has one (SPEC §4.3); or with `whole`
+ * the selection's every cell when `cell` lies in it, or the layer's without one. Empty off the
+ * map, without a tile layer, or when a 1 × 1 stamp equals the cell (not with `whole`). Kept between calls while the session's revision, the layer, `whole`
  * and the stamp stay and `cell` lies in it (Tiled's own shortcut: any cell of a flood region
  * floods to the same region).
  */
@@ -84,12 +95,17 @@ export function bucketRegion(
     const layer = findLayer(map, layerId)?.layer;
     const inside = cell.x >= 0 && cell.y >= 0 && cell.x < map.width && cell.y < map.height;
     let region: Region = [];
+    const selection = tileSelectionOf(session, map.id);
     if (layer?.type === "tile" && inside) {
-        const bounds = { x: 0, y: 0, width: map.width, height: map.height };
+        const rect = { x: 0, y: 0, width: map.width, height: map.height };
         const value = layer.cells.get(cell.x, cell.y);
-        if (whole) region = rectRegion(bounds);
-        else if (stamp.width !== 1 || stamp.height !== 1 || stamp.cells[0] !== value) {
-            region = floodRegion((x, y) => layer.cells.get(x, y), cell, bounds);
+        if (whole) {
+            // Tiled: the pressed cell must lie in the region filled.
+            if (!selection) region = rectRegion(rect);
+            else if (maskHas(selection, cell.x, cell.y)) region = maskSpans(selection);
+        } else if (stamp.width !== 1 || stamp.height !== 1 || stamp.cells[0] !== value) {
+            const flood = floodRegion((x, y) => layer.cells.get(x, y), cell, rect);
+            region = selection ? maskSpans(intersectMask(spansMask(flood), selection)) : flood;
         }
     }
     known = { session, revision, mapId: map.id, layerId, whole, stamp, region };
@@ -124,7 +140,7 @@ export const bucketTool: ToolSpec = withCapture({
     id: "bucket",
     label: "Bucket Fill",
     paints: true,
-    hint: "Shift: fill the whole layer",
+    hint: "Shift: fill the whole selection or layer",
     options: [
         FILL_MODE_OPTION,
         { kind: "toggle", key: "wholeSelection", label: "Whole selection", default: false },

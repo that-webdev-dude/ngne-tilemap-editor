@@ -1,0 +1,27 @@
+{
+    "id": "te-020-magic-wand-intel-uhd",
+    "ticket": "TE-020",
+    "measurement": "Magic wand of a 65536-cell region on the reference map at 100%, the region found after the press, press to the overlay frame showing the selection; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 35 presses after 5 warm-up presses",
+    "budgetMs": 100,
+    "resultMs": 20,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "medianMs": 6.400000000372529,
+        "maxMs": 33.200000000186265,
+        "shapeAloneMs": 6.1000000005587935,
+        "handledMedianMs": 4,
+        "entries": 79,
+        "layerId": 7
+    },
+    "benchmarkId": "te-020-magic-wand",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-02T22:47:46.508Z"
+}
