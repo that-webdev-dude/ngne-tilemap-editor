@@ -775,14 +775,19 @@ The budgets are ENGINE §6, unchanged; the ticket that builds a feature measures
 reference hardware (RULES 8). Feature budgets ENGINE does not list, measured the same way on the
 reference map:
 
-| Metric | Budget |
-| ------ | ------ |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms |
-| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s |
-| Open of the reference project to first frame | ≤ 3 s |
-| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms |
-| Update tileset from source, 1,024 tiles | ≤ 1 s |
+| Metric | Budget | Measured (Intel UHD / RTX 4060) |
+| ------ | ------ | ------------------------------- |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket, TE-019: 41.3 / 43.1 ms (median 25.7 / 29.8 ms; flood alone 4.5 / 4.2 ms). Magic wand: — |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | — |
+| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | — |
+| Open of the reference project to first frame | ≤ 3 s | — |
+| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
+| Update tileset from source, 1,024 tiles | ≤ 1 s | — |
+
+TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. Raw data:
+`te-019-bucket-fill-intel-uhd.json` and `te-019-bucket-fill-rtx-4060.json` in
+[evidence/](evidence/); with the region already found by the hover preview the p95 is
+39.7 / 40.3 ms.
 
 ## 15. Quality
 

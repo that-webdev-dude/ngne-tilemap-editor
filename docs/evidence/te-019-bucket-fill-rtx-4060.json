@@ -1,0 +1,32 @@
+{
+    "id": "te-019-bucket-fill-rtx-4060",
+    "ticket": "TE-019",
+    "measurement": "Bucket fill of a 65536-cell region on the reference map at 100%, the region found after the press, press to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 35 presses after 5 warm-up presses",
+    "budgetMs": 100,
+    "resultMs": 43.09999999997672,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 29.79999999998836,
+        "maxMs": 46.29999999998836,
+        "floodAloneMs": 4.2000000000116415,
+        "handledMedianMs": 18.5,
+        "hoverFoundP95Ms": 40.29999999998836,
+        "hoverFoundMedianMs": 24.79999999998836,
+        "hoverFoundHandledMedianMs": 11.700000000011642,
+        "tiers": [
+            "live"
+        ],
+        "layerId": 7
+    },
+    "benchmarkId": "te-019-bucket-fill",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-02T21:34:13.844Z"
+}
