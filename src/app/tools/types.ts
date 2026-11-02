@@ -260,6 +260,13 @@ export interface ToolSpec {
      */
     variantOf?: string;
     /**
+     * The tool's name among the variants of its rail slot in the context bar (DESIGN §7: the
+     * shape fill's Rectangle / Ellipse). While a tool with one is active, the context bar shows
+     * after its options a choice of the slot's variants that have one, which selects the
+     * variant chosen.
+     */
+    variantLabel?: string;
+    /**
      * The layer kinds whose tool set holds this tool (DESIGN §6); a tool without it is in
      * every set, as Hand and Zoom are. A tool without it takes the kinds of the planned slot
      * of its rail slot.

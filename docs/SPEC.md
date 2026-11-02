@@ -226,7 +226,7 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
 | ---- | -------------------------------------------------- |
 | Stamp brush | Press and drag paint the stamp at each cell crossed. Empty stamp cells leave the map as it is. Shift+click: a line of stamps from the last painted point. Ctrl+Shift+click: an ellipse of stamps centred on the last painted point through the cursor. Along a line or an ellipse a stamp that would overlap one placed before it is left out (Tiled's `drawPreviewLayer`); with no painted point on the map yet, a Shift+click only sets the start (Tiled sets it at every Shift+click that does not continue a line) |
 | Eraser | Press and drag erase the cell under the cursor (line-interpolated). Right drag: erase a rectangle. Shift: erase on all unlocked visible tile layers |
-| Bucket fill | Fills the 4-connected region of cells equal to the clicked cell (same tile and flags; Tiled's `Cell` equality), bounded by the map or the selection. Shift: fill the whole selection, or the whole layer without one. The stamp tiles the region from the region's bounding box top-left (Tiled `TileFill`). Hover previews the region |
+| Bucket fill | Fills the 4-connected region of cells equal to the clicked cell (same tile and flags; Tiled's `Cell` equality), bounded by the map or the selection. Shift: fill the whole selection, or the whole layer without one. The stamp tiles the region from the region's bounding box top-left (Tiled `TileFill`); its empty cells leave the map as it is (Tiled paints the fill's non-empty cells, `modifiedRegion`). A 1 × 1 stamp equal to the clicked cell fills nothing (Tiled). The fill is made at the press (Tiled fills at the release and, since 1.12, also fills the regions of the cells dragged over; neither is done here). Hover previews the region |
 | Shape fill | Drag a rectangle or ellipse (context bar toggle); Shift: square / circle; Alt: centred on the press. Filled with the stamp as bucket fill does. Right click or Escape cancels |
 | Rectangle select | Drag a rectangle of cells. Mode by modifiers (Tiled): none = replace (or the context bar's locked mode), Shift = add, Ctrl = subtract, Ctrl+Shift = intersect. Right click clears the selection |
 | Magic wand | Selects the 4-connected region of cells equal to the clicked one; modes as rectangle select |
@@ -239,8 +239,9 @@ Tools are offered by the active layer's kind (DESIGN §6). Bucket fill, shape fi
 context bar: **Tile** (stamp) or **Terrain**.
 
 Flood fill (`core/fill`) is one queue-based scanline fill, 4-connected, used by bucket fill and
-the magic wand; it returns a region (row spans). An ellipse region holds the cells whose centre
-lies inside the ellipse inscribed in the drag rectangle.
+the magic wand; it returns a region (row spans). An ellipse region is Tiled's `ellipseRegion` of
+the drag rectangle: Zingl's Bresenham ellipse with each row filled between its edge cells; it
+touches all four sides of the rectangle.
 
 ### 4.4 Selection and clipboard
 
@@ -776,7 +777,7 @@ reference map:
 
 | Metric | Budget |
 | ------ | ------ |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, p95 | ≤ 100 ms |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms |
 | Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms |
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s |
 | Open of the reference project to first frame | ≤ 3 s |

@@ -210,6 +210,7 @@ describe("overlay layer registry", () => {
             ["cell-grid", 300],
             ["capture-preview", 600],
             ["eraser-preview", 600],
+            ["fill-preview", 600],
             ["stamp-preview", 600],
         ]);
     });

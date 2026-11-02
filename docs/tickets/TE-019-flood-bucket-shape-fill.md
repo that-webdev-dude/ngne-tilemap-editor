@@ -18,8 +18,8 @@ provides the scanline flood fill the magic wand reuses (TE-020) and the shape re
 ## Required work
 
 - `core/fill`: queue-based scanline fill, 4-connected, over cells equal by tile and flags,
-  bounded by the map or a region, returning row spans; rectangle and ellipse regions (cells whose
-  centre lies inside the inscribed ellipse).
+  bounded by the map or a region, returning row spans; rectangle and ellipse regions (Tiled's
+  `ellipseRegion` of the rectangle).
 - Bucket fill: fills the region of the clicked cell, the stamp tiled from the region's bounding
   box top-left; Shift (or Whole selection): the whole layer when no selection exists; hover
   previews the region.

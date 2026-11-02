@@ -390,6 +390,8 @@ file, object (int id), class (value = object of members), list (1.12; value = ar
 | `WangFiller` (§4) | Port: colour distances, greedy row-major resolve, 1-step look-ahead, corrections pass; seeded RNG in tests |
 | Chunked cell storage (§2 TileLayer) | Use for tile layers: keeps infinite maps additive and maps onto the viewport's chunk tier |
 | Scanline flood fill (§3) | One implementation for bucket fill, magic wand and select same tile |
+| Bucket Fill (§3) | Fills at the press, not at the release; dragging collects no further cells (1.12's drag is not reproduced) |
+| Shape Fill `ellipseRegion` (§3) | Port exactly: the ellipse fill's cells must match Tiled's |
 | Tile collision editor (§3 docks) | A small rectangle/ellipse/polygon editor, reused for marker layers |
 | Object tools (§3) | Only the rectangle, point, ellipse, polygon and polyline tools, as marker tools |
 | TMJ/TSJ (§5) | Import only; handling per feature in [BRIEF.md](../BRIEF.md) §7 |

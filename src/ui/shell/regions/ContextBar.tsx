@@ -1,5 +1,8 @@
 import { useSyncExternalStore } from "react";
+import { slotOf } from "../../../app/tools/registry";
+import type { ToolState } from "../../../app/tools/activeTool";
 import type {
+    Tool,
     ToolAction,
     ToolOptionSpec,
     ToolOptionValue,
@@ -76,6 +79,27 @@ function Actions({ actions }: { actions: readonly ToolAction[] }) {
     );
 }
 
+/**
+ * The variants of the active tool's rail slot that name themselves in the context bar (DESIGN
+ * §7: the shape fill's Rectangle / Ellipse), as a segmented control that selects one.
+ */
+function VariantChoice({ tool, tools }: { tool: Tool; tools: ToolState }) {
+    const slotId = slotOf(tool);
+    const slot = tools.registry.railSlots().find((each) => each.id === slotId);
+    const variants = (slot?.variants ?? []).filter((each) => each.variantLabel !== undefined);
+    if (!slot || variants.length < 2) return null;
+    return (
+        <span className="ui-field" data-tool-variant-choice={slot.id}>
+            <SegmentedControl
+                label={slot.label}
+                value={tool.id}
+                onChange={(id) => void tools.select(id)}
+                options={variants.map((each) => ({ value: each.id, label: each.variantLabel! }))}
+            />
+        </span>
+    );
+}
+
 /** One option of the active tool, as the control its kind calls for (DESIGN §7). */
 function OptionControl({ option, value, onChange }: OptionControlProps) {
     const data = { "data-tool-option": option.key };
@@ -138,8 +162,8 @@ function OptionControl({ option, value, onChange }: OptionControlProps) {
 
 /**
  * Context bar content (DESIGN §7): the active tool's name and its options, in the order the
- * tool lists them, rendered from its option schema, then its command buttons, then its
- * readouts. Empty while no registered tool is active.
+ * tool lists them, rendered from its option schema, then the choice of its slot's variants,
+ * then its command buttons, then its readouts. Empty while no registered tool is active.
  * While registered content is shown (`contextBarRegistry.ts`), it takes the options' place.
  */
 export function ContextBar() {
@@ -168,6 +192,9 @@ export function ContextBar() {
                           onChange={(value) => tools.setOption(tool, option.key, value)}
                       />
                   ))}
+            {content || tool.variantLabel === undefined ? null : (
+                <VariantChoice key={`${slotOf(tool)}:variants`} tool={tool} tools={tools} />
+            )}
             {content || !tool.actions?.length ? null : (
                 <Actions key={`${tool.id}:actions`} actions={tool.actions} />
             )}
