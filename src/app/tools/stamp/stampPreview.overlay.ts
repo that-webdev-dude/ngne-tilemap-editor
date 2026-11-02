@@ -6,6 +6,7 @@ import { toolState } from "../activeTool";
 import { toolPipeline } from "../appPipeline";
 import { cellDeviceRect, clipToMap, outlineRects } from "../cellOutline";
 import { heldModifiers, subscribeHeldModifiers } from "../heldModifiers";
+import { captureArea, subscribeCapture } from "./capture";
 import { currentStamp, currentStampStore } from "./currentStamp";
 import { stampIsEmpty, stampOrigin } from "./placement";
 import { brushPlacements, stampTool, subscribeStampBrush } from "./stamp.tools";
@@ -16,7 +17,8 @@ import { stampCanvas } from "./stampImage";
 // paint, each placement's rectangle outlined 1 px in `--accent`; a line or an ellipse shows all
 // its placements. Cut at the map's edge; nothing when the pointer is off the map, and nothing
 // without a stamp. Where a press would paint nothing (a line's start not set yet) the cell
-// under the pointer is outlined alone.
+// under the pointer is outlined alone. A capture in progress shows its rectangle instead
+// (`capturePreview.overlay.ts`).
 
 /** The opacity of the preview's tiles (DESIGN §4). */
 export const STAMP_PREVIEW_ALPHA = 0.6;
@@ -25,6 +27,7 @@ function drawStampPreview(frame: OverlayFrame): void {
     const tool = toolPipeline.strokeTool ?? toolState.active();
     const { cursor, map, mapping, context, theme } = frame;
     if (tool?.id !== stampTool.id || !cursor || !mapping.contains(cursor.cell)) return;
+    if (captureArea(cursor.cell)) return;
     const stamp = currentStamp();
     if (!stamp || stampIsEmpty(stamp)) return;
     const pressed = toolPipeline.strokeTool === tool && toolPipeline.strokeButton === "primary";
@@ -68,6 +71,7 @@ export const overlayLayers: OverlayLayer[] = [
                 currentStampStore.subscribe(redraw),
                 toolState.subscribe(redraw),
                 subscribeStampBrush(redraw),
+                subscribeCapture(redraw),
                 subscribeHeldModifiers(redraw),
                 sessionStore.subscribe(redraw),
             ];

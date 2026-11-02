@@ -208,6 +208,7 @@ describe("overlay layer registry", () => {
         const { overlayLayers } = await import("../../src/app/overlay/overlayLayers");
         expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([
             ["cell-grid", 300],
+            ["capture-preview", 600],
             ["eraser-preview", 600],
             ["stamp-preview", 600],
         ]);

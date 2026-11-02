@@ -1,9 +1,20 @@
 import { useSyncExternalStore } from "react";
-import type { ToolOptionSpec, ToolOptionValue, ToolReadout } from "../../../app/tools/types";
+import type {
+    ToolAction,
+    ToolOptionSpec,
+    ToolOptionValue,
+    ToolReadout,
+} from "../../../app/tools/types";
+import { runCommand } from "../../commands/runCommand";
+import { useCommands } from "../../commands/useCommands";
 import { shownContextBarContent, subscribeContextBarContent } from "../../tools/contextBarRegistry";
+import { Button } from "../../primitives/Button";
+import { Icon } from "../../primitives/Icon";
+import { IconButton } from "../../primitives/IconButton";
 import { NumberField } from "../../primitives/NumberField";
 import { SegmentedControl } from "../../primitives/SegmentedControl";
 import { Select } from "../../primitives/Select";
+import { Tooltip } from "../../primitives/Tooltip";
 import { Toggle } from "../../primitives/Toggle";
 import { useToolState } from "../../tools/useToolState";
 import "../../tools/contextBar.css";
@@ -21,6 +32,46 @@ function Readout({ readout }: { readout: ToolReadout }) {
         <span className="ui-field" data-tool-readout={readout.key}>
             <span className="ui-field__label">{readout.label}</span>
             <output className="context-readout">{text}</output>
+        </span>
+    );
+}
+
+/**
+ * The command buttons of the active tool (DESIGN §7: rotate and flip the stamp): an icon
+ * button or a text button each, disabled while its command is.
+ */
+function Actions({ actions }: { actions: readonly ToolAction[] }) {
+    const commands = useCommands();
+    return (
+        <span className="context-actions">
+            {actions.map((action) => {
+                const command = commands.find((each) => each.id === action.command);
+                const data = { "data-tool-action": action.command };
+                const disabled = !command || !command.enabled();
+                const run = () => void runCommand(action.command);
+                return action.icon ? (
+                    <IconButton
+                        key={action.command}
+                        {...data}
+                        label={action.label}
+                        shortcut={command?.shortcuts[0]}
+                        disabled={disabled}
+                        onClick={run}
+                    >
+                        <Icon icon={action.icon} />
+                    </IconButton>
+                ) : (
+                    <Tooltip
+                        key={action.command}
+                        label={command?.title() ?? action.label}
+                        shortcut={command?.shortcuts[0]}
+                    >
+                        <Button {...data} disabled={disabled} onClick={run}>
+                            {action.label}
+                        </Button>
+                    </Tooltip>
+                );
+            })}
         </span>
     );
 }
@@ -87,8 +138,8 @@ function OptionControl({ option, value, onChange }: OptionControlProps) {
 
 /**
  * Context bar content (DESIGN §7): the active tool's name and its options, in the order the
- * tool lists them, rendered from its option schema, then its readouts. Empty while no
- * registered tool is active.
+ * tool lists them, rendered from its option schema, then its command buttons, then its
+ * readouts. Empty while no registered tool is active.
  * While registered content is shown (`contextBarRegistry.ts`), it takes the options' place.
  */
 export function ContextBar() {
@@ -117,6 +168,9 @@ export function ContextBar() {
                           onChange={(value) => tools.setOption(tool, option.key, value)}
                       />
                   ))}
+            {content || !tool.actions?.length ? null : (
+                <Actions key={`${tool.id}:actions`} actions={tool.actions} />
+            )}
             {content
                 ? null
                 : (tool.readouts ?? []).map((readout) => (

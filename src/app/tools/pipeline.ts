@@ -437,7 +437,8 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         const layerId = activeLayerId(session, map);
 
         let transaction: Transaction | null = null;
-        if (tool.paints) {
+        const paints = typeof tool.paints === "function" ? tool.paints(button) : tool.paints;
+        if (paints) {
             const target = resolvePaintTarget(session);
             if (!target) return false;
             if ("refused" in target) {

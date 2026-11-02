@@ -1,9 +1,11 @@
+import { RotateCcwSquare, RotateCwSquare } from "lucide-react";
 import type { Stamp } from "../../../core/cells";
 import { pointsOnEllipse } from "../../../core/raster/ellipse";
 import { pointsOnLine } from "../../../core/raster/line";
 import type { PixelPoint } from "../../../core/raster/line";
 import { sessionStore } from "../../state/session";
-import type { PaintStroke, ToolModifiers, ToolSpec } from "../types";
+import type { PaintStroke, ToolAction, ToolModifiers, ToolSpec } from "../types";
+import { withCapture } from "./capture";
 import { currentStamp, currentStampStore } from "./currentStamp";
 import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
 
@@ -24,6 +26,20 @@ import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
 // or, with Ctrl too, an ellipse (Tiled's StartSet release; Shift let go returns Tiled's brush to
 // free, and the release draws nothing). Each stroke is one history entry; the last cell it
 // painted (or set) is the next one's start, in this project.
+//
+// A right drag captures a stamp from the map (`capture.ts`). The context bar's buttons rotate
+// and flip the stamp (`stamp.commands.ts`).
+
+/**
+ * The stamp transform buttons of the context bar (DESIGN §7), for every tool that paints the
+ * stamp: the stamp brush, the bucket and shape fill (TE-019).
+ */
+export const STAMP_TRANSFORM_ACTIONS: readonly ToolAction[] = [
+    { command: "stamp.rotateLeft", label: "Rotate Stamp Left", icon: RotateCcwSquare },
+    { command: "stamp.rotateRight", label: "Rotate Stamp Right", icon: RotateCwSquare },
+    { command: "stamp.flipHorizontal", label: "Flip H" },
+    { command: "stamp.flipVertical", label: "Flip V" },
+];
 
 /** How a press of the brush paints, by its modifiers. */
 export type BrushMode = "free" | "line" | "ellipse";
@@ -119,11 +135,12 @@ function place(paint: PaintStroke, stamp: Stamp, points: readonly PixelPoint[]):
     }
 }
 
-export const stampTool: ToolSpec = {
+export const stampTool: ToolSpec = withCapture({
     id: "stamp",
     label: "Stamp Brush",
     paints: true,
     hint: "Shift: line · Ctrl+Shift: ellipse",
+    actions: STAMP_TRANSFORM_ACTIONS,
     readouts: [
         {
             key: "size",
@@ -188,7 +205,7 @@ export const stampTool: ToolSpec = {
         stroke = null;
         changed();
     },
-};
+});
 
 // Another project in the window: its maps may carry the same ids (the same file reopened).
 let project = sessionStore.getState().session.project;

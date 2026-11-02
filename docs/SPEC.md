@@ -211,8 +211,14 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
   left of the whole stamp (§2.3). They change the stamp only, not the map.
 - **Capture** (Tiled): with the stamp brush, bucket or shape fill active, a right drag on the
   map selects a rectangle of the active layer; on release it becomes the current stamp and the
-  stamp brush is selected. Shift held at release also erases the captured cells (cut), one
-  history entry. A right click without drag captures one cell.
+  active tool stays (Tiled switches to the stamp brush only from a tool that does not use the
+  stamp, `MapEditor::setStamp`). Shift held at release also erases the captured cells (cut), one
+  history entry. A right click without drag captures one cell. As Tiled's
+  `capturestamphelper.cpp` (v1.12.2): the stamp is the rectangle's part inside the map, cut to
+  the bounding box of its non-empty cells (empty cells inside stay empty); a rectangle with none
+  leaves no stamp. A capture only reads: a locked layer is captured but not cut (§4.1); a
+  hidden layer, or one under a hidden group, refuses the press (Tiled hides its brush there);
+  Ctrl+right does not capture (Tiled keeps it for picking a layer).
 
 ### 4.3 Tools
 

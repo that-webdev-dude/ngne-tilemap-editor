@@ -201,6 +201,20 @@ export interface ToolReadout {
 }
 
 /**
+ * A button of the context bar that runs a registered command (DESIGN §7: the stamp brush's
+ * rotate and flip buttons). Shown after the tool's options, before its readouts; disabled
+ * while the command is.
+ */
+export interface ToolAction {
+    /** The id of the command it runs: "stamp.rotateLeft". */
+    command: string;
+    /** Text of a text button, or the tooltip and accessible name of an icon button. */
+    label: string;
+    /** Makes it an icon button. */
+    icon?: LucideIcon;
+}
+
+/**
  * A key that makes a tool the active one while it is held. It acts in the `canvas` context;
  * a key that controls consume natively only while the viewport element itself has the focus
  * (`tools.commands.ts`). No tool holds one yet: Space pans through `view.panHold`.
@@ -255,15 +269,18 @@ export interface ToolSpec {
     hint?: string;
     /** The options the context bar shows while the tool is active. */
     options?: readonly ToolOptionSpec[];
+    /** Command buttons the context bar shows after the options while the tool is active. */
+    actions?: readonly ToolAction[];
     /** Values the context bar shows after the options while the tool is active. */
     readouts?: readonly ToolReadout[];
     /**
      * The tool writes cells of the active layer: the pipeline resolves the target before
      * `onDown` (SPEC §4.1: a visible, unlocked tile layer, not under a hidden or locked group)
      * and opens the stroke's transaction (`ToolContext.paint`). When the target is refused the
-     * status bar says why and no handler is called.
+     * status bar says why and no handler is called. A function decides by the button that
+     * began the stroke (a right drag of the stamp brush captures and paints nothing).
      */
-    paints?: boolean;
+    paints?: boolean | ((button: ToolButton) => boolean);
     /** A key that makes this tool the active one while it is held. */
     hold?: ToolHold;
     /** CSS cursor over the viewport while the tool is active; the default is "default". */

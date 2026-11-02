@@ -88,7 +88,7 @@ Dependencies are listed without the `TE-` prefix.
 | **M2** | **Tile tools** | | | |
 | [TE-016](TE-016-tool-framework.md) | Tool framework and cell pointer pipeline | M | 014 | Done |
 | [TE-017](TE-017-stamp-brush-eraser.md) | Current stamp, stamp brush and eraser | L | 016 | Done |
-| [TE-018](TE-018-stamp-transforms-capture.md) | Stamp transforms and capture | M | 017 | To do |
+| [TE-018](TE-018-stamp-transforms-capture.md) | Stamp transforms and capture | M | 017 | Done |
 | [TE-019](TE-019-flood-bucket-shape-fill.md) | Flood fill, bucket fill and shape fill | M | 018 | To do |
 | [TE-020](TE-020-tile-selection-tools.md) | Tile selection tools | M | 019 | To do |
 | [TE-021](TE-021-cell-clipboard.md) | Cell clipboard | S | 020 | To do |
