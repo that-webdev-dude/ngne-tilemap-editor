@@ -10,7 +10,7 @@ import type { SessionState } from "../state/session";
 import type { StatusState } from "../state/status";
 import type { ViewMapping } from "../view/coordinates";
 import type { ToolState } from "./activeTool";
-import { resolvePaintTarget } from "./paintTarget";
+import { paintableTileLayers, resolvePaintTarget } from "./paintTarget";
 import { activeLayerId, activeMap } from "./toolSets";
 import type {
     PaintStroke,
@@ -250,13 +250,14 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         cancelFeedback = sources.later(clearFeedback, FEEDBACK_MS);
     };
 
-    /** Reports `rect` of the stroke's layer to `cellsChanged`. */
+    /** Reports `rect` of the layers the stroke wrote to `cellsChanged`. */
     const report = (current: Stroke, rect: CellRect | null) => {
         if (!rect) return;
+        const written = current.transaction?.layerIds ?? [];
         try {
             sources.cellsChanged?.({
                 ...touchedNothing(current.mapId),
-                layerIds: [current.layerId],
+                layerIds: written.length > 0 ? [...written] : [current.layerId],
                 cellRects: [rect],
             });
         } catch (error) {
@@ -453,18 +454,25 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         const opened = transaction;
         /** The stroke this context is of, once it is made. */
         let own: Stroke | null = null;
+        const paintable = opened ? paintableTileLayers(opened.map) : [];
+        const writable = new Set(paintable);
+        const inMap = (x: number, y: number) =>
+            opened !== null && x >= 0 && y >= 0 && x < opened.map.width && y < opened.map.height;
         const paint: PaintStroke | null = opened && {
             mapId: opened.mapId,
             layerId: opened.layerId,
             map: opened.map,
-            get(x, y) {
-                return opened.get(x, y);
+            paintableLayers: paintable,
+            get(x, y, layer = opened.layerId) {
+                if (!inMap(x, y) || !writable.has(layer)) return 0;
+                return opened.get(x, y, layer);
             },
-            set(x, y, value) {
+            set(x, y, value, layer = opened.layerId) {
                 if (!opened.open || !own) return;
-                // Painting is clipped to the map (SPEC §4.1).
-                if (!(x >= 0 && y >= 0 && x < opened.map.width && y < opened.map.height)) return;
-                opened.set(x, y, value);
+                // Painting is clipped to the map (SPEC §4.1), and to the layers a stroke may
+                // write.
+                if (!inMap(x, y) || !writable.has(layer)) return;
+                opened.set(x, y, value, layer);
                 own.unreported = union(own.unreported, { x, y, width: 1, height: 1 });
             },
         };

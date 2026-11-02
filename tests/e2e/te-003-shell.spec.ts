@@ -217,9 +217,13 @@ test("regions carry their landmarks and are empty placeholders until their ticke
     );
     await expect(page.getByRole("contentinfo")).toHaveAttribute("data-region", "status-bar");
 
-    for (const id of ["tool-rail", "context-bar", "viewport"] as const) {
+    for (const id of ["tool-rail", "viewport"] as const) {
         await expect(region(page, id), id).toBeEmpty();
     }
+    // The context bar holds the active tool of TE-017: the stamp brush, a tile layer's default.
+    await expect(region(page, "context-bar").locator("[data-context-tool]")).toHaveText(
+        "Stamp Brush",
+    );
     // The status bar holds the fields of TE-014: the size of the project's map.
     await expect(region(page, "status-bar").locator('[data-status="size"]')).toHaveText(
         /^\d+ × \d+ cells$/,

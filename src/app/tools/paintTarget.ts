@@ -1,5 +1,5 @@
-import { effectiveValues, findLayer } from "../../core/model";
-import type { ProjectSession } from "../../core/model";
+import { effectiveValues, findLayer, walkLayers } from "../../core/model";
+import type { ProjectMap, ProjectSession } from "../../core/model";
 import { activeLayerId, activeMap } from "./toolSets";
 
 // The target of a painting stroke (SPEC §4.1): the active layer of the active map, when it is
@@ -25,4 +25,18 @@ export function resolvePaintTarget(session: ProjectSession): PaintTarget | null 
     if (!visible) return { refused: REFUSALS.hidden };
     if (!unlocked) return { refused: REFUSALS.locked };
     return { mapId: map.id, layerId: entry.layer.id };
+}
+
+/**
+ * The tile layers of `map` a stroke may write (SPEC §4.1, §4.3: the eraser's all layers):
+ * visible and unlocked, under no hidden or locked group, bottom to top.
+ */
+export function paintableTileLayers(map: ProjectMap): number[] {
+    const ids: number[] = [];
+    for (const { layer, ancestors } of walkLayers(map.layers)) {
+        if (layer.type !== "tile") continue;
+        const { visible, unlocked } = effectiveValues(layer, ancestors);
+        if (visible && unlocked) ids.push(layer.id);
+    }
+    return ids;
 }

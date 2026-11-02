@@ -79,14 +79,24 @@ export interface PaintStroke {
     readonly mapId: string;
     readonly layerId: number;
     readonly map: ProjectMap;
-    /** The value of a cell of the layer, 0 when empty or outside the map. */
-    get(x: number, y: number): number;
+    /**
+     * The value of a cell of the layer, 0 when empty or outside the map. `layer` reads
+     * another of `paintableLayers` instead.
+     */
+    get(x: number, y: number, layer?: number): number;
     /**
      * Writes `value` (0 empties) to a cell of the layer. Painting is clipped to the map
      * (SPEC §4.1): a cell outside it is left alone. The viewport shows the change before
-     * the stroke ends.
+     * the stroke ends. `layer` writes another of `paintableLayers` instead (the eraser's
+     * all-layers mode, SPEC §4.3); any other layer is left alone.
      */
-    set(x: number, y: number, value: number): void;
+    set(x: number, y: number, value: number, layer?: number): void;
+    /**
+     * The tile layers of the map a tool may write besides `layerId`, as they are at the
+     * pointer down: visible and unlocked, under no hidden or locked group (SPEC §4.1),
+     * bottom to top, `layerId` among them.
+     */
+    readonly paintableLayers: readonly number[];
 }
 
 /** What a tool works with during one stroke, from its pointer down to its end. */
@@ -176,6 +186,21 @@ export interface ChoiceToolOption extends ToolOptionBase {
 export type ToolOptionSpec = NumberToolOption | ToggleToolOption | ChoiceToolOption;
 
 /**
+ * A value a tool shows in the context bar and the user does not set: its label, then its text
+ * (DESIGN §7: the stamp brush's stamp size `w × h`). Shown after the tool's options.
+ */
+export interface ToolReadout {
+    /** Stable within the tool: "size". */
+    key: string;
+    /** Label in the context bar: "Stamp size". */
+    label: string;
+    /** The text shown now. Must not throw. */
+    read(): string;
+    /** Calls `listener` whenever `read` may have changed; returns the unsubscribe. */
+    subscribe(listener: () => void): () => void;
+}
+
+/**
  * A key that makes a tool the active one while it is held. It acts in the `canvas` context;
  * a key that controls consume natively only while the viewport element itself has the focus
  * (`tools.commands.ts`). No tool holds one yet: Space pans through `view.panHold`.
@@ -230,6 +255,8 @@ export interface ToolSpec {
     hint?: string;
     /** The options the context bar shows while the tool is active. */
     options?: readonly ToolOptionSpec[];
+    /** Values the context bar shows after the options while the tool is active. */
+    readouts?: readonly ToolReadout[];
     /**
      * The tool writes cells of the active layer: the pipeline resolves the target before
      * `onDown` (SPEC §4.1: a visible, unlocked tile layer, not under a hidden or locked group)

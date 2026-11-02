@@ -4,6 +4,7 @@ import { REGION_FOCUS_ATTRIBUTE } from "../../app/keymap/regions";
 import { notices } from "../../app/notices/notices";
 import { mountOverlay } from "../../app/overlay/mountOverlay";
 import type { MountedOverlay } from "../../app/overlay/mountOverlay";
+import type { OverlayTheme } from "../../app/overlay/types";
 import { preferences } from "../../app/preferences/preferences";
 import { sessionStore } from "../../app/state/session";
 import { setViewportProbe } from "../../app/testing/testHooks";
@@ -38,6 +39,11 @@ const MARKS = {
 function themeColour(name: string): number {
     const style = getComputedStyle(document.documentElement);
     return parseHexColour(style.getPropertyValue(name)) ?? 0;
+}
+
+/** The overlay's colours of `theme` (DESIGN §4), read from its tokens on the page. */
+function overlayTheme(theme: Theme): OverlayTheme {
+    return { ink: INK[theme], accent: themeColour("--accent"), danger: themeColour("--danger") };
 }
 
 /** The canvas size in device pixels, as the browser lays the element out. */
@@ -80,7 +86,7 @@ export function ViewportArea() {
             workspace: themeColour("--bg-workspace"),
         };
         redraw.current?.();
-        overlay.current?.setTheme({ ink: INK[theme] });
+        overlay.current?.setTheme(overlayTheme(theme));
     }, [theme]);
 
     useEffect(() => {
@@ -101,7 +107,7 @@ export function ViewportArea() {
         host.append(overlayCanvas);
         const mounted = mountOverlay(overlayCanvas, host);
         overlay.current = mounted;
-        mounted.setTheme({ ink: INK[themeStore.getState().theme] });
+        mounted.setTheme(overlayTheme(themeStore.getState().theme));
         const detachNavigation = attachViewNavigation(host);
         // The tools take the overlay's presses (SPEC §4.1), mapped as the map is on screen.
         const detachTools = attachToolPointer(overlayCanvas, host, () => mounted.mapping());

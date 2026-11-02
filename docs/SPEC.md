@@ -218,7 +218,7 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
 
 | Tool | Behaviour (Tiled's, `stampbrush.cpp` and siblings) |
 | ---- | -------------------------------------------------- |
-| Stamp brush | Press and drag paint the stamp at each cell crossed. Empty stamp cells leave the map as it is. Shift+click: a line of stamps from the last painted point. Ctrl+Shift+click: an ellipse of stamps centred on the last painted point through the cursor |
+| Stamp brush | Press and drag paint the stamp at each cell crossed. Empty stamp cells leave the map as it is. Shift+click: a line of stamps from the last painted point. Ctrl+Shift+click: an ellipse of stamps centred on the last painted point through the cursor. Along a line or an ellipse a stamp that would overlap one placed before it is left out (Tiled's `drawPreviewLayer`); with no painted point on the map yet, a Shift+click only sets the start (Tiled sets it at every Shift+click that does not continue a line) |
 | Eraser | Press and drag erase the cell under the cursor (line-interpolated). Right drag: erase a rectangle. Shift: erase on all unlocked visible tile layers |
 | Bucket fill | Fills the 4-connected region of cells equal to the clicked cell (same tile and flags; Tiled's `Cell` equality), bounded by the map or the selection. Shift: fill the whole selection, or the whole layer without one. The stamp tiles the region from the region's bounding box top-left (Tiled `TileFill`). Hover previews the region |
 | Shape fill | Drag a rectangle or ellipse (context bar toggle); Shift: square / circle; Alt: centred on the press. Filled with the stamp as bucket fill does. Right click or Escape cancels |

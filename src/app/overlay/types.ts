@@ -10,10 +10,18 @@ import type { Point, ViewMapping } from "../view/coordinates";
 export interface OverlayTheme {
     /** The grid lines: white in the dark theme, black in the light one (DESIGN §4). */
     ink: number;
+    /** `--accent`: the outline of a stamp preview (DESIGN §4). */
+    accent: number;
+    /** `--danger`: the outline of an erase preview (DESIGN §4). */
+    danger: number;
 }
 
-/** The dark theme, until the interface reports the theme in use. */
-export const DEFAULT_OVERLAY_THEME: Readonly<OverlayTheme> = { ink: 0xffffff };
+/** The dark theme's colours (`tokens.css`), until the interface reports the theme in use. */
+export const DEFAULT_OVERLAY_THEME: Readonly<OverlayTheme> = {
+    ink: 0xffffff,
+    accent: 0x83e8e1,
+    danger: 0xff6b6b,
+};
 
 /** The pointer over the viewport, as a draw layer sees it. */
 export interface OverlayCursor {

@@ -18,6 +18,7 @@ import { Dock } from "./regions/Dock";
 import { MenuBar } from "./regions/MenuBar";
 import { StatusBar } from "./regions/StatusBar";
 import { ToolRail } from "./regions/ToolRail";
+import { STAMP_PREVIEW_SIZE } from "../tools/StampPreview";
 import { Viewport } from "./regions/Viewport";
 import "./shell.css";
 
@@ -69,7 +70,9 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
                     {regions["menu-bar"] ?? <MenuBar />}
                 </RegionBoundary>
             </header>
-            <RailFrame>{regions["tool-rail"] ?? <ToolRail />}</RailFrame>
+            <RailFrame footer={STAMP_PREVIEW_SIZE}>
+                {regions["tool-rail"] ?? <ToolRail />}
+            </RailFrame>
             <section className="shell-context" data-region="context-bar" aria-label="Tool options">
                 <RegionBoundary name="Context bar">
                     {regions["context-bar"] ?? <ContextBar />}

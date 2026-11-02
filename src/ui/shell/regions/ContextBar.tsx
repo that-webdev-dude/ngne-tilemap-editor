@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from "react";
-import type { ToolOptionSpec, ToolOptionValue } from "../../../app/tools/types";
+import type { ToolOptionSpec, ToolOptionValue, ToolReadout } from "../../../app/tools/types";
 import { shownContextBarContent, subscribeContextBarContent } from "../../tools/contextBarRegistry";
 import { NumberField } from "../../primitives/NumberField";
 import { SegmentedControl } from "../../primitives/SegmentedControl";
@@ -12,6 +12,17 @@ interface OptionControlProps {
     option: ToolOptionSpec;
     value: ToolOptionValue;
     onChange(value: ToolOptionValue): void;
+}
+
+/** A readout of the active tool: its label and the text it reads now (DESIGN §7). */
+function Readout({ readout }: { readout: ToolReadout }) {
+    const text = useSyncExternalStore(readout.subscribe, readout.read);
+    return (
+        <span className="ui-field" data-tool-readout={readout.key}>
+            <span className="ui-field__label">{readout.label}</span>
+            <output className="context-readout">{text}</output>
+        </span>
+    );
 }
 
 /** One option of the active tool, as the control its kind calls for (DESIGN §7). */
@@ -76,7 +87,8 @@ function OptionControl({ option, value, onChange }: OptionControlProps) {
 
 /**
  * Context bar content (DESIGN §7): the active tool's name and its options, in the order the
- * tool lists them, rendered from its option schema. Empty while no registered tool is active.
+ * tool lists them, rendered from its option schema, then its readouts. Empty while no
+ * registered tool is active.
  * While registered content is shown (`contextBarRegistry.ts`), it takes the options' place.
  */
 export function ContextBar() {
@@ -104,6 +116,11 @@ export function ContextBar() {
                           value={values[option.key] ?? option.default}
                           onChange={(value) => tools.setOption(tool, option.key, value)}
                       />
+                  ))}
+            {content
+                ? null
+                : (tool.readouts ?? []).map((readout) => (
+                      <Readout key={`${tool.id}:${readout.key}`} readout={readout} />
                   ))}
         </>
     );

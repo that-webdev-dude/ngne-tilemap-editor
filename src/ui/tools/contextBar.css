@@ -4,3 +4,9 @@
     font-weight: var(--font-weight-strong);
     white-space: nowrap;
 }
+
+/* TE-017: a readout of the active tool (the stamp size), plain text after its label. */
+.context-readout {
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}

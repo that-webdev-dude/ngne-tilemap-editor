@@ -1,9 +1,10 @@
 import { railToolSet } from "../../../app/tools/toolSets";
 import { Icon } from "../../primitives/Icon";
 import { ToolButton } from "../../primitives/ToolButton";
+import { StampPreview } from "../../tools/StampPreview";
 import { useToolState } from "../../tools/useToolState";
 import { VariantToolButton } from "../../tools/VariantToolButton";
-import { RailGroup } from "../RailFrame";
+import { RailFooter, RailGroup } from "../RailFrame";
 
 /**
  * Tool rail content (DESIGN §6), rendered from the tool registry: the tool set of the active
@@ -11,7 +12,8 @@ import { RailGroup } from "../RailFrame";
  * set. A registered tool's button selects it; the active tool's is pressed. A slot planned for
  * a later ticket is a disabled button until its tool is registered. A slot with variants shows
  * the one selected last, with a corner mark, and holding it opens the menu of its variants.
- * The stamp preview joins the bottom of the rail with TE-017.
+ * The stamp preview sits at the bottom (DESIGN §2); `AppShell` plans its height
+ * (`STAMP_PREVIEW_SIZE`).
  */
 export function ToolRail() {
     const tools = useToolState();
@@ -50,6 +52,9 @@ export function ToolRail() {
                     })}
                 </RailGroup>
             ))}
+            <RailFooter>
+                <StampPreview />
+            </RailFooter>
         </>
     );
 }

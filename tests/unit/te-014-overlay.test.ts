@@ -206,6 +206,10 @@ describe("overlay layer registry", () => {
 
     it("finds the cell grid in the app's own registry, at order 300", async () => {
         const { overlayLayers } = await import("../../src/app/overlay/overlayLayers");
-        expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([["cell-grid", 300]]);
+        expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([
+            ["cell-grid", 300],
+            ["eraser-preview", 600],
+            ["stamp-preview", 600],
+        ]);
     });
 });

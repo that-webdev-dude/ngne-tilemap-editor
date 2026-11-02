@@ -226,7 +226,11 @@ export function createOverlayController(
             requestRedraw();
         },
         setTheme(next) {
-            if (next.ink === theme.ink) return;
+            const same =
+                next.ink === theme.ink &&
+                next.accent === theme.accent &&
+                next.danger === theme.danger;
+            if (same) return;
             theme = { ...next };
             requestRedraw();
         },
