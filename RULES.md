@@ -60,3 +60,9 @@ Binding for every implementer (human or agent). Docs index: [docs/README.md](doc
     re-checked by an independent reviewer given the code, not the verdict. Report a verdict
     with evidence (file:line, doc section, test or measurement) per finding; fix only what the
     owner picks, starting from a failing test or a measurement. False alarms get no change.
+15. **A missing measurement blocks the next step.** A step whose acceptance needs a measurement
+    on reference hardware stays In progress until that number is recorded (rules 7, 8). It may
+    be merged so it can be measured, but no other step starts while it waits. Take the
+    measurement first, alone ([docs/tickets/README.md](docs/tickets/README.md), Measurements),
+    or stop and tell the owner which step is waiting. A number over budget is recorded and
+    reported, and the step waits for the owner's decision on it.

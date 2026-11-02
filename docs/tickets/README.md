@@ -246,5 +246,6 @@ Rules for parallel agents (one ticket each, own worktree and branch `te-0xx`):
   TE-034 (both change `src/engine/viewport`).
 - `docs/PROVENANCE.md` rows stay sorted by path, so concurrent additions merge cleanly.
 - Measurements are taken after the ticket is merged, alone (Measurements above); an implementing
-  agent in a parallel run writes the benchmark and leaves the number out.
+  agent in a parallel run writes the benchmark and leaves the number out. The ticket stays In
+  progress until the number is recorded, and the next wave starts after that (RULES 15).
 - Agents do not change Status and do not merge; whoever orchestrates does both.

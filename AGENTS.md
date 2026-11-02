@@ -21,7 +21,8 @@ Binding rules: [RULES.md](RULES.md). This file says how to apply them to a ticke
 ## Working on a ticket
 
 - Check usage first (RULES 10). Start only if the whole ticket fits the remaining allowance.
-- Start only when every "Depends on" ticket is Done.
+- Start only when every "Depends on" ticket is Done and no ticket waits for its measurement
+  (RULES 15).
 - Read the ticket, every doc section it lists, and the definition of done in SPEC §15.
 - The ticket's scope is binding; "Out of scope" lines are binding.
 - If the ticket and the docs disagree, or acceptance cannot be met, decide by RULES 1 (Tiled,
