@@ -7,6 +7,7 @@ import type { MountedOverlay } from "../../app/overlay/mountOverlay";
 import { preferences } from "../../app/preferences/preferences";
 import { sessionStore } from "../../app/state/session";
 import { setViewportProbe } from "../../app/testing/testHooks";
+import { attachToolPointer } from "../../app/tools/attachToolPointer";
 import { attachViewNavigation } from "../../app/view/pointerNavigation";
 import { connectViewPolicy } from "../../app/view/viewPolicy";
 import { viewportSize } from "../../app/view/viewportSize";
@@ -57,9 +58,9 @@ function deviceSizeOf(entry: ResizeObserverEntry): { width: number; height: numb
  * again, and disposes it when the region unmounts.
  *
  * Keyboard focus, the F6 focus region and the pointer listeners of view navigation are on this
- * element and not on a canvas. Wheel and drags act by pointer location, whatever has focus
- * (`app/view/pointerNavigation`); their events reach this element from the overlay, the
- * pointer target, by bubbling.
+ * element and not on a canvas; the tools listen on the overlay canvas. Wheel and drags act by
+ * pointer location, whatever has focus (`app/view/pointerNavigation`); their events reach this
+ * element from the overlay, the pointer target, by bubbling.
  */
 export function ViewportArea() {
     const element = useRef<HTMLDivElement>(null);
@@ -102,6 +103,8 @@ export function ViewportArea() {
         overlay.current = mounted;
         mounted.setTheme({ ink: INK[themeStore.getState().theme] });
         const detachNavigation = attachViewNavigation(host);
+        // The tools take the overlay's presses (SPEC §4.1), mapped as the map is on screen.
+        const detachTools = attachToolPointer(overlayCanvas, host, () => mounted.mapping());
         const stopPolicy = connectViewPolicy();
 
         let viewport: Viewport | null = null;
@@ -204,6 +207,7 @@ export function ViewportArea() {
             redraw.current = null;
             viewport?.dispose();
             stopPolicy();
+            detachTools();
             detachNavigation();
             overlay.current = null;
             mounted.dispose();

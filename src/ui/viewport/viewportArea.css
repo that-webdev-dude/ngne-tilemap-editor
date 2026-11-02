@@ -26,7 +26,12 @@
     outline-offset: calc(-1 * var(--focus-ring-width));
 }
 
-/* The overlay is the pointer target; its cursor is the viewport's (DESIGN §10.3). */
+/* The overlay is the pointer target; its cursor is the viewport's: the active tool's, unless a
+   pan is ready or in progress (DESIGN §10.3). */
+.viewport-area {
+    cursor: var(--shell-tool-cursor, default);
+}
+
 .viewport-area[data-pan-ready] {
     cursor: grab;
 }

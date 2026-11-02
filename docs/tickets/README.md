@@ -86,7 +86,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-014](TE-014-navigation-overlay-status.md) | View navigation, overlay and status bar | M | 013 | Done |
 | [TE-015](TE-015-chunk-tier.md) | Chunk tier and tier switching | L | 014 | Done |
 | **M2** | **Tile tools** | | | |
-| [TE-016](TE-016-tool-framework.md) | Tool framework and cell pointer pipeline | M | 014 | To do |
+| [TE-016](TE-016-tool-framework.md) | Tool framework and cell pointer pipeline | M | 014 | Done |
 | [TE-017](TE-017-stamp-brush-eraser.md) | Current stamp, stamp brush and eraser | L | 016 | To do |
 | [TE-018](TE-018-stamp-transforms-capture.md) | Stamp transforms and capture | M | 017 | To do |
 | [TE-019](TE-019-flood-bucket-shape-fill.md) | Flood fill, bucket fill and shape fill | M | 018 | To do |

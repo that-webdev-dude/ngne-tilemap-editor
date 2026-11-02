@@ -3,6 +3,7 @@ import type { Touched } from "../../core/history";
 import type { Viewport } from "../../engine/viewport";
 import type { SessionState } from "../state/session";
 import { TilesetUsage, openMapIds } from "./mapTilesets";
+import { subscribeStrokeCells } from "./strokeCells";
 
 /**
  * Connects a viewport to the session store (ENGINE §4, redraw on demand): a frame is asked for
@@ -49,6 +50,9 @@ export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>):
         viewport.requestRedraw();
     });
 
+    // A stroke's cells show before it ends (SPEC §3): live quads, chunk patches.
+    const unsubscribeStroke = subscribeStrokeCells((touched) => viewport.noteTouched(touched));
+
     follow();
     sync();
     viewport.requestRedraw();
@@ -56,5 +60,6 @@ export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>):
     return () => {
         unsubscribeStore();
         unsubscribeHistory?.();
+        unsubscribeStroke();
     };
 }

@@ -59,6 +59,19 @@ rows.
 | `src/app/state/status.ts` | `src/app/state/status.ts` | adapt | `ea5c91d` |  | Cursor is the cell under the pointer (DESIGN §8.7); the fields that read it register from `*.status.ts` modules |
 | `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
 | `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project; `viewport`, the probe of the viewport host (frames, textures, renderer count) |
+| `src/app/tools/activeTool.ts` | `src/app/tools/activeTool.ts` | adapt | `ea5c91d` |  | Its own store keeps the selected tool per layer kind (`tile`, `marker`, `none`; DESIGN §6) and the option values; `select` and `hold` take only tools of the active layer's set; `kind` and `offered` added; no editor store |
+| `src/app/tools/appPipeline.ts` | `src/app/tools/appPipeline.ts` | adapt | `ea5c91d` |  | On the session and status stores; stroke cells to the viewport (`strokeCells.ts`); no stroke while the pan key is held; failures reported as a toast naming the tool (`reportStrokeError`, SPEC §3); no composites, echo, playback or symmetry grab |
+| `src/app/tools/attachToolPointer.ts` | `src/app/tools/attachToolPointer.ts` | adapt | `ea5c91d` |  | Cursor state `overMap` instead of `overDocument`; a right press joining a left drag (a chorded move) arms the context-menu cancel; no grab cursor; probe without the grab |
+| `src/app/tools/gesture.commands.ts` | `src/app/tools/gesture.commands.ts` | adapt | `ea5c91d` |  | Comment cites DESIGN §10.1 and this editor's gestures |
+| `src/app/tools/hand/hand.tools.ts` | `src/app/tools/hand/hand.tools.ts` | adapt | `ea5c91d` |  | No `hold`: Space pans through `view.panHold` (TE-014); comment cites SPEC §4.3 |
+| `src/app/tools/options.ts` | `src/app/tools/options.ts` | adapt | `ea5c91d` |  | `ToolOptions` defined here instead of in the editor store |
+| `src/app/tools/pipeline.ts` | `src/app/tools/pipeline.ts` | adapt | `ea5c91d` |  | Cells instead of pixels (SPEC §4.1): samples carry the cell and the cells crossed since the one before (`pointsOnLine`); paint target is the active tile layer (`paintTarget.ts`) and its transaction, clipped to the map; a right press during a left drag aborts; the stroke ends when the project, history, active map or layer changes; `cellsChanged`, `navigating`; `onError` gets the stroke's tool; no live composite, colours, grab, `latestSample` or `claims` |
+| `src/app/tools/planned.tools.ts` | `src/app/tools/planned.tools.ts` | adapt | `ea5c91d` |  | The slots of DESIGN §6 with the keys of DESIGN §10.3 and the layer kinds of their set |
+| `src/app/tools/registry.ts` | `src/app/tools/registry.ts` | verbatim | `ea5c91d` | `bd5fd9bd647aed09d426fe461403d03ad10f1065855274831ecebbc232ce76a1` |  |
+| `src/app/tools/toolRegistry.ts` | `src/app/tools/toolRegistry.ts` | verbatim | `ea5c91d` | `af10d01031ee17fd4d5825f7bc4d3f35513118cda4fc3d9ea5f70b3423eac666` |  |
+| `src/app/tools/tools.commands.ts` | `src/app/tools/tools.commands.ts` | adapt | `ea5c91d` |  | Select and hold commands are enabled only while the active layer's set holds the tool; the registry refreshes on the tool state |
+| `src/app/tools/types.ts` | `src/app/tools/types.ts` | adapt | `ea5c91d` |  | Same exports plus `ToolLayerKind`: pointers carry map position, cell and crossed cells; `PaintStroke` writes cells of a tile layer; `ToolContext` has the session, map and layer instead of the document and colour; `layers` on tools and planned slots; no `claims` or `latestSample` |
+| `src/app/tools/zoom/zoom.tools.ts` | `src/app/tools/zoom/zoom.tools.ts` | adapt | `ea5c91d` |  | Comment cites SPEC §4.3 |
 | `src/app/view/coordinates.ts` | `src/app/view/coordinates.ts` | adapt | `ea5c91d` |  | Client, device, map and cell spaces from the view's centre and zoom (zoom in CSS pixels per map pixel, TE-013); map positions within 1e-9 of a whole pixel are that pixel |
 | `src/app/view/navigate.ts` | `src/app/view/navigate.ts` | adapt | `ea5c91d` |  | Views are centre and zoom; navigation works on the map's origin on the canvas and converts back; pan limit and pixel-exact origin as the sprite editor's |
 | `src/app/view/pointerNavigation.ts` | `src/app/view/pointerNavigation.ts` | adapt | `ea5c91d` |  | Wheel, Shift+wheel, middle drag and Space-held primary drag; the status cursor is the cell under the pointer |
@@ -75,6 +88,7 @@ rows.
 | `src/core/history/history.ts` | `src/core/history/history.ts` | adapt | `ea5c91d` | | One history per project: `markSaved` and `dirty` (SPEC §3), `undoMapId`/`redoMapId`, memory limit and one warning per crossing (SPEC §2.2), a `verify` option that runs `assertInvariants` in development and tests and reverses a failing step; no cel limits or ID generator |
 | `src/core/history/index.ts` | `src/core/history/index.ts` | adapt | `ea5c91d` | | Exports of this editor's history: cell patch, `Touched`, memory warning listener, verifier; no chained command or pixel patch |
 | `src/core/history/transaction.ts` | `src/core/history/transaction.ts` | adapt | `ea5c91d` | | Target is a tile layer of a map; `begin` snapshots nothing, `set` records `(index, before, after)` on a cell's first write, `commit` stores 12 bytes a cell through `cellPatchCommand`; no clip mask, no cel creation |
+| `src/core/raster/line.ts` | `src/core/raster/line.ts` | adapt | `ea5c91d` |  | `pointsOnLine` (Tiled's `src/tiled/geometry.cpp` at v1.12.2, with its `manhattan` option) replaces `linePixels` and `forEachLinePixel` (Zingl's all-octant form, which breaks ties differently) |
 | `src/core/sprite/animation/expandTag.ts` | `src/core/animation/expandTag.ts` | verbatim | `ea5c91d` | `b72b0e96d9ed95b79d090f436e7b070752fb28438f162fcbccda5ca84cdadf0b` | |
 | `src/core/sprite/animation/index.ts` | `src/core/animation/index.ts` | verbatim | `ea5c91d` | `4f38e8b4add97270be649f06776753a8fa0d2d01fee8f27bfdee2f9bbde93897` | |
 | `src/core/sprite/animation/playbackClock.ts` | `src/core/animation/playbackClock.ts` | verbatim | `ea5c91d` | `b2d057b570c42f31d91f6cffb436f2287904224ad07eaaedaee7e8959cf30d9b` | |
@@ -194,7 +208,7 @@ rows.
 | `src/ui/primitives/splitterMath.ts` | `src/ui/primitives/splitterMath.ts` | verbatim | `ea5c91d` | `1d96ac72cd69f2ead655db2d6e09a51427a5489a51e1034f36176ed814fec385` | |
 | `src/ui/primitives/tooltip.css` | `src/ui/primitives/tooltip.css` | verbatim | `ea5c91d` | `52bef1c6e98304457ef16e054f81ecb1dbc72d0f5952ea258482785406071dec` | |
 | `src/ui/shell/AppShell.tsx` | `src/ui/shell/AppShell.tsx` | adapt | `ea5c91d` | | Region `bottom-panel` ("Bottom panel", splitter "Resize bottom panel") in the timeline's slot and sizes, hidden by the bottom-panel store (Tab, TE-007) |
-| `src/ui/shell/RailFrame.tsx` | `src/ui/shell/RailFrame.tsx` | adapt | `ea5c91d` | | Column count from `groups` and `footer` props, none passed yet (the tool set is TE-016's, the stamp preview TE-017's), instead of the sprite tool registry |
+| `src/ui/shell/RailFrame.tsx` | `src/ui/shell/RailFrame.tsx` | adapt | `ea5c91d` | | Column count from the groups of the tool set of the active layer's kind (`railToolSet`) and a `footer` prop (the stamp preview, TE-017) instead of the sprite tool registry and `RAIL.footer` |
 | `src/ui/shell/RegionBoundary.tsx` | `src/ui/shell/RegionBoundary.tsx` | verbatim | `ea5c91d` | `c94eaf58d754b2ae325946afc92a024b46a71fab8ad155a8935dcc4fa3301eed` | |
 | `src/ui/shell/layout.ts` | `src/ui/shell/layout.ts` | verbatim | `ea5c91d` | `3ac6fc4d0345c669786c6a2af179b251fa4ff1a686500597b62da5a5ad1c61ac` | |
 | `src/ui/shell/layoutStore.ts` | `src/ui/shell/layoutStore.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.layout` (SUITE §7) |
@@ -203,11 +217,11 @@ rows.
 | `src/ui/shell/notices/notice.css` | `src/ui/shell/notices/notice.css` | verbatim | `ea5c91d` | `76af4099e674df54d8626c6f16e47b44a30f32d5b35823c41a20cae9a9600008` | |
 | `src/ui/shell/regionBoundary.css` | `src/ui/shell/regionBoundary.css` | verbatim | `ea5c91d` | `d3a067d3f16a58dc4a46d342fe9daf5fdbdc2eb0664da85ba1965a112527a5a8` | |
 | `src/ui/shell/regions/BottomPanel.tsx` | `src/ui/shell/regions/Timeline.tsx` | adapt | `ea5c91d` | | In the timeline's place: tabs Tilesets and Terrains (DESIGN §2), panels empty until TE-025 and TE-043 |
-| `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool options (TE-016) |
+| `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Doc comments cite DESIGN §7 |
 | `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
 | `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus and the command palette trigger (TE-008); map tabs (TE-031) are left out |
 | `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Renders the fields of the `*.status.ts` registry (cell, tile, zoom with Fit, map size) and the tool hint or feedback on the right |
-| `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | Empty placeholder until the tool set (TE-016) and the stamp preview (TE-017) |
+| `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | The tool set of the active layer's kind (`railToolSet`, DESIGN §6); no colour chips (the stamp preview footer is TE-017's) |
 | `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Hosts the viewport canvas of the active map (TE-013); the empty state joins it later |
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
 | `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
@@ -220,6 +234,11 @@ rows.
 | `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
 | `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |
 | `src/ui/toast/toast.ts` | `src/ui/toast/toast.ts` | verbatim | `ea5c91d` | `35cdddcdfb41732710dea2c026a5c22c443c2b16fcf6a3fdb5701b594cce70e7` | |
+| `src/ui/tools/VariantToolButton.tsx` | `src/ui/tools/VariantToolButton.tsx` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/types.ts` keeps `RailSlot` and `Tool` |
+| `src/ui/tools/contextBar.css` | `src/ui/tools/contextBar.css` | adapt | `ea5c91d` |  | No change |
+| `src/ui/tools/contextBarRegistry.ts` | `src/ui/tools/contextBarRegistry.ts` | verbatim | `ea5c91d` | `55d5826dfdf30596c09d31257c56654b1765942d0ffec2c1dcdfa7739d98c8eb` |  |
+| `src/ui/tools/toolRail.css` | `src/ui/tools/toolRail.css` | adapt | `ea5c91d` |  | No change |
+| `src/ui/tools/useToolState.ts` | `src/ui/tools/useToolState.ts` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/activeTool.ts` keeps `toolState` and `ToolState`, bound to this editor's active-tool store (per layer kind) |
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
 | `tests/e2e/harness/te-003-boundary.html` | `tests/e2e/harness/se-006-boundary.html` | adapt | `ea5c91d` | | Ticket name |

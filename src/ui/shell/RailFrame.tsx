@@ -1,15 +1,12 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
+import { railToolSet } from "../../app/tools/toolSets";
+import { useToolState } from "../tools/useToolState";
 import { railColumns } from "./layout";
 import { RegionBoundary } from "./RegionBoundary";
 
 export interface RailFrameProps {
     children: ReactNode;
-    /**
-     * The number of buttons in each group of the rail, as the rail's content plans them: the
-     * tool set of the active layer's kind (DESIGN §6, TE-016). None while no tool exists.
-     */
-    groups?: readonly number[];
     /** Height of the footer in one column (the stamp preview, DESIGN §2); 0 without one. */
     footer?: number;
 }
@@ -20,12 +17,16 @@ export interface RailFrameProps {
  * is built from `RailGroup` and, at the bottom, an optional `RailFooter`; separators between
  * groups are drawn by the rail.
  *
- * The column count follows the planned content, not what is rendered: a rail whose content
- * failed to render keeps the healthy layout, and the footer, which two columns lay out side by
+ * The column count follows the planned content, not what is rendered: the groups of the
+ * tool set the rail shows (DESIGN §6) and the footer. A rail whose content failed to render
+ * keeps the healthy layout, and the footer, which two columns lay out side by
  * side, cannot make the rail switch back and forth.
  */
-export function RailFrame({ children, groups = [], footer = 0 }: RailFrameProps) {
+export function RailFrame({ children, footer = 0 }: RailFrameProps) {
     const ref = useRef<HTMLElement>(null);
+    // The groups of the tool set of the active layer's kind (DESIGN §6).
+    const tools = useToolState();
+    const groups = railToolSet(tools.registry, tools.kind()).map((group) => group.length);
     const [height, setHeight] = useState<number | null>(null);
 
     useLayoutEffect(() => {
