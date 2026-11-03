@@ -207,6 +207,13 @@ centre cell (`floor(w/2), floor(h/2)`). It comes from: a tileset selection (a re
 in the Tilesets panel, laid out as in the panel); a capture from the map; the clipboard. It is
 shown at the cursor as a translucent preview on the overlay and in the tool rail.
 
+- **Preview cost** follows what is shown, not the stamp's pixels (Tiled's `BrushItem` draws only
+  the exposed part of its preview layer, at the view's scale). The rail composites the stamp at
+  its own size. The overlay's stamp and fill previews composite only the part of the stamp in
+  view, at the view's scale and at most one texel per map pixel, in chunks of at most 256 × 256
+  texels made when first in view; a redraw makes chunks for at most 8 ms after its first and
+  leaves the rest to the next frames.
+
 - **Transforms** (keys in DESIGN §10): flip horizontal, flip vertical, rotate right, rotate
   left of the whole stamp (§2.3). They change the stamp only, not the map.
 - **Capture** (Tiled): with the stamp brush, bucket or shape fill active, a right drag on the
@@ -781,6 +788,7 @@ reference map:
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
 | Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket, TE-019: 41.3 / 43.1 ms (median 25.7 / 29.8 ms; flood alone 4.5 / 4.2 ms). Magic wand, TE-020: 20.0 / 18.9 ms (median 6.4 / 6.8 ms; flood alone 6.1 / 5.1 ms) |
+| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 11.5 / 18.3 ms, **over budget** on RTX 4060 (the rotation with 16 px cells; overlay redraws ≤ 9.8 / 9.5 ms) |
 | Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | — |
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | — |
 | Open of the reference project to first frame | ≤ 3 s | — |
@@ -795,6 +803,15 @@ TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6
 TE-020 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. The wand changes
 no cells, so its frame is the overlay's redraw showing the selection's ants. Raw data:
 `te-020-magic-wand-intel-uhd.json` and `te-020-magic-wand-rtx-4060.json` in [evidence/](evidence/).
+
+Stamp preview row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6, the map's
+overview built first. The task max is the longest gap of a message loop, as TE-015's, so one
+gap can hold a task and the frame drawn after it. The paste is not in the row: its task holds
+the Paste command itself (17–19 ms alone; 25.9–32.2 ms with the preview). The owner accepted
+the RTX 4060 result as recorded (2026-11-03); the row is measured again at later stages of the
+implementation, and with every row in TE-064. Raw data:
+`te-017-stamp-preview-intel-uhd.json` and `te-017-stamp-preview-rtx-4060.json` in
+[evidence/](evidence/).
 
 ## 15. Quality
 

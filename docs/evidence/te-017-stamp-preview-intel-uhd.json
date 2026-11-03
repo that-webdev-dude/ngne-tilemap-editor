@@ -1,0 +1,59 @@
+{
+    "id": "te-017-stamp-preview-intel-uhd",
+    "ticket": "TE-017",
+    "measurement": "Longest main-thread task while the stamp brush previews a 256 × 256 stamp (Select All, Copy, Paste of a reference map layer) at 100%, rotated (R), then moved 40 cells, each until the preview is drawn; cells of 16 and 32 px; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "longest task of 4 steps (rotate, moves at each cell size)",
+    "budgetMs": 16,
+    "resultMs": 11.5,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "cells16px": {
+            "pasteLongestTaskMs": 25.899999998509884,
+            "pasteCommandMs": 17.200000002980232,
+            "pasteToFirstRedrawMs": 26.399999998509884,
+            "pasteToPreviewMs": 81.70000000298023,
+            "pasteRedraws": 5,
+            "pasteLongestRedrawMs": 9.400000005960464,
+            "rotateLongestTaskMs": 11.5,
+            "rotateCommandMs": 4.399999998509884,
+            "rotateToFirstRedrawMs": 11.699999995529652,
+            "rotateToPreviewMs": 46.79999999701977,
+            "rotateRedraws": 4,
+            "rotateLongestRedrawMs": 9.199999995529652,
+            "moveLongestTaskMs": 4.9000000059604645,
+            "moveRedraws": 40,
+            "moveMedianMs": 0.10000000149011612,
+            "moveP95Ms": 3.7999999970197678,
+            "moveLongestRedrawMs": 3.899999998509884
+        },
+        "cells32px": {
+            "pasteLongestTaskMs": 27,
+            "pasteCommandMs": 17.099999994039536,
+            "pasteToFirstRedrawMs": 27.5,
+            "pasteToPreviewMs": 88.5,
+            "pasteRedraws": 5,
+            "pasteLongestRedrawMs": 9.799999997019768,
+            "rotateLongestTaskMs": 10.699999995529652,
+            "rotateCommandMs": 3.2999999970197678,
+            "rotateToFirstRedrawMs": 11,
+            "rotateToPreviewMs": 60.899999998509884,
+            "rotateRedraws": 4,
+            "rotateLongestRedrawMs": 8.899999998509884,
+            "moveLongestTaskMs": 5.300000004470348,
+            "moveRedraws": 25,
+            "moveMedianMs": 0.10000000149011612,
+            "moveP95Ms": 3.7999999970197678,
+            "moveLongestRedrawMs": 4.100000001490116
+        }
+    },
+    "benchmarkId": "te-017-stamp-preview",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-03T10:31:27.720Z"
+}

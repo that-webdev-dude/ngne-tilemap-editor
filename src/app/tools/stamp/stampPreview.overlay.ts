@@ -10,7 +10,7 @@ import { captureArea, subscribeCapture } from "./capture";
 import { currentStamp, currentStampStore } from "./currentStamp";
 import { stampIsEmpty, stampOrigin } from "./placement";
 import { brushPlacements, stampTool, subscribeStampBrush } from "./stamp.tools";
-import { stampCanvas } from "./stampImage";
+import { drawStamp, subscribeStampImage } from "./stampImage";
 
 // The stamp brush's preview (DESIGN §4): while the brush is the active tool and the pointer is
 // over a cell of the map, the stamp's tiles at 60% opacity over the cells each placement would
@@ -38,16 +38,14 @@ function drawStampPreview(frame: OverlayFrame): void {
     context.rect(area.x, area.y, area.width, area.height);
     context.clip();
     if (placements.length > 0) {
-        const image = stampCanvas(sessionStore.getState().session.project, map, stamp);
-        context.globalAlpha = STAMP_PREVIEW_ALPHA;
-        context.imageSmoothingEnabled = false;
-        for (const point of placements) {
+        const tilings = placements.map((point) => {
             const origin = stampOrigin(stamp, point);
             const rect = { ...origin, width: stamp.width, height: stamp.height };
-            const device = cellDeviceRect(mapping, rect);
-            context.drawImage(image, device.x, device.y, device.width, device.height);
             outlines.push(rect);
-        }
+            return { origin, area: rect };
+        });
+        context.globalAlpha = STAMP_PREVIEW_ALPHA;
+        drawStamp(frame, sessionStore.getState().session.project, stamp, tilings);
         context.globalAlpha = 1;
     } else {
         outlines.push({ x: cursor.cell.x, y: cursor.cell.y, width: 1, height: 1 });
@@ -65,10 +63,11 @@ export const overlayLayers: OverlayLayer[] = [
         order: 600,
         draw: drawStampPreview,
         // The stamp, the tool, a stroke beginning or ending, the modifiers (Shift draws a
-        // line) and the project's tilesets.
+        // line), the project's tilesets and the stamp's chunks still to make.
         watch(redraw) {
             const stops = [
                 currentStampStore.subscribe(redraw),
+                subscribeStampImage(redraw),
                 toolState.subscribe(redraw),
                 subscribeStampBrush(redraw),
                 subscribeCapture(redraw),

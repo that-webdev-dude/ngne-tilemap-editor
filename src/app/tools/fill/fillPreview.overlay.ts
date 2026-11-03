@@ -10,7 +10,7 @@ import { heldModifiers, subscribeHeldModifiers } from "../heldModifiers";
 import { subscribeCapture } from "../stamp/capture";
 import { currentStampStore } from "../stamp/currentStamp";
 import { STAMP_PREVIEW_ALPHA } from "../stamp/stampPreview.overlay";
-import { stampCanvas } from "../stamp/stampImage";
+import { drawStamp, subscribeStampImage } from "../stamp/stampImage";
 import { activeLayerId } from "../toolSets";
 import { bucketPlan, bucketTool, subscribeBucket } from "./bucket.tools";
 import { selectedPlan } from "./fillPlan";
@@ -33,32 +33,26 @@ import {
 /** Draws `plan` over the map: its spans filled with the tiled stamp, then its outline. */
 function drawPlan(frame: OverlayFrame, plan: FillPlan): void {
     const { map, mapping, context, theme } = frame;
-    const project = sessionStore.getState().session.project;
-    const image = stampCanvas(project, map, plan.stamp);
-    const pattern = context.createPattern(image, "repeat");
-    const origin = mapping.cellToDevice(plan.origin.x, plan.origin.y);
-    const step = mapping.cellToDevice(plan.origin.x + 1, plan.origin.y + 1);
-    // The stamp's picture has one pixel per map pixel; the pattern lays it from the origin.
-    const scaleX = (step.x - origin.x) / map.tileWidth;
-    const scaleY = (step.y - origin.y) / map.tileHeight;
-    if (pattern) {
-        pattern.setTransform(new DOMMatrix([scaleX, 0, 0, scaleY, origin.x, origin.y]));
-        context.imageSmoothingEnabled = false;
-        context.globalAlpha = STAMP_PREVIEW_ALPHA;
-        context.fillStyle = pattern;
-        // Only the rows on screen.
-        const top = mapping.deviceToCell(0, 0).y;
-        const bottom = mapping.deviceToCell(frame.size.width, frame.size.height).y;
-        for (const span of plan.region) {
-            if (span.y < top || span.y > bottom) continue;
-            const rect = { x: span.start, y: span.y, width: span.end - span.start, height: 1 };
-            const device = cellDeviceRect(mapping, rect);
-            context.fillRect(device.x, device.y, device.width, device.height);
-        }
-        context.globalAlpha = 1;
-    }
     const bounds = regionBounds(plan.region);
-    const inside = bounds && clipToMap(bounds, map);
+    if (!bounds) return;
+    // The stamp tiled from the origin over the bounding box, clipped to the spans: only the
+    // rows on screen.
+    context.save();
+    context.beginPath();
+    const top = mapping.deviceToCell(0, 0).y;
+    const bottom = mapping.deviceToCell(frame.size.width, frame.size.height).y;
+    for (const span of plan.region) {
+        if (span.y < top || span.y > bottom) continue;
+        const rect = { x: span.start, y: span.y, width: span.end - span.start, height: 1 };
+        const device = cellDeviceRect(mapping, rect);
+        context.rect(device.x, device.y, device.width, device.height);
+    }
+    context.clip();
+    context.globalAlpha = STAMP_PREVIEW_ALPHA;
+    const project = sessionStore.getState().session.project;
+    drawStamp(frame, project, plan.stamp, [{ origin: plan.origin, area: bounds }]);
+    context.restore();
+    const inside = clipToMap(bounds, map);
     if (inside) fillRects(context, outlineRects(cellDeviceRect(mapping, inside)), theme.accent);
 }
 
@@ -95,10 +89,11 @@ export const overlayLayers: OverlayLayer[] = [
         draw: drawFillPreview,
         // The stamp, the tool and its options, a press or a drag beginning or ending, a capture, the
         // modifiers (Shift fills the whole selection or layer, or squares the shape), the layer's
-        // cells and the tile selection.
+        // cells, the tile selection and the stamp's chunks still to make.
         watch(redraw) {
             const stops = [
                 currentStampStore.subscribe(redraw),
+                subscribeStampImage(redraw),
                 toolState.subscribe(redraw),
                 subscribeBucket(redraw),
                 subscribeShapeFill(redraw),

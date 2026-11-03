@@ -3,7 +3,7 @@ import { useStore } from "zustand";
 import { sessionStore } from "../../app/state/session";
 import { currentStampStore } from "../../app/tools/stamp/currentStamp";
 import { stampTool } from "../../app/tools/stamp/stamp.tools";
-import { stampCanvas } from "../../app/tools/stamp/stampImage";
+import { stampThumbnail } from "../../app/tools/stamp/stampImage";
 import { activeMap } from "../../app/tools/toolSets";
 import { Tooltip } from "../primitives/Tooltip";
 import { useToolState } from "./useToolState";
@@ -39,18 +39,11 @@ export function StampPreview() {
         target.height = side;
         const context = target.getContext("2d");
         if (!context || !stamp || !map) return;
-        const image = stampCanvas(session.project, map, stamp);
-        if (image.width === 0 || image.height === 0) return;
-        const scale = Math.min(side / image.width, side / image.height);
-        const width = Math.max(1, Math.round(image.width * scale));
-        const height = Math.max(1, Math.round(image.height * scale));
-        context.imageSmoothingEnabled = false;
-        context.drawImage(
-            image,
-            Math.floor((side - width) / 2),
-            Math.floor((side - height) / 2),
-            width,
-            height,
+        const image = stampThumbnail(session.project, map, stamp, side);
+        context.putImageData(
+            new ImageData(image.data as Uint8ClampedArray<ArrayBuffer>, image.width, image.height),
+            Math.floor((side - image.width) / 2),
+            Math.floor((side - image.height) / 2),
         );
     }, [stamp, map, session, revision]);
 
