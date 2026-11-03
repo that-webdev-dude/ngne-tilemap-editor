@@ -1,11 +1,15 @@
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
 import type { Stamp } from "../../core/cells";
+import { hasTiles, withoutRemovedTiles } from "../../core/model";
+import { sessionStore } from "../state/session";
+import { onTilesetChange } from "../tilesets/tilesetChanges";
 
 // The editor's clipboard (SPEC §4.4; TE-021): the app's own, not the system's, one for the
 // window and so shared by every map of the project. It holds tileset slots and tile IDs, which
-// belong to the project; clearing it when another project opens is TE-047's. Markers join it in
-// TE-039: it holds cells or markers, the last copy wins (SPEC §8).
+// belong to the project: it loses its cells on tiles a change removes (SPEC §4.2), and clearing
+// it when another project opens is TE-047's. Markers join it in TE-039: it holds cells or
+// markers, the last copy wins (SPEC §8).
 
 /** What the clipboard holds: cells, as a stamp whose empty cells were not selected. */
 export type ClipboardContent = { readonly kind: "cells"; readonly stamp: Stamp };
@@ -34,3 +38,12 @@ export function copyCellsToClipboard(stamp: Stamp): void {
         content: { kind: "cells", stamp: { width, height, cells: Uint32Array.from(cells) } },
     });
 }
+
+// A removed tileset or tile: its cells leave the clipboard, and cells left all empty are none.
+onTilesetChange(sessionStore, (project) => {
+    const content = clipboardContent();
+    if (!content) return;
+    const kept = withoutRemovedTiles(content.stamp, project);
+    if (kept === content.stamp) return;
+    clipboardStore.setState({ content: hasTiles(kept) ? { kind: "cells", stamp: kept } : null });
+});

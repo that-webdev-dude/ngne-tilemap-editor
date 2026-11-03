@@ -1,13 +1,16 @@
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
 import type { Stamp } from "../../../core/cells";
+import { hasTiles, withoutRemovedTiles } from "../../../core/model";
 import { sessionStore } from "../../state/session";
+import { onTilesetChange } from "../../tilesets/tilesetChanges";
 
 // The current stamp (SPEC §4.2): a rectangle of cell values, empty cells allowed, that the
 // stamp brush paints and the rail and the overlay preview. Later tickets feed it: the Tilesets
 // panel (TE-025), capture (TE-018) and the clipboard (TE-021); until then code sets it. Its
 // values hold tileset slots, which belong to one project: it is cleared when another project
-// takes the window, as the clipboard is (SPEC §4.4).
+// takes the window, as the clipboard is (SPEC §4.4), and loses its cells on tiles a change
+// removes (SPEC §4.2).
 
 export interface CurrentStampState {
     /** The stamp, or null while there is none: the stamp brush paints nothing. */
@@ -49,4 +52,12 @@ sessionStore.subscribe((state) => {
     if (state.session.project === project) return;
     project = state.session.project;
     if (currentStamp()) setCurrentStamp(null);
+});
+
+// A removed tileset or tile: its cells leave the stamp, and a stamp left empty is no stamp.
+onTilesetChange(sessionStore, (changed) => {
+    const stamp = currentStamp();
+    if (!stamp) return;
+    const kept = withoutRemovedTiles(stamp, changed);
+    if (kept !== stamp) currentStampStore.setState({ stamp: hasTiles(kept) ? kept : null });
 });

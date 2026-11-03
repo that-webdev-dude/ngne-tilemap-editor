@@ -93,7 +93,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-020](TE-020-tile-selection-tools.md) | Tile selection tools | M | 019 | Done |
 | [TE-021](TE-021-cell-clipboard.md) | Cell clipboard | S | 020 | Done |
 | **M3** | **Tilesets** | | | |
-| [TE-022](TE-022-import-grid-png-atlas.md) | Tileset import core: grid PNG and atlas | M | 006, 009 | To do |
+| [TE-022](TE-022-import-grid-png-atlas.md) | Tileset import core: grid PNG and atlas | M | 006, 009 | Done |
 | [TE-023](TE-023-import-ngsprite.md) | Tileset import core: sprite projects | M | 022 | To do |
 | [TE-024](TE-024-import-tileset-dialog.md) | Import Tileset dialog and file drop | L | 007, 010, 023 | To do |
 | [TE-025](TE-025-tilesets-panel.md) | Tilesets panel | L | 017, 024 | To do |

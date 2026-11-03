@@ -350,8 +350,10 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
 - **Grid PNG**: dialog with tile
   width and height, margin, spacing, a live grid preview, name and export name (slug of the
   file name, made unique). Every grid cell becomes a tile, IDs 0.. in row-major order (Tiled);
-  partial cells at the right and bottom are not tiles. The tiles' pixels are copied into the
-  tileset's stored grid.
+  partial cells at the right and bottom are not tiles. As Tiled's `initializeTilesetTiles`
+  (v1.12.2), the grid starts at the margin and steps by the tile size plus the spacing, and a
+  cell is a tile when it lies whole inside the image: the margin counts at the left and top
+  only. The tiles' pixels are copied into the tileset's stored grid.
 - **Sprite project `.ngsprite`** (picked or dropped like a PNG): the sprite editor's own file,
   so a tileset drawn there comes in without an export step. It is read by the sprite editor's
   reader (`core/sprite`, its `FORMAT.md` §1; a newer version is refused naming both versions)
@@ -391,7 +393,8 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
   that would give a tileset more distinct tiles than its export atlas holds
   (§10.2: `⌈√r⌉ × (w + 2) ≤ 8192` and `⌈r / ⌈√r⌉⌉ × (h + 2) ≤ 8192` for `r` distinct tiles of even
   size `w × h`, e.g. at most 961 tiles of 256 × 256) is refused with that limit in the message.
-  The check runs the packer's layout only, without pixels.
+  The check runs the packer's layout only, without pixels, before decoding: each grid cell
+  counts as a distinct tile, and atlas frames count once per distinct rectangle and offset.
 - New tilesets go to the end of the list. One command; undo removes the tileset.
 
 ### 6.2 Tilesets panel
