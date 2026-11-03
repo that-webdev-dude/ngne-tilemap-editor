@@ -4,6 +4,14 @@ import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
 import { usePreference } from "../../app/preferences/preferences";
 import { useSession } from "../../app/state/session";
+import {
+    TILESET_MENU,
+    applyTilesetRename,
+    cancelTilesetRename,
+    setTilesetPanelFocused,
+    setTilesetRenameText,
+    useTilesetRename,
+} from "../../app/tilesets/edit/tilesetEdit";
 import { installTilesetDrop } from "../../app/tilesets/import/tilesetDrop";
 import {
     PANEL_ZOOMS,
@@ -22,6 +30,7 @@ import {
     tilesetPanelStore,
     useTilesetPanel,
 } from "../../app/tilesets/panel/tilesetPanel";
+import { MAX_TEXT_LENGTH } from "../../core/model";
 import type { Tileset } from "../../core/model";
 import { contextMenuEntries } from "../commands/contextMenu";
 import { runCommand } from "../commands/runCommand";
@@ -39,7 +48,9 @@ import "./tilesetsPanel.css";
 // Enter makes the stamp. The tile
 // menu (Menu key, right click, overflow button) lists the commands registered for the context
 // menu "tile" (`contextMenus: [{ menu: "tile" }]`): the tile editors (TE-029, TE-030) and
-// Properties (TE-040) add to it. Files dropped on the panel are imported as tilesets.
+// Properties (TE-040) add to it. A tab's menu (right click, Menu key) shows its tileset and
+// lists the commands of the context menu "tileset" (TE-026). F2 renames the shown tileset in
+// place, in its tab. Files dropped on the panel are imported as tilesets.
 
 /** The context menu the tile menu lists (`CommandSpec.contextMenus`). */
 export const TILE_MENU = "tile";
@@ -73,10 +84,50 @@ const ARROWS: Readonly<Record<string, [number, number]>> = {
     ArrowDown: [0, 1],
 };
 
+/** The in-place rename of a tab (F2): Enter or leaving applies, Escape keeps the old name. */
+function TabRenameField({ text, onEnd }: { text: string; onEnd(): void }) {
+    return (
+        <input
+            className="tilesets-panel__rename"
+            type="text"
+            aria-label="Tileset name"
+            autoComplete="off"
+            spellCheck={false}
+            maxLength={MAX_TEXT_LENGTH}
+            data-tileset-rename=""
+            // The field appears where the name was, for typing at once.
+            autoFocus
+            value={text}
+            onFocus={(event) => event.currentTarget.select()}
+            onChange={(event) => setTilesetRenameText(event.target.value)}
+            onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                    event.preventDefault();
+                    applyTilesetRename();
+                    onEnd();
+                } else if (event.key === "Escape") {
+                    event.preventDefault();
+                    // Not the dialog's or the canvas's Escape.
+                    event.stopPropagation();
+                    cancelTilesetRename();
+                    onEnd();
+                }
+            }}
+            // Leaving the field keeps what was typed, as Enter does.
+            onBlur={() => void applyTilesetRename()}
+        />
+    );
+}
+
 function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown: Tileset | null }) {
     const list = useRef<HTMLDivElement>(null);
+    const commands = useCommands();
+    const renaming = useTilesetRename((state) => state.renaming);
+    const entries = contextMenuEntries(TILESET_MENU, commands);
     const focusTab = (id: string) =>
         list.current?.querySelector<HTMLElement>(`[data-tileset-tab="${CSS.escape(id)}"]`)?.focus();
+    /** The rename ended from the keyboard: the focus goes back to the shown tab. */
+    const endRename = () => requestAnimationFrame(() => shown && focusTab(shown.id));
     const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
         const target =
             event.key === "ArrowLeft"
@@ -99,20 +150,28 @@ function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown:
         <div ref={list} className="tilesets-panel__tabs" role="tablist" aria-label="Tilesets">
             {tilesets.map((tileset, index) => {
                 const selected = tileset === shown;
+                if (renaming?.id === tileset.id) {
+                    return (
+                        <TabRenameField key={tileset.id} text={renaming.text} onEnd={endRename} />
+                    );
+                }
                 return (
-                    <button
-                        key={tileset.id}
-                        type="button"
-                        role="tab"
-                        className="tilesets-panel__tab"
-                        aria-selected={selected}
-                        tabIndex={selected ? 0 : -1}
-                        data-tileset-tab={tileset.id}
-                        onClick={() => tilesetPanel.showTileset(tileset.id)}
-                        onKeyDown={(event) => onKeyDown(event, index)}
-                    >
-                        {tileset.name}
-                    </button>
+                    <ContextMenu key={tileset.id} items={entries} disabled={entries.length === 0}>
+                        <button
+                            type="button"
+                            role="tab"
+                            className="tilesets-panel__tab"
+                            aria-selected={selected}
+                            tabIndex={selected ? 0 : -1}
+                            data-tileset-tab={tileset.id}
+                            onClick={() => tilesetPanel.showTileset(tileset.id)}
+                            // The menu acts on the shown tileset: the tab's own.
+                            onContextMenu={() => tilesetPanel.showTileset(tileset.id)}
+                            onKeyDown={(event) => onKeyDown(event, index)}
+                        >
+                            {tileset.name}
+                        </button>
+                    </ContextMenu>
                 );
             })}
         </div>
@@ -382,7 +441,19 @@ export function TilesetsPanel() {
     }, []);
 
     return (
-        <div ref={root} className="tilesets-panel" data-tilesets-panel="">
+        <div
+            ref={root}
+            className="tilesets-panel"
+            data-tilesets-panel=""
+            // F2 renames while the focus is in the panel (DESIGN §10.3).
+            onFocus={() => setTilesetPanelFocused(true)}
+            onBlur={(event) => {
+                const next = event.relatedTarget;
+                if (!(next instanceof Node && event.currentTarget.contains(next))) {
+                    setTilesetPanelFocused(false);
+                }
+            }}
+        >
             <div className="tilesets-panel__bar">
                 <TilesetTabs tilesets={tilesets} shown={shown} />
                 <IconButton

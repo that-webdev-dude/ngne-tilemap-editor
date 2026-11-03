@@ -1,0 +1,56 @@
+/* The Tileset Properties dialog (DESIGN §9): labels left, fields right. */
+.tileset-properties__form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+}
+
+.tileset-properties__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    min-width: 0;
+}
+
+.tileset-properties__text {
+    width: 100%;
+    max-width: 280px;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+.tileset-properties__text[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+/* Read-only: no field chrome, the value as text. */
+.tileset-properties__text--read-only {
+    border-color: transparent;
+    background: transparent;
+    color: var(--text-muted);
+    text-overflow: ellipsis;
+}
+
+.tileset-properties__heading {
+    grid-column: 1 / -1;
+    margin: var(--space-8) 0 0;
+    color: var(--text);
+    font: inherit;
+}
+
+.tileset-properties__messages {
+    grid-column: 1 / -1;
+}
+
+.tileset-properties__message {
+    margin: 0;
+    color: var(--danger);
+}

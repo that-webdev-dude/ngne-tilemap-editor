@@ -37,3 +37,35 @@ export class TilesetImportError extends Error {
         this.frames = options.frames ?? [];
     }
 }
+
+// Why a tileset command is refused (SPEC §6.2). The message says it to the user; `code` says it
+// to the code.
+
+export type TilesetEditErrorCode =
+    /** No tileset of the project has the ID. */
+    | "not-found"
+    /** A blank name, or one over 255 characters (FORMAT §1.1). */
+    | "name"
+    /** Not a slug, or an export name of another map, tileset or image (FORMAT §2.4). */
+    | "export-name"
+    /** A class over 255 characters. */
+    | "class"
+    /** A tile offset that is no integer in −4096..4096 (FORMAT §2.4). */
+    | "offset"
+    /** A move past either end of the list. */
+    | "move"
+    /** Delete of a tileset some map has a cell of; `maps` names them. */
+    | "in-use";
+
+export class TilesetEditError extends Error {
+    override readonly name = "TilesetEditError";
+    readonly code: TilesetEditErrorCode;
+    /** With `in-use`: the names of the maps that use the tileset, in project order. */
+    readonly maps: readonly string[];
+
+    constructor(code: TilesetEditErrorCode, message: string, maps: readonly string[] = []) {
+        super(message);
+        this.code = code;
+        this.maps = maps;
+    }
+}

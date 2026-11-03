@@ -289,8 +289,10 @@ Tabs per tileset along the top (the sprite editor's tab metrics at 24 px), New T
 end with Import Tileset…; right side: tile class filter (text field), zoom select (1×–8×,
 whole numbers). The grid draws tiles on the checkerboard with 1 px `--border` gaps; selected
 tiles have a 2 px `--accent` outline round the selection's rectangle. Tile menu (Menu key,
-overflow): Edit Collision…, Edit Animation…, Properties. Double click opens the collision
-editor. Keyboard: the grid is one tab stop; arrows move the selection, Shift extends it, Enter
+overflow): Edit Collision…, Edit Animation…, Properties. Tab menu (right click or Menu key on a
+tab, which shows that tab): Tileset Properties…, Move Tileset Left, Move Tileset Right, Delete
+Tileset; Tiled reorders by dragging tabs, which this panel does not. F2 renames the shown tileset
+in its tab. Double click opens the collision editor. Keyboard: the grid is one tab stop; arrows move the selection, Shift extends it, Enter
 makes the stamp.
 
 ### 8.6 Terrains (bottom panel)

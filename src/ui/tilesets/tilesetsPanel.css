@@ -93,3 +93,16 @@
     padding: var(--space-12);
     color: var(--text-muted);
 }
+
+/* The in-place rename of a tab (F2): a field of the tab's metrics. */
+.tilesets-panel__rename {
+    flex: none;
+    width: 160px;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--accent);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}

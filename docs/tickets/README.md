@@ -97,7 +97,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-023](TE-023-import-ngsprite.md) | Tileset import core: sprite projects | M | 022 | Done |
 | [TE-024](TE-024-import-tileset-dialog.md) | Import Tileset dialog and file drop | L | 007, 010, 023 | Done |
 | [TE-025](TE-025-tilesets-panel.md) | Tilesets panel | L | 017, 024 | Done |
-| [TE-026](TE-026-tileset-commands-properties.md) | Tileset commands and Tileset Properties | M | 025 | To do |
+| [TE-026](TE-026-tileset-commands-properties.md) | Tileset commands and Tileset Properties | M | 025 | Done |
 | [TE-027](TE-027-update-from-source-core.md) | Update tileset from source: matching and apply | M | 023 | To do |
 | [TE-028](TE-028-update-from-source-dialog.md) | Update Tileset from Source dialog | M | 026, 027 | To do |
 | [TE-029](TE-029-collision-editor.md) | Tile collision editor and Show Collision | L | 025 | To do |
