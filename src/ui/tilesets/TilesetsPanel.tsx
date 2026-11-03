@@ -23,6 +23,7 @@ import {
     tileOrigin,
 } from "../../app/tilesets/panel/tileGrid";
 import type { GridLayout, GridPoint, PanelZoom } from "../../app/tilesets/panel/tileGrid";
+import { installUpdateDrop } from "../../app/tilesets/update/updateDrop";
 import {
     selectionRect,
     shownTileset,
@@ -124,6 +125,11 @@ function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown:
     const commands = useCommands();
     const renaming = useTilesetRename((state) => state.renaming);
     const entries = contextMenuEntries(TILESET_MENU, commands);
+    // Files dropped on a tab update its tileset (TE-028), before the panel's drop imports them.
+    useEffect(() => {
+        const element = list.current;
+        return element ? installUpdateDrop({ target: element }) : undefined;
+    }, []);
     const focusTab = (id: string) =>
         list.current?.querySelector<HTMLElement>(`[data-tileset-tab="${CSS.escape(id)}"]`)?.focus();
     /** The rename ended from the keyboard: the focus goes back to the shown tab. */

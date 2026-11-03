@@ -456,6 +456,17 @@ history budget (§3) like any entry: an update larger than the budget stays undo
 newest entry and drops older ones. A different tile
 size in the source refuses the update ("tile size changed from 16 × 16 to 32 × 32"). Tile IDs of
 matched tiles never change, so maps change only through Delete and Replace.
+
+The command acts on the tileset the Tilesets panel shows. A browser's open picker cannot be
+given a file name (Tiled's file dialog preselects the file; the sprite editor names files only
+in its save pickers), so the picker takes only files of the source's kind and an information
+toast names the recorded file as it opens; a file of another name is accepted. Files dropped
+on a tileset's tab in the Tilesets panel update that tileset; files dropped elsewhere on the
+panel are imported (§6.1). The reading and matching run in the background worker. An update
+applied at once reports its summary in a toast. In the dialog, each row starts on a choice that
+loses nothing: an ambiguous tile on the first of its candidates no row above took, else Keep
+as is; a missing tile on Keep as is. Replace with… picks the tile from a grid of the source's
+tiles, and Apply waits until it is picked; a candidate another row took cannot be chosen.
 Delete and Replace both remove the old tile: its animation frames and terrain entries go
 with it (a replaced tile's are not moved to the replacement). The summary counts unchanged,
 moved and changed tiles of steps 1 and 2, ambiguous and missing tiles, and as new every entry
@@ -830,7 +841,7 @@ reference map:
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | — |
 | Open of the reference project to first frame | ≤ 3 s | — |
 | Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
-| Update tileset from source, 1,024 tiles | ≤ 1 s | — |
+| Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
 
 TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. Raw data:
 `te-019-bucket-fill-intel-uhd.json` and `te-019-bucket-fill-rtx-4060.json` in
@@ -840,6 +851,13 @@ TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6
 TE-020 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. The wand changes
 no cells, so its frame is the overlay's redraw showing the selection's ants. Raw data:
 `te-020-magic-wand-intel-uhd.json` and `te-020-magic-wand-rtx-4060.json` in [evidence/](evidence/).
+
+Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
+tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with
+64 tiles changed and 2 moved; timed from the call with the picked file (read and match in the
+worker, apply) to the first frame after the new texture is uploaded, the maximum of 10 updates.
+Raw data: `te-028-update-intel-uhd.json` and `te-028-update-rtx-4060.json` in
+[evidence/](evidence/).
 
 Stamp preview row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6, the map's
 overview built first. The task max is the longest gap of a message loop, as TE-015's, so one

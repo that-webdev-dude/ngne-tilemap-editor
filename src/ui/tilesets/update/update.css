@@ -1,0 +1,129 @@
+/*
+ * TE-028: Update Tileset from Source (DESIGN §9), a large dialog: the summary line, then one
+ * row per ambiguous and missing tile (old picture, tile and status, usage per map, choice);
+ * Replace with… picks a tile from a grid of the source's tiles in a popover.
+ */
+.update-dialog__summary {
+    margin: 0 0 var(--space-12);
+}
+
+.update-dialog__rows {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.update-dialog__row {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) max-content;
+    align-items: start;
+    gap: var(--space-12);
+    padding: var(--space-8);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+}
+
+.update-dialog__picture {
+    display: block;
+    flex: none;
+    image-rendering: pixelated;
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 /
+        var(--space-8) var(--space-8);
+}
+
+.update-dialog__about {
+    min-width: 0;
+}
+
+.update-dialog__tile {
+    margin: 0;
+}
+
+.update-dialog__status {
+    color: var(--text-muted);
+}
+
+.update-dialog__usage {
+    margin: var(--space-4) 0 0;
+    padding: 0;
+    color: var(--text-muted);
+    list-style: none;
+}
+
+.update-dialog__choice {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-8);
+    min-width: 200px;
+}
+
+.update-dialog__replace {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-height: var(--control-height);
+    padding: var(--space-4) var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+}
+
+.update-dialog__replace:disabled {
+    color: var(--text-muted);
+}
+
+/* The failure, at the start of the actions: always in view. */
+.update-dialog__footer {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    margin-right: auto;
+}
+
+.update-dialog__message {
+    margin: 0;
+    color: var(--danger);
+}
+
+/* The source's tiles: one canvas, the picked tile and the keyboard's tile outlined over it. */
+.update-sheet {
+    position: relative;
+    max-width: min(640px, 80vw);
+    max-height: 320px;
+    overflow: auto;
+}
+
+.update-sheet__canvas {
+    display: block;
+    background: var(--border);
+    cursor: pointer;
+}
+
+.update-sheet__chosen,
+.update-sheet__focus {
+    position: absolute;
+    box-sizing: border-box;
+    pointer-events: none;
+}
+
+.update-sheet__chosen {
+    border: 2px solid var(--accent);
+}
+
+.update-sheet__focus {
+    display: none;
+    border: 1px dashed var(--text);
+}
+
+.update-sheet:focus-visible .update-sheet__focus {
+    display: block;
+}

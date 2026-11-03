@@ -99,7 +99,7 @@ Dependencies are listed without the `TE-` prefix.
 | [TE-025](TE-025-tilesets-panel.md) | Tilesets panel | L | 017, 024 | Done |
 | [TE-026](TE-026-tileset-commands-properties.md) | Tileset commands and Tileset Properties | M | 025 | Done |
 | [TE-027](TE-027-update-from-source-core.md) | Update tileset from source: matching and apply | M | 023 | Done |
-| [TE-028](TE-028-update-from-source-dialog.md) | Update Tileset from Source dialog | M | 026, 027 | To do |
+| [TE-028](TE-028-update-from-source-dialog.md) | Update Tileset from Source dialog | M | 026, 027 | Done |
 | [TE-029](TE-029-collision-editor.md) | Tile collision editor and Show Collision | L | 025 | To do |
 | [TE-030](TE-030-animation-editor.md) | Tile animation editor | M | 025 | To do |
 | **M4** | **Maps, layers and markers** | | | |

@@ -1,4 +1,5 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
+import { notices } from "../app/notices/notices";
 import { installTestHooks } from "../app/testing/testHooks";
 import { useEditorKeymap } from "./commands/useEditorKeymap";
 import { useTilesetDrop } from "./import/useTilesetDrop";
@@ -9,6 +10,7 @@ import { isWindowTooSmall } from "./shell/layout";
 import { WebGpuRequired } from "./shell/notices/WebGpuRequired";
 import { WindowTooSmall } from "./shell/notices/WindowTooSmall";
 import { AppSurfaces } from "./surfaces/AppSurfaces";
+import { toast } from "./toast/toast";
 import { UiRoot } from "./UiRoot";
 
 // Development route: left out of the production bundle.
@@ -49,6 +51,16 @@ function Editor() {
 }
 
 export function App() {
+    // The results and failures the app announces (app/notices) as toasts, as the sprite
+    // editor's `FileWorkflows` shows them.
+    useEffect(
+        () =>
+            notices.attachSink((kind, message) => {
+                if (kind === "error") toast.error(message);
+                else toast.info(message);
+            }),
+        [],
+    );
     return (
         <UiRoot>
             {Gallery && isGalleryPath(window.location.pathname) ? (

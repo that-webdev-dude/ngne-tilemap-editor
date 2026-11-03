@@ -162,7 +162,7 @@ rows.
 | `src/import-meta.d.ts` | `src/import-meta.d.ts` | adapt | `ea5c91d` | | No `SERVICE_WORKER` flag until the PWA build defines it (TE-066) |
 | `src/main.tsx` | `src/main.tsx` | adapt | `ea5c91d` | | Renders `App` in a root that sets `<html data-app-ready>` once committed; no service worker |
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
-| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); the surfaces (TE-008); file workflows and the pixel-memory warning are left out |
+| `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); the surfaces (TE-008); the notices shown as toasts, as `FileWorkflows` shows them (TE-028); file workflows and the pixel-memory warning are left out |
 | `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
 | `src/ui/commandPalette/CommandPalette.tsx` | `src/ui/commandPalette/CommandPalette.tsx` | verbatim | `ea5c91d` | `0b28da9e42ce9e91c73f1b8a6d0873801cc319c4f921fde16a0d359871373723` | |
 | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | verbatim | `ea5c91d` | `414b2165c6eac389f9797a4371f24e64171daf524c636262c1ca5b7f1c01b4f6` | |

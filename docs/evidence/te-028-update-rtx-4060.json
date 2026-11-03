@@ -1,0 +1,24 @@
+{
+    "id": "te-028-update-rtx-4060",
+    "ticket": "TE-028",
+    "measurement": "Update from source of a 1024-tile tileset used by the reference map at 100%, applied at once (64 tiles changed, 2 moved), the call with the picked file to the first frame after the new texture is uploaded; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "max of 10 updates after 2 warm-up updates",
+    "budgetMs": 1000,
+    "resultMs": 175,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 129.90000000596046,
+        "appliedMedianMs": 84,
+        "appliedMaxMs": 128.40000000596046
+    },
+    "benchmarkId": "te-028-update",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-03T22:29:33.769Z"
+}
