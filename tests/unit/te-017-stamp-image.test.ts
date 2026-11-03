@@ -256,3 +256,41 @@ describe("stampThumbnail", () => {
         expect(at(27, 13)).toEqual([192, 192, 192, 255]);
     });
 });
+
+describe("the stamp's compositor", () => {
+    /** Counts how often the tileset is read for a compositor (`MapCompositor` lists its tiles). */
+    function countReads(tileset: Tileset): () => number {
+        let reads = 0;
+        const tiles = [...tileset.tiles];
+        tiles.forEach = function (...args: Parameters<typeof Array.prototype.forEach>) {
+            reads++;
+            return Array.prototype.forEach.apply(this, args);
+        };
+        tileset.tiles = tiles;
+        return () => reads;
+    }
+
+    it("reads the tilesets once for any number of stamps (a new stamp costs its cells)", () => {
+        const map = openMap(16);
+        const { project } = sessionStore.getState().session;
+        const reads = countReads(project.tilesets[0]!);
+        stampThumbnail(project, map, stampOf(4, 4), 28);
+        expect(reads()).toBe(1);
+        for (let n = 0; n < 3; n++) stampThumbnail(project, map, stampOf(5 + n, 4), 28);
+        setCurrentStamp(stampOf(SIDE, SIDE));
+        expect(toolState.select("stamp")).toBe(true);
+        drawSettled(stampLayers[0]!, frameOf(map, 1));
+        expect(reads()).toBe(1);
+    });
+
+    it("reads them again when a tileset's pixels change", () => {
+        const map = openMap(16);
+        const { project } = sessionStore.getState().session;
+        const tileset = project.tilesets[0]!;
+        const stamp = { width: 1, height: 1, cells: Uint32Array.of(cellValue(1, 0)) };
+        expect([...stampThumbnail(project, map, stamp, 1).data]).toEqual([0, 0, 0, 255]);
+        tileset.pixels = { ...tileset.pixels, data: tileset.pixels.data.slice().fill(255) };
+        const next = { width: 1, height: 1, cells: Uint32Array.of(cellValue(1, 0)) };
+        expect([...stampThumbnail(project, map, next, 1).data]).toEqual([255, 255, 255, 255]);
+    });
+});

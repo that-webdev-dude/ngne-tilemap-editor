@@ -1,7 +1,7 @@
 import type { CellRect, Stamp } from "../../../core/cells";
 import { MapCompositor } from "../../../core/compositor";
 import { createTileLayer } from "../../../core/model";
-import type { PixelBuffer, Project, ProjectMap, Tileset } from "../../../core/model";
+import type { PixelBuffer, Project, ProjectMap, Tileset, TileLayer } from "../../../core/model";
 import type { PixelPoint } from "../../../core/raster/line";
 import type { OverlayFrame } from "../../overlay/types";
 import { cellDeviceRect, clipToMap } from "../cellOutline";
@@ -11,22 +11,30 @@ import { cellDeviceRect, clipToMap } from "../cellOutline";
 // costs follows what is shown, never the stamp's pixels (as Tiled's `BrushItem` draws only the
 // exposed part of its preview layer): the rail's preview is composited at its own size
 // (`stampThumbnail`); the overlay's previews at the view's scale, in chunks of the stamp made
-// when first in view (`drawStamp`). The compositor of the stamp is made again only when the
-// stamp, the cell size or a tileset's pixels changed.
+// when first in view (`drawStamp`). One compositor reads the tilesets, again only when one of
+// them or the cell size changed; a new stamp only puts its layer in, so it costs its cells.
 
 /** The longer side of a chunk of the overlay's picture, at most, in texels. */
 export const STAMP_CHUNK_TEXELS = 256;
 /** How long one redraw composites chunks after its first one; the rest wait for the next. */
 export const STAMP_SLICE_MS = 8;
 
-/** The stamp as the one layer of a map of its size, and the compositor of that map. */
-interface Source {
-    readonly stamp: Stamp;
+/** A compositor of a map the stamp's size: the tilesets read once, any stamp's layer put in. */
+interface Reader {
     readonly tileWidth: number;
     readonly tileHeight: number;
-    /** The pixels of the project's tilesets the compositor read, in list order. */
-    readonly pixels: readonly PixelBuffer[];
+    /** What it read of each tileset, in list order (`readOf`). */
+    readonly read: readonly (readonly unknown[])[];
+    /** Its map: a stamp's layer and size are put in before each use (`show`). */
+    readonly grid: ProjectMap;
     readonly compositor: MapCompositor;
+}
+
+/** The stamp as the one layer of a map of its size, and the compositor that draws it. */
+interface Source {
+    readonly stamp: Stamp;
+    readonly layer: TileLayer;
+    readonly reader: Reader;
 }
 
 /** The stamp at one scale: chunks of whole cells, made when first shown. */
@@ -50,25 +58,65 @@ export interface StampTiling {
     readonly area: CellRect;
 }
 
+let reader: Reader | null = null;
 let source: Source | null = null;
 let picture: Picture | null = null;
 const listeners = new Set<() => void>();
 
-function samePixels(a: readonly PixelBuffer[], tilesets: readonly Tileset[]): boolean {
-    return a.length === tilesets.length && a.every((pixels, n) => pixels === tilesets[n]!.pixels);
+/** What a `MapCompositor` reads of `tileset` when it is made. */
+function readOf(tileset: Tileset): readonly unknown[] {
+    const { pixels, tiles, slot, tileWidth, tileHeight, offsetX, offsetY, columns } = tileset;
+    return [
+        tileset,
+        pixels,
+        tiles,
+        tiles.length,
+        slot,
+        tileWidth,
+        tileHeight,
+        offsetX,
+        offsetY,
+        columns,
+    ];
 }
 
-function sourceOf(project: Project, map: ProjectMap, stamp: Stamp): Source {
-    const known = source;
+function sameRead(a: readonly (readonly unknown[])[], b: readonly (readonly unknown[])[]): boolean {
+    return (
+        a.length === b.length && a.every((read, n) => read.every((value, k) => value === b[n]![k]))
+    );
+}
+
+function readerOf(project: Project, map: ProjectMap): Reader {
+    const read = project.tilesets.map(readOf);
+    const known = reader;
     if (
         known &&
-        known.stamp === stamp &&
         known.tileWidth === map.tileWidth &&
         known.tileHeight === map.tileHeight &&
-        samePixels(known.pixels, project.tilesets)
+        sameRead(known.read, read)
     ) {
         return known;
     }
+    const grid: ProjectMap = {
+        ...map,
+        width: 0,
+        height: 0,
+        backgroundColor: null,
+        parallaxOriginX: 0,
+        parallaxOriginY: 0,
+        layers: [],
+    };
+    reader = {
+        tileWidth: map.tileWidth,
+        tileHeight: map.tileHeight,
+        read,
+        grid,
+        compositor: new MapCompositor(project, grid),
+    };
+    return reader;
+}
+
+function stampLayer(stamp: Stamp): TileLayer {
     const layer = createTileLayer(1, "Stamp");
     for (let y = 0; y < stamp.height; y++) {
         for (let x = 0; x < stamp.width; x++) {
@@ -76,22 +124,24 @@ function sourceOf(project: Project, map: ProjectMap, stamp: Stamp): Source {
             if (value !== 0) layer.cells.set(x, y, value);
         }
     }
-    const grid: ProjectMap = {
-        ...map,
-        width: stamp.width,
-        height: stamp.height,
-        backgroundColor: null,
-        parallaxOriginX: 0,
-        parallaxOriginY: 0,
-        layers: [layer],
-    };
-    source = {
-        stamp,
-        tileWidth: map.tileWidth,
-        tileHeight: map.tileHeight,
-        pixels: project.tilesets.map((tileset) => tileset.pixels),
-        compositor: new MapCompositor(project, grid),
-    };
+    return layer;
+}
+
+/** Puts the stamp of `shown` in its compositor's map; the compositor's reader. */
+function show(shown: Source): Reader {
+    const { grid } = shown.reader;
+    grid.width = shown.stamp.width;
+    grid.height = shown.stamp.height;
+    if (grid.layers[0] !== shown.layer) grid.layers = [shown.layer];
+    return shown.reader;
+}
+
+function sourceOf(project: Project, map: ProjectMap, stamp: Stamp): Source {
+    const shared = readerOf(project, map);
+    const known = source;
+    if (known && known.stamp === stamp && known.reader === shared) return known;
+    const layer = known?.stamp === stamp ? known.layer : stampLayer(stamp);
+    source = { stamp, layer, reader: shared };
     return source;
 }
 
@@ -111,7 +161,7 @@ export function stampThumbnail(
     const scale = Math.min(side / pixelsX, side / pixelsY);
     const width = Math.min(side, Math.max(1, Math.round(pixelsX * scale)));
     const height = Math.min(side, Math.max(1, Math.round(pixelsY * scale)));
-    return sourceOf(project, map, stamp).compositor.composite({
+    return show(sourceOf(project, map, stamp)).compositor.composite({
         x: 0,
         y: 0,
         width,
@@ -168,14 +218,15 @@ function chunkCells(shown: Picture, column: number, row: number): CellRect {
 
 function makeChunk(shown: Picture, column: number, row: number): HTMLCanvasElement {
     const { source: made, texelsX, texelsY } = shown;
+    const { compositor, tileWidth, tileHeight } = show(made);
     const cells = chunkCells(shown, column, row);
-    const image = made.compositor.composite({
+    const image = compositor.composite({
         x: cells.x * texelsX,
         y: cells.y * texelsY,
         width: cells.width * texelsX,
         height: cells.height * texelsY,
-        scaleX: { texels: texelsX, pixels: made.tileWidth },
-        scaleY: { texels: texelsY, pixels: made.tileHeight },
+        scaleX: { texels: texelsX, pixels: tileWidth },
+        scaleY: { texels: texelsY, pixels: tileHeight },
         background: false,
     });
     const canvas = document.createElement("canvas");
