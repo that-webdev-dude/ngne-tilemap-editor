@@ -11,7 +11,7 @@ key (SPEC §6.3). This ticket is the `core/` matcher and the undoable apply.
 ## Relevant code and documentation
 
 - [SPEC.md](../SPEC.md) §6.3 (matching order, resolutions, history entry, tile-size refusal),
-  §3 (history budget).
+  §3 (history budget), §4.2 (removed tiles; the rule of TE-022).
 - [FORMAT.md](../FORMAT.md) §2.4 (source keys, fingerprint).
 - Import core (TE-022, TE-023).
 
@@ -27,6 +27,9 @@ key (SPEC §6.3). This ticket is the `core/` matcher and the undoable apply.
   rewritten, flags kept).
 - Apply as one history entry holding before/after pixels of changed, new and deleted tiles and
   the rewritten cells; counted against the budget like any entry.
+- Removed tiles (SPEC §4.2): after the apply, and after its undo and redo, the current stamp
+  and the clipboard lose their cells on every tile that was removed. Delete and Replace remove
+  a tile, and the undo of an apply removes the new tiles it added.
 - A summary: unchanged, moved, changed, new, ambiguous, missing.
 
 ## Acceptance criteria
@@ -34,6 +37,8 @@ key (SPEC §6.3). This ticket is the `core/` matcher and the undoable apply.
 - [ ] `tests/unit/te-027-match.test.ts`: one case per matching step and per resolution, with
       the expected tile IDs and cells afterwards.
 - [ ] Moved and changed tiles keep their IDs; maps change only through Delete and Replace.
+- [ ] After Delete, after Replace, and after undoing an apply that added tiles, the current stamp
+      and the clipboard hold no cell of a removed tile. Their other cells are unchanged.
 - [ ] The apply passes the TE-006 symmetry harness; its `bytes` covers only changed, new and
       deleted tiles and rewritten cells.
 - [ ] Tile-size change refused with the message above.

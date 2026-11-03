@@ -9,14 +9,16 @@ Tilesets are renamed, reordered, given a tile offset and deleted through undoabl
 
 ## Relevant code and documentation
 
-- [SPEC.md](../SPEC.md) §6.2 (tileset commands, delete refusal).
+- [SPEC.md](../SPEC.md) §6.2 (tileset commands, delete refusal), §4.2 (removed tiles; the rule
+  of TE-022).
 - [FORMAT.md](../FORMAT.md) §2.4 (Tileset members, export names distinct), §1.3 (tile offset).
 - [DESIGN.md](../DESIGN.md) §5 (Tileset menu), §9 (Tileset Properties), §10.3 (F2).
 
 ## Required work
 
 - Commands: rename, export name (slug, unique), class, tile offset X/Y, move left/right in the
-  list, delete (refused while any map uses one of its tiles; the message names the maps).
+  list, delete (refused while any map uses one of its tiles; the message names the maps; the
+  current stamp and the clipboard lose their cells on it, SPEC §4.2).
 - Tileset Properties dialog: name, export name, class, tile offset X/Y, source read-only (kind,
   file, tile size, margin, spacing).
 - Tileset menu items Tileset Properties…, Delete Tileset, Previous Tileset, Next Tileset; F2
@@ -26,7 +28,9 @@ Tilesets are renamed, reordered, given a tile offset and deleted through undoabl
 ## Acceptance criteria
 
 - [ ] `tests/unit/te-026-commands.test.ts`: every command passes the TE-006 symmetry harness;
-      a duplicate export name is refused; delete is refused naming the maps that use it.
+      a duplicate export name is refused; delete is refused naming the maps that use it; delete
+      and the redo of a delete leave the current stamp and the clipboard with no cell of the
+      deleted tileset.
 - [ ] `tests/e2e/te-026-properties.spec.ts`: dialog edits apply as one entry each; tile offset
       moves the drawn tiles (readback); source fields are read-only.
 

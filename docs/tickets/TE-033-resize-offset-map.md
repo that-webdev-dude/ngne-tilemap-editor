@@ -9,7 +9,9 @@ Tiled's Resize / Offset Map changes a map's size and shifts its content in one s
 
 ## Relevant code and documentation
 
-- [SPEC.md](../SPEC.md) §7.1 (Resize / Offset Map).
+- [SPEC.md](../SPEC.md) §7.1 (Resize / Offset Map), §4.4 (Copy, Cut and Delete inside the map).
+- Selection and clipboard: `src/core/selection/`, `src/app/clipboard/clipboard.ts` (TE-020,
+  TE-021).
 - [DESIGN.md](../DESIGN.md) §3.3 row `ui/sprite/PivotGrid.tsx`; §3.4 row
   `ui/sprite/CanvasSizeDialog.tsx`; §9 (Resize / Offset Map row).
 - [FORMAT.md](../FORMAT.md) §2.8 (limits).
@@ -17,7 +19,10 @@ Tiled's Resize / Offset Map changes a map's size and shifts its content in one s
 ## Required work
 
 - Command: new width and height and an offset in cells; cells outside the new bounds removed;
-  markers moved by the offset and kept even outside the bounds; one entry; limits checked.
+  markers moved by the offset and kept even outside the bounds; the tile selection moved by the
+  offset in the same entry, not cut to the new bounds (Tiled's `MapDocument::resizeMap`); one
+  entry; limits checked.
+- Copy, Cut and Delete act only on the selected cells inside the map (SPEC §4.4).
 - Dialog: width, height, offset X/Y, anchor grid (adapted `PivotGrid`) setting the offset, a
   preview of the old map inside the new bounds (from `core/compositor`).
 
@@ -25,6 +30,9 @@ Tiled's Resize / Offset Map changes a map's size and shifts its content in one s
 
 - [ ] `tests/unit/te-033-resize.test.ts`: grow, shrink and offset on every anchor give the
       expected cells and marker positions; the command passes the TE-006 symmetry harness.
+- [ ] `tests/unit/te-033-selection.test.ts`: the selection moves by the offset and undo restores
+      it. After a shrink that leaves selected cells outside the map, Copy, Cut and Delete act on
+      the selected cells inside the map and throw nothing.
 - [ ] `tests/e2e/te-033-dialog.spec.ts`: the anchor grid sets the offset; the preview shows the
       old bounds; Apply is one entry; undo restores.
 - [ ] A size above FORMAT §2.8 is refused.

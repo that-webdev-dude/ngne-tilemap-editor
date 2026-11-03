@@ -227,6 +227,12 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
   leaves no stamp. A capture only reads: a locked layer is captured but not cut (§4.1); a
   hidden layer, or one under a hidden group, refuses the press (Tiled hides its brush there);
   Ctrl+right does not capture (Tiled keeps it for picking a layer).
+- **Removed tiles**: the stamp and the clipboard (§4.4) hold slots and tile IDs (§2.2), so a
+  change that removes a tileset or a tile empties their cells on it, as Delete in an update
+  erases a deleted tile's cells in the maps (§6.3); a stamp left with no non-empty cell is no
+  stamp. Such changes: undoing an import, Delete Tileset (§6.2), Delete and Replace in an update
+  from source (§6.3), and the undo or redo of any change that removes one. Tiled does not settle
+  this: its stamp holds the tileset itself, not a slot.
 
 ### 4.3 Tools
 
@@ -263,8 +269,11 @@ touches all four sides of the rectangle.
   a locked layer or one under a locked group, not on a hidden one (Tiled's `isTileSelectionLocked`);
   Copy only reads. **Paste** makes the clipboard the current stamp, cut to the bounding box of its
   non-empty cells, clears the selection (an entry of its own) and selects the stamp brush (Tiled's
-  `MapEditor::paste`, v1.12.2). The clipboard is the editor's own, shared by all maps of the
-  project; it holds slots and tile IDs, so it is cleared when another project opens.
+  `MapEditor::paste`, v1.12.2). Copy, Cut and Delete act on the selected cells inside the map
+  only; a selection moved by Resize / Offset Map (§7.1) can reach past it (Tiled's
+  `eraseTileLayers` cuts the region to the layer's bounds). The clipboard is the editor's own,
+  shared by all maps of the project; it holds slots and tile IDs, so it is cleared when another
+  project opens and loses its cells on removed tiles (§4.2).
 - **Crop to Selection** and **New Layer from Selection** are Later.
 
 ## 5. Terrain
@@ -456,7 +465,9 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   properties. Changing the tile size keeps cells; markers and offsets stay in pixels.
 - **Resize / Offset Map** (Tiled's dialog): new width and height and an offset in cells; a
   preview shows the old map inside the new bounds. Cells outside the new bounds are removed;
-  markers are moved by the offset and kept even outside the bounds (Tiled). One entry.
+  markers are moved by the offset and kept even outside the bounds (Tiled). The tile selection
+  moves by the offset and is not cut to the new bounds (Tiled's `MapDocument::resizeMap`). One
+  entry.
 - Maps are tabs in the menu bar (SUITE §3). Closing a tab hides the map; it stays in the
   project. The project's map list (DESIGN) opens them.
 

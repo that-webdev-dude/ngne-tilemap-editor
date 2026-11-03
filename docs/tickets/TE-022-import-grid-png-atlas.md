@@ -10,11 +10,14 @@ grid PNGs and `ngne-sprite-atlas` files, as pure `core/` conversions plus the ad
 
 ## Relevant code and documentation
 
-- [SPEC.md](../SPEC.md) §6.1 (grid PNG, atlas, pixel limits, packability, new tilesets).
+- [SPEC.md](../SPEC.md) §6.1 (grid PNG, atlas, pixel limits, packability, new tilesets), §4.2
+  (removed tiles), §4.4 (clipboard).
 - [FORMAT.md](../FORMAT.md) §2.4 (Tileset, Source, Tile, fingerprint), §2.8 (limits).
 - [BRIEF.md](../BRIEF.md) §5 (tilesets and stable tile IDs).
 - `src/core/sprite/export/validateAtlas.ts`, PNG code (TE-002); `core/pack` packability
   (TE-009).
+- `src/app/tools/stamp/currentStamp.ts` (stamp cleared when another project opens),
+  `src/app/clipboard/clipboard.ts` (TE-021).
 
 ## Required work
 
@@ -32,6 +35,9 @@ grid PNGs and `ngne-sprite-atlas` files, as pure `core/` conversions plus the ad
   limit.
 - Export name: slug of the file name, made unique. Add-tileset command: end of list, lowest free
   slot, undo removes it.
+- Removed tiles (SPEC §4.2): when a tileset or a tile is removed, the current stamp and the
+  clipboard lose their cells on it. This is one rule for every such change, so TE-026 and
+  TE-027 reuse it, and the undo of add-tileset is the first change that applies it.
 
 ## Acceptance criteria
 
@@ -42,6 +48,10 @@ grid PNGs and `ngne-sprite-atlas` files, as pure `core/` conversions plus the ad
 - [ ] Fingerprints match a reference SHA-256 and ignore RGB under alpha 0.
 - [ ] Limit and packability refusals happen before any pixel is decoded (spy on the decoder).
 - [ ] Add-tileset passes the TE-006 symmetry harness.
+- [ ] `tests/unit/te-022-removed-tiles.test.ts`: the stamp and the clipboard hold cells of the
+      added tileset and of another. Undoing the add empties the cells of the added tileset and
+      keeps the others. A stamp made only of the added tileset's cells becomes no stamp. A later
+      add that reuses the freed slot leaves the stamp and the clipboard unchanged.
 
 ## Validation
 
