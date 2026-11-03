@@ -29,6 +29,9 @@ Binding rules: [RULES.md](RULES.md). This file says how to apply them to a ticke
   then the sprite editor) and record the decision in the doc it belongs to. If that does not
   settle it, or it touches a BRIEF §8 decision, a frozen format, the stack or the scope, stop and
   report.
+- Never edit a ticket file, your own included. A RULES 1 decision goes into the doc it belongs
+  to and into the report; the ticket keeps what was asked. Only the owner edits tickets, before
+  they start.
 - Never change a doc to make code pass. Edit docs only where the ticket's Documentation section
   names the edit.
 - Copies from the sprite editor come from commit `ea5c91d` (`git show ea5c91d:<path>`), never

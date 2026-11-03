@@ -7,9 +7,10 @@ Binding for every implementer (human or agent). Docs index: [docs/README.md](doc
 1. **Decide; don't hand the owner every choice.** When a decision is needed, check in order:
    how Tiled solves it ([docs/reference/tiled.md](docs/reference/tiled.md), then Tiled's
    source and docs), then how ngne-sprite-editor solves it. If either answers it, adopt that,
-   write it into the doc it belongs to, and continue. Consult the owner only when both checks
-   fail or the decision is critical: it changes a decision in `docs/BRIEF.md` §8, a frozen
-   file format, the stack, or the scope.
+   write it into the doc it belongs to (never into a ticket file: only the owner edits tickets,
+   before they start), list it in the report (rule 13), and continue. Consult the owner only
+   when both checks fail or the decision is critical: it changes a decision in
+   `docs/BRIEF.md` §8, a frozen file format, the stack, or the scope.
 2. Docs state the current truth only: no revision notes, "superseded" or "amended" markers.
    History lives in git. Never change a doc just to make code pass.
 3. A step's scope is binding. If the docs and the step disagree, or acceptance cannot be met,
