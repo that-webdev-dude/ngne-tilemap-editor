@@ -217,9 +217,15 @@ test("regions carry their landmarks and are empty placeholders until their ticke
     );
     await expect(page.getByRole("contentinfo")).toHaveAttribute("data-region", "status-bar");
 
-    for (const id of ["tool-rail", "viewport"] as const) {
-        await expect(region(page, id), id).toBeEmpty();
-    }
+    // The tool rail holds the tools of TE-016, the stamp brush of TE-017 pressed.
+    await expect(region(page, "tool-rail").locator('[data-tool="stamp"]')).toHaveAttribute(
+        "aria-pressed",
+        "true",
+    );
+    // The viewport holds the canvas of TE-013 and the overlay above it.
+    const canvas = region(page, "viewport").getByRole("application", { name: "Canvas" });
+    await expect(canvas.locator("canvas:not([data-viewport-overlay])")).toBeVisible();
+    await expect(canvas.locator("canvas[data-viewport-overlay]")).toBeVisible();
     // The context bar holds the active tool of TE-017: the stamp brush, a tile layer's default.
     await expect(region(page, "context-bar").locator("[data-context-tool]")).toHaveText(
         "Stamp Brush",
