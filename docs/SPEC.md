@@ -456,6 +456,10 @@ history budget (§3) like any entry: an update larger than the budget stays undo
 newest entry and drops older ones. A different tile
 size in the source refuses the update ("tile size changed from 16 × 16 to 32 × 32"). Tile IDs of
 matched tiles never change, so maps change only through Delete and Replace.
+Delete and Replace both remove the old tile: its animation frames and terrain entries go
+with it (a replaced tile's are not moved to the replacement). The summary counts unchanged,
+moved and changed tiles of steps 1 and 2, ambiguous and missing tiles, and as new every entry
+steps 1 and 2 leave unmatched, before any choice of the dialog.
 
 ### 6.4 Tile editors
 

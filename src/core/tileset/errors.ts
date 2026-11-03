@@ -69,3 +69,26 @@ export class TilesetEditError extends Error {
         this.maps = maps;
     }
 }
+
+// Why an update from source is refused (SPEC §6.3). Refusals of the source itself (a PNG that is
+// not one, an atlas `validateAtlas` refuses, a limit) are the import's `TilesetImportError`.
+
+export type TilesetUpdateErrorCode =
+    /** No tileset of the project has the ID. */
+    | "not-found"
+    /** The source is of another kind than the tileset's, or `"collection"` (TE-062). */
+    | "source-kind"
+    /** The source's tiles are of another size than the tileset's. */
+    | "tile-size"
+    /** An ambiguous or missing tile without a resolution, or a resolution it cannot take. */
+    | "resolution";
+
+export class TilesetUpdateError extends Error {
+    override readonly name = "TilesetUpdateError";
+    readonly code: TilesetUpdateErrorCode;
+
+    constructor(code: TilesetUpdateErrorCode, message: string) {
+        super(message);
+        this.code = code;
+    }
+}
