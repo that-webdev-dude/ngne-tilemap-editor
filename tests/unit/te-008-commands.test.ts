@@ -241,6 +241,10 @@ describe("the shortcut sheet over the app's registry", () => {
         expect(edit?.rows.map((row) => row.command.id)).toEqual([
             "edit.undo",
             "edit.redo",
+            "edit.cut",
+            "edit.copy",
+            "edit.paste",
+            "edit.delete",
             "edit.commandPalette",
             "edit.shortcuts",
         ]);

@@ -249,10 +249,13 @@ touches all four sides of the rectangle.
   Marching ants on the overlay.
 - Select All, Select None, Invert (Select menu); Escape with a tile tool active clears it
   (Tiled 1.12).
-- **Copy** copies the selected cells of the active layer into the clipboard as a stamp (its
-  bounding box, cells outside the selection empty). **Cut** copies and erases, one entry.
-  **Delete** erases the selected cells. **Paste** makes the clipboard the current stamp and
-  selects the stamp brush (Tiled). The clipboard is the editor's own, shared by all maps of the
+- **Copy** copies the selected cells of the active layer into the clipboard as a stamp (its bounding
+  box, cells outside the selection empty). **Cut** copies, erases and clears the selection, one
+  entry. **Delete** erases the selected cells and keeps the selection. Cut and Delete are refused on
+  a locked layer or one under a locked group, not on a hidden one (Tiled's `isTileSelectionLocked`);
+  Copy only reads. **Paste** makes the clipboard the current stamp, cut to the bounding box of its
+  non-empty cells, clears the selection (an entry of its own) and selects the stamp brush (Tiled's
+  `MapEditor::paste`, v1.12.2). The clipboard is the editor's own, shared by all maps of the
   project; it holds slots and tile IDs, so it is cleared when another project opens.
 - **Crop to Selection** and **New Layer from Selection** are Later.
 
