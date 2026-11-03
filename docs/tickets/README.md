@@ -206,6 +206,16 @@ Tiled 1.12.2 is needed only at TE-042 and TE-058.
 | TE-055 | Game runtime 480 × 270 ×3 p95 ≤ 8 ms on Intel UHD; 1920 × 1080 recorded |
 | TE-064 | Cold load ≤ 2 s; idle 0 frames/s; every row re-measured on the finished build |
 
+## Follow-ups
+
+Open items that no ticket covers. Each one waits for an owner decision: it can become a ticket,
+part of a ticket's scope, a fix branch, or be dropped. Its row is then removed (RULES 9).
+
+| Item | Evidence | Decision |
+| ---- | -------- | -------- |
+| Paste of a full layer runs as one long main-thread task (TE-021 code, `paste` in `src/app/clipboard/clipboard.commands.ts`). For a 256 × 256 stamp, the Paste command alone takes 16.6–16.8 / 16.8–19.4 ms (Intel UHD / RTX 4060, 16 and 32 px cells). The longest task around it is 26.1 / 26.8–29.7 ms. No budget in ENGINE §6 or SPEC §14 covers Paste | `pasteCommandMs` and `pasteLongestTaskMs` in `docs/evidence/te-017-stamp-preview-{intel-uhd,rtx-4060}.json`, recorded by the stamp preview benchmark. Not yet re-checked under RULES 14 | Either add a budget (for example no task over 16 ms, as for the stamp preview) and a fix branch, or accept it |
+| `src/ui/tools/VariantToolButton.tsx` and `src/ui/tools/useToolState.ts` are byte-identical to the sprite editor at `ea5c91d`, but `docs/PROVENANCE.md` records them as **adapt** ("No change"), as DESIGN §3.3 lists them. The drift report checks only verbatim rows, so changes the sprite editor makes to these two files go unreported | SHA-256 of both files equals `git show ea5c91d:<path>` (`7100f35f…`, `1aa4ae98…`) | Either reclassify both as verbatim (the DESIGN §3.3 row, plus both PROVENANCE rows with their SHA-256), or keep them as adapt |
+
 ## Parallel work
 
 Waves computed from the index: a ticket's wave is one more than the latest wave among its
