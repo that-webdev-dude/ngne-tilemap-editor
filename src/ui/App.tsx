@@ -1,6 +1,7 @@
 import { lazy, Suspense } from "react";
 import { installTestHooks } from "../app/testing/testHooks";
 import { useEditorKeymap } from "./commands/useEditorKeymap";
+import { useTilesetDrop } from "./import/useTilesetDrop";
 import { useWindowHeight, useWindowWidth } from "./platform/useWindowSize";
 import { useWebGpuSupport } from "./platform/webgpu";
 import { AppShell } from "./shell/AppShell";
@@ -30,6 +31,8 @@ function Editor() {
     const tooSmall = isWindowTooSmall(width, height);
     // Shortcuts act only while the shell is on screen.
     useEditorKeymap(gpu.status === "supported" && !tooSmall);
+    // A `.ngsprite` dropped on the window, likewise (TE-024).
+    useTilesetDrop(gpu.status === "supported" && !tooSmall);
     if (gpu.status === "checking") return null;
     if (gpu.status === "unsupported") {
         return <WebGpuRequired reason={gpu.reason} detail={gpu.detail} />;

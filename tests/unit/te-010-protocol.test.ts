@@ -2,7 +2,10 @@ import { afterEach, describe, expect, it } from "vitest";
 import { createWorkerClient, taskFailure } from "../../src/app/worker/client";
 import type { WorkerClient } from "../../src/app/worker/client";
 import { WorkerError } from "../../src/app/worker/protocol";
+import type { TaskModule } from "../../src/app/worker/task";
 import { workerTasks } from "../../src/app/worker/taskTable";
+// Declares `import.meta.glob` wherever this module is compiled.
+import type {} from "../../src/import-meta";
 import { decodePng, encodePng, openZip, writeZip } from "../../src/core/codec";
 import type { PixelBuffer, ZipInput } from "../../src/core/codec";
 import { packTileset } from "../../src/core/pack";
@@ -61,13 +64,22 @@ const ZIP_ENTRIES: ZipInput[] = [
 
 describe("task table", () => {
     it("holds the tasks of TE-010, each once", () => {
-        expect([...workerTasks.keys()].sort()).toEqual([
-            "pack.tileset",
-            "png.decode",
-            "png.encode",
-            "zip.read",
-            "zip.write",
-        ]);
+        // Later tickets add tasks of their own (`*.task.ts`, RULES 6); TE-010's must stay.
+        expect([...workerTasks.keys()]).toEqual(
+            expect.arrayContaining([
+                "pack.tileset",
+                "png.decode",
+                "png.encode",
+                "zip.read",
+                "zip.write",
+            ]),
+        );
+        // Every task of every module is in the table once: none is lost to a name taken twice.
+        const modules = import.meta.glob<TaskModule>("../../src/app/worker/**/*.task.ts", {
+            eager: true,
+        });
+        const defined = Object.values(modules).flatMap((module) => module.tasks ?? []);
+        expect(defined.map((task) => task.name).sort()).toEqual([...workerTasks.keys()].sort());
     });
 });
 

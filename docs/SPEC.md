@@ -353,7 +353,10 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
   partial cells at the right and bottom are not tiles. As Tiled's `initializeTilesetTiles`
   (v1.12.2), the grid starts at the margin and steps by the tile size plus the spacing, and a
   cell is a tile when it lies whole inside the image: the margin counts at the left and top
-  only. The tiles' pixels are copied into the tileset's stored grid.
+  only. The tiles' pixels are copied into the tileset's stored grid. As Tiled's New Tileset
+  dialog (v1.12.2), the form starts with the active map's tile size and the margin and spacing
+  of the last grid PNG imported in the window (0 at first). The export name follows the name
+  until it is typed.
 - **Sprite project `.ngsprite`** (picked or dropped like a PNG): the sprite editor's own file,
   so a tileset drawn there comes in without an export step. It is read by the sprite editor's
   reader (`core/sprite`, its `FORMAT.md` §1; a newer version is refused naming both versions)
@@ -385,7 +388,9 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
     shows one picture. A test checks this on a fixture sprite and the atlas the sprite editor
     exports from it.
 - **`ngne-sprite-atlas`** (the `.atlas.json` and its PNG, picked or dropped together; the atlas
-  is checked with the sprite editor's `validateAtlas` rules): every frame becomes a tile, IDs 0..
+  is checked with the sprite editor's `validateAtlas` rules; its PNG is the file its `image`
+  names, else the only PNG among the files, and without one the import is refused naming it):
+  every frame becomes a tile, IDs 0..
   in the order of `frames`, source key = frame ID. A frame is rebuilt at its source size
   (`sourceW × sourceH`, its rectangle's content placed at `offsetX, offsetY`). Frames of
   different source sizes, or a source size above 256, refuse the import with a message naming

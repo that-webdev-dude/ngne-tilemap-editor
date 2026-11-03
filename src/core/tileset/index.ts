@@ -2,13 +2,14 @@
 // fingerprints, and the command that adds one to the project.
 
 export { IMPORT_TILESET_LABEL, addTilesetCommand } from "./addTileset";
-export { importAtlas } from "./atlas";
+export { importAtlas, planAtlas, readAtlasJson, readAtlasOutline } from "./atlas";
+export type { AtlasAnimationOutline, AtlasFrameOutline, AtlasOutline, AtlasPlan } from "./atlas";
 export { tilesetNameOf } from "./build";
 export type { TilesetImport, TilesetImportOptions, TilesetImportWarning } from "./build";
 export { TilesetImportError } from "./errors";
 export type { TilesetImportErrorCode } from "./errors";
 export { tileFingerprint } from "./fingerprint";
-export { importGridPng, planGridPng } from "./gridPng";
+export { gridCount, importGridPng, planGridPng } from "./gridPng";
 export type { GridOptions, GridPngOptions, PngDecoder } from "./gridPng";
 export { readPngSize } from "./pngSize";
 export { checkLimits, checkPackability, storedSize } from "./room";
@@ -18,7 +19,9 @@ export {
     importSprite,
     importSpriteDocument,
     planSprite,
+    readSprite,
     readSpriteOutline,
+    spriteFramePixels,
     spriteGridDefaults,
 } from "./sprite";
-export type { SpriteImportOptions, SpriteReader } from "./sprite";
+export type { SpriteDoc, SpriteImportOptions, SpriteReader } from "./sprite";

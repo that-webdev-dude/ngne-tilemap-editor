@@ -182,6 +182,9 @@ rows.
 | `src/ui/focus/modality.ts` | `src/ui/focus/modality.ts` | verbatim | `ea5c91d` | `6ac8166dda8f7ccca4277d23bc58b945e9393590c33eec26044835948ee50917` | |
 | `src/ui/gallery/Gallery.tsx` | `src/ui/gallery/Gallery.tsx` | verbatim | `ea5c91d` | `085dec68931e95f663140458010ad08f9bb84a9ecfc29054462e7b1b06a43f2f` | |
 | `src/ui/gallery/gallery.css` | `src/ui/gallery/gallery.css` | verbatim | `ea5c91d` | `b6aded6922dd700c06b8da53d87435cdc16537094512bf52d98458e2f23ff521` | |
+| `src/ui/import/PixelCanvas.tsx` | `src/ui/import/PixelCanvas.tsx` | adapt | `ea5c91d` | | `PixelBuffer` from `core/codec`, which re-exports the `core/sprite` type (only `core/` imports `core/sprite`, DESIGN §3.1) |
+| `src/ui/import/SourcePane.tsx` | `src/ui/import/SourcePane.tsx` | adapt | `ea5c91d` | | Grid overlay of the tileset import: the tiles of the form's tile size, margin and spacing as `core/tileset` cuts them (Tiled's grid, SPEC §6.1); no crop rectangle or pointer drawing; `PixelRect` local |
+| `src/ui/import/import.css` | `src/ui/import/import.css` | adapt | `ea5c91d` | | The source pane's rules without the crop; the Import Tileset layout (source left, form right), atlas lists, text fields, warnings; no result pane or drop chooser |
 | `src/ui/menubar/MenubarItems.tsx` | `src/ui/menubar/MenubarItems.tsx` | verbatim | `ea5c91d` | `2cd89ca6bc084dd4f26cfb91572643d87bf22167383aa1d4f8505df5bd1c9363` | |
 | `src/ui/menubar/menubar.css` | `src/ui/menubar/menubar.css` | verbatim | `ea5c91d` | `402568c9b9500b5442d2ca215b0deeb78efba6671f8e46f135fd6974e6e970e6` | |
 | `src/ui/platform/useWindowSize.ts` | `src/ui/platform/useWindowSize.ts` | verbatim | `ea5c91d` | `0d968743a68821e6aeac5cc7a2e3cef3943505b7be6b682134d7254833630f63` | |

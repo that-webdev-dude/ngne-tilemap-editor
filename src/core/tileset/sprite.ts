@@ -40,6 +40,9 @@ import type { TilesetShape } from "./room";
 /** Reads a `.ngsprite` whole: the sprite editor's `deserialize` outside tests. */
 export type SpriteReader = (bytes: Uint8Array) => Promise<ProjectContents>;
 
+/** The sprite editor's document, as the import reads it. */
+export type { SpriteDoc };
+
 export interface SpriteImportOptions extends TilesetImportOptions, GridOptions {}
 
 /** The sprite editor's refusal as an import refusal; anything else is rethrown. */
@@ -368,11 +371,30 @@ export async function importSprite(
     read: SpriteReader = deserialize,
 ): Promise<TilesetImport> {
     planSprite(project, readSpriteOutline(bytes), options);
-    let contents;
+    return importSpriteDocument(project, await readSprite(bytes, read), options);
+}
+
+/**
+ * The sprite of the `.ngsprite` `bytes` read whole, with its images, by the sprite editor's
+ * reader (`read`). Rejects with `TilesetImportError` ("sprite") for a file it refuses.
+ */
+export async function readSprite(
+    bytes: Uint8Array,
+    read: SpriteReader = deserialize,
+): Promise<SpriteDoc> {
     try {
-        contents = await read(bytes);
+        return (await read(bytes)).doc;
     } catch (error) {
         throw refused(error);
     }
-    return importSpriteDocument(project, contents.doc, options);
+}
+
+/**
+ * Frame `index` of `doc` composited as the sprite editor exports it (`compositeFrame`): what
+ * the import dialog shows under its frame select.
+ */
+export function spriteFramePixels(doc: SpriteDoc, index: number): PixelBuffer {
+    const frame = doc.frames[index];
+    if (!frame) throw new RangeError(`The sprite has no frame ${index}.`);
+    return compositeFrame(doc, frame.id);
 }
