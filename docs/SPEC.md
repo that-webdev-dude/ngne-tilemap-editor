@@ -360,9 +360,10 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
   and each frame is composited as the sprite editor exports it (`compositeFrame`: visible pixel
   layers with layer and cel opacity and blend modes; reference layers left out). The dialog
   slices every frame by a grid (tile width and height, margin, spacing). Defaults: the sprite's
-  grid (its cell size, its offset as margin when not negative) when the cell is at most 256 px a
-  side, else the whole canvas (one tile per frame) when it is at most 256 px a side, else
-  none: Import stays disabled until a tile size of at most 256 is entered.
+  grid (its cell size; its offset as margin when the x and y offsets are equal and not
+  negative, else margin 0) when the cell is at most 256 px a side, else the whole canvas (one
+  tile per frame) when it is at most 256 px a side, else none: Import stays disabled until a
+  tile size of at most 256 is entered.
   - Tiles: each grid cell of each frame, frames in order, cells row by row, IDs 0..; a cell
     whose pixels equal the same cell of an earlier frame is not a new tile. Source key
     `[frameId, column, row]` of the cell's first occurrence (FORMAT §2.4). Sprite frame IDs are
@@ -372,13 +373,17 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
     (`expandTag`: reverse and ping-pong written out; a repeat count other than 0 imported as
     looping, with a warning); a sprite with several frames and no tag counts as one tag over
     all frames. For each tag and each grid cell whose pixels change within the tag, the
-    cell's tile at the tag's first frame is animated through that cell's tiles at the expanded
-    frames, each for its frame's duration. A tile that would host a second animation keeps the
-    first; the others are warned about.
+    cell's tile at the tag's first expanded frame (the first it plays: the last of its range
+    when reversed, as the atlas's first entry) is animated through that cell's tiles at the
+    expanded frames, each for its frame's duration. A tile that would host a second animation
+    keeps the first; the others are warned about.
   - With one tile per frame, the tileset shows the same pixels and animations as the one
     imported from the atlas the sprite editor exports from the same sprite (frames all, no
     trim); only the source keys differ, and a frame identical to an earlier one is that
-    frame's tile. A test checks this on the sprite editor's fixture sprites.
+    frame's tile. One exception: a tag under which no cell changes (one frame, or identical
+    frames) animates nothing here, where the atlas gives its first frame an animation that
+    shows one picture. A test checks this on a fixture sprite and the atlas the sprite editor
+    exports from it.
 - **`ngne-sprite-atlas`** (the `.atlas.json` and its PNG, picked or dropped together; the atlas
   is checked with the sprite editor's `validateAtlas` rules): every frame becomes a tile, IDs 0..
   in the order of `frames`, source key = frame ID. A frame is rebuilt at its source size

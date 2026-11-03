@@ -1,4 +1,4 @@
-import { MAX_TEXT_LENGTH, exportNames, randomId, uniqueSlug } from "../model";
+import { MAX_IMAGE_SIDE, MAX_TEXT_LENGTH, exportNames, randomId, uniqueSlug } from "../model";
 import type {
     IdGenerator,
     PixelBuffer,
@@ -19,8 +19,13 @@ import type { TilesetShape } from "./room";
 
 /** Something the import changed or left out, shown in the import result (SPEC §6.1). */
 export interface TilesetImportWarning {
+    /**
+     * `once-animation`: an animation that plays a set number of times (an atlas `once`, a sprite
+     * tag whose repeat is not 0) loops. `duplicate-animation`: an animation, or some cells of a
+     * sprite tag's, left out because the tile it starts on has one already.
+     */
     code: "once-animation" | "duplicate-animation";
-    /** The source's ID of the animation. */
+    /** The source's ID of the animation: an atlas animation ID, or a sprite tag's name. */
     animation: string;
     message: string;
 }
@@ -58,6 +63,16 @@ export function storedOrigin(shape: TilesetShape, k: number): { x: number; y: nu
         x: (k % shape.columns) * shape.tileWidth,
         y: Math.floor(k / shape.columns) * shape.tileHeight,
     };
+}
+
+/**
+ * Tiles per row of the stored image of `count` tiles that have no grid of their own (atlas
+ * frames, sprite cells): about square, within 8192 px a side when it can be.
+ */
+export function storedColumns(count: number, tileWidth: number, tileHeight: number): number {
+    const maxColumns = Math.floor(MAX_IMAGE_SIDE / tileWidth);
+    const minColumns = Math.ceil(count / Math.floor(MAX_IMAGE_SIDE / tileHeight));
+    return Math.min(Math.max(Math.ceil(Math.sqrt(count)), minColumns), maxColumns);
 }
 
 /** An empty stored image for `shape`. */

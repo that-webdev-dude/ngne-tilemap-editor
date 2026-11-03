@@ -1,0 +1,148 @@
+{
+    "format": "ngne-sprite-atlas",
+    "version": 1,
+    "generator": "ngne-sprite-editor 1.0.0",
+    "image": "tiles.png",
+    "width": 35,
+    "height": 35,
+    "frames": {
+        "tiles-0": {
+            "x": 1,
+            "y": 1,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [
+                0.5,
+                0.5
+            ]
+        },
+        "tiles-1": {
+            "x": 18,
+            "y": 1,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [
+                0.5,
+                0.5
+            ]
+        },
+        "tiles-2": {
+            "x": 1,
+            "y": 1,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [
+                0.5,
+                0.5
+            ]
+        },
+        "tiles-3": {
+            "x": 1,
+            "y": 18,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [
+                0.5,
+                0.5
+            ]
+        },
+        "tiles-4": {
+            "x": 18,
+            "y": 18,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [
+                0.5,
+                0.5
+            ]
+        }
+    },
+    "animations": {
+        "walk": {
+            "playback": "loop",
+            "durationMs": 560,
+            "entries": [
+                {
+                    "frame": "tiles-0",
+                    "ms": 100
+                },
+                {
+                    "frame": "tiles-1",
+                    "ms": 80
+                },
+                {
+                    "frame": "tiles-2",
+                    "ms": 120
+                },
+                {
+                    "frame": "tiles-3",
+                    "ms": 60
+                },
+                {
+                    "frame": "tiles-2",
+                    "ms": 120
+                },
+                {
+                    "frame": "tiles-1",
+                    "ms": 80
+                }
+            ]
+        },
+        "blink": {
+            "playback": "once",
+            "durationMs": 400,
+            "entries": [
+                {
+                    "frame": "tiles-1",
+                    "ms": 80
+                },
+                {
+                    "frame": "tiles-2",
+                    "ms": 120
+                },
+                {
+                    "frame": "tiles-1",
+                    "ms": 80
+                },
+                {
+                    "frame": "tiles-2",
+                    "ms": 120
+                }
+            ]
+        },
+        "back": {
+            "playback": "loop",
+            "durationMs": 310,
+            "entries": [
+                {
+                    "frame": "tiles-4",
+                    "ms": 250
+                },
+                {
+                    "frame": "tiles-3",
+                    "ms": 60
+                }
+            ]
+        }
+    }
+}

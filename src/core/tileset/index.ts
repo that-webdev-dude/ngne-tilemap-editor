@@ -9,8 +9,16 @@ export { TilesetImportError } from "./errors";
 export type { TilesetImportErrorCode } from "./errors";
 export { tileFingerprint } from "./fingerprint";
 export { importGridPng, planGridPng } from "./gridPng";
-export type { GridPngOptions, PngDecoder } from "./gridPng";
+export type { GridOptions, GridPngOptions, PngDecoder } from "./gridPng";
 export { readPngSize } from "./pngSize";
 export { checkLimits, checkPackability, storedSize } from "./room";
 export type { TilesetShape } from "./room";
 export { sha256Hex } from "./sha256";
+export {
+    importSprite,
+    importSpriteDocument,
+    planSprite,
+    readSpriteOutline,
+    spriteGridDefaults,
+} from "./sprite";
+export type { SpriteImportOptions, SpriteReader } from "./sprite";

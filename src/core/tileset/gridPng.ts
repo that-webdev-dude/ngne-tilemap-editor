@@ -18,7 +18,8 @@ import type { TilesetShape } from "./room";
 /** Decodes a PNG to straight RGBA8; the import's default is the sprite editor's `decodePng`. */
 export type PngDecoder = (bytes: Uint8Array) => Promise<PixelBuffer>;
 
-export interface GridPngOptions extends TilesetImportOptions {
+/** How a source image is cut into tiles. */
+export interface GridOptions {
     tileWidth: number;
     tileHeight: number;
     /** Pixels before the first tile, at the left and at the top. */
@@ -27,7 +28,10 @@ export interface GridPngOptions extends TilesetImportOptions {
     spacing: number;
 }
 
-function checkOptions(options: GridPngOptions): void {
+export interface GridPngOptions extends TilesetImportOptions, GridOptions {}
+
+/** Throws `TilesetImportError` ("options") for a tile size, margin or spacing out of range. */
+export function checkGridOptions(options: GridOptions): void {
     const ranged = (value: number, min: number, max: number) =>
         Number.isInteger(value) && value >= min && value <= max;
     const { tileWidth, tileHeight, margin, spacing } = options;
@@ -46,7 +50,7 @@ function checkOptions(options: GridPngOptions): void {
 }
 
 /** Whole tiles per row and per column of an image `size` px long (Tiled's count). */
-function count(size: number, tile: number, margin: number, spacing: number): number {
+export function gridCount(size: number, tile: number, margin: number, spacing: number): number {
     return Math.max(0, Math.floor((size - margin + spacing) / (tile + spacing)));
 }
 
@@ -60,7 +64,7 @@ export function planGridPng(
     size: { width: number; height: number },
     options: GridPngOptions,
 ): TilesetShape {
-    checkOptions(options);
+    checkGridOptions(options);
     const { tileWidth, tileHeight, margin, spacing } = options;
     if (size.width > MAX_IMAGE_SIDE || size.height > MAX_IMAGE_SIDE) {
         throw new TilesetImportError(
@@ -69,8 +73,8 @@ export function planGridPng(
                 `${MAX_IMAGE_SIDE} px a side.`,
         );
     }
-    const columns = count(size.width, tileWidth, margin, spacing);
-    const rows = count(size.height, tileHeight, margin, spacing);
+    const columns = gridCount(size.width, tileWidth, margin, spacing);
+    const rows = gridCount(size.height, tileHeight, margin, spacing);
     if (columns === 0 || rows === 0) {
         throw new TilesetImportError(
             "no-tiles",

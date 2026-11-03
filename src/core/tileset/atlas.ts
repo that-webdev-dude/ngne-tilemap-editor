@@ -1,10 +1,10 @@
-import { MAX_ANIMATION_FRAMES, MAX_IMAGE_SIDE, MAX_TILE_SIZE } from "../model";
+import { MAX_ANIMATION_FRAMES, MAX_TILE_SIZE } from "../model";
 import type { Project } from "../model";
 import { AtlasError } from "../sprite/export/errors";
 import { validateAtlas } from "../sprite/export/validateAtlas";
 import type { AtlasFrame } from "../sprite/export/sprite-runtime";
 import { decodePng } from "../sprite/png";
-import { buildTileset, storedImage, storedOrigin, tilesetNameOf } from "./build";
+import { buildTileset, storedColumns, storedImage, storedOrigin, tilesetNameOf } from "./build";
 import type { TilesetImport, TilesetImportOptions, TilesetImportWarning } from "./build";
 import { TilesetImportError } from "./errors";
 import type { PngDecoder } from "./gridPng";
@@ -52,13 +52,6 @@ function checkFrameSizes(frames: readonly (readonly [string, AtlasFrame])[]): vo
             { frames: frames.map(([id]) => id) },
         );
     }
-}
-
-/** Tiles per row of the stored image: about square, within 8192 px a side when it can be. */
-function storedColumns(count: number, tileWidth: number, tileHeight: number): number {
-    const maxColumns = Math.floor(MAX_IMAGE_SIDE / tileWidth);
-    const minColumns = Math.ceil(count / Math.floor(MAX_IMAGE_SIDE / tileHeight));
-    return Math.min(Math.max(Math.ceil(Math.sqrt(count)), minColumns), maxColumns);
 }
 
 /**

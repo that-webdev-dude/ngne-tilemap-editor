@@ -8,6 +8,8 @@ export type TilesetImportErrorCode =
     | "png"
     /** The atlas fails the sprite editor's `validateAtlas` rules. */
     | "atlas"
+    /** The sprite editor's reader refuses the `.ngsprite`; `cause` is its `ProjectError`. */
+    | "sprite"
     /** Atlas frames of different source sizes, or of a source size above 256. */
     | "frame-size"
     /** The source holds no whole tile. */
