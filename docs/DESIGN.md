@@ -196,7 +196,7 @@ Every new element uses tokens and primitives only. Specifics:
 - **Collision outlines** (View → Show Collision, off by default): 1 px `--accent` outlines of
   every visible tile's collision shapes, transformed with the tile.
 - **Highlight current layer**: other layers drawn at the preference's opacity (default 25%).
-- **Tile marks** in the Tilesets panel: a 2 px corner triangle in `--text-muted` for a tile with
+- **Tile marks** in the Tilesets panel: a 4 px corner triangle in `--text-muted` for a tile with
   properties or class, a small `▶` glyph for animated, an outline square glyph for collision.
 - **Layer type icons** (16 px, lucide): `Grid2x2` tile, `MapPin` marker, `Image` image, `Folder`
   group.

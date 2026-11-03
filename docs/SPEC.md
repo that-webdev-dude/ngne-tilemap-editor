@@ -413,7 +413,15 @@ Tabs per tileset (Tiled's `tilesetdock`), a zoomable grid of tiles in display or
 Canvas2D, a filter by tile class; click or drag a rectangle to make the current stamp. The tile
 under the cursor and the selected tile show
 their ID and class in the status bar. Tiles with collision, animation or properties carry small
-markers (DESIGN). Tileset commands: rename, edit tile offset, move left/right in the list,
+markers (DESIGN). As Tiled's `TilesetDock` (v1.12.2): the grid lays tiles out on the tileset's
+own columns; a pointer selection is the current stamp at every change (a keyboard selection on
+Enter, DESIGN §8.5); Previous and Next Tileset stop at the first and last tab; adding a tileset
+leaves the tab shown, and removing the shown one shows the tab after it, else the last. As
+Tiled's `MapEditor::setStamp`, a stamp from the panel selects the stamp brush unless the stamp
+brush, the bucket or the shape fill is active, and a selection without a tile leaves the stamp
+as it is. The class filter (Tiled has none) shows the tiles whose class contains its text,
+ignoring case, and hides the others in place: the layout is kept, and a hidden tile is an empty
+cell of a stamp across it. Tileset commands: rename, edit tile offset, move left/right in the list,
 delete (refused while any map uses one of its tiles: the message names the maps; Later: delete
 with replacement).
 

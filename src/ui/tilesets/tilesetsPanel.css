@@ -1,0 +1,95 @@
+/* The Tilesets panel (DESIGN §8.5). */
+.tilesets-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+}
+
+.tilesets-panel__bar {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-8);
+    min-width: 0;
+    height: 32px;
+    padding: 0 var(--space-8);
+    border-bottom: var(--border-width) solid var(--border);
+}
+
+.tilesets-panel__tabs {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+}
+
+/* The tab metrics of the sprite editor's document tabs: 24 px. */
+.tilesets-panel__tab {
+    flex: none;
+    max-width: 160px;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    overflow: hidden;
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition:
+        background-color var(--motion-fast) var(--motion-ease),
+        color var(--motion-fast) var(--motion-ease);
+}
+
+.tilesets-panel__tab:hover {
+    background: var(--bg-raised);
+    color: var(--text);
+}
+
+.tilesets-panel__tab[aria-selected="true"] {
+    background: var(--bg-active);
+    box-shadow: inset 0 -2px 0 var(--accent);
+    color: var(--text);
+}
+
+.tilesets-panel__spacer {
+    flex: 1;
+}
+
+.tilesets-panel__filter {
+    width: 120px;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+}
+
+.tilesets-panel__grid {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
+    outline-offset: -2px;
+}
+
+.tilesets-panel__sizer {
+    position: relative;
+}
+
+/* The canvas covers the part of the grid in view and stays there while the grid scrolls. */
+.tilesets-panel__canvas {
+    display: block;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
+
+.tilesets-panel__empty {
+    margin: 0;
+    padding: var(--space-12);
+    color: var(--text-muted);
+}

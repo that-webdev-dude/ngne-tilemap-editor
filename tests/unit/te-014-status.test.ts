@@ -39,6 +39,7 @@ describe("status field registry", () => {
         expect(statusFields.map((each) => each.id)).toEqual([
             "cell",
             "tile",
+            "panelTile",
             "zoom",
             "size",
             "selection",

@@ -1,5 +1,6 @@
 import { Tabs } from "radix-ui";
 import { useState } from "react";
+import { TilesetsPanel } from "../../tilesets/TilesetsPanel";
 
 /** The tabs of the bottom panel (DESIGN §2): Tilesets (§8.5) and Terrains (§8.6). */
 export const BOTTOM_PANEL_TABS = [
@@ -10,8 +11,8 @@ export type BottomPanelTab = (typeof BOTTOM_PANEL_TABS)[number]["id"];
 
 /**
  * Bottom panel content, in the sprite editor's timeline slot: a tab strip over the selected
- * tab's panel. The panels are empty until the Tilesets panel (TE-025) and the Terrains panel
- * (TE-043) fill them.
+ * tab's panel. The Tilesets tab holds the Tilesets panel (TE-025); the Terrains tab is empty
+ * until the Terrains panel (TE-043) fills it.
  */
 export function BottomPanel() {
     const [tab, setTab] = useState<BottomPanelTab>("tilesets");
@@ -34,7 +35,9 @@ export function BottomPanel() {
                     className="bottom-panel__body"
                     value={id}
                     data-panel-tab={id}
-                />
+                >
+                    {id === "tilesets" ? <TilesetsPanel /> : null}
+                </Tabs.Content>
             ))}
         </Tabs.Root>
     );

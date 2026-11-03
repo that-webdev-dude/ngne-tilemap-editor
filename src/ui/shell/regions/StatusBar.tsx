@@ -1,3 +1,4 @@
+import { useReducer, useEffect } from "react";
 import { useSession } from "../../../app/state/session";
 import { useStatus } from "../../../app/state/status";
 import { runCommand } from "../../commands/runCommand";
@@ -9,7 +10,8 @@ import "../../status/status.css";
  * Status bar content (DESIGN §8.7), left to right the registered fields (`*.status.ts`), then
  * the active tool's modifier hint or transient feedback on the right. A field without text is
  * not rendered, unless it reserves its width so the fields after it keep their place. A field's
- * action ("Fit" after the zoom) is a control, not a field, so it carries no `data-status`.
+ * action ("Fit" after the zoom) is a control, not a field, so it carries no `data-status`. A
+ * field with a store of its own (`subscribe`) redraws the bar when that store changes.
  */
 export function StatusBar() {
     const { session } = useSession((state) => state);
@@ -17,6 +19,15 @@ export function StatusBar() {
     const hint = useStatus((state) => state.hint);
     const feedback = useStatus((state) => state.feedback);
     const commands = useCommands();
+    const [, redraw] = useReducer((count: number) => count + 1, 0);
+    useEffect(() => {
+        const stops = statusFields.flatMap((field) =>
+            field.subscribe ? [field.subscribe(redraw)] : [],
+        );
+        return () => {
+            for (const stop of stops) stop();
+        };
+    }, []);
     const map = session.project.maps.find((each) => each.id === session.activeMapId) ?? null;
     const input = { session, map, cursor };
     const message = feedback ?? hint ?? "";

@@ -169,7 +169,9 @@ test("the bottom panel holds the tabs Tilesets and Terrains and resizes like the
         "true",
     );
     await expect(panel.locator('[data-panel-tab="tilesets"]')).toBeVisible();
-    await expect(panel.locator('[data-panel-tab="tilesets"]')).toBeEmpty();
+    await expect(
+        panel.locator('[data-panel-tab="tilesets"] [data-tilesets-panel] [data-tilesets-empty]'),
+    ).toBeVisible();
     await expect(panel.locator('[data-panel-tab="terrains"]')).toBeHidden();
 
     await panel.getByRole("tab", { name: "Terrains" }).click();

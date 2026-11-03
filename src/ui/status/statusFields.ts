@@ -39,6 +39,12 @@ export interface StatusField {
     reserve?: number;
     /** A command shown as a quiet button right after the text ("Fit" after the zoom). */
     action?: { commandId: string };
+    /**
+     * For a field that also reads a store of its own feature (the Tilesets panel's hovered
+     * tile): subscribes `listener` to it, returning the function that stops it. The bar
+     * redraws on every call.
+     */
+    subscribe?(listener: () => void): () => void;
 }
 
 /** What a `*.status.ts` module exports. */
