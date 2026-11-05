@@ -3,6 +3,7 @@ import { readFileSync, readdirSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { packNgsprite } from "../support/ngsprite";
 
 // Verbatim copies stay byte-identical to their sprite editor source (DESIGN §3): every
 // verbatim row of docs/PROVENANCE.md hashes to its recorded SHA-256, and every file of the
@@ -32,7 +33,12 @@ function mismatches(read: (path: string) => Uint8Array): string[] {
     return verbatim.filter((row) => sha256(read(row.path)) !== row.sha256).map((row) => row.path);
 }
 
-const readLocal = (path: string) => readFileSync(new URL(path, ROOT));
+// A verbatim `.ngsprite` is stored unpacked (`<file>.d/`, tests/support/ngsprite.ts) and is read
+// as the archive its folder packs into.
+const readLocal = (path: string): Uint8Array =>
+    path.endsWith(".ngsprite.d/")
+        ? packNgsprite(new URL(path, ROOT))
+        : readFileSync(new URL(path, ROOT));
 
 describe("provenance", () => {
     it("has a SHA-256 on every verbatim row", () => {

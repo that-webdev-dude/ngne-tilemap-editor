@@ -31,7 +31,7 @@ export interface ContextMenuPlacement {
  *     ];
  *
  * `appCommands.ts` finds the module with a glob import, so no shared file is edited
- * (AGENTS.md, Parallel work).
+ * (RULES 6).
  */
 export interface CommandSpec {
     /** Stable and unique: "edit.undo". The id of a planned command implements it. */

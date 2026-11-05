@@ -1,16 +1,18 @@
-import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { expandTag } from "../../src/core/sprite/animation";
 import { compositeFrame } from "../../src/core/sprite/composite/compositeFrame";
 import { pack } from "../../src/core/sprite/export/pack";
 import { validateAtlas } from "../../src/core/sprite/export/validateAtlas";
 import { deserialize } from "../../src/core/sprite/project/deserialize";
+import { packNgsprite } from "../support/ngsprite";
 
 // The sprite core subtree (DESIGN §3.1) end to end on the sprite editor's golden project file
 // (`se/tests/unit/se-040-fixtures/golden-v1.ngsprite`, PROVENANCE.md): read it, composite its
 // frames, pack them and validate the atlas that describes the result.
 
-const GOLDEN = new URL("./te-002-fixtures/golden-v1.ngsprite", import.meta.url);
+// Stored unpacked (`te-002-fixtures/golden-v1.ngsprite.d/`) and packed back into the upstream
+// file's bytes, which te-002-provenance checks.
+const GOLDEN = packNgsprite(new URL("./te-002-fixtures/golden-v1.ngsprite.d/", import.meta.url));
 
 /** The composite of the fixture's first frame, from `se/tests/unit/se-040-support.ts`. */
 const FIRST_FRAME_COMPOSITE = [
@@ -30,7 +32,7 @@ const FIRST_FRAME_COMPOSITE = [
 
 describe("sprite core subtree", () => {
     it("reads, composites, packs and validates the golden project", async () => {
-        const { doc } = await deserialize(new Uint8Array(readFileSync(GOLDEN)));
+        const { doc } = await deserialize(GOLDEN);
         expect([doc.width, doc.height]).toEqual([4, 3]);
 
         const frames = doc.frames.map((frame) => compositeFrame(doc, frame.id));

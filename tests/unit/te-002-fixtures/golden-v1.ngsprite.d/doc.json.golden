@@ -1,0 +1,208 @@
+{
+    "id": "doc-hero",
+    "name": "Hero ✦ idle",
+    "width": 4,
+    "height": 3,
+    "colorMode": "rgba",
+    "layers": [
+        {
+            "id": "layer-ref",
+            "kind": "reference",
+            "name": "Sketch",
+            "visible": true,
+            "locked": true,
+            "opacity": 128,
+            "sourceId": "source-sketch",
+            "x": -1.5,
+            "y": 0.25,
+            "scale": 0.125,
+            "placement": "behind"
+        },
+        {
+            "id": "layer-bg",
+            "kind": "pixel",
+            "name": "Background",
+            "visible": true,
+            "locked": false,
+            "opacity": 255,
+            "blend": "normal"
+        },
+        {
+            "id": "layer-body",
+            "kind": "pixel",
+            "name": "Body",
+            "visible": true,
+            "locked": false,
+            "opacity": 255,
+            "blend": "normal"
+        },
+        {
+            "id": "layer-fx",
+            "kind": "pixel",
+            "name": "FX",
+            "visible": false,
+            "locked": true,
+            "opacity": 64,
+            "blend": "screen"
+        }
+    ],
+    "frames": [
+        {
+            "id": "frame-1",
+            "durationMs": 100
+        },
+        {
+            "id": "frame-2",
+            "durationMs": 80
+        },
+        {
+            "id": "frame-3",
+            "durationMs": 1
+        },
+        {
+            "id": "frame-4",
+            "durationMs": 65535
+        },
+        {
+            "id": "frame-5",
+            "durationMs": 250
+        }
+    ],
+    "cels": [
+        {
+            "layerId": "layer-bg",
+            "frameId": "frame-1",
+            "imageId": "image-bg",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-bg",
+            "frameId": "frame-2",
+            "imageId": "image-bg",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-bg",
+            "frameId": "frame-3",
+            "imageId": "image-bg",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-bg",
+            "frameId": "frame-4",
+            "imageId": "image-bg",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-bg",
+            "frameId": "frame-5",
+            "imageId": "image-bg",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-body",
+            "frameId": "frame-1",
+            "imageId": "image-body-a",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-body",
+            "frameId": "frame-2",
+            "imageId": "image-body-b",
+            "opacity": 128
+        },
+        {
+            "layerId": "layer-body",
+            "frameId": "frame-3",
+            "imageId": "image-body-a",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-body",
+            "frameId": "frame-5",
+            "imageId": "image-body-c",
+            "opacity": 1
+        },
+        {
+            "layerId": "layer-fx",
+            "frameId": "frame-2",
+            "imageId": "image-fx",
+            "opacity": 0
+        }
+    ],
+    "tags": [
+        {
+            "id": "tag-idle",
+            "name": "idle",
+            "color": "#3cb371ff",
+            "fromFrameId": "frame-1",
+            "toFrameId": "frame-3",
+            "direction": "forward",
+            "repeat": 0
+        },
+        {
+            "id": "tag-blink",
+            "name": "blink ✦",
+            "color": "#ff000080",
+            "fromFrameId": "frame-4",
+            "toFrameId": "frame-5",
+            "direction": "pingpong",
+            "repeat": 3
+        }
+    ],
+    "palette": {
+        "name": "Hero",
+        "colors": [
+            "#00000000",
+            "#ffffffff",
+            "#12345678",
+            "#ff8000ff"
+        ]
+    },
+    "pivot": {
+        "x": 0.25,
+        "y": 1
+    },
+    "settings": {
+        "grid": {
+            "width": 8,
+            "height": 4,
+            "offsetX": -2,
+            "offsetY": 3,
+            "visible": true
+        },
+        "pixelGrid": false,
+        "onion": {
+            "enabled": true,
+            "before": 3,
+            "after": 0,
+            "opacity": 96,
+            "falloff": 0.75,
+            "tint": true,
+            "placement": "front",
+            "withinTag": true
+        },
+        "symmetry": {
+            "mode": "both",
+            "axisX": 3,
+            "axisY": 5
+        },
+        "tiled": "x"
+    },
+    "exportSettings": {
+        "layout": "row",
+        "padding": 4,
+        "extrude": 2,
+        "trim": true,
+        "mergeDuplicates": false,
+        "frames": {
+            "tagId": "tag-idle"
+        },
+        "files": {
+            "spritesTs": false,
+            "previewConfig": false,
+            "asepriteJson": "hash"
+        },
+        "exportOnSave": true
+    }
+}

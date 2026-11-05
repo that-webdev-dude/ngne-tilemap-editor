@@ -2,8 +2,7 @@
 
 The benchmarks of the budgets in ENGINE §6 and SPEC §14, one file per ticket
 (`te-0xx-*.perf.ts`). They are measured and recorded, not asserted: `npm run check` does not
-run them. Which numbers count and where they are recorded: `docs/tickets/README.md`
-(Measurements).
+run them. Which numbers count: RULES 8; the records are written under `docs/evidence/`.
 
 ## Running
 

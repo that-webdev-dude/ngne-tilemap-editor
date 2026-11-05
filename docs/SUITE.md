@@ -150,7 +150,7 @@ Config files:
 | --- | --- |
 | `tsconfig.json` | Copy (ES2022, Bundler resolution, `types: []`, `strict`, `skipLibCheck: false`, `verbatimModuleSyntax`) |
 | `tsconfig.node.json` | Adapt: drop `src/gifenc.d.ts` |
-| `eslint.config.js` | Copy (DOM globals barred from `src/core`, `@ngne/core` only in `src/engine`, `.claude` ignored) |
+| `eslint.config.js` | Copy (DOM globals barred from `src/core`, `@ngne/core` only in `src/engine`) |
 | `.prettierrc.json`, `.prettierignore` | Copy (tab width 4, print width 100; `docs` not formatted) |
 | `.npmrc`, `.gitignore`, `.gitattributes` | Copy |
 | `vitest.config.ts`, `vitest.perf.config.ts` | Copy |
@@ -216,10 +216,7 @@ space; every name carries the app prefix.
 
 ## 8. Repo conventions
 
-- Tickets `TE-0xx`, one branch `te-0xx` per ticket, one commit per ticket with the one-line
-  message `[TE-0xx] Title`, the ticket's title unchanged (RULES 11, 12).
-- `AGENTS.md` adapted from `se/AGENTS.md`: doc roles, scope is binding, stop on doc
-  conflicts, never edit docs to fit code, dependencies only as listed in §5, layer
-  boundaries, never weaken tests, perf files under `tests/perf/`, numbers recorded only on
-  reference hardware.
+- Tickets `TE-0xx`, one branch per ticket named `<prefix>/<description>` with the prefix
+  `feat`, `dev`, `cleanup` or `chore`, one commit per ticket with the one-line message
+  `[TE-0xx] Title`, the ticket's title unchanged.
 - Shared E2E wait helpers exist before the first UI ticket; the suite is sharded from day 0.

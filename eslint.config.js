@@ -119,16 +119,8 @@ const workerFolder = [0, 1, 2, 3, 4, 5, 6, 7].map((depth) => ({
 }));
 
 export default tseslint.config(
-    // `.claude` holds agent worktrees: whole copies of the repository.
     {
-        ignores: [
-            "dist",
-            "node_modules",
-            "test-results",
-            "playwright-report",
-            "coverage",
-            ".claude",
-        ],
+        ignores: ["dist", "node_modules", "test-results", "playwright-report", "coverage"],
     },
     js.configs.recommended,
     tseslint.configs.recommended,

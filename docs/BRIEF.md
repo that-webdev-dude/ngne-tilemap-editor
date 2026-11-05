@@ -212,5 +212,3 @@ Tiled 1.12.2.
 | D12 | Budgets and spike results in [ENGINE.md](ENGINE.md) §6 are the performance baseline for the spec and tickets | Spikes S1, S2 and S4 passed on reference hardware on 2026-10-30 |
 | D13 | Same suite as the sprite editor: identity, design system, stack (exact versions), packaging, hosting ([SUITE.md](SUITE.md)) | Both tools must read as one product |
 | D14 | Design system and non-engine shared code are copied from the sprite editor with a provenance list and a drift-report script; engine-facing code is written new on 0.3.0 | The sprite editor is released and frozen; a shared package would reopen it. Its engine layer works around 0.2.1 gaps that 0.3.0 removes |
-
-Milestones, tickets and estimates: [tickets/README.md](tickets/README.md).

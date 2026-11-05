@@ -8,7 +8,7 @@ import { record } from "./record";
 
 // TE-011: quad emission for 65,536 visible cells (the live tier's budget, ENGINE §4), in slot
 // values and in GIDs, through a sink that does nothing. Report-only: the number that counts is
-// taken on reference hardware (docs/tickets/README.md, Measurements).
+// taken on reference hardware (RULES 8).
 
 const SIDE = 256;
 const GRID = 16;

@@ -1,0 +1,243 @@
+{
+    "id": "sprite-tiles",
+    "name": "tiles",
+    "width": 16,
+    "height": 16,
+    "colorMode": "rgba",
+    "layers": [
+        {
+            "id": "layer-ref",
+            "kind": "reference",
+            "name": "Sketch",
+            "visible": true,
+            "locked": false,
+            "opacity": 255,
+            "sourceId": "source-sketch",
+            "x": 0,
+            "y": 0,
+            "scale": 1,
+            "placement": "front"
+        },
+        {
+            "id": "layer-ground",
+            "kind": "pixel",
+            "name": "Ground",
+            "visible": true,
+            "locked": false,
+            "opacity": 255,
+            "blend": "normal"
+        },
+        {
+            "id": "layer-shade",
+            "kind": "pixel",
+            "name": "Shade",
+            "visible": true,
+            "locked": false,
+            "opacity": 200,
+            "blend": "multiply"
+        },
+        {
+            "id": "layer-hidden",
+            "kind": "pixel",
+            "name": "Hidden",
+            "visible": false,
+            "locked": false,
+            "opacity": 255,
+            "blend": "normal"
+        }
+    ],
+    "frames": [
+        {
+            "id": "frame-a",
+            "durationMs": 100
+        },
+        {
+            "id": "frame-b",
+            "durationMs": 80
+        },
+        {
+            "id": "frame-c",
+            "durationMs": 120
+        },
+        {
+            "id": "frame-d",
+            "durationMs": 60
+        },
+        {
+            "id": "frame-e",
+            "durationMs": 250
+        }
+    ],
+    "cels": [
+        {
+            "layerId": "layer-ground",
+            "frameId": "frame-a",
+            "imageId": "image-ground-a",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-ground",
+            "frameId": "frame-b",
+            "imageId": "image-ground-b",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-ground",
+            "frameId": "frame-c",
+            "imageId": "image-ground-a",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-ground",
+            "frameId": "frame-d",
+            "imageId": "image-ground-c",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-ground",
+            "frameId": "frame-e",
+            "imageId": "image-ground-d",
+            "opacity": 255
+        },
+        {
+            "layerId": "layer-shade",
+            "frameId": "frame-a",
+            "imageId": "image-shade",
+            "opacity": 180
+        },
+        {
+            "layerId": "layer-shade",
+            "frameId": "frame-b",
+            "imageId": "image-shade",
+            "opacity": 180
+        },
+        {
+            "layerId": "layer-shade",
+            "frameId": "frame-c",
+            "imageId": "image-shade",
+            "opacity": 180
+        },
+        {
+            "layerId": "layer-shade",
+            "frameId": "frame-d",
+            "imageId": "image-shade",
+            "opacity": 180
+        },
+        {
+            "layerId": "layer-hidden",
+            "frameId": "frame-a",
+            "imageId": "image-white",
+            "opacity": 255
+        }
+    ],
+    "tags": [
+        {
+            "id": "tag-walk",
+            "name": "walk",
+            "color": "#3cb371ff",
+            "fromFrameId": "frame-a",
+            "toFrameId": "frame-d",
+            "direction": "pingpong",
+            "repeat": 0
+        },
+        {
+            "id": "tag-blink",
+            "name": "blink",
+            "color": "#ffa500ff",
+            "fromFrameId": "frame-b",
+            "toFrameId": "frame-c",
+            "direction": "forward",
+            "repeat": 2
+        },
+        {
+            "id": "tag-back",
+            "name": "back",
+            "color": "#4169e1ff",
+            "fromFrameId": "frame-d",
+            "toFrameId": "frame-e",
+            "direction": "reverse",
+            "repeat": 0
+        }
+    ],
+    "palette": {
+        "name": "DawnBringer 32",
+        "colors": [
+            "#000000ff",
+            "#222034ff",
+            "#45283cff",
+            "#663931ff",
+            "#8f563bff",
+            "#df7126ff",
+            "#d9a066ff",
+            "#eec39aff",
+            "#fbf236ff",
+            "#99e550ff",
+            "#6abe30ff",
+            "#37946eff",
+            "#4b692fff",
+            "#524b24ff",
+            "#323c39ff",
+            "#3f3f74ff",
+            "#306082ff",
+            "#5b6ee1ff",
+            "#639bffff",
+            "#5fcde4ff",
+            "#cbdbfcff",
+            "#ffffffff",
+            "#9badb7ff",
+            "#847e87ff",
+            "#696a6aff",
+            "#595652ff",
+            "#76428aff",
+            "#ac3232ff",
+            "#d95763ff",
+            "#d77bbaff",
+            "#8f974aff",
+            "#8a6f30ff"
+        ]
+    },
+    "pivot": {
+        "x": 0.5,
+        "y": 0.5
+    },
+    "settings": {
+        "grid": {
+            "width": 8,
+            "height": 8,
+            "offsetX": 0,
+            "offsetY": 0,
+            "visible": false
+        },
+        "pixelGrid": true,
+        "onion": {
+            "enabled": false,
+            "before": 1,
+            "after": 1,
+            "opacity": 128,
+            "falloff": 0.5,
+            "tint": false,
+            "placement": "behind",
+            "withinTag": false
+        },
+        "symmetry": {
+            "mode": "none",
+            "axisX": 16,
+            "axisY": 16
+        },
+        "tiled": "none"
+    },
+    "exportSettings": {
+        "layout": "grid",
+        "padding": 1,
+        "extrude": 0,
+        "trim": false,
+        "mergeDuplicates": true,
+        "frames": "all",
+        "files": {
+            "spritesTs": true,
+            "previewConfig": true,
+            "asepriteJson": "none"
+        },
+        "exportOnSave": false
+    }
+}

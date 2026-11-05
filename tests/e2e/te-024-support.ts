@@ -6,6 +6,7 @@ import { encodePng, writeZip } from "../../src/core/codec";
 import type { PixelBuffer } from "../../src/core/codec";
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../src/app/testing/testHooks";
+import { packNgsprite } from "../support/ngsprite";
 import { menuItem, openEditor, openMenu } from "./te-007-support";
 
 // Shared by the TE-024 specs: files made in Node (grid PNGs, PNG headers, sprite projects,
@@ -23,8 +24,13 @@ export interface FilePayload {
 
 const FIXTURES = new URL("../fixtures/sprite/", import.meta.url);
 
-/** A file of the TE-023 fixture pair (`tests/fixtures/sprite/`). */
+/**
+ * A file of the TE-023 fixture pair (`tests/fixtures/sprite/`). A `.ngsprite` is stored unpacked
+ * and packed from its folder (tests/support/ngsprite.ts).
+ */
 export function fixture(name: string): Buffer {
+    if (name.endsWith(".ngsprite"))
+        return Buffer.from(packNgsprite(new URL(`${name}.d/`, FIXTURES)));
     return readFileSync(new URL(name, FIXTURES));
 }
 

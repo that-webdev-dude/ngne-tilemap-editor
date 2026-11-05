@@ -10,9 +10,9 @@ rows.
 | ---- | ---------- | ---- | ------ | ------- | ------ |
 | `.gitattributes` | `.gitattributes` | verbatim | `ea5c91d` | `23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651` | |
 | `.github/workflows/ci.yml` | `.github/workflows/ci.yml` | adapt | `ea5c91d` | | `check` and E2E jobs only (4 shards + `alone`); E2E needs `check`; `--pass-with-no-tests`. Golden path, README commands and links are later tickets' |
-| `.gitignore` | `.gitignore` | verbatim | `ea5c91d` | `5423c7bb6e7fbdf01fa35385d7e8d669842f619049c5dcd7df4b82ff08492150` | |
+| `.gitignore` | `.gitignore` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `.npmrc` | `.npmrc` | verbatim | `ea5c91d` | `be85cc462e740587626bbcbb1c3ed1c40b26e62ec072e8cbd2768f23915c28e6` | |
-| `.prettierignore` | `.prettierignore` | verbatim | `ea5c91d` | `fd8356b420ff96f0e5767647a3552b8c74560812d32cd30bdb0f3566876df1e6` | |
+| `.prettierignore` | `.prettierignore` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `.prettierrc.json` | `.prettierrc.json` | verbatim | `ea5c91d` | `d04a16899ab54acc7f6594035de866d26c4abf39686192b3994abdd132351e27` | |
 | `LICENSE` | `LICENSE` | verbatim | `ea5c91d` | `4d21bde6e4b9d15aafd5e507b3222205aa1ed73c3546650c524a3bf75685305a` | |
 | `eslint.config.js` | `eslint.config.js` | adapt | `ea5c91d` | | `src/core/sprite` imports only itself, `fflate` and `fast-png`; only `src/core` imports `src/core/sprite` (DESIGN §3.1) |
@@ -45,7 +45,7 @@ rows.
 | `src/app/overlay/gridLines.ts` | `src/app/overlay/gridLines.ts` | adapt | `ea5c91d` |  | Axes from the map's corner and the scale (map pixels, cells); cell lines only, from 4 device pixels per cell; no pixel grid or outline helpers |
 | `src/app/overlay/mountOverlay.ts` | `src/app/overlay/mountOverlay.ts` | adapt | `ea5c91d` |  | Session store of the project; the canvas is sized by the viewport host (no NGNE canvas observation or stretching); probe adds the canvas |
 | `src/app/overlay/overlayController.ts` | `src/app/overlay/overlayController.ts` | adapt | `ea5c91d` |  | Active map, its geometry and view as the redraw key; cursor carries map position and cell; no stretched mapping; theme is the grid ink, `--accent` and `--danger` |
-| `src/app/overlay/overlayLayers.ts` | `src/app/overlay/overlayLayers.ts` | verbatim | `ea5c91d` | `a9803b719456e99d8a4129e5a39ee071f5fd07f7b112dff2dc7c76b86f1bb4f3` |  |
+| `src/app/overlay/overlayLayers.ts` | `src/app/overlay/overlayLayers.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/app/overlay/types.ts` | `src/app/overlay/types.ts` | adapt | `ea5c91d` |  | Frame carries the map, a cell mapping and the cursor's cell; theme is the grid ink, `--accent` and `--danger` |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
 | `src/app/preferences/preferences.commands.ts` | `src/app/preferences/preferences.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
@@ -73,7 +73,7 @@ rows.
 | `src/app/tools/pipeline.ts` | `src/app/tools/pipeline.ts` | adapt | `ea5c91d` |  | Cells instead of pixels (SPEC §4.1): samples carry the cell and the cells crossed since the one before (`pointsOnLine`); paint target is the active tile layer (`paintTarget.ts`) and its transaction, clipped to the map and to the paintable tile layers; a right press during a left drag aborts; the stroke ends when the project, history, active map or layer changes; `cellsChanged`, `navigating`; `onError` gets the stroke's tool; no live composite, colours, grab, `latestSample` or `claims` |
 | `src/app/tools/planned.tools.ts` | `src/app/tools/planned.tools.ts` | adapt | `ea5c91d` |  | The slots of DESIGN §6 with the keys of DESIGN §10.3 and the layer kinds of their set |
 | `src/app/tools/registry.ts` | `src/app/tools/registry.ts` | verbatim | `ea5c91d` | `bd5fd9bd647aed09d426fe461403d03ad10f1065855274831ecebbc232ce76a1` |  |
-| `src/app/tools/toolRegistry.ts` | `src/app/tools/toolRegistry.ts` | verbatim | `ea5c91d` | `af10d01031ee17fd4d5825f7bc4d3f35513118cda4fc3d9ea5f70b3423eac666` |  |
+| `src/app/tools/toolRegistry.ts` | `src/app/tools/toolRegistry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/app/tools/tools.commands.ts` | `src/app/tools/tools.commands.ts` | adapt | `ea5c91d` |  | Select and hold commands are enabled only while the active layer's set holds the tool; the registry refreshes on the tool state |
 | `src/app/tools/types.ts` | `src/app/tools/types.ts` | adapt | `ea5c91d` |  | Same exports plus `ToolLayerKind`: pointers carry map position, cell and crossed cells; `PaintStroke` writes cells of a tile layer, or of another paintable tile layer of the map (`paintableLayers`); `ToolContext` has the session, map and layer instead of the document and colour; `layers` on tools and planned slots; `readouts` on tools; no `claims` or `latestSample` |
 | `src/app/tools/zoom/zoom.tools.ts` | `src/app/tools/zoom/zoom.tools.ts` | adapt | `ea5c91d` |  | Comment cites SPEC §4.3 |
@@ -174,9 +174,9 @@ rows.
 | `src/ui/commands/useCommands.ts` | `src/ui/commands/useCommands.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` keeps its exports |
 | `src/ui/commands/useEditorKeymap.ts` | `src/ui/commands/useEditorKeymap.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `install` keep their exports |
 | `src/ui/dialogs/DialogHost.tsx` | `src/ui/dialogs/DialogHost.tsx` | verbatim | `ea5c91d` | `d80f3e296fc4dce2ccb5dd09023ec782594b82a47e0e3bf1261e7055bb2c23df` | |
-| `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | verbatim | `ea5c91d` | `432ee32ed5a734072855bcb6c90f41c143e67d01dc76f5f6b344f8398a232006` | |
+| `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
-| `src/ui/dock/registry.ts` | `src/ui/dock/registry.ts` | verbatim | `ea5c91d` | `33534c61332600daa37db50256fe7df3ebfc23776000ba3dd2379e07cb3d6036` | |
+| `src/ui/dock/registry.ts` | `src/ui/dock/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/focus/inertOutside.ts` | `src/ui/focus/inertOutside.ts` | verbatim | `ea5c91d` | `b6a211b7c790c44abf0cc688082b60da14552729402fcfea43c108fa60377b32` | |
 | `src/ui/focus/menuOpener.ts` | `src/ui/focus/menuOpener.ts` | verbatim | `ea5c91d` | `b61a40a2721132e675858320c17f49c84f72947e52fd85fe3b7afda8c584f572` | |
 | `src/ui/focus/modality.ts` | `src/ui/focus/modality.ts` | verbatim | `ea5c91d` | `6ac8166dda8f7ccca4277d23bc58b945e9393590c33eec26044835948ee50917` | |
@@ -248,7 +248,7 @@ rows.
 | `src/ui/toast/toast.ts` | `src/ui/toast/toast.ts` | verbatim | `ea5c91d` | `35cdddcdfb41732710dea2c026a5c22c443c2b16fcf6a3fdb5701b594cce70e7` | |
 | `src/ui/tools/VariantToolButton.tsx` | `src/ui/tools/VariantToolButton.tsx` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/types.ts` keeps `RailSlot` and `Tool` |
 | `src/ui/tools/contextBar.css` | `src/ui/tools/contextBar.css` | adapt | `ea5c91d` |  | Readout text (`.context-readout`) |
-| `src/ui/tools/contextBarRegistry.ts` | `src/ui/tools/contextBarRegistry.ts` | verbatim | `ea5c91d` | `55d5826dfdf30596c09d31257c56654b1765942d0ffec2c1dcdfa7739d98c8eb` |  |
+| `src/ui/tools/contextBarRegistry.ts` | `src/ui/tools/contextBarRegistry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/tools/toolRail.css` | `src/ui/tools/toolRail.css` | adapt | `ea5c91d` |  | The stamp preview button (`.tool-rail__stamp`) |
 | `src/ui/tools/useToolState.ts` | `src/ui/tools/useToolState.ts` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/activeTool.ts` keeps `toolState` and `ToolState`, bound to this editor's active-tool store (per layer kind) |
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
@@ -277,7 +277,7 @@ rows.
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
 | `tests/unit/te-001-layers.test.ts` | `tests/unit/se-001-lint-boundaries.test.ts` | adapt | `ea5c91d` | | RULES 4 cases; the same code passes in `src/engine` |
-| `tests/unit/te-002-fixtures/golden-v1.ngsprite` | `tests/unit/se-040-fixtures/golden-v1.ngsprite` | verbatim | `ea5c91d` | `9e1e15076393d05f99322dfdd866133d191fe6e0cca3cdefd0b710b55ee05044` | |
+| `tests/unit/te-002-fixtures/golden-v1.ngsprite.d/` | `tests/unit/se-040-fixtures/golden-v1.ngsprite` | verbatim | `ea5c91d` | `9e1e15076393d05f99322dfdd866133d191fe6e0cca3cdefd0b710b55ee05044` | Stored unpacked; `tests/support/ngsprite.ts` packs it into these bytes |
 | `tests/unit/te-003-tokens.test.ts` | `tests/unit/se-006-tokens.test.ts` | adapt | `ea5c91d` | | Colour table of `se-design` §3.1 written out (DESIGN §1 inherits it unrepeated); SUITE §2 dark values |
 | `tests/unit/te-006-history.test.ts` | `tests/unit/se-004-history.test.ts` | adapt | `ea5c91d` | | Project session and cell patches instead of a document and pixel patches; map of each entry, verifier, composite and `mergeTouched` cases added |
 | `tests/unit/te-006-support.ts` | `tests/unit/se-004-support.ts` | adapt | `ea5c91d` | | Session with one map, one tile layer and one tileset; `paintRect` writes cells; allocators return `ArrayBuffer` |

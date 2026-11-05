@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { packNgsprite } from "../support/ngsprite";
 import { celKey, createDocument } from "../../src/core/sprite/model";
 import type { PixelBuffer, SpriteDoc, Tag } from "../../src/core/sprite/model";
 import type { Tileset } from "../../src/core/model";
@@ -104,7 +105,7 @@ const FIXTURES = new URL("../fixtures/sprite/", import.meta.url);
 export function spriteFixture(): { sprite: Uint8Array; atlasJson: unknown; atlasPng: Uint8Array } {
     const read = (name: string) => new Uint8Array(readFileSync(new URL(name, FIXTURES)));
     return {
-        sprite: read("tiles.ngsprite"),
+        sprite: packNgsprite(new URL("tiles.ngsprite.d/", FIXTURES)),
         atlasJson: JSON.parse(new TextDecoder().decode(read("tiles.atlas.json.golden"))),
         atlasPng: read("tiles.png"),
     };

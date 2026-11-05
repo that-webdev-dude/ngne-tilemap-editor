@@ -3,7 +3,7 @@ import type { Project } from "./types";
 
 // Slugs of FORMAT §1.1: export names of maps, tilesets and images, which name files in one
 // export folder and asset IDs in the generated runtime. The rules follow the sprite editor's
-// `core/sprite/export/names.ts` (RULES 1: Tiled has no export names): ASCII lowering only, no
+// `core/sprite/export/names.ts` (Tiled has no export names): ASCII lowering only, no
 // transliteration, every run of other characters one `-`; here `_` is kept, as the pattern
 // allows it.
 

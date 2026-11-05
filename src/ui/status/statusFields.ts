@@ -5,7 +5,7 @@ import type { ProjectMap, ProjectSession } from "../../core/model";
 /**
  * Status bar field registry (DESIGN §8.7, TE-014). A feature adds a field by creating a module
  * named `*.status.ts` anywhere under `src` that exports `statusFields`; this file finds it
- * with a glob import, so no shared file is edited (AGENTS.md, Parallel work):
+ * with a glob import, so no shared file is edited (RULES 6):
  *
  *     // src/ui/status/selection.status.ts
  *     export const statusFields: StatusField[] = [

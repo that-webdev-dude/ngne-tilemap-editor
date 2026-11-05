@@ -22,6 +22,7 @@ import {
     readSpriteOutline,
 } from "../../src/core/tileset";
 import { decodePng } from "../../src/core/sprite/png";
+import { packNgsprite } from "../support/ngsprite";
 import { atlasJson, png, pngHeader, positionImage } from "./te-022-support";
 
 // TE-024: the import dialog's session against a fake worker (what it asks of the worker, and
@@ -317,7 +318,7 @@ function heldWorker() {
 const tick = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 function spriteSource(): ImportSource {
-    const bytes = fixture("tiles.ngsprite");
+    const bytes = packNgsprite(new URL("tiles.ngsprite.d/", FIXTURES));
     return {
         kind: "sprite",
         fileName: "tiles.ngsprite",

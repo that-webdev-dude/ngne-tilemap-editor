@@ -10,7 +10,7 @@ import type { CommandModule } from "./types";
  * The command registry of the app. It holds what every module named `*.commands.ts` or
  * `*.commands.tsx` under `src` exports as `commands` (and `plannedCommands`); the glob import
  * finds those modules, so a feature adds its commands, shortcuts and menu items without an
- * edit to a shared file (RULES 6; AGENTS.md, Parallel work). See `CommandSpec` in types.ts.
+ * edit to a shared file (RULES 6). See `CommandSpec` in types.ts.
  *
  * A command module is evaluated while this one loads: it may import the registry, but must
  * not use it before a command runs.
