@@ -1,0 +1,167 @@
+/*
+ * TE-029: the Collision Editor (DESIGN §9), a large dialog: the tool strip, the tile at its
+ * zoom with the shapes over it, and the shape list with the selected shape's fields.
+ */
+.collision-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.collision-editor__about {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+/* A vertical strip, as the tool rail: tooltips open to the right. */
+.collision-editor__strip {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+}
+
+.collision-editor__divider {
+    height: var(--border-width);
+    align-self: stretch;
+    margin: var(--space-4) 0;
+    background: var(--border);
+}
+
+.collision-editor__zoom {
+    min-width: 3ch;
+    text-align: center;
+    font-variant-numeric: tabular-nums;
+}
+
+.collision-editor__body {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr) 220px;
+    gap: var(--space-12);
+    min-height: 0;
+}
+
+.collision-editor__scroller {
+    max-height: 60vh;
+    overflow: auto;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+}
+
+.collision-editor__stage {
+    position: relative;
+    touch-action: none;
+    cursor: crosshair;
+    outline: none;
+}
+
+.collision-editor__stage:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.collision-editor__tile {
+    position: absolute;
+    image-rendering: pixelated;
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 /
+        var(--space-8) var(--space-8);
+}
+
+.collision-editor__shapes {
+    position: absolute;
+    inset: 0;
+    overflow: visible;
+    pointer-events: none;
+}
+
+.collision-editor__tile-edge {
+    fill: none;
+    stroke: var(--text-muted);
+    stroke-width: 1px;
+    stroke-dasharray: 3 3;
+    vector-effect: non-scaling-stroke;
+}
+
+.collision-editor__shape {
+    fill: var(--accent);
+    fill-opacity: 0.15;
+    stroke: var(--accent);
+    stroke-width: 1.5px;
+    vector-effect: non-scaling-stroke;
+}
+
+.collision-editor__shape--selected {
+    fill-opacity: 0.3;
+}
+
+.collision-editor__draft {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.5px;
+    stroke-dasharray: 4 3;
+    vector-effect: non-scaling-stroke;
+}
+
+/* The 7 px handles of `se-design` §5.2; their white and black are set in the component. */
+.collision-editor__handle,
+.collision-editor__vertex {
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.collision-editor__vertex--chosen {
+    fill: var(--accent);
+}
+
+.collision-editor__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+}
+
+.collision-editor__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    max-height: 30vh;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+    list-style: none;
+}
+
+.collision-editor__item {
+    width: 100%;
+    padding: var(--space-4) var(--space-8);
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+}
+
+.collision-editor__item:hover {
+    background: var(--bg-raised);
+}
+
+.collision-editor__item[aria-pressed="true"] {
+    background: var(--bg-active);
+}
+
+.collision-editor__empty {
+    color: var(--text-muted);
+}
+
+.collision-editor__fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-4);
+    align-items: center;
+}
+
+.collision-editor__message {
+    min-height: 1lh;
+    margin: 0;
+    color: var(--danger);
+}

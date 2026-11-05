@@ -392,7 +392,7 @@ file, object (int id), class (value = object of members), list (1.12; value = ar
 | Scanline flood fill (§3) | One implementation for bucket fill, magic wand and select same tile |
 | Bucket Fill (§3) | Fills at the press, not at the release; dragging collects no further cells (1.12's drag is not reproduced) |
 | Shape Fill `ellipseRegion` (§3) | Port exactly: the ellipse fill's cells must match Tiled's |
-| Tile collision editor (§3 docks) | A small rectangle/ellipse/polygon editor, reused for marker layers |
+| Tile collision editor (§3 docks) | A small rectangle/ellipse/polygon editor, reused for marker layers. A click of its rectangle or ellipse tool without a drag makes nothing; Tiled's `CreateObjectTool` (v1.12.2) commits a shape of size 0, which has no area to collide with |
 | Object tools (§3) | Only the rectangle, point, ellipse, polygon and polyline tools, as marker tools |
 | TMJ/TSJ (§5) | Import only; handling per feature in [BRIEF.md](../BRIEF.md) §7 |
 | GID bits (§5) | Bit 29 (anti-diagonal) is valid on orthogonal maps: with H/V it encodes the 90° rotations. Bit 28 is hex-only and is cleared on import |

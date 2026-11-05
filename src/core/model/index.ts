@@ -39,6 +39,25 @@ export {
 } from "./memory";
 export type { MemoryAccount } from "./memory";
 export { hasTiles, withoutRemovedTiles } from "./removedTiles";
+export {
+    absolutePoints,
+    clampCollisionCoord,
+    cloneShape,
+    cloneShapes,
+    collisionProblem,
+    fitShape,
+    insertPolygonPoint,
+    moveShape,
+    movePolygonPoint,
+    orientPoint,
+    orientShape,
+    polygonFrom,
+    polygonShape,
+    removePolygonPoint,
+    shapeBox,
+    shapesEqual,
+} from "./shapes";
+export type { ShapeBox } from "./shapes";
 export { RESERVED_SLUG, exportNames, isSlug, slugify, uniqueSlug } from "./slug";
 export { SlotError, assignSlots, freeSlot } from "./slots";
 export type {

@@ -482,7 +482,13 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   edit points (drag a vertex; double click on an edge adds one; Delete removes one, never below
   three). Snap to whole pixels by default (context toggle); Ctrl inverts snapping while held.
   Shapes may extend outside the tile (FORMAT range). Applying to several selected tiles at once
-  copies the shape list to each (one entry).
+  copies the shape list to each (one entry). The editor shows the tile the panel's selection
+  ends on (Tiled's current tile); each edit copies that tile's edited list to every selected tile
+  the filter shows. A rectangle or ellipse is made only when its drag spans an area: a click,
+  or a drag along one axis, makes nothing (unlike Tiled, [reference/tiled.md](reference/tiled.md)
+  §6), as a shape without area blocks nothing. A new shape is selected; a polygon is stored at
+  its first point. Escape cancels a polygon or a drag first, then closes the dialog; while it is
+  open, Ctrl+Z and Ctrl+Y undo and redo the project history.
 - **Animation editor**: the frame list of the tile; add tiles by dragging from the tileset grid
   or a button for the tileset selection; default 100 ms; edit durations (one or many); reorder by
   drag; delete; a looping preview at the tile's size. A tile is animated when its list is not

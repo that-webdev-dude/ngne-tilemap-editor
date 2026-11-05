@@ -55,7 +55,11 @@ export type TilesetEditErrorCode =
     /** A move past either end of the list. */
     | "move"
     /** Delete of a tileset some map has a cell of; `maps` names them. */
-    | "in-use";
+    | "in-use"
+    /** No tile of the tileset has the ID. */
+    | "tile-not-found"
+    /** A collision list past FORMAT §2.4's limits: 64 shapes, 1024 points, ±4096 (SPEC §6.4). */
+    | "collision";
 
 export class TilesetEditError extends Error {
     override readonly name = "TilesetEditError";

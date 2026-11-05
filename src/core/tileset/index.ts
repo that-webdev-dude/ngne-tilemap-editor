@@ -1,7 +1,8 @@
 // Tileset import (SPEC §6.1): sources turned into tilesets with stable tile IDs, source keys and
 // fingerprints, and the command that adds one to the project. The tileset commands of SPEC §6.2:
 // rename, export name, class, tile offset, move, delete. Update tileset from source (SPEC §6.3):
-// the source re-read, its entries matched to the tiles, and the undoable apply.
+// the source re-read, its entries matched to the tiles, and the undoable apply. The collision
+// editor's command (SPEC §6.4).
 
 export { IMPORT_TILESET_LABEL, addTilesetCommand } from "./addTileset";
 export { importAtlas, planAtlas, readAtlasJson, readAtlasOutline } from "./atlas";
@@ -44,6 +45,8 @@ export {
     tilesetPropertiesCommand,
 } from "./tilesetCommands";
 export type { TilesetFields } from "./tilesetCommands";
+export { COLLISION_LABELS, collisionCommand, setCollisionCommand } from "./collisionCommands";
+export type { CollisionEdit } from "./collisionCommands";
 export { TilesetUpdateError } from "./errors";
 export type { TilesetUpdateErrorCode } from "./errors";
 export { matchTiles } from "./updateMatch";
