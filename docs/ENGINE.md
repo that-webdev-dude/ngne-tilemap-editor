@@ -149,7 +149,7 @@ tickets that build the feature.
 | Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | TE-015: 32 / 32 MB (T = 8, 128 chunks) |
 | Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | TE-015: 456 / 356 ms, longest build slice 4.0 / 3.9 ms; the live-tier frame drawn meanwhile 126 / 116 ms (§4) |
 | Initial overview build after a map opens (background) | no task > 16 ms | TE-015: 0.67 / 0.57 s total, longest task 33.9 / 53.2 ms, **over budget** (NGNE's first `updateTexture` readback; build slices ≤ 9.9 / 10.4 ms) |
-| Tab switch to an open map: first frame submitted | ≤ 100 ms | — |
+| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | TE-031: fitted view 99.3 / 98.4 ms (max 106.3 / 107.8 ms); 100% view 25.8 / 25.7 ms |
 | Idle editor: frames submitted per second | 0 | — |
 | Cold load to interactive (production build, local) | ≤ 2 s | — |
 
@@ -158,6 +158,12 @@ performance power mode, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×7
 `te-015-*-rtx-4060.json` in [evidence/](evidence/).
 TE-017 row: 2026-11-02, the same machine, Chrome, power plan, panel and window. Raw data:
 `te-017-paint-intel-uhd.json` and `te-017-paint-rtx-4060.json` in [evidence/](evidence/).
+TE-031 row: 2026-11-06, the same machine, Chrome, power plan, panel and window. Two open tabs
+each hold the reference map; a switch is timed from the call that shows the other map to the
+return of the first frame submitted after it, 40 switches 1 s apart. At the fitted view the first
+frame is a live-tier frame of all 524,289 cells (median draw 76 ms): the previous map's chunk tier
+is released on the switch and the new one is built in the background (§4). Raw data:
+`te-031-tab-switch-{fit,100}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
 
 ### Game runtime budget
 

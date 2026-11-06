@@ -1,5 +1,6 @@
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../../src/app/testing/testHooks";
+import { activateMap, closeMapTab, mapTabsStore } from "../../../src/app/tabs/tabs";
 import { compositeMap } from "../../../src/core/compositor";
 import { cellValue } from "../../../src/core/cells";
 import { createMap, createProjectSession } from "../../../src/core/model";
@@ -225,11 +226,10 @@ export function addMaps(): { partial: string; empty: string; first: string } {
     return { partial: partial.id, empty: empty.id, first };
 }
 
-/** Makes a map the active one, as the map tabs will (TE-031). */
+/** Shows a map in its tab and closes every other tab (TE-031): it is the only open map. */
 export function showMap(id: string): void {
-    const hooks = window.__ngneTest!;
-    hooks.session.getState().session.activeMapId = id;
-    hooks.session.getState().touch();
+    activateMap(id);
+    for (const other of mapTabsStore.getState().open) if (other !== id) closeMapTab(other);
 }
 
 /** The IDs of the tilesets of the project, in list order. */

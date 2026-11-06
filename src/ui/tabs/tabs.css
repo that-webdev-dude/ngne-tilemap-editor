@@ -1,0 +1,151 @@
+/*
+ * TE-031: map tabs in the centre of the menu bar (DESIGN §2), the project's name and unsaved
+ * marker before the first tab in `--text-muted`. The strip takes the free space between the
+ * menus and the command palette trigger, centred while it fits; tabs shrink to 96 px, then the
+ * strip scrolls sideways and the overflow menu appears.
+ */
+.map-tabs {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    margin: 0 auto;
+    padding: 0 var(--space-12);
+}
+
+/* The strip takes the free space on both of its sides and stays centred. */
+.map-tabs + .command-palette-trigger {
+    margin-left: 0;
+}
+
+.map-tabs__project {
+    display: flex;
+    flex: 0 1 auto;
+    align-items: baseline;
+    gap: var(--space-4);
+    min-width: 0;
+    max-width: 200px;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.map-tabs__project-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.map-tabs__unsaved {
+    flex: none;
+}
+
+.map-tabs__list {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    /* Room for the focus ring, which the scrolling box would cut off. */
+    padding: var(--space-4) calc(var(--focus-ring-width) + var(--focus-ring-offset));
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+}
+
+.map-tabs__list::-webkit-scrollbar {
+    display: none;
+}
+
+/*
+ * A tab: the name centred between two 24 px columns, the right one the close control, so a
+ * single tab's name sits in the middle of the strip.
+ */
+.map-tab {
+    display: grid;
+    flex: 0 1 auto;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    align-items: center;
+    min-width: 96px;
+    max-width: 200px;
+    height: 28px;
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    cursor: default;
+    user-select: none;
+    transition:
+        background-color var(--motion-fast) var(--motion-ease),
+        color var(--motion-fast) var(--motion-ease);
+}
+
+.map-tab:hover {
+    background: var(--bg-raised);
+    color: var(--text);
+}
+
+/*
+ * Selected: the active background, the primary text and an accent line along the bottom
+ * edge, drawn inside the tab; no change of weight, so a tab keeps its width when selected.
+ */
+.map-tab[aria-selected="true"] {
+    background: var(--bg-active);
+    box-shadow: inset 0 -2px 0 var(--accent);
+    color: var(--text);
+}
+
+.map-tab__label {
+    display: flex;
+    grid-column: 2;
+    align-items: baseline;
+    justify-content: center;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.map-tab__name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Shown on the selected tab and on the one under the pointer. */
+.map-tab__close {
+    display: grid;
+    grid-column: 3;
+    place-items: center;
+    width: 24px;
+    height: 24px;
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    opacity: 0;
+}
+
+.map-tab[aria-selected="true"] .map-tab__close,
+.map-tab:hover .map-tab__close {
+    opacity: 1;
+}
+
+/* Hidden on a background tab that is not under the pointer: it takes no press then. */
+.map-tab:not([aria-selected="true"]):not(:hover) .map-tab__close {
+    pointer-events: none;
+}
+
+.map-tab__close:hover {
+    background: var(--bg-active);
+    color: var(--text);
+}
+
+/* On the selected tab, whose background is the active one already. */
+.map-tab[aria-selected="true"] .map-tab__close:hover {
+    background: var(--bg-raised);
+}
+
+.map-tabs__overflow {
+    flex: none;
+}
+
+.map-tabs__item-name {
+    max-width: 320px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

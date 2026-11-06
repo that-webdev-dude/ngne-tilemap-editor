@@ -60,10 +60,12 @@ rows.
 | `src/app/shell/bottomPanel.ts` | `src/app/timeline/timelineState.ts` | adapt | `ea5c91d` | | Only `visible`, for the bottom panel |
 | `src/app/shortcuts/shortcutSheet.ts` | `src/app/shortcuts/shortcutSheet.ts` | verbatim | `ea5c91d` | `607f13dc68fc72037b0a6cc77812bb0cb5656947d48d81933f76767f04f28e49` | |
 | `src/app/shortcuts/shortcuts.commands.ts` | `src/app/shortcuts/shortcuts.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
-| `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection |
+| `src/app/state/history.commands.ts` | `src/app/state/history.commands.ts` | adapt | `ea5c91d` | | Reads the history of the app's one project; no floating selection; a step for another map shows that map's tab first (SPEC §3) |
 | `src/app/state/session.ts` | `src/app/state/sessions.ts` | adapt | `ea5c91d` | | One `ProjectSession` with its `History` per window (SPEC §3, §10.1) instead of a list of documents: `replace`, `touch`, `revision`; no views, saved state or reference sources |
 | `src/app/state/status.ts` | `src/app/state/status.ts` | adapt | `ea5c91d` |  | Cursor is the cell under the pointer (DESIGN §8.7); the fields that read it register from `*.status.ts` modules |
 | `src/app/surfaces/surfaces.ts` | `src/app/surfaces/surfaces.ts` | verbatim | `ea5c91d` | `cd95fe5ba802969ff977d366e540320bd4a5104d4011f76a669478b5b14a599b` | |
+| `src/app/tabs/tabs.commands.ts` | `src/app/tabs/tabs.commands.ts` | adapt | `ea5c91d` | | Previous Map and Next Map in the Map menu, through the open map tabs; Close Map (Alt+W) |
+| `src/app/tabs/tabs.ts` | `src/app/tabs/tabs.ts` | adapt | `ea5c91d` | | Tabs hold the open maps of the one project (`mapTabsStore`): no file workflows, palette swatch or reference images; closing a tab hides the map; the active map is always open; a deleted map's tab comes back in place on undo |
 | `src/app/testing/testHooks.ts` | `src/app/testing/testHooks.ts` | adapt | `ea5c91d` | | Exposes the session, key-context, bottom-panel, preference, view-preference and recent-command stores and the registry; `assertInvariants` on the project; `viewport`, the probe of the viewport host (frames, textures, renderer count) |
 | `src/app/tools/activeTool.ts` | `src/app/tools/activeTool.ts` | adapt | `ea5c91d` |  | Its own store keeps the selected tool per layer kind (`tile`, `marker`, `none`; DESIGN §6) and the option values; `select` and `hold` take only tools of the active layer's set; `kind` and `offered` added; no editor store |
 | `src/app/tools/appPipeline.ts` | `src/app/tools/appPipeline.ts` | adapt | `ea5c91d` |  | On the session and status stores; stroke cells to the viewport (`strokeCells.ts`); no stroke while the pan key is held; failures reported as a toast naming the tool (`reportStrokeError`, SPEC §3); no composites, echo, playback or symmetry grab |
@@ -232,7 +234,7 @@ rows.
 | `src/ui/shell/regions/BottomPanel.tsx` | `src/ui/shell/regions/Timeline.tsx` | adapt | `ea5c91d` | | In the timeline's place: tabs Tilesets and Terrains (DESIGN §2), panels empty until TE-025 and TE-043 |
 | `src/ui/shell/regions/ContextBar.tsx` | `src/ui/shell/regions/ContextBar.tsx` | adapt | `ea5c91d` | | Doc comments cite DESIGN §7; the tool's readouts after its options |
 | `src/ui/shell/regions/Dock.tsx` | `src/ui/shell/regions/Dock.tsx` | verbatim | `ea5c91d` | `7a0847e2169df096d4dc2314ba82d4f77b0b9db27a0a5d5df1e04d0dc813fabe` | |
-| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | The menus and the command palette trigger (TE-008); map tabs (TE-031) are left out |
+| `src/ui/shell/regions/MenuBar.tsx` | `src/ui/shell/regions/MenuBar.tsx` | adapt | `ea5c91d` | | `MapTabs` (TE-031) in place of `DocumentTabs` |
 | `src/ui/shell/regions/StatusBar.tsx` | `src/ui/shell/regions/StatusBar.tsx` | adapt | `ea5c91d` | | Renders the fields of the `*.status.ts` registry (cell, tile, zoom with Fit, map size) and the tool hint or feedback on the right |
 | `src/ui/shell/regions/ToolRail.tsx` | `src/ui/shell/regions/ToolRail.tsx` | adapt | `ea5c91d` | | The tool set of the active layer's kind (`railToolSet`, DESIGN §6); the stamp preview footer instead of the colour chips |
 | `src/ui/shell/regions/Viewport.tsx` | `src/ui/shell/regions/Viewport.tsx` | adapt | `ea5c91d` | | Hosts the viewport canvas of the active map (TE-013); the empty state joins it later |
@@ -243,6 +245,8 @@ rows.
 | `src/ui/styles/base.css` | `src/ui/styles/base.css` | verbatim | `ea5c91d` | `cb79b6d9a9383a0d114a3453f2fe19471ae3f657472d0f6d7186553ef92c8d87` | |
 | `src/ui/styles/tokens.css` | `src/ui/styles/tokens.css` | verbatim | `ea5c91d` | `a8d0de7b7cefa647152a2a27811adfa1f8db544b9443201647ea132fc05b3917` | |
 | `src/ui/surfaces/AppSurfaces.tsx` | `src/ui/surfaces/AppSurfaces.tsx` | verbatim | `ea5c91d` | `7e3cb942466f81c3e0e1cb6fc899b98b589347294b3f00c26cb5ee28b63ba079` | |
+| `src/ui/tabs/MapTabs.tsx` | `src/ui/tabs/DocumentTabs.tsx` | adapt | `ea5c91d` | | Tabs of the open maps (`app/tabs/tabs.ts`); the project's name and unsaved marker before the first tab instead of a marker per tab; close without asking; overflow menu "All maps" |
+| `src/ui/tabs/tabs.css` | `src/ui/tabs/tabs.css` | adapt | `ea5c91d` | | Class names `map-tabs`, `map-tab`; the project's name before the tabs in `--text-muted` |
 | `src/ui/theme/theme.ts` | `src/ui/theme/theme.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.theme` (SUITE §7) |
 | `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
 | `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |

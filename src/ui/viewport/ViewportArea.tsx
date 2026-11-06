@@ -7,6 +7,7 @@ import type { MountedOverlay } from "../../app/overlay/mountOverlay";
 import type { OverlayTheme } from "../../app/overlay/types";
 import { preferences } from "../../app/preferences/preferences";
 import { sessionStore } from "../../app/state/session";
+import { mapTabsStore } from "../../app/tabs/tabs";
 import { setViewportProbe } from "../../app/testing/testHooks";
 import { attachToolPointer } from "../../app/tools/attachToolPointer";
 import { attachViewNavigation } from "../../app/view/pointerNavigation";
@@ -177,7 +178,7 @@ export function ViewportArea() {
                 }
                 viewport = created;
                 redraw.current = () => created.requestRedraw();
-                unbind = bindViewport(created, sessionStore);
+                unbind = bindViewport(created, sessionStore, mapTabsStore);
                 created.resize(size);
                 setViewportProbe({
                     canvas,

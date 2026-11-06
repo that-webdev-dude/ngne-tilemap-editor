@@ -102,10 +102,10 @@ describe("TilesetUsage", () => {
 });
 
 describe("openMapIds", () => {
-    it("is the active map until map tabs exist", () => {
+    it("is the active map when no other tab is open", () => {
         const session = createProjectSession(project());
-        expect(openMapIds(session)).toEqual([session.activeMapId]);
-        expect(openMapIds({ ...session, activeMapId: "" })).toEqual([]);
+        expect(openMapIds(session, [])).toEqual([session.activeMapId]);
+        expect(openMapIds({ ...session, activeMapId: "" }, [])).toEqual([]);
     });
 });
 

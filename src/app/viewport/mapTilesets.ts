@@ -7,9 +7,17 @@ import type { Project, ProjectMap, ProjectSession, Tileset } from "../../core/mo
 // has a cell of it. A map is scanned once when it first shows, and the cells a command touched
 // are added after that; the set shrinks when the map closes, not when a cell is erased.
 
-/** The maps the viewport keeps textures for. Until map tabs exist (TE-031) that is the active map. */
-export function openMapIds(session: ProjectSession): string[] {
-    return session.activeMapId === "" ? [] : [session.activeMapId];
+/**
+ * The maps the viewport keeps textures for: the maps of the open tabs (`open`, TE-031) that the
+ * project has, and the active map.
+ */
+export function openMapIds(session: ProjectSession, open: readonly string[]): string[] {
+    const ids = new Set(session.project.maps.map((map) => map.id));
+    const kept = open.filter((id) => ids.has(id));
+    if (ids.has(session.activeMapId) && !kept.includes(session.activeMapId)) {
+        kept.push(session.activeMapId);
+    }
+    return kept;
 }
 
 function addSlot(slots: Set<number>, value: number): void {

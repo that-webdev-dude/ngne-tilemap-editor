@@ -1,5 +1,6 @@
 import type { History } from "../../core/history";
 import type { CommandSpec } from "../commands/types";
+import { showMapOfStep } from "../tabs/tabs";
 import { activeHistory } from "./session";
 
 /**
@@ -9,6 +10,18 @@ import { activeHistory } from "./session";
 function idleHistory(): History | null {
     const history = activeHistory();
     return history.transaction ? null : history;
+}
+
+/**
+ * Undoes (`"undo"`) or redoes the next step. A step for a map other than the active one first
+ * shows that map's tab, so a change is never undone out of sight (SPEC §3).
+ */
+function step(kind: "undo" | "redo"): void {
+    const history = idleHistory();
+    if (!history) return;
+    if (!showMapOfStep(kind === "undo" ? history.undoMapId : history.redoMapId)) return;
+    if (kind === "undo") history.undo();
+    else history.redo();
 }
 
 /** "Undo Stamp Brush": the verb, then the label of the step it would act on. */
@@ -26,7 +39,7 @@ export const commands: CommandSpec[] = [
         menuPath: ["Edit"],
         menuOrder: 100,
         enabled: () => idleHistory()?.canUndo ?? false,
-        run: () => void idleHistory()?.undo(),
+        run: () => step("undo"),
     },
     {
         id: "edit.redo",
@@ -35,6 +48,6 @@ export const commands: CommandSpec[] = [
         menuPath: ["Edit"],
         menuOrder: 110,
         enabled: () => idleHistory()?.canRedo ?? false,
-        run: () => void idleHistory()?.redo(),
+        run: () => step("redo"),
     },
 ];

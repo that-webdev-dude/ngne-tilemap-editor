@@ -2,22 +2,36 @@ import type { StoreApi } from "zustand/vanilla";
 import type { Touched } from "../../core/history";
 import type { Viewport } from "../../engine/viewport";
 import type { SessionState } from "../state/session";
+import type { MapTabsState } from "../tabs/tabs";
 import { TilesetUsage, openMapIds } from "./mapTilesets";
 import { subscribeStrokeCells } from "./strokeCells";
 
 /**
  * Connects a viewport to the session store (ENGINE §4, redraw on demand): a frame is asked for
  * when the project or its session state changes, and the viewport's tileset textures follow the
- * tilesets the open maps use. Returns the function that disconnects it.
+ * tilesets the maps of the open tabs (`tabs`) use: a texture no open map uses is released
+ * (ENGINE §3). Returns the function that disconnects it.
  */
-export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>): () => void {
+export function bindViewport(
+    viewport: Viewport,
+    store: StoreApi<SessionState>,
+    tabs: StoreApi<MapTabsState>,
+): () => void {
     const usage = new TilesetUsage();
     let unsubscribeHistory: (() => void) | null = null;
     let history = store.getState().history;
 
+    /** The maps of the last `sync`. */
+    let shown: readonly string[] = [];
+
     const sync = () => {
         const { session } = store.getState();
-        viewport.useTilesets(usage.tilesetsOf(session.project, openMapIds(session)));
+        const open = openMapIds(session, tabs.getState().open);
+        // A map that closed is forgotten: it is scanned again when it opens (ENGINE §3), so
+        // cells erased while it was open no longer keep a texture.
+        for (const id of shown) if (!open.includes(id)) usage.forget(id);
+        shown = open;
+        viewport.useTilesets(usage.tilesetsOf(session.project, open));
     };
 
     const onTouched = (touched: Touched) => {
@@ -50,6 +64,9 @@ export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>):
         viewport.requestRedraw();
     });
 
+    // A closed tab releases what only its map used.
+    const unsubscribeTabs = tabs.subscribe(sync);
+
     // A stroke's cells show before it ends (SPEC §3): live quads, chunk patches.
     const unsubscribeStroke = subscribeStrokeCells((touched) => viewport.noteTouched(touched));
 
@@ -59,6 +76,7 @@ export function bindViewport(viewport: Viewport, store: StoreApi<SessionState>):
 
     return () => {
         unsubscribeStore();
+        unsubscribeTabs();
         unsubscribeHistory?.();
         unsubscribeStroke();
     };

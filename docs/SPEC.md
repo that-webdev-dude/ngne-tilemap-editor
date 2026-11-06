@@ -528,6 +528,17 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   entry.
 - Maps are tabs in the menu bar (SUITE §3). Closing a tab hides the map; it stays in the
   project. The project's map list (DESIGN) opens them.
+- New Map adds the map at the end of the map list, named "Map N" with N one above the highest
+  number among maps named "Map <number>" (1 with none), as the sprite editor names a new layer;
+  its size and tile size default to the last new map's for the session. Duplicate places the
+  copy after its map, named "<name> Copy" as the sprite editor names a duplicated layer, with
+  an export name of its own. Both show the map they add.
+- The tab strip has its own order, changed by dragging a tab, as the sprite editor's document
+  tabs; Move up/down changes the map list and names no map in its history entry. A map that
+  becomes active by any route gets a tab; the last tab may be closed, and then no map is shown
+  (Tiled, the sprite editor). Deleting the active map shows the tab that takes its place; its
+  undo restores the map, its tab where it was, and shows it. Undo or redo of another map's
+  entry switches to that map and performs the step in one press.
 
 ### 7.2 Layers
 
