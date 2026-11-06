@@ -59,7 +59,9 @@ export type TilesetEditErrorCode =
     /** No tile of the tileset has the ID. */
     | "tile-not-found"
     /** A collision list past FORMAT §2.4's limits: 64 shapes, 1024 points, ±4096 (SPEC §6.4). */
-    | "collision";
+    | "collision"
+    /** An animation past FORMAT §2.4's limits or naming no tile of the tileset (SPEC §6.4). */
+    | "animation";
 
 export class TilesetEditError extends Error {
     override readonly name = "TilesetEditError";

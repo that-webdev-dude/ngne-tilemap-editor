@@ -492,7 +492,18 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
 - **Animation editor**: the frame list of the tile; add tiles by dragging from the tileset grid
   or a button for the tileset selection; default 100 ms; edit durations (one or many); reorder by
   drag; delete; a looping preview at the tile's size. A tile is animated when its list is not
-  empty. Animation frames are tiles of the same tileset (Tiled).
+  empty. Animation frames are tiles of the same tileset (Tiled). As Tiled's
+  `TileAnimationEditor` (v1.12.2): the editor edits the tile the panel's selection ends on, that
+  tile only, and holds its own grid of the tileset's tiles (the dialog is modal, so the panel
+  cannot be reached), starting with the panel's selection. A tile dragged from that grid is
+  inserted where it is dropped, a double click appends it, and the button appends the grid's
+  selection. New frames take the frame duration, 100 ms until changed and kept while the page is
+  open (Tiled keeps it in its session); Apply gives it to the selected frames, and each frame's
+  own field edits that frame. Dragging a selected frame's handle moves the selection; Alt+Up and
+  Alt+Down move each selected frame one place; Delete or Backspace deletes them. Each edit is
+  one entry, and an undo or redo leaves no frame selected (Tiled resets its list); the
+  preview restarts from the first frame at every change, frame `k` showing from the sum of the
+  durations before it.
 - **Tile properties and class** are edited in the Properties panel (§9) for the selected tiles.
 
 ## 7. Maps and layers

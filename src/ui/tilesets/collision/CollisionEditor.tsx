@@ -45,7 +45,7 @@ import {
     removePolygonPoint,
     shapeBox,
 } from "../../../core/model";
-import type { PixelBuffer, Shape, ShapeBox, ShapePoint, Tileset } from "../../../core/model";
+import type { Shape, ShapeBox, ShapePoint, Tileset } from "../../../core/model";
 import type { CollisionEdit } from "../../../core/tileset";
 import { runCommand } from "../../commands/runCommand";
 import { PixelCanvas } from "../../import/PixelCanvas";
@@ -58,6 +58,7 @@ import {
     Toggle,
     ToolButton,
 } from "../../primitives";
+import { tilePixels } from "../tilePixels";
 import "./collision.css";
 
 // The Collision Editor (DESIGN §9; SPEC §6.4; TE-029), a large dialog: the tool strip (select,
@@ -93,24 +94,6 @@ const KIND_NAMES: Record<Shape["shape"], string> = {
     polyline: "Polyline",
     point: "Point",
 };
-
-/** The pixels of the tile at `index` in display order. */
-function tilePixels(
-    pixels: PixelBuffer,
-    columns: number,
-    tw: number,
-    th: number,
-    index: number,
-): PixelBuffer {
-    const left = (index % columns) * tw;
-    const top = Math.floor(index / columns) * th;
-    const data = new Uint8ClampedArray(tw * th * 4);
-    for (let y = 0; y < th; y++) {
-        const from = ((top + y) * pixels.width + left) * 4;
-        data.set(pixels.data.subarray(from, from + tw * 4), y * tw * 4);
-    }
-    return { width: tw, height: th, data };
-}
 
 /** The room round the tile on the stage, in tile pixels: shapes may extend outside it. */
 function marginOf(tileset: Tileset): number {

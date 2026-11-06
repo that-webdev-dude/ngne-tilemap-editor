@@ -2,7 +2,7 @@
 // fingerprints, and the command that adds one to the project. The tileset commands of SPEC §6.2:
 // rename, export name, class, tile offset, move, delete. Update tileset from source (SPEC §6.3):
 // the source re-read, its entries matched to the tiles, and the undoable apply. The collision
-// editor's command (SPEC §6.4).
+// and animation editors' commands (SPEC §6.4).
 
 export { IMPORT_TILESET_LABEL, addTilesetCommand } from "./addTileset";
 export { importAtlas, planAtlas, readAtlasJson, readAtlasOutline } from "./atlas";
@@ -47,6 +47,8 @@ export {
 export type { TilesetFields } from "./tilesetCommands";
 export { COLLISION_LABELS, collisionCommand, setCollisionCommand } from "./collisionCommands";
 export type { CollisionEdit } from "./collisionCommands";
+export { ANIMATION_LABELS, animationCommand, setAnimationCommand } from "./animationCommands";
+export type { AnimationEdit } from "./animationCommands";
 export { TilesetUpdateError } from "./errors";
 export type { TilesetUpdateErrorCode } from "./errors";
 export { matchTiles } from "./updateMatch";

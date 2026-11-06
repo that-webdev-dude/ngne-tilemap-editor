@@ -1,0 +1,195 @@
+/*
+ * TE-030: the Animation Editor (DESIGN §9), a dialog: the frame list with the frame duration,
+ * Apply and Delete under it; the tileset's tiles to add from and the preview beside it.
+ */
+.animation-editor {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.animation-editor__about {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.animation-editor__body {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: var(--space-12);
+    min-height: 0;
+}
+
+.animation-editor__frames,
+.animation-editor__side {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+}
+
+.animation-editor__list {
+    height: 260px;
+    margin: 0;
+    padding: var(--space-4);
+    overflow: auto;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+    list-style: none;
+}
+
+.animation-editor__row {
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    border-radius: var(--radius-control);
+}
+
+.animation-editor__row[data-selected] {
+    background: var(--bg-active);
+}
+
+/* Where a drag drops: a 2 px accent line before the row, or after the last one. */
+.animation-editor__row[data-drop-before] {
+    box-shadow: inset 0 2px 0 var(--accent);
+}
+
+.animation-editor__drop-end {
+    height: 2px;
+    background: var(--accent);
+}
+
+.animation-editor__handle {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 24px;
+    color: var(--text-muted);
+    cursor: grab;
+    touch-action: none;
+}
+
+.animation-editor__item {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--space-8);
+    min-width: 0;
+    padding: 2px var(--space-4);
+    border: none;
+    border-radius: var(--radius-control);
+    background: none;
+    color: var(--text);
+    font: inherit;
+    text-align: left;
+    cursor: default;
+}
+
+.animation-editor__row:not([data-selected]) .animation-editor__item:hover {
+    background: var(--bg-raised);
+}
+
+.animation-editor__item:focus-visible {
+    outline: var(--focus-ring-width) solid var(--accent);
+    outline-offset: calc(var(--focus-ring-width) * -1);
+}
+
+.animation-editor__thumb {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    image-rendering: pixelated;
+}
+
+.animation-editor__ms {
+    flex: none;
+    width: 84px;
+}
+
+.animation-editor__empty {
+    padding: var(--space-8);
+    color: var(--text-muted);
+}
+
+.animation-editor__controls {
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.animation-editor__duration {
+    flex: 1;
+    min-width: 0;
+}
+
+.animation-editor__message {
+    min-height: 1lh;
+    margin: 0;
+    color: var(--danger);
+}
+
+.animation-editor__picker {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-8);
+}
+
+.animation-editor__grid {
+    align-self: stretch;
+    height: 180px;
+    overflow: auto;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+    outline: none;
+    touch-action: none;
+}
+
+.animation-editor__grid:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--accent);
+}
+
+.animation-editor__sizer {
+    position: relative;
+}
+
+/* The canvas covers the part of the grid in view and stays there while the grid scrolls. */
+.animation-editor__canvas {
+    display: block;
+    position: sticky;
+    top: 0;
+    left: 0;
+}
+
+.animation-editor__preview {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--space-12);
+}
+
+.animation-editor__stage {
+    display: flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    min-width: 32px;
+    min-height: 32px;
+    border: var(--border-width) solid var(--border);
+}
+
+.animation-editor__preview-canvas {
+    display: block;
+    image-rendering: pixelated;
+}
+
+.animation-editor__no-preview {
+    padding: var(--space-4);
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+
+.animation-editor__list:focus {
+    outline: none;
+}

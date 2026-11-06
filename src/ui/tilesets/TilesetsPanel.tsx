@@ -63,7 +63,10 @@ function hex(value: number): string {
 }
 
 /** The grid's colours: the theme's tokens, the checkerboard as the viewport's preference. */
-function readColours(element: Element, checker: "theme" | { a: number; b: number }): GridColours {
+export function readColours(
+    element: Element,
+    checker: "theme" | { a: number; b: number },
+): GridColours {
     const style = getComputedStyle(element);
     const token = (name: string) => style.getPropertyValue(name).trim();
     return {

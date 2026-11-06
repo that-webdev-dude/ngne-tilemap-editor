@@ -18,6 +18,21 @@ export {
     takenExportNames,
 } from "./create";
 export type { CreateMapOptions, CreateProjectOptions } from "./create";
+export {
+    DEFAULT_FRAME_MS,
+    MAX_FRAME_MS,
+    MIN_FRAME_MS,
+    animationFrameAt,
+    animationProblem,
+    cloneFrames,
+    deleteFrames,
+    framesEqual,
+    insertFrames,
+    isFrameMs,
+    moveFrames,
+    nudgeFrames,
+    setFrameDurations,
+} from "./animation";
 export { idKey, isId, randomId, sequentialIds } from "./ids";
 export type { IdGenerator } from "./ids";
 export { INVARIANTS, InvariantError, assertInvariants } from "./invariants";
