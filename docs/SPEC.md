@@ -342,6 +342,11 @@ outside neighbours, corrections off, so only the border has to match.
 
 ## 6. Tilesets
 
+One tileset file operation (Import Tileset, Update Tileset from Source) runs at a time: while it
+runs, file drops, those two commands and the tileset dialogs (Edit Collision, Edit Animation,
+Tileset Properties) are unavailable, and an operation given up after it started is reported by a
+toast.
+
 ### 6.1 Import
 
 File → Import Tileset… or a file dropped on the Tilesets panel; a `.ngsprite` dropped anywhere

@@ -4,8 +4,8 @@ import type { CollisionEdit } from "../../../core/tileset";
 import { commandDialogs } from "../../dialogs/dialogRequests";
 import { sessionStore } from "../../state/session";
 import { currentTileset, historyIdle, runTilesetCommand } from "../edit/tilesetEdit";
-import { gridLayout, shownTile, tileIndex } from "../panel/tileGrid";
-import { selectionRect, tilesetPanelStore } from "../panel/tilesetPanel";
+import { focusTile, selectedTiles } from "../panel/tilesetPanel";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 
 // Tileset → Edit Collision… (SPEC §6.4, DESIGN §9; TE-029): the Collision Editor opens on the
 // tiles selected in the Tilesets panel and shows the shapes of the tile the selection ends on.
@@ -26,41 +26,24 @@ export interface CollisionEditorRequest {
     answer(values: null): void;
 }
 
-/** The tiles selected in the Tilesets panel for `tileset`, shown ones only, in display order. */
-export function selectedTiles(tileset: Tileset): Tile[] {
-    const state = tilesetPanelStore.getState();
-    const rect = selectionRect(tileset, state);
-    if (!rect) return [];
-    const layout = gridLayout(tileset, 1);
-    const tiles: Tile[] = [];
-    for (let row = rect.row; row < rect.row + rect.rows; row++) {
-        for (let column = rect.column; column < rect.column + rect.columns; column++) {
-            const tile = shownTile(tileset, layout, { column, row }, state.filter);
-            if (tile) tiles.push(tile);
-        }
-    }
-    return tiles;
-}
-
-/** The selected tile the editor shows: the one the selection ends on, else the first. */
-function focusTile(tileset: Tileset, tiles: readonly Tile[]): Tile | null {
-    const state = tilesetPanelStore.getState();
-    const selection = state.selections[tileset.id];
-    const layout = gridLayout(tileset, 1);
-    const focus = selection ? tileset.tiles[tileIndex(layout, selection.focus)] : undefined;
-    return (focus && tiles.includes(focus) ? focus : tiles[0]) ?? null;
-}
-
-/** Whether Edit Collision… can open now: a tile is selected and no stroke is under way. */
+/**
+ * Whether Edit Collision… can open now: a tile is selected, no stroke is under way and no
+ * tileset file operation is in progress.
+ */
 export function canEditCollision(): boolean {
     const tileset = currentTileset();
-    return tileset !== null && historyIdle() && selectedTiles(tileset).length > 0;
+    return (
+        tileset !== null &&
+        historyIdle() &&
+        !tilesetWorkflowBusy() &&
+        selectedTiles(tileset).length > 0
+    );
 }
 
 /** Opens the Collision Editor on the selected tiles; resolves when it closes. */
 export async function editCollision(): Promise<boolean> {
     const tileset = currentTileset();
-    if (!tileset || !historyIdle()) return false;
+    if (!tileset || !historyIdle() || tilesetWorkflowBusy()) return false;
     const tiles = selectedTiles(tileset);
     const shown = focusTile(tileset, tiles);
     if (!shown) return false;

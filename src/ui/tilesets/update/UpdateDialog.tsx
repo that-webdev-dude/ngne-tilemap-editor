@@ -15,6 +15,8 @@ import { Button } from "../../primitives/Button";
 import { Dialog } from "../../primitives/Dialog";
 import { Popover } from "../../primitives/Popover";
 import { Select } from "../../primitives/Select";
+import { rowStatusText } from "./rowText";
+import { sheetBacking, sheetLayout } from "./sheetBacking";
 import "./update.css";
 
 // Update Tileset from Source (DESIGN §9; SPEC §6.3; TE-028), a large dialog: the summary line,
@@ -25,14 +27,6 @@ import "./update.css";
 
 /** Side of a tile in the pictures of the dialog, in CSS pixels. */
 const PICTURE = 32;
-/** Columns of the source grid of Replace with…, at least. */
-const SHEET_COLUMNS = 12;
-/**
- * Rows of that grid, at most: more tiles take more columns, so the canvas stays within
- * Chrome's 32,767 px a side at a device pixel ratio up to 2 (400 × 33 × 2 = 26,400).
- */
-const SHEET_ROWS = 400;
-
 type ChoiceValue = "keep" | "delete" | "replace" | `candidate:${number}`;
 
 function valueOf(choice: RowChoice): ChoiceValue {
@@ -64,8 +58,8 @@ function EntryPicture({ source, entry }: { source: SourceTiles; entry: number })
 }
 
 /**
- * The source's tiles on one canvas, `SHEET_COLUMNS` a row, for Replace with…: a click picks
- * one; the arrow keys move the outlined tile and Enter picks it.
+ * The source's tiles on one canvas, in the grid of `sheetLayout`, for Replace with…: a click
+ * picks one; the arrow keys move the outlined tile and Enter picks it.
  */
 function SourceSheet({
     source,
@@ -78,20 +72,20 @@ function SourceSheet({
 }) {
     const canvas = useRef<HTMLCanvasElement>(null);
     const count = source.entries.length;
-    const columns = Math.min(count, Math.max(SHEET_COLUMNS, Math.ceil(count / SHEET_ROWS)));
-    const rows = Math.ceil(count / columns);
     const cell = pictureSize(source);
-    const pitchX = cell.width + 1;
-    const pitchY = cell.height + 1;
+    const layout = sheetLayout(count, cell.width, cell.height);
+    const { columns, pitchX, pitchY } = layout;
     const [focus, setFocus] = useState(chosen ?? 0);
 
     useEffect(() => {
         const element = canvas.current;
         const context = element?.getContext("2d");
         if (!element || !context) return;
-        const dpr = window.devicePixelRatio || 1;
-        element.width = Math.round((columns * pitchX + 1) * dpr);
-        element.height = Math.round((rows * pitchY + 1) * dpr);
+        // The backing store stays within the canvas limits; the CSS size does not follow it.
+        const backing = sheetBacking(layout.width, layout.height, window.devicePixelRatio || 1);
+        const scale = backing.scale;
+        element.width = backing.width;
+        element.height = backing.height;
         context.imageSmoothingEnabled = false;
         const tile = document.createElement("canvas");
         tile.width = source.tileWidth;
@@ -110,9 +104,9 @@ function SourceSheet({
             );
             const x = 1 + (index % columns) * pitchX;
             const y = 1 + Math.floor(index / columns) * pitchY;
-            context.drawImage(tile, x * dpr, y * dpr, cell.width * dpr, cell.height * dpr);
+            context.drawImage(tile, x * scale, y * scale, cell.width * scale, cell.height * scale);
         });
-    }, [source, columns, rows, pitchX, pitchY, cell.width, cell.height]);
+    }, [source, columns, pitchX, pitchY, cell.width, cell.height, layout.width, layout.height]);
 
     const entryAt = (event: MouseEvent<HTMLCanvasElement>): number | null => {
         const box = event.currentTarget.getBoundingClientRect();
@@ -157,7 +151,7 @@ function SourceSheet({
             <canvas
                 ref={canvas}
                 className="update-sheet__canvas"
-                style={{ width: columns * pitchX + 1, height: rows * pitchY + 1 }}
+                style={{ width: layout.width, height: layout.height }}
                 onClick={(event) => {
                     const entry = entryAt(event);
                     if (entry !== null) onPick(entry);
@@ -251,10 +245,7 @@ function Row({ session, row }: { session: UpdateSession; row: UpdateRow }) {
             session.choose(row.tileId, { kind: value as "keep" | "delete" });
         }
     };
-    const status =
-        row.status === "ambiguous"
-            ? `Ambiguous: ${row.candidates.length} source tiles match`
-            : "Missing from the source";
+    const status = rowStatusText(row);
     return (
         <li className="update-dialog__row" data-update-row={row.tileId}>
             <PixelCanvas

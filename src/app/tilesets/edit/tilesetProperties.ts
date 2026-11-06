@@ -3,6 +3,7 @@ import { tilesetFieldProblems, tilesetPropertiesCommand } from "../../../core/ti
 import type { TilesetFields } from "../../../core/tileset";
 import { commandDialogs } from "../../dialogs/dialogRequests";
 import { sessionStore } from "../../state/session";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 import { currentTileset, historyIdle, runTilesetCommand } from "./tilesetEdit";
 
 // Tileset → Tileset Properties… (DESIGN §9; TE-026): name, export name, class and tile offset
@@ -33,7 +34,7 @@ export interface TilesetPropertiesRequest {
 /** Opens the dialog on the shown tileset and applies its answer. Resolves true on a change. */
 export async function editTilesetProperties(): Promise<boolean> {
     const tileset = currentTileset();
-    if (!tileset) return false;
+    if (!tileset || tilesetWorkflowBusy()) return false;
     const { id, name, exportName, offsetX, offsetY, source } = tileset;
     const values = await commandDialogs.open<TilesetFields>((answer): TilesetPropertiesRequest => ({
         kind: "tileset-properties",

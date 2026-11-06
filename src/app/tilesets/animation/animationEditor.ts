@@ -6,11 +6,10 @@ import { animationCommand } from "../../../core/tileset";
 import type { AnimationEdit } from "../../../core/tileset";
 import { commandDialogs } from "../../dialogs/dialogRequests";
 import { sessionStore } from "../../state/session";
-import { selectedTiles } from "../collision/collisionEditor";
 import { currentTileset, historyIdle, runTilesetCommand } from "../edit/tilesetEdit";
-import { gridLayout, tileIndex } from "../panel/tileGrid";
-import { selectionRect, tilesetPanelStore } from "../panel/tilesetPanel";
+import { focusTile, selectedTiles, selectionRect, tilesetPanelStore } from "../panel/tilesetPanel";
 import type { GridRect } from "../panel/tileGrid";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 
 // Tileset → Edit Animation… (SPEC §6.4, DESIGN §9; TE-030): the Animation Editor opens on the
 // tile the Tilesets panel's selection ends on (Tiled's current tile) and edits that tile's frame
@@ -51,27 +50,25 @@ export function setFrameDuration(ms: number): void {
         frameDurationStore.setState({ ms });
 }
 
-/** The selected tile the editor edits: the one the selection ends on, else the first shown. */
-function focusTile(tileset: Tileset): Tile | null {
-    const tiles = selectedTiles(tileset);
-    const state = tilesetPanelStore.getState();
-    const selection = state.selections[tileset.id];
-    const layout = gridLayout(tileset, 1);
-    const focus = selection ? tileset.tiles[tileIndex(layout, selection.focus)] : undefined;
-    return (focus && tiles.includes(focus) ? focus : tiles[0]) ?? null;
-}
-
-/** Whether Edit Animation… can open now: a tile is selected and no stroke is under way. */
+/**
+ * Whether Edit Animation… can open now: a tile is selected, no stroke is under way and no
+ * tileset file operation is in progress.
+ */
 export function canEditAnimation(): boolean {
     const tileset = currentTileset();
-    return tileset !== null && historyIdle() && focusTile(tileset) !== null;
+    return (
+        tileset !== null &&
+        historyIdle() &&
+        !tilesetWorkflowBusy() &&
+        focusTile(tileset, selectedTiles(tileset)) !== null
+    );
 }
 
 /** Opens the Animation Editor on the selected tile; resolves when it closes. */
 export async function editAnimation(): Promise<boolean> {
     const tileset = currentTileset();
-    if (!tileset || !historyIdle()) return false;
-    const tile = focusTile(tileset);
+    if (!tileset || !historyIdle() || tilesetWorkflowBusy()) return false;
+    const tile = focusTile(tileset, selectedTiles(tileset));
     if (!tile) return false;
     const selection = selectionRect(tileset, tilesetPanelStore.getState());
     await commandDialogs.open<null>((answer): AnimationEditorRequest => ({

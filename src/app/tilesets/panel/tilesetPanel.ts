@@ -1,12 +1,12 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
-import type { Project, Tileset } from "../../../core/model";
+import type { Project, Tile, Tileset } from "../../../core/model";
 import { sessionStore } from "../../state/session";
 import type { SessionState } from "../../state/session";
 import { toolState } from "../../tools/activeTool";
 import { setCurrentStamp } from "../../tools/stamp/currentStamp";
-import { gridLayout, selectionStamp, spanGridRect } from "./tileGrid";
+import { gridLayout, selectionStamp, shownTile, spanGridRect, tileIndex } from "./tileGrid";
 import type { GridPoint, GridRect, PanelZoom } from "./tileGrid";
 
 // The state of the Tilesets panel (SPEC §6.2, DESIGN §8.5), outside the project and not
@@ -80,6 +80,30 @@ export function selectionRect(tileset: Tileset, state: TilesetPanelState): GridR
         row: Math.min(row, layout.rows - 1),
     });
     return spanGridRect(clip(selection.anchor), clip(selection.focus));
+}
+
+/** The tiles selected for `tileset`, shown ones only, in display order. */
+export function selectedTiles(tileset: Tileset): Tile[] {
+    const state = tilesetPanelStore.getState();
+    const rect = selectionRect(tileset, state);
+    if (!rect) return [];
+    const layout = gridLayout(tileset, 1);
+    const tiles: Tile[] = [];
+    for (let row = rect.row; row < rect.row + rect.rows; row++) {
+        for (let column = rect.column; column < rect.column + rect.columns; column++) {
+            const tile = shownTile(tileset, layout, { column, row }, state.filter);
+            if (tile) tiles.push(tile);
+        }
+    }
+    return tiles;
+}
+
+/** The tile of `tiles` the selection ends on, else the first; null without any. */
+export function focusTile(tileset: Tileset, tiles: readonly Tile[]): Tile | null {
+    const selection = tilesetPanelStore.getState().selections[tileset.id];
+    const layout = gridLayout(tileset, 1);
+    const focus = selection ? tileset.tiles[tileIndex(layout, selection.focus)] : undefined;
+    return (focus && tiles.includes(focus) ? focus : tiles[0]) ?? null;
 }
 
 /** The panel operations, bound to a panel store and a session store. */

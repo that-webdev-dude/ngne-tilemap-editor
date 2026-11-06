@@ -20,8 +20,6 @@ export {
 export type { CreateMapOptions, CreateProjectOptions } from "./create";
 export {
     DEFAULT_FRAME_MS,
-    MAX_FRAME_MS,
-    MIN_FRAME_MS,
     animationFrameAt,
     animationProblem,
     cloneFrames,

@@ -10,6 +10,7 @@ import {
 } from "../model";
 import type { Project, ProjectMap, Tileset } from "../model";
 import { TilesetEditError } from "./errors";
+import { tilesetOf } from "./lookup";
 
 // The tileset commands of SPEC §6.2: rename, export name, class, tile offset, move left or right
 // in the list, delete. Each `do` checks its values against the project as it is then and throws
@@ -57,12 +58,6 @@ const OVERHEAD_BYTES = 256;
  */
 function touched(parts: Partial<Touched> = {}): Touched {
     return { mapId: null, layerIds: [], cellRects: [], tilesetIds: [], structure: false, ...parts };
-}
-
-function tilesetOf(project: Project, id: string): Tileset {
-    const tileset = project.tilesets.find((each) => each.id === id);
-    if (!tileset) throw new TilesetEditError("not-found", `No tileset has the ID ${id}.`);
-    return tileset;
 }
 
 function quoted(text: string): string {

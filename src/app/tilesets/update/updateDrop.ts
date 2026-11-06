@@ -1,15 +1,15 @@
 import { OVERLAY_SELECTOR } from "../../keymap/environment";
-import { importingTileset } from "../import/importTileset";
 import type { PickedFile } from "../import/importSources";
 import { pickedFile } from "../import/pickTilesetFiles";
 import type { DropTarget } from "../import/tilesetDrop";
-import { updateTilesetFromFiles, updatingTileset } from "./updateFromSource";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
+import { updateTilesetFromFiles } from "./updateFromSource";
 
 // Files dropped on a tileset's tab in the Tilesets panel update that tileset from them (SPEC
 // §6.3: "drop works too"; TE-028); files dropped elsewhere on the panel are imported (TE-025).
 // The drop is installed on the panel's tab list, below the panel's own drop, and stops there
 // when it lands on a tab. As every file drop of the app, it does nothing while a menu or
-// dialog is open or an import or update is in progress.
+// dialog is open or a tileset file operation (an import or an update) is in progress.
 
 /** The attribute that names a tab's tileset (`ui/tilesets/TilesetsPanel.tsx`). */
 const TAB_SELECTOR = "[data-tileset-tab]";
@@ -41,7 +41,7 @@ export function installUpdateDrop(install: UpdateDropInstall): () => void {
         install.overlayOpen ?? (() => document.querySelector(OVERLAY_SELECTOR) !== null);
     const updateFiles =
         install.updateFiles ?? ((id, files) => void updateTilesetFromFiles(id, files));
-    const accepts = () => !overlayOpen() && !importingTileset() && !updatingTileset();
+    const accepts = () => !overlayOpen() && !tilesetWorkflowBusy();
 
     const onDragOver = (event: Event) => {
         const { dataTransfer } = event as DragLike;

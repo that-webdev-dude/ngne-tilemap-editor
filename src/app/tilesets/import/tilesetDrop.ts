@@ -1,5 +1,6 @@
 import { OVERLAY_SELECTOR } from "../../keymap/environment";
-import { importTilesetFiles, importingTileset } from "./importTileset";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
+import { importTilesetFiles } from "./importTileset";
 import type { PickedFile } from "./importSources";
 import { isSpriteName } from "./importSources";
 import { pickedFile } from "./pickTilesetFiles";
@@ -8,8 +9,9 @@ import { pickedFile } from "./pickTilesetFiles";
 // §6.1; TE-024); files dropped on the Tilesets panel open it for whatever they hold, a PNG, a
 // sprite or an atlas with its PNG (TE-025), and that drop does not reach the window's. A
 // `.ngtilemap` drop is TE-047's. Every file drag has its default prevented, so a dropped file
-// never replaces the app; a drop while a menu or dialog is open, or while an import is in
-// progress, does nothing (as the sprite editor's file drop, `app/file/install.ts`).
+// never replaces the app; a drop while a menu or dialog is open, or while a tileset file
+// operation (an import or an update) is in progress, does nothing (as the sprite editor's file
+// drop, `app/file/install.ts`).
 
 /** The part of `window` the drop listens on; tests pass an `EventTarget`. */
 export interface DropTarget {
@@ -48,7 +50,7 @@ export function installTilesetDrop(install: TilesetDropInstall = {}): () => void
         install.overlayOpen ?? (() => document.querySelector(OVERLAY_SELECTOR) !== null);
     const importFiles = install.importFiles ?? ((files) => void importTilesetFiles(files));
     const all = install.files === "all";
-    const accepts = () => !overlayOpen() && !importingTileset();
+    const accepts = () => !overlayOpen() && !tilesetWorkflowBusy();
 
     const onDragOver = (event: Event) => {
         const { dataTransfer } = event as DragLike;

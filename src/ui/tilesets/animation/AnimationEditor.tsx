@@ -1,6 +1,7 @@
 import { GripVertical, Trash2 } from "lucide-react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
+import { isTextField } from "../../../app/keymap/environment";
 import { usePreference } from "../../../app/preferences/preferences";
 import { useSession } from "../../../app/state/session";
 import {
@@ -71,13 +72,6 @@ interface Drag {
     payload: Payload;
     dragging: boolean;
 }
-
-const isTextTarget = (target: EventTarget) =>
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-        target.tagName === "TEXTAREA" ||
-        (target.tagName === "INPUT" &&
-            !["button", "checkbox"].includes((target as HTMLInputElement).type)));
 
 function defaultScale(tileset: Tileset): PreviewScale {
     const side = Math.max(tileset.tileWidth, tileset.tileHeight);
@@ -266,7 +260,7 @@ function AnimationEditorBody({
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (isTextTarget(event.target)) return;
+        if (event.target instanceof HTMLElement && isTextField(event.target)) return;
         const key = event.key;
         const ctrl = event.ctrlKey || event.metaKey;
         if (ctrl && !event.altKey && (key === "z" || key === "Z" || key === "y" || key === "Y")) {

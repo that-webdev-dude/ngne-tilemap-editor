@@ -8,6 +8,7 @@ import { toolPipeline } from "../../tools/appPipeline";
 import { WorkerError } from "../../worker/protocol";
 import type { WorkerClient } from "../../worker/client";
 import type { TilesetImportInput } from "../../worker/tasks/tileset.task";
+import { reason } from "../errorReason";
 import {
     changedForm,
     gridKey,
@@ -94,10 +95,6 @@ export function canImportState(state: ImportSessionState): boolean {
         spriteResult.key === gridKey(state.form) &&
         spriteResult.imported !== null
     );
-}
-
-function reason(error: unknown): string {
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
 }
 
 const cancelled = (error: unknown) => error instanceof WorkerError && error.code === "cancelled";

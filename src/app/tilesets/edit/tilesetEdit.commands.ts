@@ -1,5 +1,6 @@
 import { appCommands } from "../../commands/appCommands";
 import type { CommandSpec } from "../../commands/types";
+import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 import {
     canMoveCurrentTileset,
     currentTileset,
@@ -24,7 +25,7 @@ export const commands: CommandSpec[] = [
     {
         id: "tileset.properties",
         title: "Tileset Properties…",
-        enabled: editable,
+        enabled: () => editable() && !tilesetWorkflowBusy(),
         contextMenus: [{ menu: TILESET_MENU, order: 100 }],
         run: async () => void (await editTilesetProperties()),
     },

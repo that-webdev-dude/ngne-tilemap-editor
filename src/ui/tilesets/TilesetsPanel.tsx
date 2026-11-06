@@ -2,7 +2,10 @@ import { Ellipsis, Plus } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
+import { useStore } from "zustand";
+import { useShallow } from "zustand/react/shallow";
 import { usePreference } from "../../app/preferences/preferences";
+import { historySteps } from "../../app/state/historySteps";
 import { useSession } from "../../app/state/session";
 import {
     TILESET_MENU,
@@ -40,6 +43,7 @@ import { ContextMenu, Icon, IconButton, Select } from "../primitives";
 import { useTheme } from "../theme/theme";
 import { paintTileGrid } from "./paintTileGrid";
 import type { GridColours } from "./paintTileGrid";
+import { useDevicePixelRatio } from "./useDevicePixelRatio";
 import "./tilesetsPanel.css";
 
 // The Tilesets panel (SPEC §6.2, DESIGN §8.5): tabs per tileset with New Tileset (+), the class
@@ -246,15 +250,20 @@ function selectionEnd(tileset: Tileset): GridPoint | null {
 }
 
 function TileGrid({ tileset }: { tileset: Tileset }) {
-    const revision = useSession((state) => state.revision);
-    const panel = useTilesetPanel((state) => state);
-    const { zoom, filter } = panel;
+    // Only what the grid shows: not the hovered tile, and not the session's `revision`, which
+    // also rises with every pan and zoom of the map. `step` rises with each history step.
+    const step = useStore(historySteps, (state) => state.step);
+    const zoom = useTilesetPanel((state) => state.zoom);
+    const filter = useTilesetPanel((state) => state.filter);
+    const selection = useTilesetPanel(useShallow((state) => selectionRect(tileset, state)));
+    const dpr = useDevicePixelRatio();
     const theme = useTheme();
     const checkerboard = usePreference("checkerboard");
     const commands = useCommands();
     const scroller = useRef<HTMLDivElement>(null);
     const sizer = useRef<HTMLDivElement>(null);
     const canvas = useRef<HTMLCanvasElement>(null);
+    const colours = useRef<{ key: string; value: GridColours } | null>(null);
     const drag = useRef<{ pointerId: number } | null>(null);
     const [view, setView] = useState({ x: 0, y: 0, width: 0, height: 0 });
 
@@ -267,7 +276,6 @@ function TileGrid({ tileset }: { tileset: Tileset }) {
     const describedBy = useId();
 
     const layout = gridLayout(tileset, zoom);
-    const selection = selectionRect(tileset, panel);
     const entries = contextMenuEntries(TILE_MENU, commands);
 
     // The part of the grid in view follows scrolling and the panel's size.
@@ -302,24 +310,41 @@ function TileGrid({ tileset }: { tileset: Tileset }) {
     const shownWidth = Math.min(view.width, layout.width);
     const shownHeight = Math.min(view.height, layout.height);
 
+    // Repaints when something it shows changes. `step` stands for tile marks and tiles, which
+    // commands change in place; `theme` for the colour tokens, read once per theme and
+    // checkerboard, not per paint.
     useLayoutEffect(() => {
         const element = canvas.current;
         if (!element || shownWidth <= 0 || shownHeight <= 0) return;
+        const key = `${theme}|${JSON.stringify(checkerboard.colors)}`;
+        if (colours.current?.key !== key) {
+            colours.current = { key, value: readColours(element, checkerboard.colors) };
+        }
         paintTileGrid(element, {
             tileset,
-            layout,
+            layout: gridLayout(tileset, zoom),
             filter,
             selection,
             view: { x: view.x, y: view.y, width: shownWidth, height: shownHeight },
-            colours: readColours(element, checkerboard.colors),
+            colours: colours.current.value,
             checkerSize: checkerboard.size,
-            dpr: window.devicePixelRatio,
+            dpr,
             zoom,
         });
-    });
-    // `revision` and `theme` change what is painted without being read above.
-    void revision;
-    void theme;
+    }, [
+        tileset,
+        step,
+        zoom,
+        filter,
+        selection,
+        view.x,
+        view.y,
+        shownWidth,
+        shownHeight,
+        theme,
+        checkerboard,
+        dpr,
+    ]);
 
     /** Scrolls the grid so the tile at the selection's end is in view. */
     const reveal = () => {

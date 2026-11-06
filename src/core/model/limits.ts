@@ -37,6 +37,8 @@ export const MIN_POLYLINE_POINTS = 2;
 export const MAX_COLLISION_COORD = 4096;
 export const MAX_ANIMATION_FRAMES = 1024;
 export const MAX_ANIMATION_FRAMES_PER_TILESET = 65_536;
+/** The fewest and most milliseconds a frame shows (FORMAT §2.4). */
+export const MIN_FRAME_MS = 1;
 export const MAX_FRAME_MS = 65_535;
 
 export const MAX_TERRAIN_SETS = 256;

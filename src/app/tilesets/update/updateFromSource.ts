@@ -10,9 +10,11 @@ import type { WorkerClient } from "../../worker/client";
 // The task type, so that `run("tileset.updateSource")` is typed outside the worker's own glob.
 import type { UpdateTilesetInput } from "../../worker/tasks/tilesetUpdate.task";
 import { currentTileset, historyIdle } from "../edit/tilesetEdit";
+import { reason } from "../errorReason";
 import { readImportSource } from "../import/importSources";
 import type { PickedFile } from "../import/importSources";
 import { pickedFile } from "../import/pickTilesetFiles";
+import { runTilesetWorkflow, tilesetWorkflowBusy } from "../tilesetWorkflow";
 import { createUpdateSession } from "./updateSession";
 import type { UpdateSession } from "./updateSession";
 
@@ -22,8 +24,10 @@ import type { UpdateSession } from "./updateSession";
 // update applies at once, one history entry, and a toast gives the counts; otherwise the
 // dialog asks for a choice per ambiguous and missing tile, and its Apply makes the entry. A
 // browser's open picker cannot be given a file name, so the picker takes only files of the
-// source's kind and a toast names the recorded file as it opens. One update at a time: files
-// picked or dropped while one runs are ignored.
+// source's kind and a toast names the recorded file as it opens. An update runs as a tileset file
+// operation (`tilesetWorkflow.ts`): one at a time, with the drops, the file commands and the
+// tileset dialogs unavailable meanwhile. One given up after it started, because another dialog
+// is open when it needs its own, is reported by a toast; one the user cancels is not.
 
 export interface UpdateTilesetRequest {
     kind: "update-tileset";
@@ -57,15 +61,9 @@ export function summaryText(summary: UpdateSummary): string {
     ].join(", ");
 }
 
-let running = false;
-
-/** Whether an update is in progress (its files are read, or its dialog is open). */
+/** Whether a tileset file operation, an update or an import, is in progress. */
 export function updatingTileset(): boolean {
-    return running;
-}
-
-function reason(error: unknown): string {
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
+    return tilesetWorkflowBusy();
 }
 
 /** The files of the source as the update reads them, or why there are none. */
@@ -86,15 +84,14 @@ async function sourceFiles(files: readonly PickedFile[]): Promise<UpdateSourceFi
 
 /**
  * Updates tileset `tilesetId` from `files`. Resolves true once the update is applied; false
- * when it is cancelled, changes nothing, is refused (reported by a toast), or another update
- * is in progress.
+ * when it is cancelled, changes nothing, is refused (reported by a toast), or a tileset file
+ * operation is in progress.
  */
 export async function updateTilesetFromFiles(
     tilesetId: string,
     files: readonly PickedFile[],
     worker: Pick<WorkerClient, "run"> = backgroundWorker,
 ): Promise<boolean> {
-    if (running) return false;
     const project = () => sessionStore.getState().session.project;
     const tileset = project().tilesets.find((each) => each.id === tilesetId);
     if (!tileset) return false;
@@ -103,8 +100,7 @@ export async function updateTilesetFromFiles(
         notices.error(`Could not update tileset “${name}”. ${message}`);
         return false;
     };
-    running = true;
-    try {
+    return runTilesetWorkflow(async () => {
         const read = await sourceFiles(files);
         if (typeof read === "string") return fail(read);
         const input: UpdateTilesetInput = {
@@ -163,6 +159,9 @@ export async function updateTilesetFromFiles(
             { tilesetId, tilesetName: name, source, match },
             { project, execute, busy },
         );
+        if (commandDialogs.store.getState().request !== null) {
+            return fail("Another dialog is open.");
+        }
         const answer = await commandDialogs.open<true>((answer): UpdateTilesetRequest => ({
             kind: "update-tileset",
             session,
@@ -175,9 +174,7 @@ export async function updateTilesetFromFiles(
         }
         notices.info(`Updated tileset “${name}”.`);
         return true;
-    } finally {
-        running = false;
-    }
+    });
 }
 
 /** Asks for the source files of a source of `kind`; resolves null when the user cancels. */
@@ -208,13 +205,18 @@ export function pickUpdateFiles(
 /** Whether the shown tileset can be updated now: one is shown, of a kind TE-028 reads. */
 export function canUpdateCurrentTileset(): boolean {
     const tileset = currentTileset();
-    return tileset !== null && tileset.source.kind !== "collection" && historyIdle() && !running;
+    return (
+        tileset !== null &&
+        tileset.source.kind !== "collection" &&
+        historyIdle() &&
+        !tilesetWorkflowBusy()
+    );
 }
 
 /** Tileset → Update Tileset from Source…: asks for the source, then updates the shown tileset. */
 export async function updateCurrentTileset(): Promise<boolean> {
     const tileset = currentTileset();
-    if (!tileset || running) return false;
+    if (!tileset || tilesetWorkflowBusy()) return false;
     const { kind, fileName } = tileset.source;
     if (kind === "collection") return false;
     notices.info(`Pick “${fileName}”, the source of tileset “${tileset.name}”.`);

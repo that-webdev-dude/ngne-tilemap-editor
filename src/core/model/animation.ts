@@ -1,4 +1,9 @@
-import { MAX_ANIMATION_FRAMES, MAX_ANIMATION_FRAMES_PER_TILESET } from "./limits";
+import {
+    MAX_ANIMATION_FRAMES,
+    MAX_ANIMATION_FRAMES_PER_TILESET,
+    MAX_FRAME_MS,
+    MIN_FRAME_MS,
+} from "./limits";
 import type { AnimationFrame, Tileset } from "./types";
 
 // Tile animations (FORMAT §2.4, SPEC §6.4): a tile is animated when its frame list is not
@@ -6,9 +11,6 @@ import type { AnimationFrame, Tileset } from "./types";
 // edits of the Animation Editor (TE-030) are pure functions here, so the editor, its commands
 // and their tests share them; `animationFrameAt` is the looping playback its preview shows.
 
-/** The fewest and most milliseconds a frame shows (FORMAT §2.4). */
-export const MIN_FRAME_MS = 1;
-export const MAX_FRAME_MS = 65_535;
 /** The duration of a new frame until the editor is told another (Tiled's default). */
 export const DEFAULT_FRAME_MS = 100;
 

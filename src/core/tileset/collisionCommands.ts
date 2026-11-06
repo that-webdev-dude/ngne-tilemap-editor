@@ -2,6 +2,7 @@ import type { Command, Touched } from "../history";
 import { cloneShapes, collisionProblem, shapesEqual } from "../model";
 import type { Project, Shape, Tile, Tileset } from "../model";
 import { TilesetEditError } from "./errors";
+import { tilesetOf } from "./lookup";
 
 // The collision editor's command (SPEC §6.4; TE-029): the collision list of one or more tiles
 // of a tileset set to one list, one history entry. Every edit of the editor (a shape added,
@@ -40,12 +41,6 @@ function shapeBytes(shapes: readonly Shape[]): number {
 
 function nothingTouched(): Touched {
     return { mapId: null, layerIds: [], cellRects: [], tilesetIds: [], structure: false };
-}
-
-function tilesetOf(project: Project, id: string): Tileset {
-    const tileset = project.tilesets.find((each) => each.id === id);
-    if (!tileset) throw new TilesetEditError("not-found", `No tileset has the ID ${id}.`);
-    return tileset;
 }
 
 function tilesOf(tileset: Tileset, tileIds: readonly number[]): Tile[] {

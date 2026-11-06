@@ -2,6 +2,7 @@ import type { Command, Touched } from "../history";
 import { animationProblem, cloneFrames, framesEqual } from "../model";
 import type { AnimationFrame, Project, Tile, Tileset } from "../model";
 import { TilesetEditError } from "./errors";
+import { tilesetOf } from "./lookup";
 
 // The animation editor's command (SPEC §6.4; TE-030): the frame list of one tile of a tileset
 // set to a new list, one history entry, as Tiled's `ChangeTileAnimation`. Every edit of the
@@ -29,12 +30,6 @@ const FRAME_BYTES = 16;
 
 function nothingTouched(): Touched {
     return { mapId: null, layerIds: [], cellRects: [], tilesetIds: [], structure: false };
-}
-
-function tilesetOf(project: Project, id: string): Tileset {
-    const tileset = project.tilesets.find((each) => each.id === id);
-    if (!tileset) throw new TilesetEditError("not-found", `No tileset has the ID ${id}.`);
-    return tileset;
 }
 
 function tileOf(tileset: Tileset, tileId: number): Tile {

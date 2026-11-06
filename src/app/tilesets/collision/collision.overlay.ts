@@ -11,6 +11,7 @@ import type { Project, ProjectMap, Shape, Tileset } from "../../../core/model";
 import { layerShift } from "../../../engine/viewport/geometry";
 import { cssColour } from "../../overlay/draw";
 import type { OverlayFrame, OverlayLayer } from "../../overlay/types";
+import { historySteps } from "../../state/historySteps";
 import { sessionStore } from "../../state/session";
 import { viewPreferences } from "../../view/viewPreferences";
 
@@ -23,7 +24,7 @@ import { viewPreferences } from "../../view/viewPreferences";
 /** Above the cell grid (300), below the selection's ants and the tool previews. */
 export const COLLISION_ORDER = 400;
 
-interface Collidable {
+export interface Collidable {
     tileset: Tileset;
     /** Collision lists by tile ID; only tiles that have shapes. */
     shapes: Map<number, readonly Shape[]>;
@@ -31,15 +32,26 @@ interface Collidable {
     reach: number;
 }
 
-/** The index of the last project and revision drawn: pans and zooms reuse it. */
-let cached: { project: Project; revision: number; sets: Map<number, Collidable> } | null = null;
+/**
+ * The index of the last project and history step drawn: pans and zooms (`touch`) reuse it.
+ * Collision commands change tiles in place, so only a step of the history, or a new project,
+ * can change the index.
+ */
+let cached: {
+    project: Project;
+    step: number;
+    sets: Map<number, Collidable>;
+} | null = null;
 
-/** The tilesets of the session's project with collision, by slot; rebuilt when it changed. */
-function currentCollidables(): Map<number, Collidable> {
-    const { session, revision } = sessionStore.getState();
-    const { project } = session;
-    if (cached?.project !== project || cached.revision !== revision) {
-        cached = { project, revision, sets: collidables(project) };
+/**
+ * The tilesets of the session's project with collision, by slot; rebuilt after a step of the
+ * history or when the project was replaced, not on a view change.
+ */
+export function currentCollidables(): Map<number, Collidable> {
+    const { project } = sessionStore.getState().session;
+    const { step } = historySteps.getState();
+    if (cached?.project !== project || cached.step !== step) {
+        cached = { project, step, sets: collidables(project) };
     }
     return cached.sets;
 }

@@ -119,8 +119,16 @@ const workerFolder = [0, 1, 2, 3, 4, 5, 6, 7].map((depth) => ({
 }));
 
 export default tseslint.config(
+    // Hidden directories hold local tooling state, never source to lint.
     {
-        ignores: ["dist", "node_modules", "test-results", "playwright-report", "coverage"],
+        ignores: [
+            "dist",
+            "node_modules",
+            "test-results",
+            "playwright-report",
+            "coverage",
+            "**/.*/",
+        ],
     },
     js.configs.recommended,
     tseslint.configs.recommended,

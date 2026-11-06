@@ -7,6 +7,7 @@ import {
     readSpriteOutline,
 } from "../../../core/tileset";
 import type { AtlasOutline, SpriteDoc } from "../../../core/tileset";
+import { reason } from "../errorReason";
 
 // The files of one tileset import (SPEC §6.1, SUITE §7), read and recognised by their names: a
 // grid PNG, a sprite project, or an atlas (its `.atlas.json` and its PNG, picked or dropped
@@ -63,10 +64,6 @@ export function isTilesetSourceName(name: string): boolean {
 }
 
 let lastKey = 0;
-
-function reason(error: unknown): string {
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
-}
 
 /** The atlas's PNG among `files`: the one its `image` names, else the only PNG. */
 function atlasPng(json: unknown, files: readonly PickedFile[]): PickedFile | null {

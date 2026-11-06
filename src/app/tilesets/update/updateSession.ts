@@ -3,6 +3,7 @@ import type { StoreApi } from "zustand/vanilla";
 import type { Command } from "../../../core/history";
 import type { PixelBuffer, Project, TileSourceKey } from "../../../core/model";
 import { tileBytes, tileUsage, updateFromSourceCommand } from "../../../core/tileset";
+import { reason } from "../errorReason";
 import type {
     MapUsage,
     SourceTiles,
@@ -148,10 +149,6 @@ export function choicesComplete(choices: ReadonlyMap<number, RowChoice>): boolea
         }
     }
     return true;
-}
-
-function reason(error: unknown): string {
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
 }
 
 export function createUpdateSession(

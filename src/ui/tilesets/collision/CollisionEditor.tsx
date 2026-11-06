@@ -12,6 +12,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
+import { isTextField } from "../../../app/keymap/environment";
 import {
     HANDLE_REACH,
     HANDLE_SIZE,
@@ -122,13 +123,6 @@ const DRAG_EDITS: Record<Drag["kind"], CollisionEdit> = {
     resize: "resize",
     vertex: "points",
 };
-
-const isTextTarget = (target: EventTarget) =>
-    target instanceof HTMLElement &&
-    (target.isContentEditable ||
-        target.tagName === "TEXTAREA" ||
-        (target.tagName === "INPUT" &&
-            !["button", "checkbox"].includes((target as HTMLInputElement).type)));
 
 export function CollisionEditor({ request }: { request: CollisionEditorRequest }) {
     useSession((state) => state.revision);
@@ -442,7 +436,7 @@ function CollisionEditorBody({
     };
 
     const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-        if (isTextTarget(event.target)) return;
+        if (event.target instanceof HTMLElement && isTextField(event.target)) return;
         const key = event.key;
         const ctrl = event.ctrlKey || event.metaKey;
         if (ctrl && !event.altKey && (key === "z" || key === "Z" || key === "y" || key === "Y")) {
