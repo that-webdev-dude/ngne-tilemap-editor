@@ -1,0 +1,189 @@
+/* The Layers dock section (DESIGN §8.2): 28 px rows of disclosure, type icon, name, opacity
+   and the visibility and lock toggles, indented 12 px per group level. */
+.layers-panel {
+    display: flex;
+    flex-direction: column;
+    margin: 0 calc(-1 * var(--space-12));
+}
+
+.layers-panel__empty {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.layers-panel__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+    height: var(--row-height);
+    padding-right: var(--space-4);
+    color: var(--text);
+    cursor: default;
+    user-select: none;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.layers-panel__row:hover {
+    background: var(--bg-raised);
+}
+
+/* The active layer: --bg-active with a 2 px accent bar on its left. */
+.layers-panel__row[aria-selected="true"] {
+    background: var(--bg-active);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.layers-panel__row:focus-visible {
+    outline: var(--focus-ring-width) solid var(--accent);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+/* A hidden or locked group above the layer: the row's text is muted. */
+.layers-panel__row[data-muted] {
+    color: var(--text-muted);
+}
+
+.layers-panel[data-dragging] .layers-panel__row {
+    cursor: grabbing;
+}
+
+.layers-panel__row[data-dragged] {
+    opacity: 0.6;
+}
+
+/* Where a dragged row would go: a 2 px accent line above or below a row, or a group outlined. */
+.layers-panel__row[data-drop="above"]::before,
+.layers-panel__row[data-drop="below"]::after {
+    position: absolute;
+    right: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    content: "";
+    pointer-events: none;
+}
+
+.layers-panel__row[data-drop="above"]::before {
+    top: -1px;
+}
+
+.layers-panel__row[data-drop="below"]::after {
+    bottom: -1px;
+}
+
+.layers-panel__row[data-drop="into"] {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+}
+
+.layers-panel__disclosure,
+.layers-panel__type {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    width: 16px;
+    height: 16px;
+}
+
+.layers-panel__disclosure[data-layer-disclosure] {
+    cursor: pointer;
+}
+
+.layers-panel__type {
+    color: var(--text-muted);
+}
+
+.layers-panel__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.layers-panel__rename {
+    flex: 1;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--accent);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+/* Opacity shows on hover, focus and whenever it is below 255. */
+.layers-panel__opacity {
+    flex: none;
+    min-width: 28px;
+    height: var(--control-height);
+    padding: 0 var(--space-4);
+    border: 0;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text-muted);
+    font: inherit;
+    font-variant-numeric: tabular-nums;
+    visibility: hidden;
+    cursor: pointer;
+}
+
+.layers-panel__opacity:hover {
+    background: var(--bg-active);
+    color: var(--text);
+}
+
+.layers-panel__row:hover .layers-panel__opacity,
+.layers-panel__row:focus-within .layers-panel__opacity,
+.layers-panel__opacity[data-partial] {
+    visibility: visible;
+}
+
+/* Eye and lock as the sprite editor's timeline: no pressed background. */
+.layers-panel__toggle.ui-toggle[aria-pressed="true"] {
+    background: transparent;
+}
+
+.layers-header {
+    display: inline-flex;
+    align-items: center;
+}
+
+.layers-header__variants {
+    width: 16px;
+}
+
+/* The layer properties popover: labels in the first column, fields in the second. */
+.layer-properties__form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--space-12);
+    align-items: center;
+    width: 248px;
+}
+
+.layer-properties__text {
+    width: 100%;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+}
+
+.layer-properties__wide {
+    grid-column: 1 / -1;
+}
+
+.layer-properties__pair {
+    display: grid;
+    grid-column: 1 / -1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-8);
+}

@@ -262,6 +262,7 @@ rows.
 | `src/ui/tabs/MapTabs.tsx` | `src/ui/tabs/DocumentTabs.tsx` | adapt | `ea5c91d` | | Tabs of the open maps (`app/tabs/tabs.ts`); the project's name and unsaved marker before the first tab instead of a marker per tab; close without asking; overflow menu "All maps" |
 | `src/ui/tabs/tabs.css` | `src/ui/tabs/tabs.css` | adapt | `ea5c91d` | | Class names `map-tabs`, `map-tab`; the project's name before the tabs in `--text-muted` |
 | `src/ui/theme/theme.ts` | `src/ui/theme/theme.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.theme` (SUITE §7) |
+| `src/ui/timeline/useClosingPopover.ts` | `src/ui/timeline/useClosingPopover.ts` | verbatim | `ea5c91d` | `962b1699961d55512e93b8a740c3f8305ab944c78b8fcd23753e78a6f287f20d` | |
 | `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
 | `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |
 | `src/ui/toast/toast.ts` | `src/ui/toast/toast.ts` | verbatim | `ea5c91d` | `35cdddcdfb41732710dea2c026a5c22c443c2b16fcf6a3fdb5701b594cce70e7` | |

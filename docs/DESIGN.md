@@ -274,6 +274,20 @@ text in `--text-muted`. Drag reorders and moves into groups (drop on a group row
 third). Header: New Tile Layer (+) with a variant menu for the other kinds, Delete. The tree is
 one tab stop; ↑ ↓ move, ← → collapse/expand, Enter makes active, F2 renames.
 
+As Tiled (`LayerModel::dropMimeData`, `QTreeView` at `v1.12.2`): a layer dropped on a group
+goes to the bottom of its children; dropped below an expanded group's row, to the top of its
+children (the row shown below it); dropped below the last row, to the bottom of the map. ← on
+a row that is no expanded group goes to its group's row, → on an expanded group to its top
+child; Home and End go to the first and last row. A rename may leave the name blank (Tiled's
+layer names may be empty).
+
+As the sprite editor's timeline: Escape keeps the old name; the popover applies on Enter, Escape
+or a press outside, and Escape in a number field first drops what the field has not taken; a
+press on a row's toggle or opacity focuses the row. Leaving the tree keeps no row: the tab stop
+is the active layer's row again. F2 renames the focused row's layer; Rename Layer and Layer
+Properties… of the Layer menu act on the active layer and are enabled while the section is
+expanded, where the field and the popover show.
+
 ### 8.3 Properties (dock)
 
 Two parts: built-in fields of the selection (name, class, and the kind's own fields), then
