@@ -915,6 +915,7 @@ reference map:
 | Open of the reference project to first frame | ≤ 3 s | — |
 | Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
 | Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
+| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | TE-037: 9.8 / 10.0 ms (overlay 0.2 / 0.2 ms), 0 / 0 frames; names shown at zoom 1.25: 4.1 / 4.3 ms, 0 / 0 frames |
 
 TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. Raw data:
 `te-019-bucket-fill-intel-uhd.json` and `te-019-bucket-fill-rtx-4060.json` in
@@ -931,6 +932,14 @@ tileset of 1,024 tiles of 16 px used by the reference map, updated at once from 
 worker, apply) to the first frame after the new texture is uploaded, the maximum of 10 updates.
 Raw data: `te-028-update-intel-uhd.json` and `te-028-update-rtx-4060.json` in
 [evidence/](evidence/).
+
+Markers row: 2026-11-07, the machine, Chrome, power plan, panel and window of ENGINE §6. TE-013's
+pan of the reference map with a marker layer of 2,000 markers (rectangles, ellipses, points,
+polygons of 6 points, polylines of 4, all named) that stays in view through the pan; the overlay is
+redrawn in the same callback after the viewport's submit. The overlay copies each marker layer from
+a picture painted once per history step, zoom and colour, so its redraw takes 0.2 ms; the rest is
+the live tier's own frame (submit p95 9.6 / 9.9 ms). Raw data:
+`te-037-markers-pan-{threshold,names}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
 
 Stamp preview row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6, the map's
 overview built first. The task max is the longest gap of a message loop, as TE-015's, so one

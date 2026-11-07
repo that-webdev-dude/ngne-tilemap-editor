@@ -229,7 +229,10 @@ export function createOverlayController(
             const same =
                 next.ink === theme.ink &&
                 next.accent === theme.accent &&
-                next.danger === theme.danger;
+                next.danger === theme.danger &&
+                next.text === theme.text &&
+                next.panel === theme.panel &&
+                next.font === theme.font;
             if (same) return;
             theme = { ...next };
             requestRedraw();

@@ -209,6 +209,7 @@ describe("overlay layer registry", () => {
         expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([
             ["cell-grid", 300],
             ["collision-outlines", 400],
+            ["markers", 450],
             ["selection-ants", 500],
             ["capture-preview", 600],
             ["eraser-preview", 600],

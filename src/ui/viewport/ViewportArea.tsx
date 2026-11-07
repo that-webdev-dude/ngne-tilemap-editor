@@ -4,6 +4,7 @@ import { REGION_FOCUS_ATTRIBUTE } from "../../app/keymap/regions";
 import { notices } from "../../app/notices/notices";
 import { mountOverlay } from "../../app/overlay/mountOverlay";
 import type { MountedOverlay } from "../../app/overlay/mountOverlay";
+import { DEFAULT_OVERLAY_THEME } from "../../app/overlay/types";
 import type { OverlayTheme } from "../../app/overlay/types";
 import { preferences } from "../../app/preferences/preferences";
 import { sessionStore } from "../../app/state/session";
@@ -44,7 +45,15 @@ function themeColour(name: string): number {
 
 /** The overlay's colours of `theme` (DESIGN §4), read from its tokens on the page. */
 function overlayTheme(theme: Theme): OverlayTheme {
-    return { ink: INK[theme], accent: themeColour("--accent"), danger: themeColour("--danger") };
+    const style = getComputedStyle(document.documentElement);
+    return {
+        ink: INK[theme],
+        accent: themeColour("--accent"),
+        danger: themeColour("--danger"),
+        text: themeColour("--text"),
+        panel: themeColour("--bg-panel"),
+        font: style.getPropertyValue("--font-ui").trim() || DEFAULT_OVERLAY_THEME.font,
+    };
 }
 
 /** The canvas size in device pixels, as the browser lays the element out. */

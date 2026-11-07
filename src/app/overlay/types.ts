@@ -14,6 +14,12 @@ export interface OverlayTheme {
     accent: number;
     /** `--danger`: the outline of an erase preview (DESIGN §4). */
     danger: number;
+    /** `--text`: marker names (DESIGN §4). */
+    text: number;
+    /** `--bg-panel`: the chip under a marker name (DESIGN §4). */
+    panel: number;
+    /** `--font-ui`: the font family of marker names. */
+    font: string;
 }
 
 /** The dark theme's colours (`tokens.css`), until the interface reports the theme in use. */
@@ -21,6 +27,9 @@ export const DEFAULT_OVERLAY_THEME: Readonly<OverlayTheme> = {
     ink: 0xffffff,
     accent: 0x83e8e1,
     danger: 0xff6b6b,
+    text: 0xe7e7ea,
+    panel: 0x18181a,
+    font: 'Inter, "Segoe UI", system-ui, sans-serif',
 };
 
 /** The pointer over the viewport, as a draw layer sees it. */
