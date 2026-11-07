@@ -152,7 +152,44 @@ describe("the apply as one history entry", () => {
         history.execute(updateFromSourceCommand(project, "ts", source, resolutions)!);
         expect(history.undoCount).toBe(1);
         expect(history.undo()).toBe(true);
+        // Undo does not give the two new tiles' IDs (7, 8) back.
+        before.tilesets[0]!.nextTileId = 9;
         expect(snapshotProject(history.session.project)).toStrictEqual(before);
+    });
+});
+
+describe("undo does not give tile IDs back (FORMAT §2.4, as in Tiled)", () => {
+    it("an update after undoing one that added tiles gives its new tiles unused IDs", () => {
+        const history = historyOf(fixtureProject(fixtureTileset([{ key: [0, 0], color: 1 }])));
+        const tileset = () => history.session.project.tilesets[0]!;
+        const ids = () => tileset().tiles.map((tile) => tile.id);
+        const update = (specs: { key: [number, number]; color: number }[]) =>
+            history.execute(
+                updateFromSourceCommand(history.session.project, "ts", sourceOf(specs))!,
+            );
+
+        update([
+            { key: [0, 0], color: 1 },
+            { key: [1, 0], color: 2 },
+            { key: [2, 0], color: 3 },
+        ]);
+        expect(ids()).toEqual([0, 1, 2]);
+        expect(history.undo()).toBe(true);
+        expect(ids()).toEqual([0]);
+        expect(tileset().nextTileId).toBe(3);
+        expect(history.redo()).toBe(true);
+        expect(tileset().nextTileId).toBe(3);
+        expect(history.undo()).toBe(true);
+
+        update([
+            { key: [0, 0], color: 1 },
+            { key: [3, 0], color: 4 },
+        ]);
+        expect(ids()).toEqual([0, 3]);
+        expect(tileset().nextTileId).toBe(4);
+        expect(history.undo()).toBe(true);
+        expect(ids()).toEqual([0]);
+        expect(tileset().nextTileId).toBe(4);
     });
 });
 

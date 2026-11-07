@@ -27,7 +27,8 @@ import type { SourceTiles } from "./updateSource";
 // the clipboard's cells on it (SPEC §4.2), told by `touched.tilesetIds`, as it is on the undo
 // of new tiles. The entry holds the before and after pixels of changed, new and removed tiles
 // and the rewritten cells only: `do` and `undo` rebuild the stored image from the one they
-// find, so maps change only through Delete and Replace.
+// find, so maps change only through Delete and Replace. Undo and redo leave `nextTileId` at the
+// highest value it has had: undo does not give tile IDs back.
 
 /** The label of the history entry. */
 export const UPDATE_FROM_SOURCE_LABEL = "Update Tileset from Source";
@@ -393,7 +394,9 @@ function historyEntry(entry: {
         target.pixels = rebuildImage(target.pixels, from, to, tileSize, held);
         target.tiles = to.tiles;
         target.columns = to.columns;
-        target.nextTileId = to.nextTileId;
+        // Undo does not give tile IDs back (FORMAT §2.4, as in Tiled): the counter keeps the
+        // highest value it has had, so a later update never reuses an ID a file may hold.
+        target.nextTileId = Math.max(target.nextTileId, to.nextTileId);
         target.terrainSets = to.terrainSets;
     };
     return {

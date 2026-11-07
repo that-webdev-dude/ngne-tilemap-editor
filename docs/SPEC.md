@@ -460,7 +460,9 @@ pixels of changed, new and deleted tiles only, plus the rewritten cells, and cou
 history budget (§3) like any entry: an update larger than the budget stays undoable as the
 newest entry and drops older ones. A different tile
 size in the source refuses the update ("tile size changed from 16 × 16 to 32 × 32"). Tile IDs of
-matched tiles never change, so maps change only through Delete and Replace.
+matched tiles never change, so maps change only through Delete and Replace. Undo does not give
+tile IDs back, as in Tiled: undo and redo leave `nextTileId` at the highest value it has had, so
+a tile added by a later update never takes an ID that a saved file or an export may already hold.
 
 The command acts on the tileset the Tilesets panel shows. A browser's open picker cannot be
 given a file name (Tiled's file dialog preselects the file; the sprite editor names files only

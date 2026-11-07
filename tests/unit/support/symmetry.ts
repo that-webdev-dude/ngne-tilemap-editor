@@ -7,25 +7,32 @@ import type { Project, ProjectSession } from "../../../src/core/model";
 // a command runs `expectSymmetric` on it: the command is executed through a history, undone,
 // redone and undone again, and after every step the project must equal the snapshot taken at
 // the same state and satisfy the invariants. After an undo a map's `nextLayerId` or
-// `nextMarkerId` may stay above its value before the command, since undo does not give those
-// IDs back; neither ever goes down. An assertion failure is the usual Vitest error.
+// `nextMarkerId`, or a tileset's `nextTileId`, may stay above its value before the command,
+// since undo does not give those IDs back; none ever goes down. An assertion failure is the usual Vitest error.
 
 /** A command, or a factory that makes one from the session as it is before the step. */
 export type CommandSource = Command | ((session: ProjectSession) => Command);
 
-/** The layer and marker ID counters of a project: `nextLayerId`, `nextMarkerId` per map. */
+/**
+ * The ID counters of a project: `nextLayerId`, `nextMarkerId` per map and `nextTileId` per
+ * tileset.
+ */
 function counters(project: Project): Map<string, number> {
     const out = new Map<string, number>();
     for (const map of project.maps) {
         out.set(`map ${map.id} nextLayerId`, map.nextLayerId);
         out.set(`map ${map.id} nextMarkerId`, map.nextMarkerId);
     }
+    for (const tileset of project.tilesets) {
+        out.set(`tileset ${tileset.id} nextTileId`, tileset.nextTileId);
+    }
     return out;
 }
 
 /**
- * Expects `project` to equal `snapshot` except that a map's layer or marker ID counter may stay
- * above the snapshot's: undo does not give those IDs back (SPEC §7.2, as in Tiled).
+ * Expects `project` to equal `snapshot` except that a map's layer or marker ID counter, or a
+ * tileset's tile ID counter, may stay above the snapshot's: undo does not give those IDs back
+ * (SPEC §6.3, §7.2, as in Tiled).
  * Every other member, and every counter that is not above, must be equal.
  */
 function expectUndone(project: Project, snapshot: Project, message: string): void {
@@ -34,6 +41,10 @@ function expectUndone(project: Project, snapshot: Project, message: string): voi
     for (const map of copy.maps) {
         map.nextLayerId = Math.max(map.nextLayerId, now.get(`map ${map.id} nextLayerId`) ?? 0);
         map.nextMarkerId = Math.max(map.nextMarkerId, now.get(`map ${map.id} nextMarkerId`) ?? 0);
+    }
+    for (const tileset of copy.tilesets) {
+        const key = `tileset ${tileset.id} nextTileId`;
+        tileset.nextTileId = Math.max(tileset.nextTileId, now.get(key) ?? 0);
     }
     expect(snapshotProject(project), message).toStrictEqual(copy);
 }

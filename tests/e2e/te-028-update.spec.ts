@@ -299,9 +299,13 @@ test("each choice of the dialog gives TE-027's cells; undo restores pixels, cell
     ]);
     await expectNotShown(page, 2, 0, original(2, 2));
 
-    // Undo restores the tiles, the pixels, the cells and the viewport.
+    // Undo restores the tiles, the pixels, the cells and the viewport; it does not give tile
+    // ID 12 back (SPEC §6.3).
     await call(page, "undo");
-    expect({ tileset: await tileset(page), cells: await cells(page) }).toEqual(before);
+    expect({ tileset: await tileset(page), cells: await cells(page) }).toEqual({
+        ...before,
+        tileset: { ...before.tileset, nextTileId: 13 },
+    });
     await expectViewport(page, [
         [2, 0, original(2, 2)],
         [3, 0, original(3, 2)],
