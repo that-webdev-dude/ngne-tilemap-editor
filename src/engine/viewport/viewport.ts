@@ -10,6 +10,7 @@ import type { Tier } from "./chunkPlan";
 import { ChunkTier } from "./chunkTier";
 import type { ChunkStats, ChunkTarget } from "./chunkTier";
 import type { DeviceSize } from "./geometry";
+import { ImageLayerTextures } from "./imageLayers";
 import { EmitterCache, buildLiveFrame, drawMapBase, sceneCamera } from "./liveTier";
 import type { LiveCounts, LiveInputs, ViewportScene } from "./liveTier";
 import { CHECKER_TEXTURE_ID, TilesetTextures, bitmapFromPixels } from "./textures";
@@ -62,6 +63,8 @@ export interface ViewportStats {
     /** Chunk and live quads of the last frame. */
     chunkQuads: number;
     tileQuads: number;
+    /** Quads of image layers in the last frame. */
+    imageQuads: number;
 }
 
 let creations = 0;
@@ -79,6 +82,7 @@ export class Viewport {
     readonly #camera = new Camera();
     readonly #emitters = new EmitterCache();
     readonly #textures: TilesetTextures;
+    readonly #images: ImageLayerTextures;
     readonly #bitmap: BitmapFn;
     readonly #unsubscribe: () => void;
     readonly #abort = new AbortController();
@@ -93,6 +97,7 @@ export class Viewport {
         visibleCount: 0,
         chunkQuads: 0,
         tileQuads: 0,
+        imageQuads: 0,
     };
     readonly #chunks: ChunkTier;
     /** Test seam: `updateTexture` calls of chunks still to reject, and how. */
@@ -126,6 +131,10 @@ export class Viewport {
             },
         };
         this.#textures = new TilesetTextures(target, options.pack, this.#bitmap, {
+            onChange: () => this.requestRedraw(),
+            onError: (error) => options.onError(error),
+        });
+        this.#images = new ImageLayerTextures(target, this.#bitmap, {
             onChange: () => this.requestRedraw(),
             onError: (error) => options.onError(error),
         });
@@ -278,6 +287,7 @@ export class Viewport {
         const stats = this.#stats;
         if (scene) {
             this.#ensureChecker(scene.checker);
+            this.#images.use(scene.project, scene.map);
             const size = { width: renderer.width, height: renderer.height };
             const inputs: LiveInputs = {
                 scene,
@@ -285,6 +295,7 @@ export class Viewport {
                 camera: this.#camera,
                 emitter: this.#emitters.emitter(this.#textures.drawable(scene.project.tilesets)),
                 checkerReady: this.#checkerReady,
+                images: this.#images,
             };
             // The tier from the chunk counts of the view, with hysteresis (ENGINE §4).
             const chunks = this.#chunks;
@@ -306,7 +317,9 @@ export class Viewport {
                 stats.chunkQuads = 0;
             }
             stats.tileQuads = counts.tileQuads;
+            stats.imageQuads = counts.imageQuads ?? 0;
         } else {
+            this.#images.use(null, null);
             this.#chunks.clear();
             this.#frame.reset();
             this.#frame.scene(this.#camera, 1);
@@ -330,6 +343,7 @@ export class Viewport {
         this.#abort.abort();
         this.#checkerAbort?.abort();
         this.#textures.dispose();
+        this.#images.dispose();
         this.#chunks.dispose();
         this.#unsubscribe();
         try {

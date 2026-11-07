@@ -27,8 +27,8 @@ import {
 // layer, Ctrl+Shift+D duplicate, Ctrl+Shift+↑/↓ move, ↑/↓ select the layer above or below while
 // the viewport has focus (a native key's `canvas` binding acts only there) and no markers are
 // selected (the `markers` context takes the arrows then). Rename Layer and Layer Properties…
-// need the Layers panel and its popover (TE-035), New Image Layer… the image layers (TE-036):
-// their menu items stay planned.
+// are the Layers panel's (layersPanel.commands.ts), New Image Layer… the image layers'
+// (app/images/images.commands.ts).
 //
 // Highlight Current Layer (Shift+H) is a view preference (SPEC §3), as Show Grid: its title says
 // what choosing it does.

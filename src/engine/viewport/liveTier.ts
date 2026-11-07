@@ -1,8 +1,10 @@
 import type { Camera, Frame } from "@ngne/core";
 import type {
     GroupLayer,
+    ImageLayer,
     LayerHighlight,
     MapView,
+    PixelBuffer,
     Project,
     ProjectMap,
     TileLayer,
@@ -17,10 +19,12 @@ import { CHECKER_TEXTURE_ID } from "./textures";
 import type { ReadyTileset } from "./textures";
 import { clipQuad } from "./clipQuad";
 import type { DeviceRect } from "./clipQuad";
+import { emitImageLayer } from "./imageLayers";
+import type { ReadyImage } from "./imageLayers";
 
 // The live tier (ENGINE §4): one quad per visible cell, layer by layer, grouped by tileset, one
-// depth per layer, so the frame arrives already ordered. This file builds a `Frame`; the
-// viewport submits it.
+// depth per layer, so the frame arrives already ordered; an image layer draws its texture at its
+// depth (imageLayers.ts). This file builds a `Frame`; the viewport submits it.
 
 /** What the viewport shows (read at each draw, so it is never stale). */
 export interface ViewportScene {
@@ -100,17 +104,27 @@ export interface LiveInputs {
     emitter: QuadEmitter;
     /** The checker spec `ed:checker` holds now; null while it is not uploaded. */
     checkerReady: string | null;
+    /** The image layers' textures; without them image layers are not drawn. */
+    images?: ImageTextureSource | null;
+}
+
+/** Where an image layer's texture is found (`ImageLayerTextures`). */
+export interface ImageTextureSource {
+    /** The texture of `layer` when it holds the layer's current image of `pixels`. */
+    ready(layer: ImageLayer, pixels: PixelBuffer): ReadyImage | null;
 }
 
 /** Sprites a build emitted, by kind (test hook and budget bookkeeping). */
 export interface LiveCounts {
     tileQuads: number;
     checkerQuads: number;
+    /** Quads of image layers; absent counts none. */
+    imageQuads?: number;
 }
 
 /**
  * Fills `frame` with the scene: the checkerboard and background colour of the map, then every
- * visible tile layer. The frame is reset first. Returns what it drew.
+ * visible tile and image layer. The frame is reset first. Returns what it drew.
  */
 export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
     const { scene } = inputs;
@@ -120,14 +134,66 @@ export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
     const visible = visibleRect(camera, inputs.size);
     let depth = 0;
     for (const { layer, ancestors } of walkLayers(map.layers)) {
-        if (layer.type !== "tile") continue;
+        if (layer.type !== "tile" && layer.type !== "image") continue;
         const values = effectiveValues(layer, ancestors);
         const opacity = drawnOpacity(layer, ancestors, values, scene.highlight);
         if (!values.visible || opacity === 0) continue;
         depth += 1;
-        emitLiveLayer(frame, inputs, camera, layer, visible, { depth, counts, ancestors });
+        if (layer.type === "image") {
+            emitLiveImageLayer(frame, inputs, camera, layer, visible, { depth, counts, ancestors });
+        } else {
+            emitLiveLayer(frame, inputs, camera, layer, visible, { depth, counts, ancestors });
+        }
     }
     return counts;
+}
+
+/**
+ * Emits the quads of an image layer that meet `area` (map pixels) at the layer's effective
+ * opacity, parallax and offset, once its texture holds its image. With `clip`, each quad is cut
+ * to `area` (over a chunk tier patch).
+ */
+export function emitLiveImageLayer(
+    frame: Frame,
+    inputs: LiveInputs,
+    camera: Camera2D,
+    layer: ImageLayer,
+    area: MapRect,
+    at: {
+        depth: number;
+        counts: LiveCounts;
+        ancestors?: readonly GroupLayer[];
+        layer?: number;
+        clip?: boolean;
+    },
+): void {
+    const { scene, size } = inputs;
+    const { map } = scene;
+    const entry = at.ancestors ? { layer, ancestors: at.ancestors } : findLayer(map, layer.id);
+    if (!entry || !inputs.images) return;
+    const values = effectiveValues(layer, entry.ancestors);
+    const opacity = drawnOpacity(layer, entry.ancestors, values, scene.highlight);
+    if (!values.visible || opacity === 0) return;
+    const image = scene.project.images.find((each) => each.id === layer.imageId);
+    const ready = image ? inputs.images.ready(layer, image.pixels) : null;
+    if (!ready) return;
+    let clip: DeviceRect | null = null;
+    if (at.clip) {
+        const from = toDevice(camera, size, area.x, area.y);
+        clip = {
+            x0: from.x,
+            y0: from.y,
+            x1: from.x + area.width * camera.scale,
+            y1: from.y + area.height * camera.scale,
+        };
+    }
+    const shift = layerShift(map, camera, values);
+    const quads = emitImageLayer(frame, camera, size, { layer, ready, opacity, shift }, area, {
+        layer: at.layer ?? LAYER.tiles,
+        depth: at.depth,
+        clip,
+    });
+    if (quads > 0) at.counts.imageQuads = (at.counts.imageQuads ?? 0) + quads;
 }
 
 /** The camera of a scene: its view centre and device pixels per map pixel. */

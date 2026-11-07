@@ -111,9 +111,8 @@ test("rows mirror the tree through new, delete, undo and redo", async ({ page })
     await page.locator("[data-new-layer-menu]").click();
     await page.locator('[data-new-layer-kind="layer.newGroup"]').click();
     await page.locator("[data-new-layer-menu]").click();
-    await expect(page.locator('[data-new-layer-kind="layer.newImage"]')).toHaveAttribute(
+    await expect(page.locator('[data-new-layer-kind="layer.newImage"]')).not.toHaveAttribute(
         "data-disabled",
-        "",
     );
     await page.locator('[data-new-layer-kind="layer.newMarker"]').click();
     state = await expectRowsMirror(page);

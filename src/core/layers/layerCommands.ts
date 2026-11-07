@@ -1,5 +1,15 @@
 import { CELL_INDEX_MASK, CHUNK_BITS, CHUNK_SIZE, CellStore } from "../cells";
 import type { Command, Touched } from "../history";
+// The command module's value import, not `core/history`'s index, which reads `import.meta.env`.
+import { compositeCommand } from "../history/command";
+import {
+    IMAGE_LABELS,
+    addImageCommand,
+    choiceImageId,
+    imagesOfLayers,
+    withUnusedImagesRemoved,
+} from "../images";
+import type { ImageChoice } from "../images";
 import {
     BYTES_PER_CHUNK,
     MAX_CELLS_PER_MAP,
@@ -13,6 +23,7 @@ import {
     MAX_PARALLAX,
     MAX_TEXT_LENGTH,
     createGroupLayer,
+    createImageLayer,
     createMapSession,
     createMarkerLayer,
     createTileLayer,
@@ -31,7 +42,7 @@ import type {
 } from "../model";
 
 // The layer commands of SPEC §7.2, with Tiled's behaviour (`MapDocument`, `MoveLayer`,
-// `LayerModel`, tag v1.12.2): New Tile / Marker Layer and New Group above the active layer,
+// `LayerModel`, tag v1.12.2): New Tile / Marker / Image Layer and New Group above the active layer,
 // Group Layers, Ungroup, Duplicate (new IDs for the layers and their markers), Delete, Rename,
 // Move Up / Down into and out of groups, a move to any place (a drag), and the setters of a
 // layer's values, one layer or several (Show/Hide and Lock/Unlock Other Layers).
@@ -104,8 +115,11 @@ export const LAYER_LABELS = {
     unlockOthers: "Unlock Other Layers",
 } as const;
 
-/** The kinds New Layer makes here; image layers are TE-036's. */
+/** The kinds New Layer makes; an image layer is made with its image (`newImageLayerCommand`). */
 export type NewLayerKind = "tile" | "marker" | "group";
+
+/** The kinds a new layer's name counts (Tiled's `newLayerName`). */
+export type NamedLayerKind = NewLayerKind | "image";
 
 /** The values a layer setter changes (SPEC §7.2); every field is optional. */
 export interface LayerValues {
@@ -237,9 +251,10 @@ export function otherLayers(map: ProjectMap, ids: readonly number[]): Layer[] {
 // ---------------------------------------------------------------------------------------------
 // Names
 
-const KIND_NAMES: Record<NewLayerKind, string> = {
+const KIND_NAMES: Record<NamedLayerKind, string> = {
     tile: "Tile Layer",
     marker: "Marker Layer",
+    image: "Image Layer",
     group: "Group Layer",
 };
 
@@ -247,7 +262,7 @@ const KIND_NAMES: Record<NewLayerKind, string> = {
  * The name New Layer gives a layer of `kind`, as Tiled's `newLayerName`: "<Kind> N" with N one
  * above the count of layers of that kind, raised past names already taken.
  */
-export function newLayerName(map: ProjectMap, kind: NewLayerKind): string {
+export function newLayerName(map: ProjectMap, kind: NamedLayerKind): string {
     const names = new Set<string>();
     let number = 0;
     for (const { layer } of walkLayers(map.layers)) {
@@ -463,7 +478,7 @@ interface TreeCommandOptions {
 function treeCommand(
     label: string,
     mapId: string,
-    edit: (map: ProjectMap, mapSession: MapSession) => void,
+    edit: (map: ProjectMap, mapSession: MapSession, session: ProjectSession) => void,
     options: TreeCommandOptions = {},
 ): Command {
     let before: TreeState | null = null;
@@ -482,7 +497,7 @@ function treeCommand(
             }
             const start = capture(map, mapSession);
             try {
-                edit(map, mapSession);
+                edit(map, mapSession, session);
                 checkLayerTree(map);
             } catch (error) {
                 restore(map, mapSession, start, true);
@@ -538,6 +553,34 @@ export function newLayerCommand(mapId: string, kind: NewLayerKind): Command {
         list.splice(place ? place.index + 1 : 0, 0, layer);
         mapSession.activeLayerId = id;
     });
+}
+
+/**
+ * The command that adds an image layer showing `choice` to `project`'s map `mapId`, as New Layer
+ * does (right above the active layer, active, named "Image Layer N" as Tiled's `newLayerName`),
+ * one step with the new image when `choice` is one (SPEC §7.2): undo removes both.
+ */
+export function newImageLayerCommand(
+    project: Project,
+    mapId: string,
+    choice: ImageChoice,
+): Command {
+    mapOf(project, mapId);
+    const imageId = choiceImageId(choice);
+    const layer = treeCommand(IMAGE_LABELS.newImageLayer, mapId, (map, mapSession, session) => {
+        if (!session.project.images.some((image) => image.id === imageId)) {
+            throw new LayerEditError("missing", `The project has no image "${imageId}".`);
+        }
+        const entry = findLayer(map, mapSession.activeLayerId);
+        const place = entry ? placeOf(map, entry.layer.id) : null;
+        const name = newLayerName(map, "image");
+        const id = takeLayerId(map);
+        const list = place ? place.list : map.layers;
+        list.splice(place ? place.index + 1 : 0, 0, createImageLayer(id, name, imageId));
+        mapSession.activeLayerId = id;
+    });
+    if (!("image" in choice)) return layer;
+    return compositeCommand(IMAGE_LABELS.newImageLayer, [addImageCommand(choice.image), layer]);
 }
 
 /** The given layers that are not inside another of them, in tree order. */
@@ -731,7 +774,8 @@ export function duplicateLayersCommand(
 /**
  * The command that deletes layers `ids` of `project`'s map `mapId` with their children (Tiled's
  * `removeLayers`). Its `do` throws `LayerEditError` ("last") when the map would be left without
- * a layer. An active layer that goes passes the active layer to `neighbourAfterRemoval`.
+ * a layer. An active layer that goes passes the active layer to `neighbourAfterRemoval`. An image
+ * that no layer uses any more is removed with it (SPEC §7.2).
  */
 export function deleteLayersCommand(
     project: Project,
@@ -739,8 +783,11 @@ export function deleteLayersCommand(
     ids: readonly number[],
 ): Command {
     const map = mapOf(project, mapId);
-    const bytes = cellBytes(outermost(map, ids));
-    return treeCommand(
+    const removed = outermost(map, ids);
+    const bytes = cellBytes(removed);
+    // An image whose last use goes is removed in the same step (SPEC §7.2).
+    const images = imagesOfLayers(removed);
+    const command = treeCommand(
         LAYER_LABELS.delete,
         mapId,
         (target, mapSession) => {
@@ -761,6 +808,7 @@ export function deleteLayersCommand(
         },
         { bytes },
     );
+    return withUnusedImagesRemoved(project, command, images);
 }
 
 /** Where Move Up (`1`) or Down (`-1`) puts layer `id`: Tiled's `MoveLayer`; null at the ends. */

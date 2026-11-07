@@ -2,7 +2,15 @@ import type { Frame } from "@ngne/core";
 import { CHUNK_SIZE } from "../../core/cells";
 import type { CellRect } from "../../core/cells";
 import { MapCompositor, cellScale } from "../../core/compositor";
-import type { LayerHighlight, PixelBuffer, Project, ProjectMap, TileLayer } from "../../core/model";
+import { drawnOpacity, effectiveValues, walkLayers } from "../../core/model";
+import type {
+    ImageLayer,
+    LayerHighlight,
+    PixelBuffer,
+    Project,
+    ProjectMap,
+    TileLayer,
+} from "../../core/model";
 import {
     chooseResolution,
     chunkBytes,
@@ -20,7 +28,7 @@ import {
 import type { ChunkSetPlan, Reach } from "./chunkPlan";
 import type { Camera2D, DeviceSize } from "./geometry";
 import { intersect, layerShift, toDevice, visibleRect } from "./geometry";
-import { LAYER, drawUnderTiles, emitLiveLayer } from "./liveTier";
+import { LAYER, drawUnderTiles, emitLiveImageLayer, emitLiveLayer } from "./liveTier";
 import type { LiveCounts, LiveInputs } from "./liveTier";
 
 // The chunk tier (ENGINE §4): each chunk set of the map is a grid of 32 × 32-cell chunk textures
@@ -141,6 +149,9 @@ const MAX_IN_FLIGHT = 2;
 
 /** Consecutive failures of one chunk before it is reported and left to its live quads. */
 const MAX_FAILURES = 3;
+
+/** What the chunk tier draws, in order: a chunk set, or an image layer between sets. */
+type DrawItem = { kind: "set"; set: ChunkSet } | { kind: "image"; layer: ImageLayer };
 
 interface ChunkSet {
     plan: ChunkSetPlan;
@@ -382,8 +393,10 @@ export class ChunkTier {
      * For each set bottom to top, its chunk quads, then over the cells its chunks do not show
      * yet everything up to the set drawn again: the checkerboard and background (`workspace`,
      * 0xRRGGBB, outside the map), the layers of the sets below as live quads, then its own. So a
-     * pending cell shows the document, whatever its stale chunk holds. Live quads are counted in
-     * `counts`; returns the chunk quads.
+     * pending cell shows the document, whatever its stale chunk holds. A visible image layer
+     * between two sets draws its texture between them (`planSets` ends a set at one), and again
+     * under a patch of a set above it. Live quads are counted in `counts`; returns the chunk
+     * quads.
      */
     draw(
         frame: Frame,
@@ -400,8 +413,17 @@ export class ChunkTier {
         const { scale } = camera;
         const chunkWidth = CHUNK_SIZE * map.tileWidth;
         const chunkHeight = CHUNK_SIZE * map.tileHeight;
+        const drawn: DrawItem[] = [];
         let depth = 0;
-        for (const set of this.#sets) {
+        for (const item of this.#drawOrder(map, inputs.scene.highlight ?? null)) {
+            if (item.kind === "image") {
+                depth += 1;
+                emitLiveImageLayer(frame, inputs, camera, item.layer, visible, { depth, counts });
+                drawn.push(item);
+                continue;
+            }
+            const { set } = item;
+            drawn.push(item);
             depth += 1;
             const shift = layerShift(map, camera, set.plan.placement);
             const live: CellRect[] = [];
@@ -445,19 +467,53 @@ export class ChunkTier {
                 if (!shown) continue;
                 const place = { layer: LAYER.tiles, depth };
                 drawUnderTiles(frame, inputs, camera, shown, counts, { ...place, workspace });
-                for (const below of this.#sets) {
-                    for (const layer of below.layers) {
+                for (const below of drawn) {
+                    if (below.kind === "image") {
+                        emitLiveImageLayer(frame, inputs, camera, below.layer, shown, {
+                            depth,
+                            counts,
+                            clip: true,
+                        });
+                        continue;
+                    }
+                    for (const layer of below.set.layers) {
                         emitLiveLayer(frame, inputs, camera, layer, shown, {
                             depth,
                             counts,
                             clip: true,
                         });
                     }
-                    if (below === set) break;
                 }
             }
         }
         return chunkQuads;
+    }
+
+    /**
+     * The sets and the visible image layers of `map`, bottom to top, as `planSets` walks the
+     * layers: a set where its first layer is, an image layer where it is.
+     */
+    #drawOrder(map: ProjectMap, highlight: LayerHighlight | null): DrawItem[] {
+        const setOf = new Map<number, ChunkSet>();
+        for (const set of this.#sets) for (const id of set.plan.layerIds) setOf.set(id, set);
+        const items: DrawItem[] = [];
+        let last: ChunkSet | null = null;
+        for (const { layer, ancestors } of walkLayers(map.layers)) {
+            if (layer.type === "image") {
+                const values = effectiveValues(layer, ancestors);
+                if (!values.visible || drawnOpacity(layer, ancestors, values, highlight) === 0) {
+                    continue;
+                }
+                items.push({ kind: "image", layer });
+                last = null;
+                continue;
+            }
+            const set = setOf.get(layer.id);
+            if (set === undefined || set === last) continue;
+            items.push({ kind: "set", set });
+            last = set;
+        }
+        return items;
     }
 
     /** The visible count of the tier choice (ENGINE §4) for the planned sets; 0 without a plan. */

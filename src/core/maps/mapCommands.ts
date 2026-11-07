@@ -1,5 +1,6 @@
 import { CELL_INDEX_MASK, CHUNK_BITS, CHUNK_SIZE, CellStore } from "../cells";
 import type { Command, Touched } from "../history";
+import { imagesOfLayers, withUnusedImagesRemoved } from "../images";
 import {
     BYTES_PER_CHUNK,
     MAX_CELLS_PER_LAYER,
@@ -317,7 +318,7 @@ export function deleteMapCommand(project: Project, id: string, next?: string): C
     let removed: { index: number; mapSession: MapSession | undefined } | null = null;
     /** The map the first `do` left active. */
     let after: string | null = null;
-    return {
+    const command: Command = {
         label: MAP_LABELS.delete,
         bytes: OVERHEAD_BYTES + bytes,
         touched: touched(id, { structure: true }),
@@ -347,6 +348,8 @@ export function deleteMapCommand(project: Project, id: string, next?: string): C
             session.activeMapId = id;
         },
     };
+    // An image whose last use goes with the map is removed in the same step (SPEC §7.2).
+    return withUnusedImagesRemoved(project, command, imagesOfLayers(map.layers));
 }
 
 /**

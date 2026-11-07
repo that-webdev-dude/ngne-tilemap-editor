@@ -14,7 +14,11 @@ export interface Touched {
     cellRects: CellRect[];
     /** Tilesets whose pixels, tiles or terrain changed. */
     tilesetIds: string[];
-    /** Maps, layers, tilesets or images added, removed, reordered or resized. */
+    /**
+     * Maps, layers or tilesets added, removed, reordered or resized. An image added or removed
+     * alone is not structural: chunks never draw images, and the image layers showing it are
+     * named in `layerIds` (core/images).
+     */
     structure: boolean;
 }
 

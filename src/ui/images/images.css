@@ -1,0 +1,35 @@
+/* The image of an image layer: the project's images, Import PNG… and why a PNG was refused. */
+.image-chooser {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-8);
+    justify-items: start;
+}
+
+.image-chooser__select {
+    width: 100%;
+}
+
+.image-chooser__select .ui-select {
+    width: 100%;
+    min-width: 0;
+}
+
+.image-chooser__empty {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.image-chooser__problem {
+    margin: 0;
+    color: var(--danger);
+}
+
+.image-repeat {
+    display: flex;
+    gap: var(--space-8);
+}
+
+.new-image-layer {
+    width: 320px;
+}

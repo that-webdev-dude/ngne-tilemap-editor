@@ -17,6 +17,7 @@ export {
     moveLayerToCommand,
     moveTarget,
     newLayerCommand,
+    newImageLayerCommand,
     newLayerName,
     otherLayers,
     placeOf,
@@ -24,6 +25,12 @@ export {
     toggleOtherLayersCommand,
     ungroupCommand,
 } from "./layerCommands";
-export type { LayerEditErrorCode, LayerPlace, LayerValues, NewLayerKind } from "./layerCommands";
+export type {
+    LayerEditErrorCode,
+    LayerPlace,
+    LayerValues,
+    NamedLayerKind,
+    NewLayerKind,
+} from "./layerCommands";
 export { ENVELOPE, envelopeProblems } from "./envelope";
 export type { EnvelopeProblem } from "./envelope";

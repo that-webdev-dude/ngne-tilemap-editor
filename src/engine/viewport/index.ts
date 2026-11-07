@@ -5,6 +5,7 @@ export type { Tier } from "./chunkPlan";
 export { chunkTextureId } from "./chunkTier";
 export type { ChunkStats } from "./chunkTier";
 export { deviceScale, layerShift, visibleRect } from "./geometry";
+export { imageTextureId } from "./imageLayers";
 export type { DeviceSize } from "./geometry";
 export { LAYER, buildLiveFrame } from "./liveTier";
 export type { ViewportScene } from "./liveTier";

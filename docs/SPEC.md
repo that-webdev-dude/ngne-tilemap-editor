@@ -574,8 +574,8 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
   D1 bounds are hard limits already, or the project's (tileset pixels).
 - As Tiled (`MapDocument`, `MoveLayer`, `LayerModel`, `LayerIterator` at `v1.12.2`):
   - A new layer goes right above the active layer, in its group, and becomes active; it is
-    named "Tile Layer N", "Marker Layer N" or "Group Layer N", N one above the count of layers of
-    that kind, raised past names taken. Group Layers puts a group named "Group N" (N one above
+    named "Tile Layer N", "Marker Layer N", "Image Layer N" or "Group Layer N", N one above the
+    count of layers of that kind, raised past names taken. Group Layers puts a group named "Group N" (N one above
     the count of groups) right above the first chosen layer and moves the chosen layers into it
     in tree order; the active layer stays.
   - Ungroup moves a group's children into its parent where it was and removes it; a layer

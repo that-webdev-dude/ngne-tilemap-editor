@@ -27,6 +27,8 @@ export interface ViewportProbe {
         visibleCount: number;
         chunkQuads: number;
         tileQuads: number;
+        /** Quads of image layers (TE-036). */
+        imageQuads: number;
     }>;
     /** What the chunk tier reports (TE-015). */
     chunkStats(): Readonly<{

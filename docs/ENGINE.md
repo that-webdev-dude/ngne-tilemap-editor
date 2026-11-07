@@ -111,7 +111,9 @@ Editable texture rules (`createTexture` / `updateTexture`):
 - **Redraw on demand:** frames are submitted only when the document, view or lifecycle
   changes; an idle editor submits nothing.
 - **Layer opacity** maps to sprite alpha. Tint and blend modes are not drawn (Later / Out).
-- **Image layers:** one texture each, ≤ 8192 px per side; repeat is drawn as a quad grid.
+- **Image layers:** one texture each, ≤ 8192 px per side; repeat is drawn as a quad grid. The
+  texture of a repeated axis holds copies of the image side by side, enough to span 512 px
+  where 8192 px allow, so a small image covers the view with few quads.
 
 ## 5. Game preview
 
