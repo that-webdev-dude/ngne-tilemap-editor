@@ -527,7 +527,13 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   preview shows the old map inside the new bounds. Cells outside the new bounds are removed;
   markers are moved by the offset and kept even outside the bounds (Tiled). The tile selection
   moves by the offset and is not cut to the new bounds (Tiled's `MapDocument::resizeMap`). One
-  entry.
+  entry. The offset is limited on each axis as Tiled's `ResizeHelper` limits it: 0 to the growth
+  when the map grows, the shrink to 0 when it shrinks, so the old map holds the new bounds or
+  lies inside them; with an anchor checked, a new size keeps the old map at the anchor
+  (offset truncated towards zero, as the sprite editor's canvas size); with none, the offset is
+  moved into its range. An image layer's offset moves by the offset in pixels, as markers do
+  (Tiled's `SetLayerOffset` by the change of the map's bounds); other layer offsets stay. An
+  offset that would move a marker or an image layer past its coordinate range is refused.
 - Maps are tabs in the menu bar (SUITE §3). Closing a tab hides the map; it stays in the
   project. The project's map list (DESIGN) opens them.
 - New Map adds the map at the end of the map list, named "Map N" with N one above the highest

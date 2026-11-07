@@ -2,13 +2,13 @@ import { MAX_MAPS } from "../../core/model";
 import { appCommands } from "../commands/appCommands";
 import type { CommandSpec } from "../commands/types";
 import { sessionStore } from "../state/session";
-import { editMapProperties, newMapFromDialog } from "./mapDialogs";
+import { editMapProperties, newMapFromDialog, resizeMapFromDialog } from "./mapDialogs";
 import { activeMap, canMoveMap, deleteMap, duplicateMap, mapsIdle, moveMap } from "./maps";
 import { MAP_MENU, focusedMap, mapsPanelStore, startMapRename } from "./mapsPanel";
 
 // The map commands of the menus and the command palette (SPEC §7.1; DESIGN §5): Map
 // Properties…, Duplicate Map and Delete Map act on the active map, as Tiled's map commands act
-// on the current document; a row's menu in the Maps panel (context menu "map", DESIGN §8.1)
+// on the current document, and so does Resize / Offset Map… (Map menu only); a row's menu in the Maps panel (context menu "map", DESIGN §8.1)
 // lists the same three, and opening it shows the row's map, as the menu of a tileset tab shows
 // that tileset (DESIGN §8.5). Delete is disabled for the last map of the project. Move Map Up
 // and Move Map Down change the project's map list; they have no menu item (DESIGN §5) and run
@@ -32,6 +32,12 @@ export const commands: CommandSpec[] = [
         enabled: hasActive,
         contextMenus: [{ menu: MAP_MENU, order: 100 }],
         run: async () => void (await editMapProperties()),
+    },
+    {
+        id: "map.resize",
+        title: "Resize / Offset Map…",
+        enabled: hasActive,
+        run: async () => void (await resizeMapFromDialog()),
     },
     {
         id: "map.duplicate",

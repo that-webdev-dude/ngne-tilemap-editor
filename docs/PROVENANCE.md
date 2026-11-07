@@ -252,6 +252,9 @@ rows.
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
 | `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
 | `src/ui/shortcuts/shortcuts.css` | `src/ui/shortcuts/shortcuts.css` | verbatim | `ea5c91d` | `4af0e022d12297df189fdb6ebb3283063b1538f538c497e75c3d69c641600a6d` | |
+| `src/ui/sprite/PivotGrid.tsx` | `src/ui/sprite/PivotGrid.tsx` | adapt | `ea5c91d` | | Anchor grid of Resize / Offset Map (DESIGN §3.3): the nine anchors are `RESIZE_ANCHORS` of `core/maps` instead of the sprite pivot presets (`ui` does not import `core/sprite`); `Pivot` is declared here and `value` may be null (an offset that is no anchor's: no cell checked); styles from `./pivotGrid.css` instead of `./sprite.css` |
+| `src/ui/sprite/pivotGrid.css` | `src/ui/sprite/sprite.css` | adapt | `ea5c91d` | | Only the `.pivot-grid` rules, unchanged; the comment names the anchor grid |
+| `src/ui/sprite/pivotGridKeys.ts` | `src/ui/sprite/pivotGridKeys.ts` | adapt | `ea5c91d` | | Counts `RESIZE_ANCHOR_COLUMNS` and `RESIZE_ANCHORS` of `core/maps` instead of the sprite pivot presets |
 | `src/ui/status/status.css` | `src/ui/status/status.css` | adapt | `ea5c91d` |  | Widths reserved by the field (inline), not by CSS rules for the cursor field |
 | `src/ui/styles/base.css` | `src/ui/styles/base.css` | verbatim | `ea5c91d` | `cb79b6d9a9383a0d114a3453f2fe19471ae3f657472d0f6d7186553ef92c8d87` | |
 | `src/ui/styles/tokens.css` | `src/ui/styles/tokens.css` | verbatim | `ea5c91d` | `a8d0de7b7cefa647152a2a27811adfa1f8db544b9443201647ea132fc05b3917` | |

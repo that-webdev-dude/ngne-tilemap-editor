@@ -1,5 +1,5 @@
 // The map commands of SPEC §7.1: New Map, Duplicate, Rename, Delete, Move up or down (or to a
-// place, by a drag) in the project's map list, and Map Properties.
+// place, by a drag) in the project's map list, Map Properties and Resize / Offset Map.
 
 export {
     MAP_LABELS,
@@ -25,3 +25,21 @@ export {
     setMapFieldsCommand,
 } from "./mapProperties";
 export type { MapFields } from "./mapProperties";
+export {
+    RESIZE_ANCHORS,
+    RESIZE_ANCHOR_COLUMNS,
+    RESIZE_MAP_LABEL,
+    anchorOffset,
+    clampOffset,
+    offsetRange,
+    resizeMapCommand,
+    resizeMapProblems,
+    resizeSource,
+} from "./resizeMap";
+export type {
+    OffsetRange,
+    PixelExtent,
+    ResizeAnchor,
+    ResizeMapValues,
+    ResizeSource,
+} from "./resizeMap";

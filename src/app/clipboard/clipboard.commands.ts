@@ -1,6 +1,9 @@
 import {
     copySelectedCells,
+    intersectMask,
     maskSpans,
+    rectMask,
+    selectionOf,
     setSelectionCommand,
     tileSelectionOf,
 } from "../../core/selection";
@@ -49,13 +52,29 @@ export const DELETE_LABEL = "Delete";
 /** Whether the history can take a command now. */
 const historyIdle = () => !sessionStore.getState().history.transaction && !toolPipeline.stroking;
 
-/** The active map's id and selection when its active layer is a tile layer. */
+/**
+ * The active map's id and the selected cells inside it when its active layer is a tile layer;
+ * null when none is. A selection moved by Resize / Offset Map can reach past the map: Copy,
+ * Cut and Delete act on its cells inside the map only (SPEC §4.4; Tiled's `eraseTileLayers`
+ * cuts the region to the layer's bounds).
+ */
 function selectedTileCells(): { mapId: string; selection: Region } | null {
     const { session } = sessionStore.getState();
     const map = activeMap(session);
     if (!map || activeLayer(session)?.type !== "tile") return null;
     const selection = tileSelectionOf(session, map.id);
-    return selection ? { mapId: map.id, selection } : null;
+    if (!selection) return null;
+    const { x, y, width, height } = selection;
+    const inside = x >= 0 && y >= 0 && x + width <= map.width && y + height <= map.height;
+    const cut = inside
+        ? selection
+        : selectionOf(
+              intersectMask(
+                  selection,
+                  rectMask({ x: 0, y: 0, width: map.width, height: map.height }),
+              ),
+          );
+    return cut ? { mapId: map.id, selection: cut } : null;
 }
 
 /**
