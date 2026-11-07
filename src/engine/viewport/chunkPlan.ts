@@ -1,7 +1,7 @@
 import { CHUNK_SIZE } from "../../core/cells";
 import type { CellRect } from "../../core/cells";
-import { effectiveValues, walkLayers } from "../../core/model";
-import type { Project, ProjectMap, TileLayer } from "../../core/model";
+import { drawnOpacity, effectiveValues, walkLayers } from "../../core/model";
+import type { LayerHighlight, Project, ProjectMap, TileLayer } from "../../core/model";
 import type { Camera2D, DeviceSize } from "./geometry";
 import { layerShift, visibleRect } from "./geometry";
 
@@ -46,8 +46,12 @@ export interface ChunkSetPlan {
     content: string;
 }
 
-/** The chunk sets of the map's visible tile layers, bottom to top. */
-export function planSets(map: ProjectMap): ChunkSetPlan[] {
+/**
+ * The chunk sets of the map's visible tile layers, bottom to top. With `highlight` (Highlight
+ * Current Layer, SPEC §7.2) the other layers' opacities are reduced, so a change of it or of the
+ * active layer changes the sets' content.
+ */
+export function planSets(map: ProjectMap, highlight?: LayerHighlight | null): ChunkSetPlan[] {
     const sets: ChunkSetPlan[] = [];
     let open: ChunkSetPlan | null = null;
     const opacities: string[] = [];
@@ -59,7 +63,7 @@ export function planSets(map: ProjectMap): ChunkSetPlan[] {
     for (const { layer, ancestors } of walkLayers(map.layers)) {
         if (layer.type !== "tile" && layer.type !== "image") continue;
         const values = effectiveValues(layer, ancestors);
-        const opacity = Math.max(0, Math.min(255, Math.round(values.opacity)));
+        const opacity = drawnOpacity(layer, ancestors, values, highlight);
         if (!values.visible || opacity === 0) continue;
         if (layer.type === "image") {
             close();

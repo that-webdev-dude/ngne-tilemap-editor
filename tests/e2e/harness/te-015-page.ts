@@ -14,6 +14,7 @@ import { layerShift } from "../../../src/engine/viewport/geometry";
 import { MIN_CHECKER_SQUARE } from "../../../src/engine/viewport/liveTier";
 import { readCanvas } from "../../../src/engine/testing/readCanvas";
 import { createViewportSceneProject } from "../../support/viewportScene";
+import { referenceHighlight } from "./te-034-highlight";
 
 // TE-015 page module: the specs import it into the running editor (`import("/tests/e2e/harness/
 // te-015-page.ts")`), so it shares the app's stores. It loads a map above the live tier's limit,
@@ -144,7 +145,8 @@ function chunkReference(project: Project, map: ProjectMap, texels: number) {
     const y0 = -side;
     const width = (Math.ceil(map.width / CHUNK_SIZE) + 2) * side;
     const height = (Math.ceil(map.height / CHUNK_SIZE) + 2) * side;
-    return planSets(map).map((set) => ({
+    const highlight = referenceHighlight();
+    return planSets(map, highlight).map((set) => ({
         set,
         x0,
         y0,
@@ -158,6 +160,7 @@ function chunkReference(project: Project, map: ProjectMap, texels: number) {
             layerIds: new Set(set.layerIds),
             layerSpace: true,
             background: false,
+            highlight,
         }),
     }));
 }
@@ -233,6 +236,7 @@ export function compare(geometry: Geometry, tolerance: number): Comparison {
                 scaleY: ratio,
                 viewCentre: { x: centreX, y: centreY },
                 layerIds,
+                highlight: referenceHighlight(),
             }),
         );
     }

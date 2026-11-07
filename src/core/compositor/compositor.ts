@@ -1,6 +1,14 @@
 import type { CellStore } from "../cells";
-import { effectiveValues, walkLayers } from "../model";
-import type { ImageLayer, PixelBuffer, Project, ProjectMap, Tileset, TileLayer } from "../model";
+import { drawnOpacity, effectiveValues, walkLayers } from "../model";
+import type {
+    ImageLayer,
+    LayerHighlight,
+    PixelBuffer,
+    Project,
+    ProjectMap,
+    Tileset,
+    TileLayer,
+} from "../model";
 import { BLEND_FUNCTIONS } from "../sprite/composite/blend";
 
 // `core/compositor` (SPEC §1): a map's tile and image layers and its background colour as
@@ -52,6 +60,8 @@ export interface CompositeRequest {
     layerSpace?: boolean;
     /** Starts from the map's background colour (the default) or from transparent black. */
     background?: boolean;
+    /** Highlight Current Layer (SPEC §7.2): the other layers at its factor of their opacity. */
+    highlight?: LayerHighlight | null;
 }
 
 /** Per-tileset data the sampling loop needs, read once. */
@@ -252,7 +262,7 @@ export class MapCompositor {
             if (layer.type !== "tile" && layer.type !== "image") continue;
             if (layerIds !== undefined && !layerIds.has(layer.id)) continue;
             const values = effectiveValues(layer, ancestors);
-            const opacity = Math.max(0, Math.min(OPAQUE_MAX, Math.round(values.opacity)));
+            const opacity = drawnOpacity(layer, ancestors, values, request.highlight);
             if (!values.visible || opacity === 0) continue;
 
             const view = layerSpace ? undefined : request.viewCentre;

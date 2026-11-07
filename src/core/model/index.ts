@@ -35,8 +35,14 @@ export { idKey, isId, randomId, sequentialIds } from "./ids";
 export type { IdGenerator } from "./ids";
 export { INVARIANTS, InvariantError, assertInvariants } from "./invariants";
 export type { InvariantName } from "./invariants";
-export { effectiveLayerValues, effectiveValues, findLayer, walkLayers } from "./layers";
-export type { EffectiveLayerValues, LayerEntry } from "./layers";
+export {
+    drawnOpacity,
+    effectiveLayerValues,
+    effectiveValues,
+    findLayer,
+    walkLayers,
+} from "./layers";
+export type { EffectiveLayerValues, LayerEntry, LayerHighlight } from "./layers";
 export * from "./limits";
 export {
     BYTES_PER_CELL,

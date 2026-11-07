@@ -288,7 +288,7 @@ export class Viewport {
             };
             // The tier from the chunk counts of the view, with hysteresis (ENGINE §4).
             const chunks = this.#chunks;
-            chunks.sync(scene.project, scene.map, size);
+            chunks.sync(scene.project, scene.map, size, scene.highlight ?? null);
             const camera = sceneCamera(scene);
             const count = chunks.visibleCount(camera, size);
             const tier = nextTier(stats.tier, count, chunks.ready);

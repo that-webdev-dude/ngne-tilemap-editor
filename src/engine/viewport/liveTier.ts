@@ -1,6 +1,13 @@
 import type { Camera, Frame } from "@ngne/core";
-import type { GroupLayer, MapView, Project, ProjectMap, TileLayer } from "../../core/model";
-import { effectiveValues, findLayer, walkLayers } from "../../core/model";
+import type {
+    GroupLayer,
+    LayerHighlight,
+    MapView,
+    Project,
+    ProjectMap,
+    TileLayer,
+} from "../../core/model";
+import { drawnOpacity, effectiveValues, findLayer, walkLayers } from "../../core/model";
 import { QuadEmitter } from "../../core/runtime/emit";
 import type { EmitTileset, SpriteLike } from "../../core/runtime/emit";
 import { checkerBlockSize, checkerMean, checkerSpec, type ViewportChecker } from "./checker";
@@ -23,6 +30,11 @@ export interface ViewportScene {
     /** Device pixels per CSS pixel; the view's zoom is in CSS pixels per map pixel. */
     dpr: number;
     checker: ViewportChecker;
+    /**
+     * Highlight Current Layer (SPEC §7.2): the layers outside the current one drawn at its
+     * factor of their opacity; null or absent draws every layer at its own.
+     */
+    highlight?: LayerHighlight | null;
 }
 
 /** NGNE sorts by scene, then `layer`, then `depth`, then insertion order. */
@@ -110,7 +122,7 @@ export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
     for (const { layer, ancestors } of walkLayers(map.layers)) {
         if (layer.type !== "tile") continue;
         const values = effectiveValues(layer, ancestors);
-        const opacity = Math.max(0, Math.min(255, Math.round(values.opacity)));
+        const opacity = drawnOpacity(layer, ancestors, values, scene.highlight);
         if (!values.visible || opacity === 0) continue;
         depth += 1;
         emitLiveLayer(frame, inputs, camera, layer, visible, { depth, counts, ancestors });
@@ -225,7 +237,7 @@ export function emitLiveLayer(
     const entry = at.ancestors ? { layer, ancestors: at.ancestors } : findLayer(map, layer.id);
     if (!entry) return;
     const values = effectiveValues(layer, entry.ancestors);
-    const opacity = Math.max(0, Math.min(255, Math.round(values.opacity)));
+    const opacity = drawnOpacity(layer, entry.ancestors, values, inputs.scene.highlight);
     if (!values.visible || opacity === 0) return;
     const { scale } = camera;
     const visible = visibleRect(camera, inputs.size);

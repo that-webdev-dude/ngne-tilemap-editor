@@ -2,7 +2,7 @@ import type { Frame } from "@ngne/core";
 import { CHUNK_SIZE } from "../../core/cells";
 import type { CellRect } from "../../core/cells";
 import { MapCompositor, cellScale } from "../../core/compositor";
-import type { PixelBuffer, Project, ProjectMap, TileLayer } from "../../core/model";
+import type { LayerHighlight, PixelBuffer, Project, ProjectMap, TileLayer } from "../../core/model";
 import {
     chooseResolution,
     chunkBytes,
@@ -218,6 +218,8 @@ export class ChunkTier {
     #reach: Reach = { left: 0, right: 0, up: 0, down: 0 };
     /** The sets' signature when planned; "" asks for a new plan. */
     #signature = "";
+    /** Highlight Current Layer as of the last sync; chunks are composited with it. */
+    #highlight: LayerHighlight | null = null;
     /** The next plan composites every set again (a structural change). */
     #rebuildAll = false;
     #texels = 0;
@@ -296,8 +298,14 @@ export class ChunkTier {
      * opacities stay keeps its chunks, wherever it is drawn. `size` is the canvas in device
      * pixels, which sets the resolution of a new plan.
      */
-    sync(project: Project, map: ProjectMap, size: DeviceSize): void {
+    sync(
+        project: Project,
+        map: ProjectMap,
+        size: DeviceSize,
+        highlight: LayerHighlight | null = null,
+    ): void {
         if (this.#disposed) return;
+        this.#highlight = highlight;
         if (project !== this.#project || map !== this.#map) {
             this.#releaseAll();
             this.#project = project;
@@ -305,7 +313,7 @@ export class ChunkTier {
             this.#compositor = null;
             this.#signature = "";
         }
-        const plans = planSets(map);
+        const plans = planSets(map, highlight);
         const signature = plans.map((plan) => `${plan.key}:${plan.content}`).join("|");
         if (signature === this.#signature) {
             // Only where the sets are drawn may have changed.
@@ -744,6 +752,7 @@ export class ChunkTier {
             layerIds: new Set(chunk.set.plan.layerIds),
             layerSpace: true,
             background: false,
+            highlight: this.#highlight,
         };
         const pixels = this.#compositor.composite(request, full ? this.#scratch! : undefined);
         const source = this.#source(pixels);

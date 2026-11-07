@@ -1,6 +1,8 @@
 import type { StoreApi } from "zustand/vanilla";
 import type { Touched } from "../../core/history";
 import type { Viewport } from "../../engine/viewport";
+import { preferences } from "../preferences/preferences";
+import { viewPreferences } from "../view/viewPreferences";
 import type { SessionState } from "../state/session";
 import type { MapTabsState } from "../tabs/tabs";
 import { TilesetUsage, openMapIds } from "./mapTilesets";
@@ -64,6 +66,14 @@ export function bindViewport(
         viewport.requestRedraw();
     });
 
+    // Highlight Current Layer and its opacity are read with the scene (scene.ts).
+    const unsubscribeHighlight = viewPreferences.subscribe((state, previous) => {
+        if (state.highlightLayer !== previous.highlightLayer) viewport.requestRedraw();
+    });
+    const unsubscribePreferences = preferences.subscribe((key) => {
+        if (key === "highlight") viewport.requestRedraw();
+    });
+
     // A closed tab releases what only its map used.
     const unsubscribeTabs = tabs.subscribe(sync);
 
@@ -76,6 +86,8 @@ export function bindViewport(
 
     return () => {
         unsubscribeStore();
+        unsubscribeHighlight();
+        unsubscribePreferences();
         unsubscribeTabs();
         unsubscribeHistory?.();
         unsubscribeStroke();

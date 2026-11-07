@@ -68,6 +68,38 @@ export function effectiveValues(
     return { visible, unlocked, opacity: opacity * 255, offsetX, offsetY, parallaxX, parallaxY };
 }
 
+/**
+ * Highlight Current Layer (SPEC §7.2): every layer outside the current layer and its children is
+ * drawn at `factor` of its opacity.
+ */
+export interface LayerHighlight {
+    /** The current layer; a group highlights its children with it. */
+    readonly layerId: number;
+    /** 0..1. */
+    readonly factor: number;
+}
+
+/**
+ * The opacity a layer is drawn with, 0..255 rounded: its effective opacity, times the highlight's
+ * factor when a highlight is given and the layer is neither the current one nor inside it.
+ */
+export function drawnOpacity(
+    layer: Layer,
+    ancestors: readonly GroupLayer[],
+    values: EffectiveLayerValues,
+    highlight?: LayerHighlight | null,
+): number {
+    let opacity = values.opacity;
+    if (
+        highlight &&
+        layer.id !== highlight.layerId &&
+        !ancestors.some((group) => group.id === highlight.layerId)
+    ) {
+        opacity *= highlight.factor;
+    }
+    return Math.max(0, Math.min(255, Math.round(opacity)));
+}
+
 /** The effective values of the layer with `id` in the map; undefined when none. */
 export function effectiveLayerValues(
     map: ProjectMap,

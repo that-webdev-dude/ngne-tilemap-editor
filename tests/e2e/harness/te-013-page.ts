@@ -9,6 +9,7 @@ import type { Ratio } from "../../../src/core/compositor";
 import { checkerColourAt } from "../../../src/engine/viewport/checker";
 import { readCanvas } from "../../../src/engine/testing/readCanvas";
 import { createViewportSceneProject } from "../../support/viewportScene";
+import { referenceHighlight } from "./te-034-highlight";
 import type { ViewportSceneOptions } from "../../support/viewportScene";
 
 // TE-013 page module: the specs import it into the running editor (`import("/tests/e2e/harness/
@@ -140,6 +141,7 @@ export function compare(geometry: Geometry, tolerance: number, perturb = false):
         scaleX: ratio,
         scaleY: ratio,
         viewCentre: { x: centreX, y: centreY },
+        highlight: referenceHighlight(),
     });
     if (perturb) cells.set(1, 0, drawn);
 

@@ -567,7 +567,37 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
 - Layer opacity draws as sprite alpha; parallax and offset are drawn in the viewport relative to
   the view centre as FORMAT §3.4 defines. Tint and blend modes are not drawn.
 - Limits: FORMAT §2.8; the D1 envelope warns once per map when exceeded ("This map is beyond the
-  editor's tested envelope").
+  editor's tested envelope"), naming what the map exceeds: more than 65,536 cells per layer
+  (width × height), more than 16 layers (groups included) or more than 2,000 markers. The other
+  D1 bounds are hard limits already, or the project's (tileset pixels).
+- As Tiled (`MapDocument`, `MoveLayer`, `LayerModel`, `LayerIterator` at `v1.12.2`):
+  - A new layer goes right above the active layer, in its group, and becomes active; it is
+    named "Tile Layer N", "Marker Layer N" or "Group Layer N", N one above the count of layers of
+    that kind, raised past names taken. Group Layers puts a group named "Group N" (N one above
+    the count of groups) right above the first chosen layer and moves the chosen layers into it
+    in tree order; the active layer stays.
+  - Ungroup moves a group's children into its parent where it was and removes it; a layer
+    inside a group moves out right above the group, and a group left empty is removed.
+    Duplicate puts each copy right above its original with the same name (Tiled's "duplicate
+    adds Copy" preference is off by default) and makes the copy active.
+  - Move Up / Down passes a sibling, enters a sibling group (at its bottom going up, at its top
+    going down) or leaves the group at either end, above or below it. Select Layer Above /
+    Below step through the layers bottom to top with a group right after its children.
+  - Show/Hide Other Layers shows them all when none is visible, else hides them all; Lock/Unlock
+    likewise locks them all unless all are locked. The other layers are the siblings of the
+    layer and of each of its groups, not the layer, its groups or the children of a sibling
+    group.
+  - When Delete or Ungroup removes the active layer, the row that takes its place in the Layers
+    panel becomes active (Qt's current row after a removal): the next layer below it in its
+    group, else the one above, else the group; Ungroup of the active group, its top child.
+- Delete is refused when the map would have no layer. Undo does not give layer or marker IDs
+  back, as in Tiled: undo and redo leave `nextLayerId` and `nextMarkerId` at the highest value
+  they have had, so a layer or marker added after an undo never takes an ID that a saved file or
+  an export may already hold.
+- Highlight Current Layer keeps the active layer, and a group's children when the active layer
+  is that group, at their own opacity; every other layer is drawn at the preference's opacity
+  (25% by default) times its own. Tiled darkens the layers below and fades only those above;
+  the editor fades all others.
 
 ## 8. Markers
 
