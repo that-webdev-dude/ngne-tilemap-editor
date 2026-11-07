@@ -128,7 +128,11 @@ test("the dock sections follow DESIGN §2 in order, each collapsible", async ({ 
         const toggle = sectionToggle(page, id);
         if ((await toggle.getAttribute("aria-expanded")) === "false") await toggle.click();
         await expect(toggle).toHaveAttribute("aria-expanded", "true");
-        await expect(dock.locator(`[data-dock-panel="${id}"] .dock-section__body`)).toBeEmpty();
+        const body = dock.locator(`[data-dock-panel="${id}"] .dock-section__body`);
+        // TE-032 fills Maps: one row per map of the project, which starts with one.
+        if (id === "maps")
+            await expect(body.getByRole("listbox").getByRole("option")).toHaveCount(1);
+        else await expect(body).toBeEmpty();
         await toggle.click();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");
         await expect(dock.locator(`[data-dock-panel="${id}"] .dock-section__body`)).toBeHidden();

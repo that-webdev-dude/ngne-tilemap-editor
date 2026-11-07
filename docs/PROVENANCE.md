@@ -89,6 +89,12 @@ rows.
 | `src/app/view/viewportSize.ts` | `src/app/view/viewportSize.ts` | adapt | `ea5c91d` |  | One store the viewport host reports to; no region probe or link |
 | `src/app/view/wheel.ts` | `src/app/view/wheel.ts` | verbatim | `ea5c91d` | `706809d643ccf8ae3d6964a8d577ff219d8e09cb6f0e201a680e6fec21817dd3` |  |
 | `src/app/view/zoom.ts` | `src/app/view/zoom.ts` | adapt | `ea5c91d` |  | Steps 1/32 and 1/16 added below (SPEC §4.1); `fitZoom` in map pixels without rounding |
+| `src/core/color/contrast.ts` | `src/core/color/contrast.ts` | verbatim | `ea5c91d` | `7fb03d414fd8612982d1fdd95b8b0cfafc5dc8cfd119b823fae663eb549fe06c` | |
+| `src/core/color/hex.ts` | `src/core/color/hex.ts` | verbatim | `ea5c91d` | `da3a6afbd39c047ec6fc6bee250ca0945e117e91fb00700dea7b75920aa36209` | |
+| `src/core/color/hsv.ts` | `src/core/color/hsv.ts` | verbatim | `ea5c91d` | `8303ccbd2731e84fc98f5a05cbcb0ed8fac5f91777d39d7cc474a4ffb34851ca` | |
+| `src/core/color/index.ts` | `src/core/color/index.ts` | verbatim | `ea5c91d` | `f906353fba3321780076f87fd9296e26077417887d9ce5e03710ab5a79554426` | |
+| `src/core/color/oklab.ts` | `src/core/color/oklab.ts` | verbatim | `ea5c91d` | `9544f9611bb120656eabaf5ae01ab6e26398748785755df45901ae1442a8f627` | |
+| `src/core/color/rgba.ts` | `src/core/color/rgba.ts` | verbatim | `ea5c91d` | `26974e90f746c75e9f9a55d061ea9786cd64c796858613d3edb9b6b493576b3f` | |
 | `src/core/history/allocate.ts` | `src/core/history/allocate.ts` | adapt | `ea5c91d` | | `Allocator` returns an `ArrayBuffer`; `allocateWords` for the 32-bit words of a cell patch instead of `allocateBuffer` and `copyRect` for pixels |
 | `src/core/history/cellPatch.ts` | `src/core/history/pixelPatch.ts` | adapt | `ea5c91d` | | `cellPatchCommand` over `(index, before, after)` words of one tile layer instead of pixel rectangles of an image; `tileLayerCells` finds the layer; no `pixelPatchCommand` |
 | `src/core/history/command.ts` | `src/core/history/command.ts` | adapt | `ea5c91d` | | `Command` over `ProjectSession` with optional `projectBytes` (SPEC §2.2); `Touched` of SPEC §3 (map, layers, cell rectangles, tilesets, structure) defined here with `touchedNothing`; `mergeTouched` keeps one map or none |
@@ -167,6 +173,11 @@ rows.
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
 | `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); the surfaces (TE-008); the notices shown as toasts, as `FileWorkflows` shows them (TE-028); file workflows and the pixel-memory warning are left out |
 | `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
+| `src/ui/colour/ColourPicker.tsx` | `src/ui/colour/ColourPicker.tsx` | adapt | `ea5c91d` | | Edits one colour given by its caller (`value`, `onChange`) instead of the editor store's foreground and background, with either button as the sprite editor's `single` panel; the colour and its HSV live in a store of the panel's own, which follows `value`; `unset` reports the first edit even when it gives `value` (a colour of "None"); no `store` or `single` props (DESIGN §3.3) |
+| `src/ui/colour/cancelContextMenu.ts` | `src/ui/colour/cancelContextMenu.ts` | verbatim | `ea5c91d` | `9c1041c45ee133476335ca53e92e1882d5ea79b3d6139c5a665466cc920242af` | |
+| `src/ui/colour/colourPicker.css` | `src/ui/colour/colourPicker.css` | verbatim | `ea5c91d` | `99a9d989a8409246bfd017f3e104db21c144428e49d0740f6bf1fa5272af2cd6` | |
+| `src/ui/colour/pickerEdits.ts` | `src/ui/colour/pickerEdits.ts` | adapt | `ea5c91d` | | Edits a `ColourStore` (the panel's colour 0xRRGGBBAA with its HSV, `PickerColour`) instead of a colour slot of the editor store: same functions without the `slot` parameter; `ColourStore` and `PickerColour` instead of `EditorStore` |
+| `src/ui/colour/pickerMath.ts` | `src/ui/colour/pickerMath.ts` | adapt | `ea5c91d` | | No change: it imports only the `Hsv` type, which `core/color` exports as in the sprite editor |
 | `src/ui/commandPalette/CommandPalette.tsx` | `src/ui/commandPalette/CommandPalette.tsx` | verbatim | `ea5c91d` | `0b28da9e42ce9e91c73f1b8a6d0873801cc319c4f921fde16a0d359871373723` | |
 | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | verbatim | `ea5c91d` | `414b2165c6eac389f9797a4371f24e64171daf524c636262c1ca5b7f1c01b4f6` | |
 | `src/ui/commandPalette/commandPalette.css` | `src/ui/commandPalette/commandPalette.css` | verbatim | `ea5c91d` | `c4cc79edc7940ebaa46b4424c69756ea1033cf1f01101c2559f73c785983da98` | |

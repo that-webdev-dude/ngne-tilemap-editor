@@ -520,7 +520,9 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   **Delete** (refused for the last map; no confirmation, undo restores it: SUITE §4),
   **Move up/down** in the map list.
 - **Map Properties**: name, export name, class, tile size, background colour, parallax origin,
-  properties. Changing the tile size keeps cells; markers and offsets stay in pixels.
+  properties. Changing the tile size keeps cells; markers and offsets stay in pixels. As
+  Tileset Properties, the dialog changes nothing until OK, and OK applies every changed field
+  as one undo step (none when nothing changed).
 - **Resize / Offset Map** (Tiled's dialog): new width and height and an offset in cells; a
   preview shows the old map inside the new bounds. Cells outside the new bounds are removed;
   markers are moved by the offset and kept even outside the bounds (Tiled). The tile selection

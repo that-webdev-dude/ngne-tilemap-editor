@@ -255,7 +255,11 @@ toggles (`se-design` §4).
 One row per map of the project in list order: name, open-tab dot, `w × h` in `--text-muted`.
 Click opens (or selects) its tab; double click renames in place (rules of `se-design` §5.6
 rename); drag reorders; row menu (Menu key, overflow button) Map Properties…, Duplicate, Delete.
-Header: New Map (+).
+Header: New Map (+). The row menu acts on its row's map, which opening it shows, as a tileset
+tab's menu shows that tileset (§8.5). A drag moves the map when the row is dropped: one undo
+step, Move Map Up or Move Map Down by its direction; it opens no map and leaves the tab strip's
+order unchanged. The list is one tab stop; ↑ ↓, Home and End move between rows, Enter or Space
+opens the row's map, F2 renames it.
 
 ### 8.2 Layers (dock)
 
@@ -347,7 +351,7 @@ key wins.
 | `text` | A text or number field has focus (as the sprite editor) |
 | `gesture` | A multi-click gesture is open: polygon or polyline marker, collision polygon, shape fill or terrain line in progress |
 | `markers` | The active layer is a marker layer and markers are selected |
-| `panel` | Focus is in the Tilesets or Terrains panel or the Layers tree (they take arrows, Enter, Home, End) |
+| `panel` | Focus is in the Tilesets or Terrains panel, the Maps list or the Layers tree (they take arrows, Enter, Home, End) |
 | `canvas` | As the sprite editor; fallback for keys a panel does not bind, so tool keys keep working |
 | `global` | As the sprite editor |
 

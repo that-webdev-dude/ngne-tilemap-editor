@@ -1,0 +1,85 @@
+/* The New Map and Map Properties dialogs (DESIGN §9): labels left, fields right. */
+.map-form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+}
+
+.map-form__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    min-width: 0;
+}
+
+.map-form__text {
+    width: 100%;
+    max-width: 280px;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+.map-form__text[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.map-form__swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    height: var(--control-height);
+    padding: 0 var(--space-8) 0 var(--space-4);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The colour over the checkerboard, so that its alpha shows. */
+.map-form__swatch-colour {
+    position: relative;
+    width: 16px;
+    height: 16px;
+    border: var(--border-width) solid var(--border-strong);
+    border-radius: 2px;
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 8px 8px;
+}
+
+.map-form__swatch-colour > span {
+    position: absolute;
+    inset: 0;
+}
+
+.map-form__swatch-none {
+    padding-left: var(--space-4);
+    color: var(--text-muted);
+}
+
+.map-form__picker {
+    width: 232px;
+}
+
+.map-form__picker-actions {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: var(--space-8);
+}
+
+.map-form__messages {
+    grid-column: 1 / -1;
+    min-height: var(--line-height);
+}
+
+.map-form__message {
+    margin: 0;
+    color: var(--danger);
+}

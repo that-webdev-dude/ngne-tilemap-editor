@@ -375,3 +375,42 @@ export function moveMapCommand(id: string, delta: -1 | 1): Command {
         undo: (session) => swap(session.project, -delta),
     };
 }
+
+/**
+ * The command that moves map `id` of `project` to place `index` of the map list, as a drag in
+ * the Maps panel does (DESIGN §8.1): one entry however far it goes, labelled Move Map Up or Down
+ * by its direction. Its `do` throws `MapEditError` ("move") for an index outside the list or the
+ * place the map holds already. As Move up/down, the entry names no map (SPEC §3). Throws
+ * `MapEditError` ("missing") for an unknown map.
+ */
+export function reorderMapCommand(project: Project, id: string, index: number): Command {
+    const start = project.maps.indexOf(mapOf(project, id));
+    let from = -1;
+    const move = (target: Project, source: number, place: number) => {
+        const [map] = target.maps.splice(source, 1);
+        target.maps.splice(place, 0, map!);
+    };
+    return {
+        label: index < start ? MAP_LABELS.moveUp : MAP_LABELS.moveDown,
+        bytes: OVERHEAD_BYTES,
+        touched: touched(null, { structure: true }),
+        do(session) {
+            const { project } = session;
+            const at = project.maps.indexOf(mapOf(project, id));
+            if (!Number.isInteger(index) || index < 0 || index >= project.maps.length) {
+                throw new MapEditError("move", `The map list has no place ${index + 1}.`);
+            }
+            if (index === at) {
+                throw new MapEditError(
+                    "move",
+                    `${quoted(project.maps[at]!.name)} is there already.`,
+                );
+            }
+            from = at;
+            move(project, at, index);
+        },
+        undo(session) {
+            if (from >= 0) move(session.project, index, from);
+        },
+    };
+}

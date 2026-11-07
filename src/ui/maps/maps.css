@@ -1,0 +1,115 @@
+/* The Maps dock section (DESIGN §8.1): 28 px rows of name, open-tab dot and size. */
+.maps-panel {
+    display: flex;
+    flex-direction: column;
+    margin: 0 calc(-1 * var(--space-12));
+}
+
+.maps-panel__row {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--space-8);
+    min-width: 0;
+    height: var(--row-height);
+    padding: 0 var(--space-4) 0 var(--space-12);
+    color: var(--text);
+    cursor: default;
+    user-select: none;
+    transition: background-color var(--motion-fast) var(--motion-ease);
+}
+
+.maps-panel__row:hover {
+    background: var(--bg-raised);
+}
+
+/* The active map: as the active layer row (DESIGN §8.2). */
+.maps-panel__row[aria-selected="true"] {
+    background: var(--bg-active);
+    box-shadow: inset 2px 0 0 var(--accent);
+}
+
+.maps-panel__row:focus-visible {
+    outline: var(--focus-ring-width) solid var(--accent);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+.maps-panel[data-dragging] .maps-panel__row {
+    cursor: grabbing;
+}
+
+.maps-panel__row[data-dragged] {
+    opacity: 0.6;
+}
+
+/* Where a dragged row would go: a 2 px accent line above or below a row. */
+.maps-panel__row[data-drop-before]::before,
+.maps-panel__row[data-drop-after]::after {
+    position: absolute;
+    right: 0;
+    left: 0;
+    height: 2px;
+    background: var(--accent);
+    content: "";
+    pointer-events: none;
+}
+
+.maps-panel__row[data-drop-before]::before {
+    top: -1px;
+}
+
+.maps-panel__row[data-drop-after]::after {
+    bottom: -1px;
+}
+
+.maps-panel__name {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.maps-panel__rename {
+    flex: 1;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--accent);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+/* The open-tab dot; the place stays when the map has no tab, so the sizes line up. */
+.maps-panel__dot {
+    flex: none;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.maps-panel__dot[data-open-tab] {
+    background: var(--text-muted);
+}
+
+.maps-panel__size {
+    flex: none;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+
+/* The overflow button shows on the hovered, focused or active row. */
+.maps-panel__menu-button {
+    flex: none;
+    opacity: 0;
+}
+
+.maps-panel__row:hover .maps-panel__menu-button,
+.maps-panel__row:focus-within .maps-panel__menu-button,
+.maps-panel__row[aria-selected="true"] .maps-panel__menu-button,
+.maps-panel__menu-button[data-state="open"] {
+    opacity: 1;
+}
