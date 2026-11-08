@@ -340,9 +340,12 @@ The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behavi
 
 ### 5.4 Terrain fill mode
 
-Bucket fill and shape fill in Terrain mode fill their region with the selected terrain:
-`WangFiller` with the region as painted (every index of every cell set), border seeding from
-outside neighbours, corrections off, so only the border has to match.
+Bucket fill and shape fill in Terrain mode fill their region with tiles of the terrain set
+selected for the terrain brush, as Tiled's `wangFill` (`abstracttilefilltool.cpp`, tag
+`v1.12.2`): `WangFiller` given the region only (`setRegion`, no index painted, so the selected
+terrain is not used), border seeding from outside neighbours, corrections off. Only the border
+has to match the cells around the region; inside it the filler chooses freely among equal
+candidates (§5.2).
 
 ## 6. Tilesets
 

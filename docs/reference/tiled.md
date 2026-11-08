@@ -290,8 +290,9 @@ Inputs: a WangSet, the current layer as background (`mBack`), the renderer (for 
        (unreachable ⇒ reject if corrections on, else `maxDistance+1`);
      - keep only lowest-score candidates in a `RandomPicker` weighted by
        `wangIdProbability × tile.probability`; if erasing enabled, an empty cell is also a candidate;
-     - unless (corrections on AND set complete), look-ahead: tentatively apply and reject a pick
-       if any neighbour would be left with no possible tile; try next pick.
+     - only with corrections off and the set not complete (`!mCorrectionsEnabled &&
+       !isComplete()`), look-ahead: tentatively apply and reject a pick if any neighbour would be
+       left with no possible tile; try next pick.
    - On success write cell, mark `Checked`, and `updateAdjacent()` pushes its colours into the
      `desired`+`mask` of all 8 neighbours (shared corners/edges).
    - On failure add to `mInvalidRegion` (brush shows red overlay).
@@ -310,6 +311,18 @@ Reproduction notes:
 - The greedy row-major resolve + 1-step look-ahead is not a full constraint solver; failures are
   expected on incomplete sets and are surfaced, not hidden.
 - Use seeded RNG if deterministic output/tests are needed (Tiled uses random picks).
+- `isComplete()` counts only WangIds without a 0 at any of the 8 indexes after the type mask
+  (`recalculateCells`, `hasWildCards`), so a corner or edge set is never complete to the filler
+  and its look-ahead always runs with corrections off. The port reproduces this; the
+  completeness of SPEC §5.1 and §5.2 counts the type's own indexes.
+- Fill tools call only `setRegion`: their cells start with no wish (`desired` all `INDEX_MASK`,
+  no mask) apart from border seeding. Region rectangles are resolved in `QRegion` order (bands
+  top to bottom, rectangles left to right, each row by row).
+- The brush's painting mode comes from `effectiveTypeForColor(color)` (`wangbrush.cpp`
+  `setColor`): in a mixed set a terrain used only at corners paints corners, one used only at
+  edges paints edges; full-tile mode follows that mode.
+- A correction cell found invalid can be resolved by a later batch; Tiled keeps it in
+  `mInvalidRegion`. The port reports only the cells left unchanged (SPEC §5.2).
 
 ---
 
