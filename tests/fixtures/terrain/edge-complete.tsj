@@ -1,0 +1,98 @@
+{ "columns":8,
+ "image":"edge-complete.png",
+ "imageheight":48,
+ "imagewidth":192,
+ "margin":0,
+ "name":"edge-complete",
+ "spacing":0,
+ "tilecount":16,
+ "tiledversion":"1.12.2",
+ "tileheight":24,
+ "tilewidth":24,
+ "type":"tileset",
+ "version":"1.11",
+ "wangsets":[
+        {
+         "colors":[
+                {
+                 "color":"#5a9e3a",
+                 "name":"Grass",
+                 "probability":1,
+                 "tile":-1
+                }, 
+                {
+                 "color":"#e2c275",
+                 "name":"Sand",
+                 "probability":1,
+                 "tile":-1
+                }],
+         "name":"Edge complete",
+         "tile":-1,
+         "type":"edge",
+         "wangtiles":[
+                {
+                 "tileid":0,
+                 "wangid":[1, 0, 1, 0, 1, 0, 1, 0]
+                }, 
+                {
+                 "tileid":1,
+                 "wangid":[2, 0, 1, 0, 1, 0, 1, 0]
+                }, 
+                {
+                 "tileid":2,
+                 "wangid":[1, 0, 2, 0, 1, 0, 1, 0]
+                }, 
+                {
+                 "tileid":3,
+                 "wangid":[2, 0, 2, 0, 1, 0, 1, 0]
+                }, 
+                {
+                 "tileid":4,
+                 "wangid":[1, 0, 1, 0, 2, 0, 1, 0]
+                }, 
+                {
+                 "tileid":5,
+                 "wangid":[2, 0, 1, 0, 2, 0, 1, 0]
+                }, 
+                {
+                 "tileid":6,
+                 "wangid":[1, 0, 2, 0, 2, 0, 1, 0]
+                }, 
+                {
+                 "tileid":7,
+                 "wangid":[2, 0, 2, 0, 2, 0, 1, 0]
+                }, 
+                {
+                 "tileid":8,
+                 "wangid":[1, 0, 1, 0, 1, 0, 2, 0]
+                }, 
+                {
+                 "tileid":9,
+                 "wangid":[2, 0, 1, 0, 1, 0, 2, 0]
+                }, 
+                {
+                 "tileid":10,
+                 "wangid":[1, 0, 2, 0, 1, 0, 2, 0]
+                }, 
+                {
+                 "tileid":11,
+                 "wangid":[2, 0, 2, 0, 1, 0, 2, 0]
+                }, 
+                {
+                 "tileid":12,
+                 "wangid":[1, 0, 1, 0, 2, 0, 2, 0]
+                }, 
+                {
+                 "tileid":13,
+                 "wangid":[2, 0, 1, 0, 2, 0, 2, 0]
+                }, 
+                {
+                 "tileid":14,
+                 "wangid":[1, 0, 2, 0, 2, 0, 2, 0]
+                }, 
+                {
+                 "tileid":15,
+                 "wangid":[2, 0, 2, 0, 2, 0, 2, 0]
+                }]
+        }]
+}

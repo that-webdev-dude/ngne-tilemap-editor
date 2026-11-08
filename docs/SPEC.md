@@ -314,8 +314,11 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 - Cells that cannot be resolved are returned as an invalid region; the brush shows them red on
   the overlay and leaves them unchanged.
 - Fixtures (`tests/fixtures/terrain/`): corner, edge and mixed sets, complete and incomplete,
-  each with exactly one tile per terrain combination, so Tiled's random choice never applies and
-  its result is deterministic; each with scripted strokes (brush, full-tile, fill mode).
+  each with exactly one tile per terrain combination; each with scripted strokes (brush,
+  full-tile, fill mode) that constrain every index of every cell the filler resolves. Only then
+  does one candidate have the lowest penalty, so Tiled's random choice never applies and its
+  result is deterministic; an index with no wish (inside a fill region wider than the seeded
+  border) leaves equal candidates.
   - Automated: fast-check properties (every resolved cell matches its constraints; a complete
     set leaves no invalid cell; nothing outside the bounds of §5.2 changes) and golden results,
     each traced by hand against `wangfiller.cpp` when written and committed as TMJ.
