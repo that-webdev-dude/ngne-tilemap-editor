@@ -1,5 +1,5 @@
 import type { StoreApi } from "zustand/vanilla";
-import { deleteMarkersCommand, findMarker } from "../../core/markers";
+import { deleteMarkersCommand } from "../../core/markers";
 import type { Command } from "../../core/history";
 import { createMapSession, effectiveValues, walkLayers } from "../../core/model";
 import type { Marker, ProjectMap, ProjectSession, Shape } from "../../core/model";
@@ -20,21 +20,38 @@ import { activeLayer, activeMap } from "../tools/toolSets";
 // The `markers` key context (DESIGN §10.1) is on while the active layer is a marker layer and
 // markers of the active map are selected (`followMarkerContext`).
 
-/** The IDs of the selected markers of `map` that exist, in selection order. */
-export function selectedMarkerIds(session: ProjectSession, map: ProjectMap): number[] {
-    const ids = session.perMap.get(map.id)?.markerSelection ?? [];
-    return ids.filter((id) => findMarker(map, id) !== undefined);
+/**
+ * The markers of `map` by ID, the first of an ID in layer order (as `findMarker`). Built once per
+ * lookup of a selection, so it costs the selection plus the markers, not their product: the
+ * listeners of every pan look the selection up.
+ */
+function markersById(map: ProjectMap): Map<number, Marker> {
+    const byId = new Map<number, Marker>();
+    for (const { layer } of walkLayers(map.layers)) {
+        if (layer.type !== "marker") continue;
+        for (const marker of layer.markers) {
+            if (!byId.has(marker.id)) byId.set(marker.id, marker);
+        }
+    }
+    return byId;
 }
 
-/** The selected markers of `map`, in selection order. */
+/** The selected markers of `map` that exist, in selection order. */
 export function selectedMarkers(session: ProjectSession, map: ProjectMap): Marker[] {
     const ids = session.perMap.get(map.id)?.markerSelection ?? [];
+    if (ids.length === 0) return [];
+    const byId = markersById(map);
     const out: Marker[] = [];
     for (const id of ids) {
-        const place = findMarker(map, id);
-        if (place) out.push(place.marker);
+        const marker = byId.get(id);
+        if (marker) out.push(marker);
     }
     return out;
+}
+
+/** The IDs of the selected markers of `map` that exist, in selection order. */
+export function selectedMarkerIds(session: ProjectSession, map: ProjectMap): number[] {
+    return selectedMarkers(session, map).map((marker) => marker.id);
 }
 
 /**
