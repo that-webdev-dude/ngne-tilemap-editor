@@ -21,6 +21,7 @@ import type { PaintTarget } from "../tools/paintTarget";
 import { CUT_LABEL, captureStamp } from "../tools/stamp/capture";
 import { setCurrentStamp } from "../tools/stamp/currentStamp";
 import { activeLayer, activeLayerId, activeMap } from "../tools/toolSets";
+import { deleteSelectedMarkersCommand, markersSelected } from "../markers/markerSelection";
 import { clipboardContent, clipboardStore, copyCellsToClipboard } from "./clipboard";
 
 // Cut, Copy, Paste and Delete of cells (SPEC §4.4, DESIGN §5, §10.3; TE-021): Ctrl+X, Ctrl+C,
@@ -36,7 +37,9 @@ import { clipboardContent, clipboardStore, copyCellsToClipboard } from "./clipbo
 //           copied; a hidden layer is cut (Tiled's `isTileSelectionLocked` looks at the lock
 //           only).
 //   Delete  the selected cells are erased, the selection kept: one entry, "Delete"; refused as
-//           Cut is. Erasing only empty cells records nothing (SPEC §3).
+//           Cut is. Erasing only empty cells records nothing (SPEC §3). While the `markers`
+//           context applies (a marker layer active, markers selected), Delete removes the
+//           selected markers instead (SPEC §8; TE-038): one entry, "Delete Marker(s)".
 //   Paste   the clipboard becomes the current stamp, cut to the bounding box of its non-empty
 //           cells (Tiled's `normalizeTileLayerPositionsAndMapSize`), and the stamp brush is
 //           selected. A tile selection is cleared first, one entry ("Select None"), so the
@@ -200,8 +203,15 @@ export const commands: CommandSpec[] = [
         id: "edit.delete",
         title: "Delete",
         shortcut: "Delete",
-        enabled: () => historyIdle() && selectedTileCells() !== null,
-        run: () => void eraseSelected(DELETE_LABEL, false),
+        enabled: () =>
+            historyIdle() &&
+            (markersSelected(sessionStore.getState().session) || selectedTileCells() !== null),
+        run() {
+            if (!historyIdle()) return;
+            const markers = deleteSelectedMarkersCommand(sessionStore.getState().session);
+            if (markers) activeHistory().execute(markers);
+            else eraseSelected(DELETE_LABEL, false);
+        },
     },
 ];
 

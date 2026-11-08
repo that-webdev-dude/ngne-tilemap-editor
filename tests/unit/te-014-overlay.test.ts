@@ -211,6 +211,7 @@ describe("overlay layer registry", () => {
             ["collision-outlines", 400],
             ["markers", 450],
             ["selection-ants", 500],
+            ["marker-tools", 550],
             ["capture-preview", 600],
             ["eraser-preview", 600],
             ["fill-preview", 600],

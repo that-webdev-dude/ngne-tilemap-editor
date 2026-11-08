@@ -1,15 +1,18 @@
 import type { History } from "../../core/history";
 import type { CommandSpec } from "../commands/types";
 import { showMapOfStep } from "../tabs/tabs";
+import { toolPipeline } from "../tools/appPipeline";
 import { activeHistory } from "./session";
 
 /**
  * The history when undo and redo may use it. While a transaction is open (a stroke) they would
- * throw, and `canUndo` still reads true, so that is checked first.
+ * throw, and `canUndo` still reads true, so that is checked first. A stroke without one (a
+ * marker drag or an open polygon, TE-038) works from the markers as they were at its press, so
+ * undo and redo wait for it too.
  */
 function idleHistory(): History | null {
     const history = activeHistory();
-    return history.transaction ? null : history;
+    return history.transaction || toolPipeline.stroking ? null : history;
 }
 
 /**

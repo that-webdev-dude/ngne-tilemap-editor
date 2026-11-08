@@ -1,8 +1,9 @@
 import { effectiveValues, shapeBox, walkLayers } from "../../core/model";
-import type { Marker, MarkerLayer, ProjectMap } from "../../core/model";
+import type { Marker, MarkerLayer, ProjectMap, Shape } from "../../core/model";
 import { layerShift } from "../../engine/viewport/geometry";
 import { cssColour } from "../overlay/draw";
 import type { OverlayFrame } from "../overlay/types";
+import { markerDraft, markerDraftVersion } from "./markerSelection";
 
 // How markers look on the overlay (DESIGN §4, SPEC §8; TE-037): outlines 1.5 CSS px in their
 // layer's colour on a 1 px black halo; rectangles, ellipses and polygons filled with the colour
@@ -23,6 +24,10 @@ import type { OverlayFrame } from "../overlay/types";
 // view leaves it. Pins keep their size on screen: a pin is drawn once per colour and copied to each
 // point. Closed shapes all wind one way, so where two of them overlap the fill shows once, at 15%.
 // Chips are painted with their layer, so a later layer's shapes cover an earlier layer's chips.
+//
+// While a marker tool drags markers (TE-038), they are drawn where the drag puts them (the draft
+// of `markerSelection.ts`): the layers holding them are built and painted again at each change
+// of the draft, the others are not.
 
 /** Outline width in CSS pixels, and the halo on each side of it. */
 export const OUTLINE_WIDTH = 1.5;
@@ -107,8 +112,8 @@ export function tracePin(path: PathSink, x: number, y: number, unit: number): vo
     path.arc(cx, cy, 3 * unit, 0, 2 * Math.PI);
 }
 
-/** Adds the outline of a marker other than a point, in map pixels. */
-export function traceShape(path: PathSink, marker: Exclude<Marker, { shape: "point" }>): void {
+/** Adds the outline of a shape other than a point, in map pixels. */
+export function traceShape(path: PathSink, marker: Exclude<Shape, { shape: "point" }>): void {
     switch (marker.shape) {
         case "rectangle":
             path.rect(marker.x, marker.y, marker.width, marker.height);
@@ -173,22 +178,30 @@ export interface MarkerPaths {
     bounds: { left: number; top: number; right: number; bottom: number };
 }
 
-/** The paths of each layer and the step of the history they were built at. */
-const built = new WeakMap<MarkerLayer, { step: number; paths: MarkerPaths }>();
+/** The paths of each layer and the step of the history (and the draft) they were built at. */
+const built = new WeakMap<MarkerLayer, { step: number; draft: number; paths: MarkerPaths }>();
 
 /**
  * The paths of `layer`'s markers. Markers change only through the history, so the paths of a
- * layer are built again only when `step` (the history's step counter) moved since they were built.
+ * layer are built again only when `step` (the history's step counter) moved since they were built,
+ * or `draftKey` changed: `draft` gives the shapes some markers are drawn with instead of their
+ * own while they are dragged (`draftKey` 0 without a draft).
  */
-export function markerPaths(layer: MarkerLayer, step: number): MarkerPaths {
+export function markerPaths(
+    layer: MarkerLayer,
+    step: number,
+    draft: ReadonlyMap<number, Shape> | null = null,
+    draftKey = 0,
+): MarkerPaths {
     const cached = built.get(layer);
-    if (cached?.step === step) return cached.paths;
+    if (cached?.step === step && cached.draft === draftKey) return cached.paths;
     const fill = new Path2D();
     const outline = new Path2D();
     const points: number[] = [];
     const names: MarkerName[] = [];
     const bounds = { left: Infinity, top: Infinity, right: -Infinity, bottom: -Infinity };
-    for (const marker of layer.markers) {
+    for (const own of layer.markers) {
+        const marker = (draft?.get(own.id) ?? own) as Shape & Pick<Marker, "name">;
         const box = shapeBox(marker);
         bounds.left = Math.min(bounds.left, box.x);
         bounds.top = Math.min(bounds.top, box.y);
@@ -199,9 +212,9 @@ export function markerPaths(layer: MarkerLayer, step: number): MarkerPaths {
             traceShape(outline, marker);
             if (marker.shape !== "polyline") traceShape(fill, marker);
         }
-        if (marker.name !== "") {
+        if (own.name !== "") {
             names.push({
-                name: marker.name,
+                name: own.name,
                 point: marker.shape === "point",
                 right: box.x + box.width,
                 top: box.y,
@@ -209,7 +222,7 @@ export function markerPaths(layer: MarkerLayer, step: number): MarkerPaths {
         }
     }
     const paths = { fill, outline, points: Float64Array.from(points), names, bounds };
-    built.set(layer, { step, paths });
+    built.set(layer, { step, draft: draftKey, paths });
     return paths;
 }
 
@@ -468,13 +481,18 @@ export function drawMarkers(frame: OverlayFrame, step: number): void {
     const { dpr } = mapping.frame;
     const { scale } = mapping;
     const names = namesShown(mapping.frame.view.zoom);
+    const draft = markerDraft();
+    const drafted = draft?.mapId === map.id ? draft.shapes : null;
     for (const { layer, shift } of drawnMarkerLayers(map, mapping.frame.view)) {
         const alpha = (layer.color & 0xff) / 255;
         if (alpha === 0) continue;
         const look: Look = { rgb: layer.color >>> 8, alpha, dpr, scale, names, theme };
-        const paths = markerPaths(layer, step);
+        const dragged = drafted !== null && layer.markers.some((marker) => drafted.has(marker.id));
+        const draftKey = dragged ? markerDraftVersion() : 0;
+        const paths = markerPaths(layer, step, dragged ? drafted : null, draftKey);
         const key = [
             step,
+            draftKey,
             scale,
             dpr,
             layer.color,

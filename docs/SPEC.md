@@ -612,6 +612,26 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
   **Polyline** (click points; Enter finishes; Escape cancels; Backspace removes the last point).
 - Snap to grid is on by default (context toggle); Ctrl inverts it while moving; Ctrl while
   resizing keeps aspect; Alt while resizing inverts snapping (Tiled).
+- Tool details, from Tiled's object tools (v1.12.2):
+  - Snapping puts a position on the map's tile grid; with snapping off it goes to the nearest
+    whole map pixel, as the sprite editor places pixels (Tiled keeps fractions unless its Snap
+    to Pixels is on). A move snaps the least `x` and `y` of the moved markers' positions; a
+    resize snaps the dragged handle, which keeps its offset from the pointer, and puts the box's
+    sides on whole pixels; Ctrl also inverts snapping while creating.
+  - Select takes markers of every visible, unlocked marker layer, the topmost first; with
+    Highlight Current Layer on, a marker of the active layer first. Shift- or Ctrl-click adds a
+    marker or takes it out of the selection; a click where no marker is clears it (kept with
+    Shift); a drag from where no marker is, or with Shift, is a rubber band that takes what it
+    touches (with Alt, what it encloses), added with Shift or Ctrl. Dragging a marker that is
+    not selected selects it alone. A drag starts after 5 CSS px. Selecting makes no history
+    entry; a move or a resize is one.
+  - The handles and the context bar's W and H act on a lone selected rectangle or ellipse; X
+    and Y move the whole selection.
+  - A created marker becomes the selection. Shift makes a rectangle or ellipse square (the
+    longer side); a click without a drag makes one of size 0. A polygon or polyline also
+    finishes on a double or right click, a polygon of 3 points or more on a click on its first
+    point; Backspace with one point left cancels; a click on the last point adds none; finished
+    with too few points, nothing is made.
 - New markers take `nextMarkerId`. Copy/paste of markers within and between maps keeps
   geometry and positions and gives new IDs. Paste goes into the active layer when it is an
   unlocked, visible marker layer, and selects the pasted markers; otherwise Paste of markers is
