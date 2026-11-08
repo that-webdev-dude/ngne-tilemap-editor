@@ -171,6 +171,10 @@ interface Command {
   records `(layer, index, before, after)` for each cell it first changes (12 bytes a cell);
   `commit` makes one command; `abort` (Escape, pointer cancel, right click during a drag)
   restores the before values. A stroke that changes nothing makes no entry.
+- After every do, undo and redo the history checks the memory limit (§2.2) and the cells of
+  all tile layers of each map against FORMAT §2.8 (4 194 304). A stroke or command that would
+  pass either is refused whole: its cells go back, no entry is made, and a toast names the
+  limit, as for a command that cannot allocate.
 - History budget 256 MB per project; oldest entries dropped first; the newest is kept even when
   it alone exceeds the budget; a new command clears redo. A command that cannot allocate aborts
   cleanly with a toast.

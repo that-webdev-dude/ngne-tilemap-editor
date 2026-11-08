@@ -3,6 +3,7 @@ import {
     MEMORY_LIMIT_BYTES,
     MemoryLimitError,
     accountMemory,
+    assertCellsWithin,
     assertInvariants,
     assertMemoryWithin,
     memoryWarns,
@@ -173,8 +174,9 @@ export class History {
     /**
      * Does `command` and makes it the newest entry; undone commands can no longer be
      * redone. Throws `MemoryLimitError` when the command would take the project's memory
-     * past its limit (SPEC §2.2), and rethrows what `command.do` or the verifier throws; the
-     * project and the history are then unchanged.
+     * past its limit (SPEC §2.2), `CellLimitError` when it would take a map past its cells
+     * (FORMAT §2.8), and rethrows what `command.do` or the verifier throws; the project and the
+     * history are then unchanged.
      */
     execute(command: Command): void {
         this.#assertIdle("execute");
@@ -251,12 +253,14 @@ export class History {
 
     /**
      * Checks the project after `command` was applied (`step` "do") or reversed ("undo"):
-     * the memory limit, then the verifier. A failure reverses the step and rethrows.
+     * the memory limit, the cells-per-map limit (FORMAT §2.8), then the verifier. A failure
+     * reverses the step and rethrows.
      */
     #check(command: Command, step: "do" | "undo"): void {
         try {
             const total = accountMemory(this.session.project).total;
             if (total > MEMORY_LIMIT_BYTES) throw new MemoryLimitError(total);
+            assertCellsWithin(this.session.project);
             this.#verify?.(this.session.project);
         } catch (error) {
             if (step === "do") command.undo(this.session);

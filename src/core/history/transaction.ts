@@ -51,7 +51,8 @@ export interface Transaction {
      * every written cell has its value at `begin` again — it acts as `abort` and returns null
      * (SPEC §3: a stroke that changes nothing makes no entry). When the entry cannot be
      * allocated, or the project's memory passed its limit, it restores the state at `begin`
-     * and throws `AllocationError` or `MemoryLimitError`.
+     * and throws `AllocationError` or `MemoryLimitError`. When the history refuses the entry
+     * (`CellLimitError` for a map past its cells, or the verifier), it undoes it and rethrows.
      *
      * `extra` is a change of the session that the owner of the transaction made besides the
      * cells and that is already applied. It becomes part of the same entry, done after the

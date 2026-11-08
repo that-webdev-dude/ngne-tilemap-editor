@@ -31,6 +31,7 @@ export {
     nudgeFrames,
     setFrameDurations,
 } from "./animation";
+export { CellLimitError, assertCellsWithin, mapCellCount } from "./cellLimit";
 export { idKey, isId, randomId, sequentialIds } from "./ids";
 export type { IdGenerator } from "./ids";
 export { INVARIANTS, InvariantError, assertInvariants } from "./invariants";
