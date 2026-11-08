@@ -257,7 +257,7 @@ test("tiles dragged from the grid drop where the pointer is; a double click appe
     await page.mouse.click(two.x, two.y);
     await page.mouse.click(two.x, two.y, { button: "right" });
     const items = page.getByRole("menuitem");
-    await expect(items).toHaveText(["Edit Collision…", "Edit Animation…"]);
+    await expect(items).toHaveText(["Edit Collision…", "Edit Animation…", "Properties"]);
     await page.getByRole("menuitem", { name: "Edit Animation…" }).click();
     await expect(dialog(page)).toContainText("Terrain · tile 2");
 });

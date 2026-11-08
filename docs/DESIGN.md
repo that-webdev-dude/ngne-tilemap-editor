@@ -294,7 +294,16 @@ Two parts: built-in fields of the selection (name, class, and the kind's own fie
 **Custom properties**: a list of rows `name · type chip · value control`, sorted by name; Add
 (+) opens a popover with Name, Type (select) and Add; row menu Rename, Change Type, Remove.
 Mixed values show "—" (`se-design` timeline duration rule). The header names what is shown
-("Marker · exit", "3 tiles", "Layer · Ground", "Map · Overworld").
+("Marker · exit", "3 tiles", "Layer · Ground", "Map · Overworld") and holds the panel's menu
+(overflow button): Show Selection Properties, Show Project Properties, Show Tileset Properties.
+Built-in fields per kind: project name and export name; tileset name, export name, class, tile
+size (read-only) and tile offset; tile ID (one tile, read-only) and class; map name, export
+name, class, size and tile size (read-only); layer name, class, type (read-only), opacity,
+offset and parallax; marker name and class, and for one marker its shape (read-only), X, Y,
+and width and height of a rectangle or ellipse. Value controls: bool a checkbox, int a number
+field, float a number field of 9 decimals, string a text field, colour a swatch whose picker popover applies on close,
+file a text field with Pick. Text fields apply on Enter or leaving, Escape keeps the old value;
+Rename edits the name in place; Change Type is a submenu of the six types.
 
 ### 8.4 Preview (dock)
 

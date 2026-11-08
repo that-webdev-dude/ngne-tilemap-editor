@@ -135,6 +135,12 @@ test("the dock sections follow DESIGN §2 in order, each collapsible", async ({ 
         // TE-035 fills Layers: one row per layer of the active map, which starts with one.
         else if (id === "layers")
             await expect(body.getByRole("tree").getByRole("treeitem")).toHaveCount(1);
+        // TE-040 fills Properties: the active layer of the new project's one map.
+        else if (id === "properties")
+            await expect(body.locator("[data-properties-panel]")).toHaveAttribute(
+                "data-properties-kind",
+                "layer",
+            );
         else await expect(body).toBeEmpty();
         await toggle.click();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");

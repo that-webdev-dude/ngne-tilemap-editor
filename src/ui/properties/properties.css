@@ -1,0 +1,198 @@
+/* The Properties dock section (DESIGN §8.3): built-in fields on a label/control grid, then the
+   custom properties as rows of name, type chip, value control and menu. */
+.properties-header {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.properties-header__subject {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-weight: normal;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.properties-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-width: 0;
+}
+
+.properties-panel__empty {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.properties-panel__fields {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-4) var(--space-8);
+    align-items: center;
+}
+
+.properties-panel__readonly {
+    overflow: hidden;
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.properties-panel__text {
+    width: 100%;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+.properties-panel__text[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.properties-panel__text::placeholder,
+.properties-panel__mixed {
+    color: var(--text-muted);
+}
+
+.properties-panel__number .ui-number,
+.properties-panel__number.ui-field .ui-number {
+    width: 100%;
+}
+
+.properties-panel__number {
+    width: 100%;
+}
+
+.properties-panel__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+.properties-panel__section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--text-muted);
+}
+
+.properties-panel__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.properties-panel__row {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) auto minmax(0, 6fr) auto;
+    gap: var(--space-4);
+    align-items: center;
+    min-height: var(--row-height);
+}
+
+.properties-panel__name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.properties-panel__chip {
+    padding: 0 var(--space-4);
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    font-size: 11px;
+    line-height: 16px;
+}
+
+.properties-panel__value {
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+
+.properties-panel__value > span {
+    width: 100%;
+    min-width: 0;
+}
+
+.properties-panel__check {
+    width: 16px;
+    height: 16px;
+    margin: 0;
+    accent-color: var(--accent);
+}
+
+.properties-panel__file {
+    display: flex;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.properties-panel__swatch {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-8);
+    max-width: 100%;
+    height: var(--control-height);
+    padding: 0 var(--space-8) 0 var(--space-4);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    font-variant-numeric: tabular-nums;
+}
+
+/* The colour over the checkerboard, so that its alpha shows. */
+.properties-panel__swatch-colour {
+    position: relative;
+    flex: none;
+    width: 16px;
+    height: 16px;
+    border: var(--border-width) solid var(--border-strong);
+    border-radius: 2px;
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 8px 8px;
+}
+
+.properties-panel__swatch-colour > span {
+    position: absolute;
+    inset: 0;
+}
+
+.properties-panel__picker {
+    width: 232px;
+}
+
+.properties-panel__add {
+    width: 232px;
+}
+
+.properties-panel__add-form {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    gap: var(--space-8);
+    align-items: center;
+}
+
+.properties-panel__problem {
+    grid-column: 1 / -1;
+    color: var(--danger);
+}
+
+.properties-panel__add-actions {
+    display: flex;
+    grid-column: 1 / -1;
+    justify-content: flex-end;
+}

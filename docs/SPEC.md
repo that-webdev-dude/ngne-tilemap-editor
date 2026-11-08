@@ -669,6 +669,21 @@ layer, else the map; the project and the active tileset are reachable from their
   properties of some items show as mixed (Tiled).
 - Every edit is an undoable command.
 
+As Tiled's Properties view follows its document's current object (v1.12.2): the selected tiles
+are the selection while the Tilesets panel has the focus, which it takes when the panel takes
+the keyboard focus, when its selection changes, or from the tile menu's Properties; it loses it
+when the active map, the active layer or the marker selection changes, or the focus enters the
+Maps or Layers section. Change Type converts as Qt's `QVariant::convert` does in Tiled: bool,
+int and float convert among themselves (non-zero is true, a float rounds half away from zero,
+and one outside the int range gives the default) and to text; text converts to bool (false for
+"", "0" and "false" in any case), to an int or float when it is one, to a colour when it is
+`#rrggbbaa` or `#rrggbb`, and to a file name of at most 1024 code units; colour and file convert
+to text only. Any other conversion gives the default.
+
+The project and the shown tileset are shown from the panel's menu until the selection first
+changes. A property is common to several items when each has one of that name and type; Add
+refuses a name any of them has.
+
 ## 10. Persistence and export
 
 ### 10.1 Project file
