@@ -5,13 +5,15 @@ import { sessionStore } from "../state/session";
 import { toolPipeline } from "../tools/appPipeline";
 import { activeMap } from "../tools/toolSets";
 import { resizable, selectionBox } from "./markerGeometry";
-import { drawnShape, selectedMarkers } from "./markerSelection";
+import { markerFeedback } from "./markerFeedback";
+import { drawnShape, lockedSelectionRefusal, selectedMarkers } from "./markerSelection";
 
 // The X, Y, W and H fields of the marker select tool's context bar (DESIGN §7; TE-038): the box
 // of the selection, in map pixels, and the commands an edit of them makes. X and Y move the
 // selection (one entry); W and H resize a lone selected rectangle or ellipse (one entry) and are
-// disabled otherwise, as its handles are absent. The context bar (ui/markers) calls these; it
-// builds no command itself.
+// disabled otherwise, as its handles are absent. While a selected marker's layer is locked an
+// edit is refused and the status bar says so (SPEC §8; TE-039). The context bar (ui/markers)
+// calls these; it builds no command itself.
 
 export type MarkerBoxField = "x" | "y" | "width" | "height";
 
@@ -35,7 +37,8 @@ export function markerBoxFields(): MarkerBoxFields | null {
 /**
  * Sets one field of the selection's box to `value`: X and Y move every selected marker, W and H
  * resize a lone rectangle or ellipse from its top-left. A value the markers refuse (FORMAT
- * limits) changes nothing and is reported as an error toast.
+ * limits) changes nothing and is reported as an error toast; a selection on a locked layer
+ * changes nothing and the status bar says so.
  */
 export function setMarkerBoxField(field: MarkerBoxField, value: number): void {
     const { session, history } = sessionStore.getState();
@@ -46,6 +49,8 @@ export function setMarkerBoxField(field: MarkerBoxField, value: number): void {
     const markers = selectedMarkers(session, map);
     const box = selectionBox(markers);
     if (!box) return;
+    const refusal = lockedSelectionRefusal(session, map);
+    if (refusal) return markerFeedback(refusal);
     try {
         if (field === "x" || field === "y") {
             const dx = field === "x" ? value - box.x : 0;

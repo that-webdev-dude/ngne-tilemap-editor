@@ -10,6 +10,7 @@ export {
     markerLayerOf,
     markerShapeProblem,
     moveMarkersCommand,
+    pasteMarkersCommand,
     renameMarkersCommand,
     resizeMarkerCommand,
     setMarkerClassCommand,
@@ -20,4 +21,5 @@ export type {
     MarkerEditErrorCode,
     MarkerPlace,
     NewMarker,
+    PasteMarkersCommand,
 } from "./markerCommands";

@@ -1,9 +1,10 @@
 import type { StoreApi } from "zustand/vanilla";
 import { deleteMarkersCommand, findMarker } from "../../core/markers";
 import type { Command } from "../../core/history";
-import { createMapSession } from "../../core/model";
+import { createMapSession, effectiveValues, walkLayers } from "../../core/model";
 import type { Marker, ProjectMap, ProjectSession, Shape } from "../../core/model";
 import { setKeyContext } from "../keymap/contextState";
+import { REFUSALS } from "../tools/paintTarget";
 import { sessionStore } from "../state/session";
 import type { SessionState } from "../state/session";
 import { activeLayer, activeMap } from "../tools/toolSets";
@@ -70,6 +71,24 @@ export function markersSelected(session: ProjectSession): boolean {
         activeLayer(session)?.type === "marker" &&
         selectedMarkerIds(session, map).length > 0
     );
+}
+
+/**
+ * Why the selected markers of `map` may not be changed by a key or a menu command (nudge, Cut,
+ * Delete, a chosen point's edits): one of them lies on a layer that is locked, itself or by a
+ * group above it, as the layer of cells Cut and Delete refuse (SPEC §4.4, §8). A selection
+ * outlives a lock made after it. Null when every one may be changed; Copy only reads.
+ */
+export function lockedSelectionRefusal(session: ProjectSession, map: ProjectMap): string | null {
+    const ids = new Set(selectedMarkerIds(session, map));
+    if (ids.size === 0) return null;
+    for (const { layer, ancestors } of walkLayers(map.layers)) {
+        if (layer.type !== "marker" || !layer.markers.some((marker) => ids.has(marker.id))) {
+            continue;
+        }
+        if (!effectiveValues(layer, ancestors).unlocked) return REFUSALS.locked;
+    }
+    return null;
 }
 
 /**

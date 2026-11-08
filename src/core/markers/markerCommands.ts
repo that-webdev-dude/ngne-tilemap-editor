@@ -29,7 +29,7 @@ import type {
 } from "../model";
 
 // The marker commands of SPEC §8 (TE-037): add, delete, move, resize, set points, rename, class,
-// and the colour a marker layer draws its markers in. The tools (TE-038, TE-039) and the
+// and the colour a marker layer draws its markers in; paste of several markers (TE-039). The tools (TE-038, TE-039) and the
 // Properties panel (TE-040) build them.
 //
 // Each command checks what it would make against FORMAT §1.5 and §2.8 before it changes anything
@@ -69,6 +69,7 @@ export class MarkerEditError extends Error {
 /** Labels of the history entries; Delete and Move count their markers (`markerLabel`). */
 export const MARKER_LABELS = {
     add: "Add Marker",
+    paste: "Paste",
     delete: "Delete Marker",
     deleteMany: "Delete Markers",
     move: "Move Marker",
@@ -328,6 +329,84 @@ export function addMarkerCommand(
             const index = layer.markers.findIndex((each) => each.id === added!.id);
             if (index >= 0) layer.markers.splice(index, 1);
             mapSessionOf(session, map).markerSelection = [...selection.before];
+        },
+    };
+}
+
+/** The marker command `pasteMarkersCommand` returns: the new markers' IDs once they have them. */
+export interface PasteMarkersCommand extends Command {
+    /** The IDs the markers took at the first `do`, in the order given; empty before. */
+    readonly markerIds: readonly number[];
+}
+
+/**
+ * The command that adds `markers` at the top of marker layer `layerId` of map `mapId`, in their
+ * order, one entry labelled `label` (Paste of markers, SPEC §8; Tiled's `AddMapObjects` of
+ * pasted objects): each keeps its geometry, name, class and properties and takes the next ID of
+ * `nextMarkerId` at the first `do`; redo puts back the same markers with the same IDs. The
+ * marker selection is kept, as `addMarkerCommand` keeps it. Throws `MarkerEditError` for no
+ * marker, or a shape, name or class out of range, now or at `do`; its `do` throws for a layer
+ * that is gone or of another kind, a map that would hold too many markers or points, or a map
+ * out of marker IDs.
+ */
+export function pasteMarkersCommand(
+    mapId: string,
+    layerId: number,
+    markers: readonly NewMarker[],
+    label: string = MARKER_LABELS.paste,
+): PasteMarkersCommand {
+    if (markers.length === 0) throw new MarkerEditError("missing", "No marker is chosen.");
+    for (const marker of markers) {
+        const problem =
+            markerShapeProblem(marker) ??
+            textProblem(marker.name ?? "", "A marker name") ??
+            textProblem(marker.class ?? "", "A class");
+        if (problem) throw new MarkerEditError("values", problem);
+    }
+    const inputs = markers.map((marker) => structuredClone(marker));
+    let added: Marker[] | null = null;
+    let selection: number[] = [];
+    return {
+        label,
+        bytes: OVERHEAD_BYTES + markerBytes(inputs),
+        touched: touched(mapId, [layerId]),
+        get markerIds() {
+            return added?.map((marker) => marker.id) ?? [];
+        },
+        do(session) {
+            const map = mapOf(session.project, mapId);
+            const layer = markerLayerOf(map, layerId);
+            const mapSession = mapSessionOf(session, map);
+            if (added) {
+                for (const marker of added) layer.markers.push(structuredClone(marker));
+                map.nextMarkerId = Math.max(map.nextMarkerId, added[added.length - 1]!.id + 1);
+                mapSession.markerSelection = [...selection];
+                return;
+            }
+            assertRoom(
+                map,
+                inputs.length,
+                inputs.reduce((sum, marker) => sum + pointsOf(marker), 0),
+            );
+            const first = map.nextMarkerId;
+            if (first + inputs.length > MAX_MARKER_ID) {
+                throw new MarkerEditError("limit", "The map has used up its marker IDs.");
+            }
+            const made = inputs.map((marker, k) => markerFrom(marker, first + k));
+            layer.markers.push(...made);
+            map.nextMarkerId = first + made.length;
+            added = structuredClone(made);
+            selection = [...mapSession.markerSelection];
+        },
+        undo(session) {
+            if (!added) return;
+            const map = mapOf(session.project, mapId);
+            const layer = markerLayerOf(map, layerId);
+            const gone = new Set(added.map((marker) => marker.id));
+            for (let index = layer.markers.length - 1; index >= 0; index--) {
+                if (gone.has(layer.markers[index]!.id)) layer.markers.splice(index, 1);
+            }
+            mapSessionOf(session, map).markerSelection = [...selection];
         },
     };
 }

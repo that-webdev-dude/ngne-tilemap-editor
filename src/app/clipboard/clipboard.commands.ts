@@ -21,8 +21,25 @@ import type { PaintTarget } from "../tools/paintTarget";
 import { CUT_LABEL, captureStamp } from "../tools/stamp/capture";
 import { setCurrentStamp } from "../tools/stamp/currentStamp";
 import { activeLayer, activeLayerId, activeMap } from "../tools/toolSets";
-import { deleteSelectedMarkersCommand, markersSelected } from "../markers/markerSelection";
-import { clipboardContent, clipboardStore, copyCellsToClipboard } from "./clipboard";
+import { MarkerEditError, deleteMarkersCommand, pasteMarkersCommand } from "../../core/markers";
+import { walkLayers } from "../../core/model";
+import type { Marker } from "../../core/model";
+import { markerLayerRefusal } from "../markers/markerToolSupport";
+import {
+    deleteSelectedMarkersCommand,
+    lockedSelectionRefusal,
+    markersSelected,
+    selectedMarkerIds,
+    setMarkerSelection,
+} from "../markers/markerSelection";
+import { deleteVertex, setChosenVertex } from "../markers/points/markerVertex";
+import {
+    clipboardContent,
+    clipboardMarkers,
+    clipboardStore,
+    copyCellsToClipboard,
+    copyMarkersToClipboard,
+} from "./clipboard";
 
 // Cut, Copy, Paste and Delete of cells (SPEC §4.4, DESIGN §5, §10.3; TE-021): Ctrl+X, Ctrl+C,
 // Ctrl+V and Delete in the `global` context, on the active map's tile selection and active tile
@@ -39,12 +56,26 @@ import { clipboardContent, clipboardStore, copyCellsToClipboard } from "./clipbo
 //   Delete  the selected cells are erased, the selection kept: one entry, "Delete"; refused as
 //           Cut is. Erasing only empty cells records nothing (SPEC §3). While the `markers`
 //           context applies (a marker layer active, markers selected), Delete removes the
-//           selected markers instead (SPEC §8; TE-038): one entry, "Delete Marker(s)".
+//           selected markers instead (SPEC §8; TE-038): one entry, "Delete Marker(s)"; with the
+//           Edit points tool's chosen point, that point (TE-039): one entry, "Edit Marker
+//           Points", refused below 3 points of a polygon or 2 of a polyline.
 //   Paste   the clipboard becomes the current stamp, cut to the bounding box of its non-empty
 //           cells (Tiled's `normalizeTileLayerPositionsAndMapSize`), and the stamp brush is
 //           selected. A tile selection is cleared first, one entry ("Select None"), so the
 //           stamp is not clipped to it. A clipboard of empty cells only leaves the stamp as it
 //           is (Tiled's `setStamp` ignores an empty stamp).
+//
+// Markers (SPEC §8; TE-039), while the `markers` context applies, as Tiled's object clipboard:
+//
+//   Copy    the selected markers, in their stacking order, with their geometry, name, class and
+//           properties; the cells on the clipboard give way (the last copy wins). No entry.
+//   Cut     Copy, then the selected markers are deleted: one entry, "Cut". Cut and Delete of
+//           markers or of a chosen point are refused, before anything is copied, while a
+//           selected marker's layer is locked (`lockedSelectionRefusal`), as for cells.
+//   Paste   with markers on the clipboard: they are added at the top of the active layer, at
+//           the positions they were copied from, with new IDs, and become the selection: one
+//           entry, "Paste". Refused with a status-bar message unless the active layer is a
+//           visible, unlocked marker layer under no hidden or locked group.
 //
 // While a stroke is in progress the history takes no command, so Cut, Delete and Paste are
 // disabled then, as undo and redo are.
@@ -101,6 +132,71 @@ function feedback(message: string): void {
     setTimeout(() => {
         if (statusStore.getState().feedback === message) statusStore.getState().setFeedback(null);
     }, FEEDBACK_MS);
+}
+
+/** The selected markers of the active map in their stacking order; empty without a selection. */
+function selectedMarkersInOrder(): Marker[] {
+    const { session } = sessionStore.getState();
+    const map = activeMap(session);
+    if (!map || !markersSelected(session)) return [];
+    const ids = new Set(selectedMarkerIds(session, map));
+    const out: Marker[] = [];
+    for (const { layer } of walkLayers(map.layers)) {
+        if (layer.type !== "marker") continue;
+        for (const marker of layer.markers) if (ids.has(marker.id)) out.push(marker);
+    }
+    return out;
+}
+
+/** Whether the `markers` context applies: a marker layer active, markers selected. */
+const markersOn = () => markersSelected(sessionStore.getState().session);
+
+/** Copies the selected markers; false when there are none. */
+function copyMarkers(): boolean {
+    const markers = selectedMarkersInOrder();
+    if (markers.length === 0) return false;
+    copyMarkersToClipboard(markers);
+    return true;
+}
+
+/** Copy, then the selected markers deleted as one entry "Cut". */
+function cutMarkers(): void {
+    const { session } = sessionStore.getState();
+    const map = activeMap(session);
+    if (!map || !historyIdle()) return;
+    const refusal = lockedSelectionRefusal(session, map);
+    if (refusal) return feedback(refusal);
+    if (!copyMarkers()) return;
+    const ids = selectedMarkersInOrder().map((marker) => marker.id);
+    activeHistory().execute({
+        ...deleteMarkersCommand(session.project, map.id, ids),
+        label: CUT_LABEL,
+    });
+}
+
+/**
+ * Pastes the clipboard's markers into the active layer, selecting them; a layer that takes no
+ * markers shows why in the status bar.
+ */
+function pasteMarkers(): void {
+    const markers = clipboardMarkers();
+    const { session } = sessionStore.getState();
+    const map = activeMap(session);
+    if (!markers || !map || !historyIdle()) return;
+    const layerId = activeLayerId(session, map);
+    const refusal = markerLayerRefusal(map, layerId);
+    if (refusal !== null) return feedback(refusal);
+    try {
+        const command = pasteMarkersCommand(map.id, layerId, markers);
+        activeHistory().execute(command);
+        setMarkerSelection(command.markerIds, map.id);
+    } catch (error) {
+        if (error instanceof MarkerEditError) {
+            feedback(error.message);
+            return;
+        }
+        throw error;
+    }
 }
 
 /** Copies the selected cells of the active tile layer; false when there are none. */
@@ -178,8 +274,9 @@ export const commands: CommandSpec[] = [
         id: "edit.cut",
         title: "Cut",
         shortcut: "Ctrl+X",
-        enabled: () => historyIdle() && selectedTileCells() !== null,
+        enabled: () => historyIdle() && (markersOn() || selectedTileCells() !== null),
         run() {
+            if (markersOn()) return cutMarkers();
             const target = eraseTarget();
             if (target && "refused" in target) return feedback(target.refused);
             if (copy()) eraseSelected(CUT_LABEL, true);
@@ -189,26 +286,35 @@ export const commands: CommandSpec[] = [
         id: "edit.copy",
         title: "Copy",
         shortcut: "Ctrl+C",
-        enabled: () => selectedTileCells() !== null,
-        run: () => void copy(),
+        enabled: () => markersOn() || selectedTileCells() !== null,
+        run: () => void (markersOn() ? copyMarkers() : copy()),
     },
     {
         id: "edit.paste",
         title: "Paste",
         shortcut: "Ctrl+V",
-        enabled: () => pastableCells() !== null,
-        run: paste,
+        enabled: () => (clipboardMarkers() !== null && historyIdle()) || pastableCells() !== null,
+        run: () => (clipboardMarkers() !== null ? pasteMarkers() : paste()),
     },
     {
         id: "edit.delete",
         title: "Delete",
         shortcut: "Delete",
-        enabled: () =>
-            historyIdle() &&
-            (markersSelected(sessionStore.getState().session) || selectedTileCells() !== null),
+        enabled: () => historyIdle() && (markersOn() || selectedTileCells() !== null),
         run() {
             if (!historyIdle()) return;
-            const markers = deleteSelectedMarkersCommand(sessionStore.getState().session);
+            const { session } = sessionStore.getState();
+            const map = activeMap(session);
+            const refusal = map && markersOn() && lockedSelectionRefusal(session, map);
+            if (refusal) return feedback(refusal);
+            const vertex = deleteVertex(session);
+            if (vertex && "refused" in vertex) return feedback(vertex.refused);
+            if (vertex) {
+                activeHistory().execute(vertex.command);
+                setChosenVertex(null);
+                return;
+            }
+            const markers = deleteSelectedMarkersCommand(session);
             if (markers) activeHistory().execute(markers);
             else eraseSelected(DELETE_LABEL, false);
         },

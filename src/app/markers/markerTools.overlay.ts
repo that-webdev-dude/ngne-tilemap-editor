@@ -10,6 +10,8 @@ import type { Point } from "../view/coordinates";
 import { PIN_SIZE, traceShape } from "./markerDrawing";
 import { editableMarkers, resizable } from "./markerGeometry";
 import { markerPreview, subscribeMarkerPreview } from "./markerPreview";
+import { drawMarkerPoints } from "./points/markerPointsDrawing";
+import { subscribeChosenVertex } from "./points/markerVertex";
 import {
     drawnShape,
     selectedMarkerIds,
@@ -24,7 +26,9 @@ import {
 //     (`handles.ts`): squares of `HANDLE_SIZE` CSS px in `--bg-panel` with an accent edge;
 //   - the select tool's rubber band, 1 px with a 10% fill;
 //   - the marker a create tool is making: its outline, a polygon's or polyline's points as small
-//     squares and a dashed segment to where the next point would go.
+//     squares and a dashed segment to where the next point would go;
+//   - with the Edit points tool active, the points of the selected polygons and polylines, the
+//     chosen one filled (TE-039, `markerPointsDrawing.ts`).
 //
 // Above the markers (450) and the tile selection's ants (500), below the tile tools' previews
 // (600), which a marker layer never shows.
@@ -189,14 +193,17 @@ export const overlayLayers: OverlayLayer[] = [
         order: MARKER_TOOLS_ORDER,
         draw(frame) {
             drawSelection(frame);
+            drawMarkerPoints(frame);
             drawPreview(frame);
         },
-        // The selection (session state), a drag's draft, the tools' previews, the active tool.
+        // The selection (session state), a drag's draft, the tools' previews, the chosen point,
+        // the active tool.
         watch(redraw) {
             const stops = [
                 sessionStore.subscribe(redraw),
                 subscribeMarkerDraft(redraw),
                 subscribeMarkerPreview(redraw),
+                subscribeChosenVertex(redraw),
                 toolState.subscribe(redraw),
             ];
             return () => stops.forEach((stop) => stop());

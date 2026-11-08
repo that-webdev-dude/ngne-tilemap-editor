@@ -632,6 +632,19 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
     finishes on a double or right click, a polygon of 3 points or more on a click on its first
     point; Backspace with one point left cancels; a click on the last point adds none; finished
     with too few points, nothing is made.
+  - Edit points (`EditPolygonTool`) shows the points of the selected polygons and polylines and
+    works on one chosen point at a time (Tiled selects several, with a rubber band). A press on a
+    point chooses it and a drag moves it, placed as a move is; a double click on an edge, away
+    from the points, inserts a point at the nearest position on the edge, on the nearest whole
+    pixel and not snapped (Tiled's `nearestPointOnLine`), and chooses it. Any other click selects
+    as Select's click does; where no marker is, a chosen point alone is let go first. Arrows nudge
+    the chosen point 1 px and Shift+arrows one cell, as they nudge markers (Tiled's arrows move
+    objects only). Delete removes the chosen point, refused below 3 points of a polygon or 2 of a
+    polyline (Tiled removes the object instead). Every edit of the points is one entry.
+  - A selection outlives a lock made after it. While a selected marker's layer, or a group above
+    it, is locked, nudge, Cut and Delete of the markers or of the chosen point, and edits of
+    the context bar's X, Y, W and H, are refused with the status-bar message, as Cut and Delete
+    of cells are (§4.4); Copy only reads.
 - New markers take `nextMarkerId`. Copy/paste of markers within and between maps keeps
   geometry and positions and gives new IDs. Paste goes into the active layer when it is an
   unlocked, visible marker layer, and selects the pasted markers; otherwise Paste of markers is

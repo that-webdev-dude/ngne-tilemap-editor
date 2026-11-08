@@ -1,6 +1,7 @@
 import { MarkerEditError } from "../../core/markers";
 import type { Command } from "../../core/history";
 import { createMapSession, effectiveValues, findLayer } from "../../core/model";
+import type { ProjectMap } from "../../core/model";
 import { layerShift } from "../../engine/viewport/geometry";
 import { REFUSALS } from "../tools/paintTarget";
 import type { ToolContext, ToolModifiers } from "../tools/types";
@@ -61,25 +62,35 @@ export interface CreateTarget {
 }
 
 /**
+ * Why layer `layerId` of `map` takes no new markers (a create tool's marker, a paste): it is no
+ * marker layer, or it is hidden or locked, itself or by a group above it (Tiled disables its
+ * object tools then); null when it takes them.
+ */
+export function markerLayerRefusal(map: ProjectMap, layerId: number | null): string | null {
+    const entry = layerId === null ? undefined : findLayer(map, layerId);
+    if (entry?.layer.type !== "marker") return NOT_A_MARKER_LAYER;
+    const values = effectiveValues(entry.layer, entry.ancestors);
+    if (!values.visible) return REFUSALS.hidden;
+    if (!values.unlocked) return REFUSALS.locked;
+    return null;
+}
+
+/** What the status bar says when the active layer is no marker layer. */
+export const NOT_A_MARKER_LAYER = "Not a marker layer";
+
+/**
  * The layer a create tool adds to: the active layer, when it is a visible, unlocked marker layer
- * under no hidden or locked group (Tiled disables its object tools otherwise). Otherwise the
- * status bar says why (SPEC §4.1's messages) and null is returned.
+ * under no hidden or locked group (`markerLayerRefusal`). Otherwise the status bar says why
+ * (SPEC §4.1's messages) and null is returned.
  */
 export function createTarget(context: ToolContext, view: ToolView): CreateTarget | null {
-    const entry = context.layerId === null ? undefined : findLayer(context.map, context.layerId);
-    if (entry?.layer.type !== "marker") {
-        context.feedback("Not a marker layer");
+    const refusal = markerLayerRefusal(context.map, context.layerId);
+    if (refusal !== null || context.layerId === null) {
+        context.feedback(refusal ?? NOT_A_MARKER_LAYER);
         return null;
     }
+    const entry = findLayer(context.map, context.layerId)!;
     const values = effectiveValues(entry.layer, entry.ancestors);
-    if (!values.visible) {
-        context.feedback(REFUSALS.hidden);
-        return null;
-    }
-    if (!values.unlocked) {
-        context.feedback(REFUSALS.locked);
-        return null;
-    }
     return { layerId: entry.layer.id, shift: layerShift(context.map, view.centre, values) };
 }
 
