@@ -1,0 +1,78 @@
+{
+    "id": "te-048-autosave-rtx-4060",
+    "ticket": "TE-048",
+    "measurement": "Autosave of the reference project (524288 cells, 2 tilesets) after one cell edit, through the worker into IndexedDB: main-thread task max from just before the 2 s delay ends to the snapshot stored; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "max of 5 runs of two snapshots each (the whole project, then one map), 1500 ms apart, after 1 warm-up run",
+    "budgetMs": 16,
+    "resultMs": 13.5,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 7,
+        "fullLongestTaskMs": [
+            7,
+            13.5,
+            4.600000023841858,
+            4.300000071525574,
+            12.5
+        ],
+        "fullPageMs": [
+            5.599999904632568,
+            6.300000071525574,
+            3.899999976158142,
+            3.5,
+            12.399999976158142
+        ],
+        "fullThumbnailMs": [
+            5.5,
+            12.300000071525574,
+            3.9000000953674316,
+            3.399999976158142,
+            5.899999976158142
+        ],
+        "fullStoredMs": [
+            74.20000004768372,
+            106.89999997615814,
+            87.29999995231628,
+            91.69999992847443,
+            85
+        ],
+        "incrementalLongestTaskMs": [
+            8,
+            3.899999976158142,
+            7.100000023841858,
+            4.400000095367432,
+            6.899999976158142
+        ],
+        "incrementalPageMs": [
+            5.099999904632568,
+            3.299999952316284,
+            5.100000023841858,
+            3.5999999046325684,
+            5.100000023841858
+        ],
+        "incrementalThumbnailMs": [
+            6.5,
+            3.100000023841858,
+            5.600000023841858,
+            3.600000023841858,
+            5.600000023841858
+        ],
+        "incrementalStoredMs": [
+            74,
+            85.19999992847443,
+            84.79999995231628,
+            82.90000009536743,
+            73.90000009536743
+        ]
+    },
+    "benchmarkId": "te-048-autosave",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T11:34:40.691Z"
+}

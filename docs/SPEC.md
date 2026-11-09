@@ -745,8 +745,22 @@ differences:
   pixels as raw buffers, keyed by ID. Launch offers recovery of unsaved snapshots. Each page
   holds a Web Lock `ngne-tilemap-editor-page:<id>` so two windows never offer each other's live
   snapshot.
-- Session state kept per project ID in IndexedDB, best effort: open map tabs and the active one,
-  per-map view and active layer.
+  - A map's JSON is written again when a step names that map, and every map's when a step of no
+    map changes cells, layers, tilesets or the structure (a map's JSON holds its tilesets' first
+    GIDs, FORMAT §1.2); `project.json` with every snapshot. The worker makes the JSON and writes
+    it; the page hands over the project without pixels, the cells of the changed maps and copies
+    of the changed pixels, and makes the thumbnails of the first 4 maps one per task.
+  - The recovery dialog lists each snapshot with its project's name, time, map count and the
+    thumbnails of its first 4 maps. A recovered project takes the window with an empty history
+    and no file, dirty until saved, as the sprite editor's recovered documents; the dialog then
+    closes and the other snapshots stay for the next launch (one project per window). Recover is
+    refused while the window's project has unsaved changes.
+- Session state kept per project ID in IndexedDB (`ngne-tilemap-editor-session`, the newest 100
+  projects), best effort: open map tabs and the active one, per-map view and active layer, as
+  Tiled keeps them per file in its session. It is written 0.5 s after it changes and when the
+  project leaves the window, and restored when a project takes the window by Open, a recent
+  file, a drop or recovery; Revert restores nothing (it keeps the views itself) and a restore
+  that arrives after the user switched maps is dropped.
 
 ### 10.2 Export
 
@@ -1001,6 +1015,7 @@ reference map:
 | Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | TE-044: 15.7 / 14.4 ms (median 14.5 / 10.5 ms, max 17.1 / 17.4 ms) |
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | TE-047: 7.9 / 5.6 ms (median 5.0 / 5.4 ms); total 311.2 / 331.6 ms (median 308.2 / 305.5 ms) |
 | Open of the reference project to first frame | ≤ 3 s | TE-047: 258.9 / 274.8 ms (median 247.2 / 264.4 ms) |
+| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | TE-048: 8.3 / 13.5 ms (median 7.2 / 7.0 ms) |
 | Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
 | Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
 | 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | TE-037: 9.8 / 10.0 ms (overlay 0.2 / 0.2 ms), 0 / 0 frames; names shown at zoom 1.25: 4.1 / 4.3 ms, 0 / 0 frames |
@@ -1030,6 +1045,15 @@ bytes written, as TE-015's; handing the project to the worker takes about 4 ms o
 the empty state, as at launch, from the call to the frame that draws the map with both tileset
 textures uploaded; its longest task is 102.8 / 104.7 ms (no budget). Raw data:
 `te-047-{save,open}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
+
+Autosave row: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The reference
+project opened afresh in the app, one cell edited and the first snapshot (every map entry and
+both tilesets' pixels) stored, then another cell edited and the next snapshot (that map's entry)
+stored; 5 runs of both. The task max is the longest gap of a message loop, as TE-015's, from
+300 ms before the 2 s delay ends to the snapshot stored. Taking the project is at most
+7.6 / 12.4 ms and a map thumbnail 7.0 / 12.3 ms, each a task of its own; the snapshot is stored
+95.7 / 106.9 ms after the delay ends at most. Raw data: `te-048-autosave-intel-uhd.json` and
+`te-048-autosave-rtx-4060.json` in [evidence/](evidence/).
 
 Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
 tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with

@@ -19,6 +19,10 @@ rows.
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); no favicon link until the icons exist (TE-066) |
 | `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `0.0.0`, description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
+| `src/app/autosave/autosave.ts` | `src/app/autosave/autosave.ts` | adapt | `ea5c91d` | | One project per window: one tracker over the session store's history; snapshots of `project.json`, changed maps' entries and changed tileset and image pixels, taken by the page and written by the worker (`backend.ts`); changes learned from `touched` (a project-wide step that changes cells, layers, tilesets or structure rewrites every map); no float, composites or reference sources; map thumbnails of the first 4 maps, one per task after the capture; a mark when a snapshot is stored |
+| `src/app/autosave/dialogs.ts` | `src/app/autosave/dialogs.ts` | adapt | `ea5c91d` | | Entries list a project's map count and map thumbnails; Recover and Discard resolve an outcome (`opened`, `gone`, `failed`) |
+| `src/app/autosave/install.ts` | `src/app/autosave/install.ts` | adapt | `ea5c91d` | | The worker backend, this editor's session store, the file workflows' saves and `run`; also starts the session state (`sessionState.ts`) |
+| `src/app/autosave/recovery.ts` | `src/app/autosave/recovery.ts` | adapt | `ea5c91d` | | Lock prefix `ngne-tilemap-editor-page:`; a recovered project replaces the window's (refused while it has unsaved changes), runs as a file operation and closes the dialog; "open in another window" |
 | `src/app/commandPalette/commandPalette.commands.ts` | `src/app/commandPalette/commandPalette.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 instead of the sprite editor's SPEC §7.8 |
 | `src/app/commandPalette/fuzzy.ts` | `src/app/commandPalette/fuzzy.ts` | verbatim | `ea5c91d` | `da142574be46c0eba4988a74649e3e1778b9dd0cf98c4df3a29e231c822e50b1` | |
 | `src/app/commandPalette/paletteModel.ts` | `src/app/commandPalette/paletteModel.ts` | verbatim | `ea5c91d` | `176c165b0cbd1f323ee156432ce67ee68a0298b13bc318d96ea796285fa9578a` | |
@@ -97,6 +101,7 @@ rows.
 | `src/app/view/viewportSize.ts` | `src/app/view/viewportSize.ts` | adapt | `ea5c91d` |  | One store the viewport host reports to; no region probe or link |
 | `src/app/view/wheel.ts` | `src/app/view/wheel.ts` | verbatim | `ea5c91d` | `706809d643ccf8ae3d6964a8d577ff219d8e09cb6f0e201a680e6fec21817dd3` |  |
 | `src/app/view/zoom.ts` | `src/app/view/zoom.ts` | adapt | `ea5c91d` |  | Steps 1/32 and 1/16 added below (SPEC §4.1); `fitZoom` in map pixels without rounding |
+| `src/app/worker/autosave/snapshotStorage.ts` | `src/app/autosave/snapshotStorage.ts` | adapt | `ea5c91d` | | Database `ngne-tilemap-editor-autosave` opened in the worker; stores `snapshots`, `entries` (JSON entries by entry name) and `pixels` (`tileset/<id>`, `image/<id>`); one transaction per write, no per-image tasks and no `shouldAbort` (the page hands over a copy) |
 | `src/core/color/contrast.ts` | `src/core/color/contrast.ts` | verbatim | `ea5c91d` | `7fb03d414fd8612982d1fdd95b8b0cfafc5dc8cfd119b823fae663eb549fe06c` | |
 | `src/core/color/hex.ts` | `src/core/color/hex.ts` | verbatim | `ea5c91d` | `da3a6afbd39c047ec6fc6bee250ca0945e117e91fb00700dea7b75920aa36209` | |
 | `src/core/color/hsv.ts` | `src/core/color/hsv.ts` | verbatim | `ea5c91d` | `8303ccbd2731e84fc98f5a05cbcb0ed8fac5f91777d39d7cc474a4ffb34851ca` | |
@@ -181,6 +186,9 @@ rows.
 | `src/raw.d.ts` | `src/raw.d.ts` | verbatim | `ea5c91d` | `b35d4d2d9cf5cfd50c415c801c3f0e0ad000f4bb30009520db02368b12eec131` | |
 | `src/ui/App.tsx` | `src/ui/App.tsx` | adapt | `ea5c91d` | | The WebGPU and window-size gates and the gallery route; test hooks and the keymap (TE-007); the surfaces (TE-008); the notices shown as toasts, as `FileWorkflows` shows them (TE-028); file workflows and the pixel-memory warning are left out |
 | `src/ui/UiRoot.tsx` | `src/ui/UiRoot.tsx` | verbatim | `ea5c91d` | `9da0fc7bf55f880cd1e7769e0bf59ebbc80ef64f00315311bfb29b0d5f1b4e74` | |
+| `src/ui/autosave/RecoveryDialog.tsx` | `src/ui/autosave/RecoveryDialog.tsx` | adapt | `ea5c91d` | | Projects: map count and up to 4 map thumbnails per row; a recovered project closes the dialog |
+| `src/ui/autosave/recovery.css` | `src/ui/autosave/recovery.css` | adapt | `ea5c91d` | | Name, details and a row of map thumbnails stacked in the text column |
+| `src/ui/autosave/recovery.dialog.tsx` | `src/ui/autosave/recovery.dialog.tsx` | adapt | `ea5c91d` | | Comment names TE-048 |
 | `src/ui/colour/ColourPicker.tsx` | `src/ui/colour/ColourPicker.tsx` | adapt | `ea5c91d` | | Edits one colour given by its caller (`value`, `onChange`) instead of the editor store's foreground and background, with either button as the sprite editor's `single` panel; the colour and its HSV live in a store of the panel's own, which follows `value`; `unset` reports the first edit even when it gives `value` (a colour of "None"); no `store` or `single` props (DESIGN §3.3) |
 | `src/ui/colour/cancelContextMenu.ts` | `src/ui/colour/cancelContextMenu.ts` | verbatim | `ea5c91d` | `9c1041c45ee133476335ca53e92e1882d5ea79b3d6139c5a665466cc920242af` | |
 | `src/ui/colour/colourPicker.css` | `src/ui/colour/colourPicker.css` | verbatim | `ea5c91d` | `99a9d989a8409246bfd017f3e104db21c144428e49d0740f6bf1fa5272af2cd6` | |
@@ -200,7 +208,7 @@ rows.
 | `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
 | `src/ui/dock/registry.ts` | `src/ui/dock/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/file/DiscardChangesDialog.tsx` | `src/ui/file/DiscardChangesDialog.tsx` | verbatim | `ea5c91d` | `d06dfcd6a681954c348c77cfbb1cfadb7395f652708f13791df237359f324415` | |
-| `src/ui/file/FileWorkflows.tsx` | `src/ui/file/FileWorkflows.tsx` | adapt | `ea5c91d` | | Installs the file workflows only: the notice toasts are `App`'s (TE-028), autosave TE-048's, the launch queue TE-066's |
+| `src/ui/file/FileWorkflows.tsx` | `src/ui/file/FileWorkflows.tsx` | adapt | `ea5c91d` | | Installs the file workflows and autosave (TE-048): the notice toasts are `App`'s (TE-028), the launch queue TE-066's |
 | `src/ui/file/file.dialog.tsx` | `src/ui/file/file.dialog.tsx` | adapt | `ea5c91d` | | Adds the Save / Discard / Cancel question and the New Project dialog |
 | `src/ui/focus/inertOutside.ts` | `src/ui/focus/inertOutside.ts` | verbatim | `ea5c91d` | `b6a211b7c790c44abf0cc688082b60da14552729402fcfea43c108fa60377b32` | |
 | `src/ui/focus/menuOpener.ts` | `src/ui/focus/menuOpener.ts` | verbatim | `ea5c91d` | `b61a40a2721132e675858320c17f49c84f72947e52fd85fe3b7afda8c584f572` | |
@@ -307,6 +315,8 @@ rows.
 | `tests/e2e/te-008-sheet.spec.ts` | `tests/e2e/se-064-shortcut-sheet.spec.ts` | adapt | `ea5c91d` | | DESIGN §5 menus; probes `te008.*`; Preferences stands in for the New Sprite dialog |
 | `tests/e2e/te-008-support.ts` | `tests/e2e/se-064-support.ts`, `se-008-support.ts` | adapt | `ea5c91d` | | This editor's keys (SUITE §7); `field`, `setNumber`, `dialogButton` from se-008-support; no `spyOnCommands`, themes or audit |
 | `tests/e2e/te-047-support.ts` | `tests/e2e/se-047-support.ts` | adapt | `ea5c91d` | | The OPFS picker stub only, every permission granted, with the suggested names recorded; File System Access taken away as `se-041-support.ts` does; this editor's project, New Project dialog, empty state and dialogs |
+| `tests/e2e/te-048-autosave.spec.ts` | `tests/e2e/se-042-recovery.spec.ts` | adapt | `ea5c91d` | | A project instead of a document: recovery in the next window, the second window, a one-map edit, Discard and Close Project; session state restored on Open; no float or reference cases |
+| `tests/e2e/te-048-support.ts` | `tests/e2e/se-042-support.ts` | adapt | `ea5c91d` | | This editor's database and stores (`entries`, `pixels`, thumbnails); no write spy (the worker writes) and no document builder |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14 |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
@@ -320,6 +330,8 @@ rows.
 | `tests/unit/te-008-commands.test.ts` | `tests/unit/se-064-commands.test.ts`, `se-064-palette.test.ts`, `se-064-shortcut-sheet.test.ts` | adapt | `ea5c91d` | | DESIGN §10.3 chords checked on the registry (no key-table parser); `inPanel` and `markers`; the palette and sheet models over the app's registry only |
 | `tests/unit/te-008-preferences.test.ts` | `tests/unit/se-064-preferences.test.ts` | adapt | `ea5c91d` | | This editor's fields, ranges and defaults; corrupt and older records; the view preferences of SPEC §3 |
 | `tests/unit/te-047-support.ts` | `tests/unit/se-041-support.ts` | adapt | `ea5c91d` | | The memory disk, fake handles and platform kept (fewer counters); the questions answered from lists; the codec of `core/project` in place of the worker; a store of one project |
+| `tests/unit/te-048-autosave.test.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | One project of maps, tilesets and images; the store spy counts entry and pixel puts; the snapshot round trip through `serialize`; recovery into the window |
+| `tests/unit/te-048-support.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | `MemorySnapshots` of that test with entries and pixels instead of images and sources; cell and tileset edits as commands |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |
