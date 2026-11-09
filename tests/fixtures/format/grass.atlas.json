@@ -1,0 +1,70 @@
+{
+    "format": "ngne-sprite-atlas",
+    "version": 1,
+    "generator": "ngne-tilemap-editor 1.0.0",
+    "image": "grass.png",
+    "width": 36,
+    "height": 36,
+    "frames": {
+        "grass-0": {
+            "x": 1,
+            "y": 1,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [0, 1]
+        },
+        "grass-1": {
+            "x": 19,
+            "y": 1,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [0, 1]
+        },
+        "grass-2": {
+            "x": 1,
+            "y": 19,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [0, 1]
+        },
+        "grass-3": {
+            "x": 19,
+            "y": 19,
+            "w": 16,
+            "h": 16,
+            "sourceW": 16,
+            "sourceH": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "pivot": [0, 1]
+        }
+    },
+    "animations": {
+        "grass-2": {
+            "playback": "loop",
+            "durationMs": 500,
+            "entries": [
+                {
+                    "frame": "grass-2",
+                    "ms": 250
+                },
+                {
+                    "frame": "grass-1",
+                    "ms": 250
+                }
+            ]
+        }
+    }
+}

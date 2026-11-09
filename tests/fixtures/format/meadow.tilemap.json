@@ -1,0 +1,132 @@
+{
+    "format": "ngne-tilemap",
+    "version": 1,
+    "generator": "ngne-tilemap-editor 1.0.0",
+    "project": "meadow-game",
+    "name": "meadow",
+    "title": "Meadow",
+    "class": "",
+    "orientation": "orthogonal",
+    "width": 4,
+    "height": 3,
+    "tileWidth": 16,
+    "tileHeight": 16,
+    "backgroundColor": "#6db3e8ff",
+    "parallaxOriginX": 0,
+    "parallaxOriginY": 0,
+    "tilesets": [
+        {
+            "name": "grass",
+            "atlas": "grass.atlas.json",
+            "class": "",
+            "firstGid": 1,
+            "nextTileId": 4,
+            "tileWidth": 16,
+            "tileHeight": 16,
+            "offsetX": 0,
+            "offsetY": 0,
+            "tiles": [
+                {
+                    "id": 3,
+                    "class": "solid",
+                    "collision": [
+                        {
+                            "shape": "rectangle",
+                            "x": 0,
+                            "y": 0,
+                            "width": 16,
+                            "height": 16
+                        }
+                    ],
+                    "properties": [
+                        {
+                            "name": "friction",
+                            "type": "float",
+                            "value": 0.8
+                        }
+                    ]
+                }
+            ],
+            "properties": []
+        }
+    ],
+    "groups": [
+        {
+            "id": 4,
+            "name": "World",
+            "class": "",
+            "parentId": null,
+            "properties": []
+        }
+    ],
+    "layers": [
+        {
+            "id": 1,
+            "type": "tile",
+            "name": "Ground",
+            "class": "",
+            "groupId": 4,
+            "visible": true,
+            "opacity": 255,
+            "offsetX": 0,
+            "offsetY": 0,
+            "parallaxX": 1,
+            "parallaxY": 1,
+            "properties": [],
+            "data": [
+                0, 0, 3, 0,
+                0, 2147483649, 0, 2684354562,
+                4, 4, 4, 4
+            ]
+        },
+        {
+            "id": 2,
+            "type": "marker",
+            "name": "Spawns",
+            "class": "",
+            "groupId": null,
+            "visible": true,
+            "opacity": 255,
+            "offsetX": 0,
+            "offsetY": 0,
+            "parallaxX": 1,
+            "parallaxY": 1,
+            "properties": [],
+            "markers": [
+                {
+                    "shape": "point",
+                    "id": 1,
+                    "name": "player",
+                    "class": "spawn",
+                    "x": 8,
+                    "y": 24,
+                    "properties": []
+                },
+                {
+                    "shape": "rectangle",
+                    "id": 2,
+                    "name": "exit",
+                    "class": "zone",
+                    "x": 48,
+                    "y": 16,
+                    "width": 16,
+                    "height": 16,
+                    "properties": [
+                        {
+                            "name": "target",
+                            "type": "string",
+                            "value": "cave"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "properties": [
+        {
+            "name": "music",
+            "type": "file",
+            "value": "meadow.ogg"
+        }
+    ]
+}
