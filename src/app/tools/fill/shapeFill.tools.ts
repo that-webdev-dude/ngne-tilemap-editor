@@ -10,11 +10,16 @@ import { currentStamp } from "../stamp/currentStamp";
 import { stampIsEmpty } from "../stamp/placement";
 import { STAMP_TRANSFORM_ACTIONS } from "../stamp/stamp.tools";
 import type { ToolModifiers, ToolSpec } from "../types";
-import { FILL_MODE_OPTION, paintPlan } from "./fillPlan";
+import type { Region } from "../../../core/fill";
+import type { TerrainAnalysis } from "../../../core/terrain";
+import { sessionStore } from "../../state/session";
+import { brushSource } from "../terrain/brushSource";
+import { FILL_MODE_OPTION, fillModeOf, paintPlan } from "./fillPlan";
 import type { FillPlan } from "./fillPlan";
+import { terrainFillPlan } from "./terrainFill";
 
 // The shape fill (SPEC §4.3), Tiled's `ShapeFillTool` (`src/tiled/shapefilltool.cpp`, checked
-// at v1.12.2) in its Tile fill mode, as two variants of one rail slot (DESIGN §6): Rectangle
+// at v1.12.2) in its Tile and Terrain fill modes (Terrain: `terrainFill.ts`), as two variants of one rail slot (DESIGN §6): Rectangle
 // (U, the slot planned in `planned.tools.ts`) and Ellipse (Shift+U); U pressed again switches
 // between them, as does the context bar's Rectangle / Ellipse choice. The overlay preview is
 // `fillPreview.overlay.ts`.
@@ -23,7 +28,9 @@ import type { FillPlan } from "./fillPlan";
 //   Shift: a square or a circle, the shorter side's length both ways
 //   Alt: centred on the pressed cell
 //   release: fills the rectangle, or the ellipse inscribed in it (Tiled's `ellipseRegion`),
-//     with the stamp tiled from the shape's top-left (`TileFill`), one history entry
+//     with the stamp tiled from the shape's top-left (`TileFill`), or in Terrain mode with the
+//     tiles of the brush's terrain set that match the cells around it (`wangFill`), one
+//     history entry
 //   right click or Escape during the drag: cancelled, nothing filled
 //
 // The modifiers count as they are at each sample and at the release. A right drag that is not
@@ -31,11 +38,20 @@ import type { FillPlan } from "./fillPlan";
 
 export type FillShape = "rectangle" | "ellipse";
 
-/** The drag in progress: the pressed cell and the stamp of the press. */
+/**
+ * The drag in progress: the pressed cell and, by the fill mode of the press, its stamp or the
+ * brush's terrain set with the layer it fills.
+ */
 interface ShapeDrag {
     readonly shape: FillShape;
     readonly start: PixelPoint;
-    readonly stamp: Stamp;
+    readonly fill:
+        | { readonly mode: "tile"; readonly stamp: Stamp }
+        | {
+              readonly mode: "terrain";
+              readonly analysis: TerrainAnalysis;
+              readonly layerId: number;
+          };
 }
 
 let drag: ShapeDrag | null = null;
@@ -82,26 +98,43 @@ export function shapePlan(
     map: Pick<ProjectMap, "width" | "height">,
     stamp: Stamp,
 ): FillPlan | null {
+    const region = shapeRegion(shape, area, map);
+    // Both shapes touch every side of the area: its top-left is theirs.
+    return region ? { region, origin: { x: area.x, y: area.y }, stamp } : null;
+}
+
+/** The cells of `shape` over `area` inside the map; null when there are none. */
+function shapeRegion(
+    shape: FillShape,
+    area: CellRect,
+    map: Pick<ProjectMap, "width" | "height">,
+): Region | null {
     const clip = clipToMap(area, map);
     if (!clip) return null;
-    // Both shapes touch every side of the area: its top-left is theirs.
     const region = shape === "rectangle" ? rectRegion(clip) : ellipseRegion(area, clip);
-    if (region.length === 0) return null;
-    return { region, origin: { x: area.x, y: area.y }, stamp };
+    return region.length > 0 ? region : null;
 }
 
 /**
- * The fill the drag in progress makes if it is released on `cell` with `modifiers` held; null
- * while no drag is in progress or it fills nothing.
+ * The fill the drag in progress makes if it is released on `cell` of `map` with `modifiers`
+ * held; null while no drag is in progress or it fills nothing. In Terrain mode the filler is
+ * given the whole shape inside the map, as Tiled's `wangFill`; the tile selection clips what
+ * is written (SPEC §4.1).
  */
 export function shapeDragPlan(
-    map: Pick<ProjectMap, "width" | "height">,
+    map: ProjectMap,
     cell: PixelPoint,
     modifiers: Pick<ToolModifiers, "shift" | "alt">,
 ): FillPlan | null {
     const current = drag;
     if (!current) return null;
-    return shapePlan(current.shape, shapeArea(current.start, cell, modifiers), map, current.stamp);
+    const area = shapeArea(current.start, cell, modifiers);
+    const { fill } = current;
+    if (fill.mode === "tile") return shapePlan(current.shape, area, map, fill.stamp);
+    const region = shapeRegion(current.shape, area, map);
+    if (!region) return null;
+    const { session, revision } = sessionStore.getState();
+    return terrainFillPlan(session, revision, map, fill.layerId, fill.analysis, region);
 }
 
 function shapeFillTool(
@@ -117,13 +150,25 @@ function shapeFillTool(
         onDown(context, pointer) {
             // A drag whose commit was refused ended without `onCommit` or `onCancel`.
             drag = null;
-            if (!context.paint || pointer.button !== "primary") return;
-            const stamp = currentStamp();
-            if (!stamp || stampIsEmpty(stamp)) {
-                context.feedback("No stamp");
-                return;
+            const { paint } = context;
+            if (!paint || pointer.button !== "primary") return;
+            if (fillModeOf(context.options) === "terrain") {
+                const brush = brushSource.current();
+                if (!brush) {
+                    context.feedback("No terrain set");
+                    return;
+                }
+                const { analysis } = brush;
+                const fill = { mode: "terrain" as const, analysis, layerId: paint.layerId };
+                drag = { shape, start: pointer.cell, fill };
+            } else {
+                const stamp = currentStamp();
+                if (!stamp || stampIsEmpty(stamp)) {
+                    context.feedback("No stamp");
+                    return;
+                }
+                drag = { shape, start: pointer.cell, fill: { mode: "tile", stamp } };
             }
-            drag = { shape, start: pointer.cell, stamp };
             changed();
         },
         onUp(context, pointer) {

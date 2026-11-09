@@ -1,0 +1,8 @@
+/* TE-045: the fill tools' context bar content (DESIGN §7) spaced as the context bar spaces the
+   tool's options. */
+.context-content[data-context-content="fill"] {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-12);
+    min-width: 0;
+}

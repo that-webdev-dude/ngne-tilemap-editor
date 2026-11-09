@@ -13,7 +13,8 @@ import { STAMP_PREVIEW_ALPHA } from "../stamp/stampPreview.overlay";
 import { drawStamp, subscribeStampImage } from "../stamp/stampImage";
 import { activeLayerId } from "../toolSets";
 import { bucketPlan, bucketTool, subscribeBucket } from "./bucket.tools";
-import { selectedPlan } from "./fillPlan";
+import { subscribeBrushTerrain } from "../terrain/brushTerrain";
+import { fillModeOf, selectedPlan } from "./fillPlan";
 import type { FillPlan } from "./fillPlan";
 import {
     ellipseFillTool,
@@ -23,7 +24,8 @@ import {
 } from "./shapeFill.tools";
 
 // The preview of the bucket and the shape fill (DESIGN §4: fill tools preview their region as
-// the stamp brush its stamp): the stamp tiled over the cells the fill would write at 60%
+// the stamp brush its stamp): the stamp tiled (in Terrain mode, the tiles the terrain fill
+// resolved, as Tiled previews its `wangFill`) over the cells the fill would write at 60%
 // opacity, the empty stamp cells clear, and the bounding box of those cells outlined 1 px in
 // `--accent`. The bucket shows the region of the cell under the pointer (the whole selection or
 // layer with Shift or Whole selection) until it is pressed; the shape fill the part of the
@@ -64,8 +66,10 @@ function drawFillPreview(frame: OverlayFrame): void {
     if (tool?.id === bucketTool.id) {
         if (pressed || !mapping.contains(cursor.cell)) return;
         const { session } = sessionStore.getState();
-        const whole = heldModifiers().shift || toolState.options(tool).wholeSelection === true;
-        const plan = bucketPlan(map, activeLayerId(session, map), cursor.cell, whole);
+        const options = toolState.options(tool);
+        const whole = heldModifiers().shift || options.wholeSelection === true;
+        const layerId = activeLayerId(session, map);
+        const plan = bucketPlan(map, layerId, cursor.cell, whole, fillModeOf(options));
         if (plan) drawPlan(frame, plan);
         return;
     }
@@ -88,7 +92,8 @@ export const overlayLayers: OverlayLayer[] = [
         order: 600,
         draw: drawFillPreview,
         // The stamp, the tool and its options, a press or a drag beginning or ending, a capture, the
-        // modifiers (Shift fills the whole selection or layer, or squares the shape), the layer's
+        // modifiers (Shift fills the whole selection or layer, or squares the shape), the brush's
+        // terrain set (Terrain mode), the layer's
         // cells, the tile selection and the stamp's chunks still to make.
         watch(redraw) {
             const stops = [
@@ -99,6 +104,7 @@ export const overlayLayers: OverlayLayer[] = [
                 subscribeShapeFill(redraw),
                 subscribeCapture(redraw),
                 subscribeHeldModifiers(redraw),
+                subscribeBrushTerrain(redraw),
                 sessionStore.subscribe(redraw),
             ];
             return () => stops.forEach((stop) => stop());
