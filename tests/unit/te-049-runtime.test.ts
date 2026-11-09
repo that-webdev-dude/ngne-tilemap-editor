@@ -14,7 +14,12 @@ const SOURCE = readFileSync(resolve(ROOT, "src/core/runtime/runtime.ts"), "utf8"
 
 describe("core/runtime/runtime.ts", () => {
     it("contains no import statement", () => {
-        expect(SOURCE).not.toMatch(/^\s*import[\s{*"']/m);
+        // The one import allowed is the quad emitter's, which the generator inlines (SPEC 11).
+        const withoutEmitter = SOURCE.replace(
+            /^import\s[^;]*?\sfrom\s+"\.\/emit(?:\.ts)?";\r?\n/gm,
+            "",
+        );
+        expect(withoutEmitter).not.toMatch(/^\s*import[\s{*"']/m);
         expect(SOURCE).not.toMatch(/\bimport\s*\(/);
         expect(SOURCE).not.toMatch(/^\s*export\s[^;]*\sfrom\s/m);
         expect(SOURCE).not.toMatch(/\brequire\s*\(/);

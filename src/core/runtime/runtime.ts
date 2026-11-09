@@ -1,15 +1,19 @@
 // The runtime of an exported tilemap (SPEC 11): the reader of `ngne-tilemap` version 1
-// (FORMAT 3.8) and its error, loading, assets and the data functions. The generator copies
-// this file into `ngne-tilemap.ts` behind a header and the quad emitter, and replaces its last
-// part with the export folder's tables; the editor imports it as code, so editor and games
-// carry one reader. That is why the file:
-// - has no import: the generated module stands alone, and `src/core` stays free of the engine;
-// - uses nothing but ECMAScript 2022 and, in `loadTilemap` alone, `fetch`
-//   (SPEC 11.4): no other DOM global, no engine type;
+// (FORMAT 3.8) and its error, loading, assets, `drawTilemap` and the data functions. The
+// generator copies this file into `ngne-tilemap.ts` behind a header and the quad emitter, and
+// replaces its last part with the export folder's tables; the editor imports it as code, so
+// editor and games carry one reader. That is why the file:
+// - imports the quad emitter alone, which the generator inlines and whose import it drops: the
+//   generated module stands alone, and `src/core` stays free of the engine;
+// - uses nothing but ECMAScript 2022, `fetch` in `loadTilemap` alone and `console.warn` as
+//   `drawTilemap`'s default report (SPEC 11.4): no other DOM global, no engine type;
 // - compiles under `strict`, `exactOptionalPropertyTypes`, `noUnusedLocals` and
 //   `noUnusedParameters` (SPEC 11.4);
 // - is ASCII, comments included, as every text file of an export is.
 // The comments are read by the users of an exported runtime.
+
+import { FlatCells, QuadEmitter } from "./emit";
+import type { EmitLayerOptions, EmitTileset, SpriteLike, SpriteSink } from "./emit";
 
 /** `format` of a tilemap. */
 export const TILEMAP_FORMAT = "ngne-tilemap";
@@ -1043,6 +1047,13 @@ export function validateTilemap(
 export function readTilemap(json: unknown, atlases: Readonly<Record<string, unknown>>): Tilemap {
     const tilemap = validateTilemap(json, atlases);
     lookupOf(tilemap);
+    try {
+        drawStates.set(tilemap, prepareDraw(tilemap, atlases));
+    } catch (error) {
+        throw new TilemapError("atlas", "", "An atlas of the tilemap cannot be read.", {
+            cause: error,
+        });
+    }
     return tilemap;
 }
 
@@ -1161,6 +1172,16 @@ export async function loadTilemap(name: TilemapName, signal?: AbortSignal): Prom
     return readTilemap(parsed.value, atlases);
 }
 
+/** The asset ID, and so the texture ID, of a tileset's or an image's PNG in this folder. */
+function assetId(tilemap: Tilemap, name: string): string {
+    return `ngne-tilemap:${tilemap.project}/${name}`;
+}
+
+/** The export name of an image layer's image: its file name without `.png`. */
+function imageName(layer: ImageLayerData): string {
+    return layer.image.slice(0, -".png".length);
+}
+
 /** Asset definitions by ID, made once per module: NGNE checks assets by identity. */
 const assetDefinitions = new Map<string, unknown>();
 
@@ -1179,7 +1200,7 @@ export function assetsFor<A>(
     const assets: A[] = [];
     const listed = new Set<string>();
     const add = (name: string, url: string) => {
-        const id = `ngne-tilemap:${tilemap.project}/${name}`;
+        const id = assetId(tilemap, name);
         if (listed.has(id)) return;
         listed.add(id);
         if (!assetDefinitions.has(id)) assetDefinitions.set(id, imageAsset(id, url));
@@ -1191,7 +1212,7 @@ export function assetsFor<A>(
     }
     for (const layer of tilemap.layers) {
         if (layer.type !== "image") continue;
-        const name = layer.image.slice(0, -".png".length);
+        const name = imageName(layer);
         const url = Object.hasOwn(imageUrls, name) ? imageUrls[name] : undefined;
         add(name, url ?? layer.image);
     }
@@ -1668,6 +1689,560 @@ export function setCell(
 /** Drops the cached results of `layer`; call it after writing the layer's `data` directly. */
 export function invalidate(tilemap: Tilemap, layer: TileLayerData): void {
     lookupOf(tilemap).caches.delete(layer);
+}
+
+/** What `drawTilemap` needs besides the frame, the tilemap and the camera. */
+export interface DrawOptions {
+    /**
+     * The scene's own clock in milliseconds, so that pause and freeze follow the game. Animated
+     * tiles show the frame at this time; all tiles share one clock from 0, as in Tiled.
+     */
+    readonly elapsedMs: number;
+    /** Size of the view in world units, right and down from `camera`. */
+    readonly viewWidth: number;
+    readonly viewHeight: number;
+    /**
+     * The scene's assets: the `assets` map `setup` receives, or anything with `has(id)`. A
+     * tileset or image whose texture it lacks is not drawn, and is reported once.
+     */
+    readonly assets: { has(id: string): boolean };
+    /** World units per map pixel; default 1. Seams between tiles are avoided at whole numbers only. */
+    readonly scale?: number;
+    /** The engine `layer` of every quad; default 0. */
+    readonly layer?: number;
+    /**
+     * The depth of the bottom map layer; default 0. Map layer `i` (its index in
+     * `tilemap.layers`) is drawn at `depth + i`, so a sprite at `depth + i + 0.5` goes between
+     * map layers `i` and `i + 1`.
+     */
+    readonly depth?: number;
+    /** Multiplies the opacity of every layer, 0..1; default 1. */
+    readonly alpha?: number;
+    /** The `color` of every sprite, `0xRRGGBB` multiplied into the texture; default white. */
+    readonly color?: number;
+    /**
+     * Which layers to draw, in place of the visible ones: called with each tile and image layer
+     * and its index in `tilemap.layers`, bottom to top. Marker layers are not passed: they have
+     * nothing to draw.
+     */
+    readonly layers?: (layer: TilemapLayer, index: number) => boolean;
+    /** Where a texture missing from `assets` is reported; default `console.warn`. */
+    readonly report?: (message: string) => void;
+}
+
+/** An animated tile: its entry in its tileset's `uv`, and its frames. */
+interface DrawAnimation {
+    readonly entry: number;
+    /** Per frame, the time it ends within one pass, in milliseconds; the last is the pass. */
+    readonly ends: Float64Array;
+    /** Per frame, `u, v, uw, vh` of its rectangle. */
+    readonly rects: Float64Array;
+}
+
+/** A tileset as `drawTilemap` draws it. */
+interface DrawTileset {
+    readonly name: string;
+    /** The asset ID that is its texture's ID. */
+    readonly texture: string;
+    /** Given to the emitter; `uv` holds the current frame of each animated tile. */
+    readonly emit: EmitTileset & { readonly uv: Float64Array };
+    readonly animations: readonly DrawAnimation[];
+}
+
+/** What `drawTilemap` keeps per tilemap from one frame to the next. */
+interface DrawState {
+    /** False for a tilemap that `readTilemap` did not return: its atlases are unknown. */
+    readonly read: boolean;
+    readonly tilesets: readonly DrawTileset[];
+    /** Per tileset, 1 while its texture is in the assets; the emitter holds those alone. */
+    readonly available: Uint8Array;
+    emitter: QuadEmitter | null;
+    /** The clock the animated tiles show; NaN before the first frame. */
+    elapsedMs: number;
+    /** Per layer, its cells as the emitter reads them (null until drawn, and for other layers). */
+    readonly cells: (FlatCells | null)[];
+    /** Per layer, the texture of an image layer's image ("" for other layers). */
+    readonly images: readonly string[];
+    /** What has been reported, so that each problem is told once: missing textures by ID. */
+    readonly reported: Set<string>;
+    /** Image textures reported for needing too many copies. */
+    readonly tooManyCopies: Set<string>;
+    /** Reused for every layer, so that a frame allocates nothing. */
+    readonly emitOptions: EmitLayerOptions;
+}
+
+const drawStates = new WeakMap<Tilemap, DrawState>();
+
+/** The rectangle of a frame as fractions of its atlas image; false when it has none. */
+function frameUv(
+    frames: Json,
+    id: string,
+    width: number,
+    height: number,
+    out: Float64Array,
+    at: number,
+): boolean {
+    const frame = Object.hasOwn(frames, id) ? frames[id] : undefined;
+    if (!isObject(frame)) return false;
+    const { x, y, w, h } = frame;
+    if (
+        typeof x !== "number" ||
+        typeof y !== "number" ||
+        typeof w !== "number" ||
+        typeof h !== "number" ||
+        !Number.isFinite(x + y + w + h)
+    ) {
+        return false;
+    }
+    out[at] = x / width;
+    out[at + 1] = y / height;
+    out[at + 2] = w / width;
+    out[at + 3] = h / height;
+    return true;
+}
+
+/**
+ * The draw tables of a tileset from its atlas (FORMAT 4): per tile the even rectangle as
+ * fractions of the image, and the frames of each animated tile. The atlases are given checked
+ * (FORMAT 3.8); a value that is still unusable leaves its tile or animation out rather than
+ * failing the draw.
+ */
+function drawTileset(tilemap: Tilemap, tileset: TilemapTileset, atlas: unknown): DrawTileset {
+    const ids: number[] = [];
+    const uvs: number[] = [];
+    const animations: DrawAnimation[] = [];
+    const rect = new Float64Array(4);
+    const texture = assetId(tilemap, tileset.name);
+    const owner = isObject(atlas) ? atlas : {};
+    const { width, height, frames } = owner;
+    const animated = isObject(owner.animations) ? owner.animations : {};
+    if (
+        typeof width === "number" &&
+        typeof height === "number" &&
+        width > 0 &&
+        height > 0 &&
+        Number.isFinite(width + height) &&
+        isObject(frames)
+    ) {
+        // Frame IDs are `<name>-<tile ID>` and name tiles below `nextTileId` (checked).
+        const prefix = `${tileset.name}-`;
+        const entryOf = new Map<string, number>();
+        for (const frame of Object.keys(frames)) {
+            const tile = frame.startsWith(prefix) ? frame.slice(prefix.length) : "";
+            if (!TILE_ID.test(tile) || Number(tile) >= tileset.nextTileId) continue;
+            const id = Number(tile);
+            if (!frameUv(frames, frame, width, height, rect, 0)) continue;
+            entryOf.set(frame, ids.length);
+            ids.push(id);
+            uvs.push(rect[0]!, rect[1]!, rect[2]!, rect[3]!);
+        }
+        for (const frame of Object.keys(animated)) {
+            const entry = entryOf.get(frame);
+            const animation = animated[frame];
+            const list = isObject(animation) ? animation.entries : undefined;
+            if (entry === undefined || !Array.isArray(list) || list.length === 0) continue;
+            const items: readonly unknown[] = list;
+            const ends = new Float64Array(items.length);
+            const rects = new Float64Array(items.length * 4);
+            let end = 0;
+            const usable = items.every((item, index) => {
+                if (!isObject(item) || typeof item.frame !== "string") return false;
+                const { ms } = item;
+                if (typeof ms !== "number" || !(ms > 0) || !Number.isFinite(ms)) return false;
+                end += ms;
+                ends[index] = end;
+                return frameUv(frames, item.frame, width, height, rects, index * 4);
+            });
+            if (usable) animations.push({ entry, ends, rects });
+        }
+    }
+    return {
+        name: tileset.name,
+        texture,
+        emit: {
+            texture,
+            tileWidth: tileset.tileWidth,
+            tileHeight: tileset.tileHeight,
+            offsetX: tileset.offsetX,
+            offsetY: tileset.offsetY,
+            key: tileset.firstGid,
+            ids: Int32Array.from(ids),
+            uv: Float64Array.from(uvs),
+            span: tileset.nextTileId,
+        },
+        animations,
+    };
+}
+
+function newDrawState(
+    tilemap: Tilemap,
+    read: boolean,
+    tilesets: readonly DrawTileset[],
+): DrawState {
+    return {
+        read,
+        tilesets,
+        available: new Uint8Array(tilesets.length),
+        emitter: null,
+        elapsedMs: NaN,
+        cells: tilemap.layers.map(() => null),
+        images: tilemap.layers.map((layer) =>
+            layer.type === "image" ? assetId(tilemap, imageName(layer)) : "",
+        ),
+        reported: new Set(),
+        tooManyCopies: new Set(),
+        emitOptions: {
+            width: 0,
+            height: 0,
+            gridWidth: 0,
+            gridHeight: 0,
+            viewX: 0,
+            viewY: 0,
+            viewWidth: 0,
+            viewHeight: 0,
+            translateX: 0,
+            translateY: 0,
+            scale: 1,
+            alpha: 1,
+            color: WHITE,
+            layer: 0,
+            depth: 0,
+        },
+    };
+}
+
+function prepareDraw(tilemap: Tilemap, atlases: Readonly<Record<string, unknown>>): DrawState {
+    return newDrawState(
+        tilemap,
+        true,
+        tilemap.tilesets.map((tileset) =>
+            drawTileset(
+                tilemap,
+                tileset,
+                Object.hasOwn(atlases, tileset.name) ? atlases[tileset.name] : undefined,
+            ),
+        ),
+    );
+}
+
+function drawStateOf(tilemap: Tilemap): DrawState {
+    let state = drawStates.get(tilemap);
+    if (state === undefined) {
+        state = newDrawState(tilemap, false, []);
+        drawStates.set(tilemap, state);
+    }
+    return state;
+}
+
+/** NGNE's default sprite colour. */
+const WHITE = 0xffffff;
+
+/** `value` when it is a finite number, otherwise `fallback`. */
+function finite(value: unknown, fallback: number): number {
+    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+}
+
+/** Tells `message` through `options.report` or `console.warn`; a report that throws is ignored. */
+function tell(options: DrawOptions, message: string): void {
+    try {
+        const report: unknown = options.report;
+        if (typeof report === "function") report(message);
+        else console.warn(message);
+    } catch {
+        // Reporting must not make the draw throw.
+    }
+}
+
+/** Tells `message` the first time `key` is reported for the tilemap of `state`. */
+function tellOnce(state: DrawState, options: DrawOptions, key: string, message: string): void {
+    if (state.reported.has(key)) return;
+    state.reported.add(key);
+    tell(options, message);
+}
+
+/** Whether the scene's assets hold the texture `id`; a broken `assets` holds nothing. */
+function hasTexture(options: DrawOptions, id: string): boolean {
+    const assets: unknown = options.assets;
+    if (!isObject(assets) || typeof assets.has !== "function") return false;
+    return (assets as { has(id: string): unknown }).has(id) === true;
+}
+
+/** The emitter of the tilesets whose textures are in the assets, built again when they change. */
+function emitterOf(state: DrawState, tilemap: Tilemap, options: DrawOptions): QuadEmitter {
+    const { tilesets, available } = state;
+    let changed = false;
+    for (let index = 0; index < tilesets.length; index += 1) {
+        const tileset = tilesets[index]!;
+        const has = hasTexture(options, tileset.texture) ? 1 : 0;
+        if (has === 0 && !state.reported.has(tileset.texture)) {
+            tellOnce(
+                state,
+                options,
+                tileset.texture,
+                `ngne-tilemap: the tilemap ${quoted(tilemap.name)} does not draw the tileset ` +
+                    `${quoted(tileset.name)}: the scene's assets have no ${quoted(tileset.texture)}.`,
+            );
+        }
+        if (available[index] !== has) {
+            available[index] = has;
+            changed = true;
+        }
+    }
+    if (changed || state.emitter === null) {
+        state.emitter = new QuadEmitter(
+            "gid",
+            tilesets.filter((_, index) => available[index] === 1).map((tileset) => tileset.emit),
+        );
+    }
+    return state.emitter;
+}
+
+/** Writes the frame each animated tile shows at `elapsedMs` into its tileset's `uv`. */
+function animate(state: DrawState, elapsedMs: number): void {
+    if (elapsedMs === state.elapsedMs) return;
+    state.elapsedMs = elapsedMs;
+    const { tilesets } = state;
+    for (let set = 0; set < tilesets.length; set += 1) {
+        const { emit, animations } = tilesets[set]!;
+        for (let index = 0; index < animations.length; index += 1) {
+            const { entry, ends, rects } = animations[index]!;
+            const pass = ends[ends.length - 1]!;
+            // A span holds its start and not its end (sprite editor FORMAT 2.4).
+            let time = elapsedMs % pass;
+            if (time < 0) time += pass;
+            let frame = 0;
+            while (frame < ends.length - 1 && time >= ends[frame]!) frame += 1;
+            const from = frame * 4;
+            const to = entry * 4;
+            emit.uv[to] = rects[from]!;
+            emit.uv[to + 1] = rects[from + 1]!;
+            emit.uv[to + 2] = rects[from + 2]!;
+            emit.uv[to + 3] = rects[from + 3]!;
+        }
+    }
+}
+
+/** The cells of the tile layer at `index` as the emitter reads them: its current `data`. */
+function cellsOf(
+    state: DrawState,
+    tilemap: Tilemap,
+    index: number,
+    layer: TileLayerData,
+): FlatCells {
+    let cells = state.cells[index] ?? null;
+    if (cells === null || cells.data !== layer.data) {
+        cells = new FlatCells(layer.data, tilemap.width, tilemap.height);
+        state.cells[index] = cells;
+    }
+    return cells;
+}
+
+/** Most copies of one image a frame draws; a view that needs more draws none of them. */
+const MAX_IMAGE_COPIES = 1_048_576;
+
+/**
+ * The image of an image layer with its top-left corner at the layer's shift; a repeated axis
+ * as a row of copies covering the view. Positions in map pixels, as `drawLayers` gives them.
+ * False when covering the view would take more than `MAX_IMAGE_COPIES` copies.
+ */
+function drawImage(
+    frame: SpriteSink,
+    sprite: SpriteLike,
+    layer: ImageLayerData,
+    shiftX: number,
+    shiftY: number,
+    view: { x: number; y: number; width: number; height: number },
+    scale: number,
+): boolean {
+    const width = layer.imageWidth;
+    const height = layer.imageHeight;
+    let x0 = 0;
+    let x1 = 0;
+    let y0 = 0;
+    let y1 = 0;
+    if (layer.repeatX) {
+        x0 = Math.floor((view.x - shiftX) / width);
+        x1 = Math.ceil((view.x + view.width - shiftX) / width) - 1;
+    } else if (shiftX + width <= view.x || shiftX >= view.x + view.width) {
+        return true;
+    }
+    if (layer.repeatY) {
+        y0 = Math.floor((view.y - shiftY) / height);
+        y1 = Math.ceil((view.y + view.height - shiftY) / height) - 1;
+    } else if (shiftY + height <= view.y || shiftY >= view.y + view.height) {
+        return true;
+    }
+    if (!((x1 - x0 + 1) * (y1 - y0 + 1) <= MAX_IMAGE_COPIES)) return false;
+    sprite.width = width * scale;
+    sprite.height = height * scale;
+    sprite.rotation = 0;
+    sprite.u = 0;
+    sprite.v = 0;
+    sprite.uw = 1;
+    sprite.vh = 1;
+    for (let row = y0; row <= y1; row += 1) {
+        for (let column = x0; column <= x1; column += 1) {
+            sprite.x = (shiftX + column * width + width / 2) * scale;
+            sprite.y = (shiftY + row * height + height / 2) * scale;
+            frame.sprite(sprite);
+        }
+    }
+    return true;
+}
+
+/** The view in map pixels; reused, as the frame allocates nothing. */
+const VIEW = { x: 0, y: 0, width: 0, height: 0 };
+
+function drawLayers(
+    frame: SpriteSink,
+    tilemap: Tilemap,
+    camera: { readonly x: number; readonly y: number },
+    options: DrawOptions,
+    state: DrawState,
+): void {
+    if (!state.read && !state.reported.has("")) {
+        tellOnce(
+            state,
+            options,
+            "",
+            `ngne-tilemap: the tilemap ${quoted(tilemap.name)} was not returned by readTilemap, ` +
+                `so its tile layers are not drawn.`,
+        );
+    }
+    const scale = finite(options.scale, 1);
+    const viewWidth = finite(options.viewWidth, 0) / scale;
+    const viewHeight = finite(options.viewHeight, 0) / scale;
+    const viewX = finite(camera.x, NaN) / scale;
+    const viewY = finite(camera.y, NaN) / scale;
+    if (!(scale > 0) || !(viewWidth > 0) || !(viewHeight > 0)) return;
+    if (!Number.isFinite(viewX) || !Number.isFinite(viewY)) return;
+    // The centre of the view, which gives each layer's parallax shift (FORMAT 3.4).
+    const centreX = viewX + viewWidth / 2 - tilemap.parallaxOriginX;
+    const centreY = viewY + viewHeight / 2 - tilemap.parallaxOriginY;
+    // A view too large for a number (a tiny scale) has no centre to draw around.
+    if (!Number.isFinite(viewWidth + viewHeight + centreX + centreY)) return;
+    const alpha = Math.min(Math.max(finite(options.alpha, 1), 0), 1);
+    const color = finite(options.color, WHITE);
+    const engineLayer = finite(options.layer, 0);
+    const depth = finite(options.depth, 0);
+    const accepts: unknown = options.layers;
+
+    const emitter = emitterOf(state, tilemap, options);
+    animate(state, finite(options.elapsedMs, 0));
+    const sprite = emitter.sprite;
+    const emit = state.emitOptions;
+    emit.width = tilemap.width;
+    emit.height = tilemap.height;
+    emit.gridWidth = tilemap.tileWidth;
+    emit.gridHeight = tilemap.tileHeight;
+    emit.viewWidth = viewWidth;
+    emit.viewHeight = viewHeight;
+    emit.scale = scale;
+    emit.color = color;
+    emit.layer = engineLayer;
+    VIEW.x = viewX;
+    VIEW.y = viewY;
+    VIEW.width = viewWidth;
+    VIEW.height = viewHeight;
+
+    const { layers } = tilemap;
+    for (let index = 0; index < layers.length; index += 1) {
+        const layer = layers[index]!;
+        if (layer.type === "marker") continue;
+        const drawn =
+            typeof accepts === "function"
+                ? Boolean(
+                      (accepts as (layer: TilemapLayer, index: number) => unknown)(layer, index),
+                  )
+                : layer.visible;
+        if (!drawn) continue;
+        const layerAlpha = (layer.opacity / 255) * alpha;
+        if (!(layerAlpha > 0)) continue;
+        const shiftX = layer.offsetX + centreX * (1 - layer.parallaxX);
+        const shiftY = layer.offsetY + centreY * (1 - layer.parallaxY);
+        if (!Number.isFinite(shiftX + shiftY)) continue;
+        if (layer.type === "tile") {
+            emit.viewX = viewX - shiftX;
+            emit.viewY = viewY - shiftY;
+            emit.translateX = shiftX;
+            emit.translateY = shiftY;
+            emit.alpha = layerAlpha;
+            emit.depth = depth + index;
+            emitter.emitLayer(frame, cellsOf(state, tilemap, index, layer), emit);
+        } else {
+            const texture = state.images[index] ?? "";
+            if (!hasTexture(options, texture)) {
+                if (state.reported.has(texture)) continue;
+                tellOnce(
+                    state,
+                    options,
+                    texture,
+                    `ngne-tilemap: the tilemap ${quoted(tilemap.name)} does not draw the image ` +
+                        `${quoted(layer.image)}: the scene's assets have no ${quoted(texture)}.`,
+                );
+                continue;
+            }
+            sprite.texture = texture;
+            sprite.alpha = layerAlpha;
+            sprite.color = color;
+            sprite.layer = engineLayer;
+            sprite.depth = depth + index;
+            if (
+                !drawImage(frame, sprite, layer, shiftX, shiftY, VIEW, scale) &&
+                !state.tooManyCopies.has(texture)
+            ) {
+                state.tooManyCopies.add(texture);
+                tell(
+                    options,
+                    `ngne-tilemap: the tilemap ${quoted(tilemap.name)} does not draw the image ` +
+                        `${quoted(layer.image)}: covering the view would take more than ` +
+                        `${MAX_IMAGE_COPIES} copies.`,
+                );
+            }
+        }
+    }
+}
+
+/**
+ * Draws `tilemap` into `frame` for `scene.render` (SPEC 11.2): the visible tile and image
+ * layers, or those `options.layers` accepts, bottom to top. Map layer `i` goes to the engine
+ * `layer` `options.layer` at depth `options.depth + i`.
+ *
+ * World units are map pixels times `options.scale`. The view is `camera` plus
+ * `options.viewWidth x options.viewHeight`, in world units; its centre gives each layer's
+ * parallax shift, and only tiles that can show in it are drawn. Animated tiles show the frame
+ * at `options.elapsedMs`. Each layer draws at its opacity times `options.alpha`, every sprite
+ * with `options.color`. An image layer draws its image at the layer's shift, a repeated axis as
+ * copies covering the view.
+ *
+ * Within a layer, quads come grouped by tileset, row by row, so the engine batches them; every
+ * call of `frame.sprite` gets the same sprite object, changed in place. The tile layers' current
+ * `data` is drawn, so a game's edits show at once.
+ *
+ * Never throws: a tileset or image whose texture `options.assets` lacks is skipped and reported
+ * once per tilemap through `options.report` (default `console.warn`), as is anything else that
+ * stops the draw.
+ */
+export function drawTilemap(
+    frame: SpriteSink,
+    tilemap: Tilemap,
+    camera: { readonly x: number; readonly y: number },
+    options: DrawOptions,
+): void {
+    let state: DrawState | null = null;
+    try {
+        state = drawStateOf(tilemap);
+        drawLayers(frame, tilemap, camera, options, state);
+    } catch (error) {
+        let message = "ngne-tilemap: drawing a tilemap stopped";
+        try {
+            message += `: ${error instanceof Error ? error.message : String(error)}`;
+        } catch {
+            // An error that cannot be shown is reported without its text.
+        }
+        if (state === null) tell(options, message);
+        else tellOnce(state, options, `error:${message}`, message);
+    }
 }
 
 // The export folder's tables. The generator replaces this line and everything below it.

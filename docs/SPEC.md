@@ -811,7 +811,8 @@ Export is accepted when, for the reference project and the FORMAT fixtures:
 
 The export writes one runtime per folder (BRIEF §6). Its source is `core/runtime/runtime.ts`;
 the generator prepends a header and appends the folder's tables; the editor's preview and tests
-import the same source as code. It has no imports.
+import the same source as code. It imports nothing but the quad emitter (§11.3), which the
+generator inlines, so the generated runtime has no imports.
 
 ### 11.1 Header and tables
 

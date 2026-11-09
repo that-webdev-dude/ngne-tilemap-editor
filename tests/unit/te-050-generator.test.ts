@@ -39,7 +39,11 @@ describe("generateRuntime", () => {
         const emit = readFileSync(resolve(ROOT, "src/core/runtime/emit.ts"), "utf8");
         const runtime = readFileSync(resolve(ROOT, "src/core/runtime/runtime.ts"), "utf8");
         expect(source).toContain(emit.trimEnd());
-        expect(source).toContain(runtime.slice(0, runtime.indexOf(TABLES_MARKER)).trimEnd());
+        // Without its import of the emitter, which is inlined above it.
+        const body = runtime
+            .slice(0, runtime.indexOf(TABLES_MARKER))
+            .replace(/^import\s[^;]*?\sfrom\s+"\.\/emit(?:\.ts)?";\n/gm, "");
+        expect(source).toContain(body.trimEnd());
         expect(source).not.toContain(TABLES_MARKER);
         expect(source.match(/^export const TILEMAP_URLS/gm)).toHaveLength(1);
         expect(source).toContain("export class QuadEmitter");

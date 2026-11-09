@@ -301,6 +301,9 @@ export class QuadEmitter {
     /** The index in `sets` of the tileset a non-empty value names, or -1. */
     private resolve(value: number): number {
         if (this.mode === "slot") return this.bySlot[(value >>> 20) & 255]!;
+        // A value with the reserved bit 28 set names no tile (FORMAT 1.2), as for the data
+        // functions; only a game's own write can hold one.
+        if ((value & 0x10000000) !== 0) return -1;
         const gid = value & 0x0fffffff;
         const sets = this.sets;
         const last = sets[this.lastSet]!;
