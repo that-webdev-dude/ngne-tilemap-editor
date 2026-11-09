@@ -1,4 +1,5 @@
 import type { PixelBuffer } from "../../../core/model";
+import { cachedDatabase, request } from "../indexedDb";
 
 // Where the autosave snapshots of SPEC §10.1 (TE-048) are kept: IndexedDB, database
 // `ngne-tilemap-editor-autosave` (SUITE §7), opened by the background worker that writes them
@@ -131,13 +132,6 @@ function rangeOf(key: SnapshotKey): IDBKeyRange {
     return IDBKeyRange.bound([key], [key, []]);
 }
 
-function request<Result>(task: IDBRequest<Result>): Promise<Result> {
-    return new Promise((resolve, reject) => {
-        task.onsuccess = () => resolve(task.result);
-        task.onerror = () => reject(task.error ?? new Error("IndexedDB request failed."));
-    });
-}
-
 /** Resolves when `transaction` commits, rejects with its error when it fails. */
 function done(transaction: IDBTransaction): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -182,61 +176,24 @@ export interface IndexedDbSnapshotOptions {
 }
 
 /**
- * The snapshots in IndexedDB, or null where there is none (Node). An open that another
- * connection blocks, or that does not answer within the timeout, fails the operation that
- * asked, and a connection that opens after that is closed at once; the next operation tries
- * again. A connection the browser closes, or that a newer version elsewhere asks to close, is
- * let go, and the next operation opens another.
+ * The snapshots in IndexedDB, or null where there is none (Node). The connection is opened and
+ * kept as `app/worker/indexedDb.ts` says: an open that fails or times out fails the operation
+ * that asked, and the next one tries again.
  */
 export function indexedDbSnapshots(options: IndexedDbSnapshotOptions = {}): SnapshotStorage | null {
     const factory = options.factory ?? (typeof indexedDB === "undefined" ? null : indexedDB);
     if (!factory) return null;
-    const timeoutMs = options.timeoutMs ?? AUTOSAVE_OPEN_TIMEOUT_MS;
-    let opened: Promise<IDBDatabase> | null = null;
-
-    const openDatabase = async (): Promise<IDBDatabase> => {
-        let timer: ReturnType<typeof setTimeout> | undefined;
-        const open = factory.open(AUTOSAVE_DATABASE, 1);
-        open.onupgradeneeded = () => {
-            const db = open.result;
+    const database = cachedDatabase({
+        factory,
+        name: AUTOSAVE_DATABASE,
+        version: 1,
+        upgrade(db) {
             for (const name of STORES) {
                 if (!db.objectStoreNames.contains(name)) db.createObjectStore(name);
             }
-        };
-        return new Promise<IDBDatabase>((resolve, reject) => {
-            /** Given up: a connection that opens later is closed at once. */
-            const giveUp = (error: Error) => {
-                open.onsuccess = () => open.result.close();
-                reject(error);
-            };
-            open.onsuccess = () => resolve(open.result);
-            open.onerror = () => reject(open.error ?? new Error("Not opened."));
-            open.onblocked = () => giveUp(new Error("The database is blocked."));
-            timer = setTimeout(() => giveUp(new Error("IndexedDB did not answer.")), timeoutMs);
-        }).finally(() => clearTimeout(timer));
-    };
-
-    const database = (): Promise<IDBDatabase> => {
-        if (opened) return opened;
-        const opening = openDatabase().then((db) => {
-            /** The connection is no longer usable: the next operation opens another. */
-            const forget = () => {
-                if (opened === opening) opened = null;
-            };
-            db.onversionchange = () => {
-                db.close();
-                forget();
-            };
-            db.onclose = forget;
-            return db;
-        });
-        opened = opening;
-        // A failed open is tried again by the next operation.
-        opening.catch(() => {
-            if (opened === opening) opened = null;
-        });
-        return opening;
-    };
+        },
+        timeoutMs: options.timeoutMs ?? AUTOSAVE_OPEN_TIMEOUT_MS,
+    });
 
     return {
         async write(write) {

@@ -1,5 +1,6 @@
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
+import { cachedDatabase, request } from "../worker/indexedDb";
 import { projectFileHandleFrom } from "../platform/projectFiles";
 import type { ProjectFileHandle } from "../platform/projectFiles";
 
@@ -74,13 +75,6 @@ const DATABASE = "ngne-tilemap-editor-recent";
 const STORE = "files";
 const KEY = "list";
 
-function request<Result>(task: IDBRequest<Result>): Promise<Result> {
-    return new Promise((resolve, reject) => {
-        task.onsuccess = () => resolve(task.result);
-        task.onerror = () => reject(task.error ?? new Error("IndexedDB request failed."));
-    });
-}
-
 /** How long the list waits for IndexedDB to open, in milliseconds; then it keeps nothing. */
 export const RECENT_OPEN_TIMEOUT_MS = 3000;
 
@@ -91,50 +85,28 @@ export interface IndexedDbRecentOptions {
 }
 
 /**
- * The list in the page's IndexedDB; a storage that keeps nothing where there is none. An open
- * that another tab blocks, or that does not answer within the timeout, gives up: the list is
- * kept in memory for the session, and nothing waits for storage for ever.
+ * The list in the page's IndexedDB; a storage that keeps nothing where there is none. The
+ * connection is opened and kept as `app/worker/indexedDb.ts` says: an open that another tab
+ * blocks, or that does not answer within the timeout, keeps nothing this time (the list stays
+ * in memory) and the next save tries again; a connection the browser closes is opened again.
+ * Nothing waits for storage for ever.
  */
 export function indexedDbRecentFiles(options: IndexedDbRecentOptions = {}): RecentFileStorage {
-    const timeoutMs = options.timeoutMs ?? RECENT_OPEN_TIMEOUT_MS;
-    let opened: Promise<IDBDatabase | null> | null = null;
-    const database = (): Promise<IDBDatabase | null> => {
-        opened ??= (async () => {
-            const factory =
-                options.factory ?? (typeof indexedDB === "undefined" ? null : indexedDB);
-            if (!factory) return null;
-            let timer: ReturnType<typeof setTimeout> | undefined;
-            try {
-                const opening = factory.open(DATABASE, 1);
-                opening.onupgradeneeded = () => {
-                    if (!opening.result.objectStoreNames.contains(STORE)) {
-                        opening.result.createObjectStore(STORE);
-                    }
-                };
-                const db = await new Promise<IDBDatabase>((resolve, reject) => {
-                    opening.onsuccess = () => resolve(opening.result);
-                    opening.onerror = () => reject(opening.error ?? new Error("Not opened."));
-                    // Another tab holds an older version open: no waiting for it.
-                    opening.onblocked = () => reject(new Error("The database is blocked."));
-                    timer = setTimeout(() => {
-                        // An answer after the timeout is not used: the database is let go.
-                        opening.onsuccess = () => opening.result.close();
-                        reject(new Error("No answer."));
-                    }, timeoutMs);
-                }).finally(() => clearTimeout(timer));
-                // A newer version elsewhere: let it go, and open again next time.
-                db.onversionchange = () => {
-                    db.close();
-                    opened = null;
-                };
-                return db;
-            } catch {
-                opened = null;
-                return null;
-            }
-        })();
-        return opened;
-    };
+    const factory = options.factory ?? (typeof indexedDB === "undefined" ? null : indexedDB);
+    const open = factory
+        ? cachedDatabase({
+              factory,
+              name: DATABASE,
+              version: 1,
+              upgrade(db) {
+                  if (!db.objectStoreNames.contains(STORE)) db.createObjectStore(STORE);
+              },
+              timeoutMs: options.timeoutMs ?? RECENT_OPEN_TIMEOUT_MS,
+          })
+        : null;
+    /** The database, or null when there is none or it cannot be opened now. */
+    const database = (): Promise<IDBDatabase | null> =>
+        open ? open().catch(() => null) : Promise.resolve(null);
     return {
         async load() {
             const db = await database();

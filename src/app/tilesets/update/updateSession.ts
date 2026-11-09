@@ -3,7 +3,7 @@ import type { StoreApi } from "zustand/vanilla";
 import type { Command } from "../../../core/history";
 import type { PixelBuffer, Project, TileSourceKey } from "../../../core/model";
 import { tileBytes, tileUsage, updateFromSourceCommand } from "../../../core/tileset";
-import { reason } from "../errorReason";
+import { reason } from "../../worker/errorReason";
 import type {
     MapUsage,
     SourceTiles,

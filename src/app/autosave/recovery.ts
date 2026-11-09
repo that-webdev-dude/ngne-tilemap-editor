@@ -1,5 +1,6 @@
 import type { StoreApi } from "zustand/vanilla";
 import { createProjectSession, randomId } from "../../core/model";
+import { reason } from "../worker/errorReason";
 import type { Notices } from "../notices/notices";
 import type { SessionState } from "../state/session";
 import type { Autosave } from "./autosave";
@@ -65,15 +66,6 @@ export async function openOwners(): Promise<Set<string> | null> {
     } catch {
         return null;
     }
-}
-
-/** What went wrong, for a message: a worker task's own error, or the error's. */
-function reason(error: unknown): string {
-    const remote = (error as { remote?: { message?: unknown } } | null)?.remote;
-    if (remote && typeof remote.message === "string" && remote.message !== "") {
-        return remote.message;
-    }
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
 }
 
 /** The toast when another page has the snapshot. */

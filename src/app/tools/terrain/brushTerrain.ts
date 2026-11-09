@@ -1,7 +1,12 @@
 import { createStore } from "zustand/vanilla";
 import { terrainAnalysis } from "../../../core/terrain";
 import { sessionStore } from "../../state/session";
-import { selectTerrain, selectedSet, terrainsPanelStore } from "../../terrains/terrainsPanel";
+import {
+    selectTerrain,
+    selectedSet,
+    subscribeTerrainChosen,
+    terrainsPanelStore,
+} from "../../terrains/terrainsPanel";
 import { tilesetPanelStore } from "../../tilesets/panel/tilesetPanel";
 import { provideBrushSource } from "./brushSource";
 import type { BrushTerrain } from "./brushSource";
@@ -64,11 +69,10 @@ export function subscribeBrushTerrain(listener: () => void): () => void {
     return () => stops.forEach((stop) => stop());
 }
 
-// A terrain selected in the panel is painted again, not "Erase".
-terrainsPanelStore.subscribe((state, previous) => {
-    if (state.selections !== previous.selections && store.getState().erase) {
-        store.setState({ erase: false });
-    }
+// A terrain the user selects in the panel is painted again, not "Erase" (SPEC §5.3); the
+// selection following its set as the history moves it keeps "Erase".
+subscribeTerrainChosen(() => {
+    if (store.getState().erase) store.setState({ erase: false });
 });
 
 provideBrushSource({ current: brushTerrain, choose: chooseBrushTerrain });

@@ -8,7 +8,7 @@ import { toolPipeline } from "../../tools/appPipeline";
 import { WorkerError } from "../../worker/protocol";
 import type { WorkerClient } from "../../worker/client";
 import type { TilesetImportInput } from "../../worker/tasks/tileset.task";
-import { reason } from "../errorReason";
+import { reason } from "../../worker/errorReason";
 import {
     changedForm,
     gridKey,

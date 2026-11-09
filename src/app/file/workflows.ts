@@ -15,6 +15,7 @@ import {
 import type { Project, ProjectSession } from "../../core/model";
 import { MAX_CONTENT_BYTES, PROJECT_FILE_EXTENSION } from "../../core/project";
 import { fitWhenShown, newMapDefaults } from "../maps/maps";
+import { reason } from "../worker/errorReason";
 import { notices as appNotices } from "../notices/notices";
 import type { Notices } from "../notices/notices";
 import { browserProjectFiles } from "../platform/projectFiles";
@@ -136,15 +137,6 @@ export interface FileWorkflows {
      * runs (it resolves false then), and with `busy` true meanwhile.
      */
     run(task: () => Promise<boolean>): Promise<boolean>;
-}
-
-/** What went wrong, for a message: the task's own error through the worker, or the error's. */
-export function reason(error: unknown): string {
-    const remote = (error as { remote?: { message?: unknown } } | null)?.remote;
-    if (remote && typeof remote.message === "string" && remote.message !== "") {
-        return remote.message;
-    }
-    return error instanceof Error && error.message !== "" ? error.message : String(error);
 }
 
 /** The file a handle names is gone: moved or deleted since it was chosen. */

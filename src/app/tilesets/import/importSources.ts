@@ -7,7 +7,7 @@ import {
     readSpriteOutline,
 } from "../../../core/tileset";
 import type { AtlasOutline, SpriteDoc } from "../../../core/tileset";
-import { reason } from "../errorReason";
+import { reason } from "../../worker/errorReason";
 
 // The files of one tileset import (SPEC §6.1, SUITE §7), read and recognised by their names: a
 // grid PNG, a sprite project, or an atlas (its `.atlas.json` and its PNG, picked or dropped

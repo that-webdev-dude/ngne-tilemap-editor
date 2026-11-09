@@ -14,7 +14,7 @@ import { commandDialogs } from "../dialogs/dialogRequests";
 import { activeMap, canAddLayer } from "../layers/layers";
 import { sessionStore } from "../state/session";
 import type { PickedFile } from "../tilesets/import/importSources";
-import { reason } from "../tilesets/errorReason";
+import { reason } from "../worker/errorReason";
 import { backgroundWorker } from "../worker/client";
 import type { WorkerClient } from "../worker/client";
 

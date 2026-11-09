@@ -10,7 +10,7 @@ import type { WorkerClient } from "../../worker/client";
 // The task type, so that `run("tileset.updateSource")` is typed outside the worker's own glob.
 import type { UpdateTilesetInput } from "../../worker/tasks/tilesetUpdate.task";
 import { currentTileset, historyIdle } from "../edit/tilesetEdit";
-import { reason } from "../errorReason";
+import { reason } from "../../worker/errorReason";
 import { readImportSource } from "../import/importSources";
 import type { PickedFile } from "../import/importSources";
 import { pickedFile } from "../import/pickTilesetFiles";

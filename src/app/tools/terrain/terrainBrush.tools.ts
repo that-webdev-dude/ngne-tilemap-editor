@@ -10,7 +10,14 @@ import {
     wangIdOfCell,
     xorshift32,
 } from "../../../core/terrain";
-import type { BrushStep, BrushTarget, WangIndex } from "../../../core/terrain";
+import type {
+    BrushStep,
+    BrushStepResult,
+    BrushTarget,
+    Random,
+    TerrainFillerOptions,
+    WangIndex,
+} from "../../../core/terrain";
 import { sessionStore } from "../../state/session";
 import type { PaintStroke, ToolContext, ToolModifiers, ToolPointer, ToolSpec } from "../types";
 import { brushSource } from "./brushSource";
@@ -37,8 +44,41 @@ import type { BrushTerrain } from "./brushSource";
 
 export const TERRAIN_TOOL_ID = "terrain";
 
-/** Breaks the filler's ties (SPEC §5.2): seeded from the clock once per session. */
-const random = xorshift32(clockSeed());
+/**
+ * The seed of the generator that breaks the next paint step's ties (SPEC §5.2): the clock's at
+ * first, then the first number of each step's generator. The overlay's preview between strokes
+ * runs the step with a generator of the same seed (`previewStep`), so a press leaves invalid
+ * exactly what its preview showed, as Tiled's brush paints its preview.
+ */
+let stepSeed = clockSeed();
+
+/** The seed the next paint step's generator starts from (the preview's cache key). */
+export function brushStepSeed(): number {
+    return stepSeed;
+}
+
+/** Seeds the brush's next paint step: tests make it deterministic. */
+export function seedTerrainBrush(seed: number): void {
+    stepSeed = seed >>> 0;
+}
+
+/** The generator of the next paint step, which advances the seed for the step after it. */
+function takeStepRandom(): Random {
+    const random = xorshift32(stepSeed);
+    stepSeed = xorshift32(stepSeed)();
+    return random;
+}
+
+/**
+ * What a press with `step` would do on the layer `options.back` holds, without painting: the
+ * step run with the generator the next press will use. The overlay shows its invalid cells.
+ */
+export function previewStep(
+    options: Omit<TerrainFillerOptions, "corrections" | "random">,
+    step: BrushStep,
+): BrushStepResult {
+    return brushStep({ ...options, random: xorshift32(stepSeed) }, step);
+}
 
 /** The brush's modes for `modifiers` held (Tiled's `modifiersChanged`). */
 export function brushModes(
@@ -147,7 +187,7 @@ function paintStep(
             back: (x, y) => paint.get(x, y),
             width: paint.map.width,
             height: paint.map.height,
-            random,
+            random: takeStepRandom(),
         },
         { ...step, mode: brushMode(brush), color: brush.color },
     );

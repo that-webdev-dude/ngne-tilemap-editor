@@ -1,6 +1,6 @@
 import type { Region } from "../../../core/fill";
 import { findLayer } from "../../../core/model";
-import { brushStep, brushTargetAt, mirroredTarget } from "../../../core/terrain";
+import { brushTargetAt, mirroredTarget } from "../../../core/terrain";
 import type { BrushTarget } from "../../../core/terrain";
 import { fillRects } from "../../overlay/draw";
 import type { DeviceRect } from "../../overlay/gridLines";
@@ -17,8 +17,10 @@ import {
     brushLineStart,
     brushMode,
     brushModes,
+    brushStepSeed,
     brushStroke,
     cellPosition,
+    previewStep,
     resetTerrainBrush,
     subscribeTerrainBrush,
 } from "./terrainBrush.tools";
@@ -28,7 +30,8 @@ import {
 // 1 px `--accent` outline, at the mirrored place too with symmetry; the cells the filler cannot
 // resolve with a 35% `--danger` fill. While a drag is in progress it shows the drag's target
 // and what its last step left invalid; between strokes it shows what a press there would do,
-// the filler run on the layer as it is (Tiled's brush preview, `WangBrush::updateBrush`).
+// the filler run on the layer as it is with the press's own generator (`previewStep`), so the
+// press leaves invalid what the preview showed (Tiled's brush preview, `WangBrush::updateBrush`).
 
 /** Side of the corner mark and width of the edge bar, CSS px (DESIGN §4). */
 const CORNER_MARK = 6;
@@ -77,19 +80,19 @@ function hoverPreview(frame: OverlayFrame, at: [number, number]): BrushPreview |
         line,
         start,
         target,
+        brushStepSeed(),
     ]);
     if (cached?.key === key) return cached.preview;
     let invalid: Region = [];
     // A Shift+press with no line start only sets it.
     if (!line || start) {
-        invalid = brushStep(
+        // With the next press's generator: ties decide what corrections leave invalid.
+        invalid = previewStep(
             {
                 analysis: brush.analysis,
                 back: (x, y) => layer.cells.get(x, y),
                 width: map.width,
                 height: map.height,
-                // The preview only reads the invalid cells; ties do not change them.
-                random: () => 0,
             },
             {
                 mode,

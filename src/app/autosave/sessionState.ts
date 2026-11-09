@@ -1,6 +1,7 @@
 import type { StoreApi } from "zustand/vanilla";
 import { createMapSession, findLayer } from "../../core/model";
 import type { MapView, ProjectSession } from "../../core/model";
+import { cachedDatabase, request } from "../worker/indexedDb";
 import type { SessionState } from "../state/session";
 import type { MapTabsState } from "../tabs/tabs";
 
@@ -46,61 +47,23 @@ export const SESSION_WRITE_DELAY_MS = 500;
 /** How long an operation waits for IndexedDB to open, in milliseconds. */
 const OPEN_TIMEOUT_MS = 3000;
 
-function request<Result>(task: IDBRequest<Result>): Promise<Result> {
-    return new Promise((resolve, reject) => {
-        task.onsuccess = () => resolve(task.result);
-        task.onerror = () => reject(task.error ?? new Error("IndexedDB request failed."));
-    });
-}
-
-/** The session states in the page's IndexedDB, or null where there is none (Node). */
+/**
+ * The session states in the page's IndexedDB, or null where there is none (Node). The
+ * connection is opened and kept as `app/worker/indexedDb.ts` says.
+ */
 export function indexedDbSessionState(
     factory: Pick<IDBFactory, "open"> | null = typeof indexedDB === "undefined" ? null : indexedDB,
 ): SessionStateStorage | null {
     if (!factory) return null;
-    let opened: Promise<IDBDatabase> | null = null;
-    const database = (): Promise<IDBDatabase> => {
-        if (opened) return opened;
-        const opening = new Promise<IDBDatabase>((resolve, reject) => {
-            const open = factory.open(SESSION_DATABASE, 1);
-            const timer = setTimeout(() => {
-                open.onsuccess = () => open.result.close();
-                reject(new Error("IndexedDB did not answer."));
-            }, OPEN_TIMEOUT_MS);
-            open.onupgradeneeded = () => {
-                if (!open.result.objectStoreNames.contains(SESSION_STORE)) {
-                    open.result.createObjectStore(SESSION_STORE);
-                }
-            };
-            open.onsuccess = () => {
-                clearTimeout(timer);
-                const db = open.result;
-                const forget = () => {
-                    if (opened === opening) opened = null;
-                };
-                db.onversionchange = () => {
-                    db.close();
-                    forget();
-                };
-                db.onclose = forget;
-                resolve(db);
-            };
-            open.onerror = () => {
-                clearTimeout(timer);
-                reject(open.error ?? new Error("Not opened."));
-            };
-            open.onblocked = () => {
-                clearTimeout(timer);
-                open.onsuccess = () => open.result.close();
-                reject(new Error("The database is blocked."));
-            };
-        });
-        opened = opening;
-        opening.catch(() => {
-            if (opened === opening) opened = null;
-        });
-        return opening;
-    };
+    const database = cachedDatabase({
+        factory,
+        name: SESSION_DATABASE,
+        version: 1,
+        upgrade(db) {
+            if (!db.objectStoreNames.contains(SESSION_STORE)) db.createObjectStore(SESSION_STORE);
+        },
+        timeoutMs: OPEN_TIMEOUT_MS,
+    });
     return {
         async get(projectId) {
             const db = await database();

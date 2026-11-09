@@ -118,18 +118,40 @@ function seeSets(tilesetId: string): void {
     if (tileset) seenSets.set(tileset.id, tileset.terrainSets);
 }
 
-function select(tilesetId: string, selection: TerrainSelection): void {
+/** Told when the user selects a terrain (`subscribeTerrainChosen`). */
+const chosenListeners = new Set<() => void>();
+
+/**
+ * Stores `selection` for tileset `tilesetId`. `chosen`: the user selected that terrain (a
+ * click, a row's menu, the brush's pickers, a terrain or set just added), as opposed to the
+ * selection following its set or terrain as it moves or goes; listeners of
+ * `subscribeTerrainChosen` are told, even when the terrain was selected already.
+ */
+function select(tilesetId: string, selection: TerrainSelection, chosen = false): void {
     seeSets(tilesetId);
     const { selections } = terrainsPanelStore.getState();
     const current = selections[tilesetId];
-    if (current?.set === selection.set && current.terrain === selection.terrain) return;
-    terrainsPanelStore.setState({ selections: { ...selections, [tilesetId]: selection } });
+    if (current?.set !== selection.set || current.terrain !== selection.terrain) {
+        terrainsPanelStore.setState({ selections: { ...selections, [tilesetId]: selection } });
+    }
+    if (chosen) for (const listener of [...chosenListeners]) listener();
+}
+
+/**
+ * Calls `listener` whenever the user selects a terrain (SPEC §5.3: the brush's "erase terrain"
+ * is dropped then), not when the selection only follows its set as the history moves it.
+ */
+export function subscribeTerrainChosen(listener: () => void): () => void {
+    chosenListeners.add(listener);
+    return () => {
+        chosenListeners.delete(listener);
+    };
 }
 
 /** Selects set `set` of the active tileset, with its terrain `terrain` (default its first). */
 export function selectTerrain(set: number, terrain = 1): void {
     const tileset = currentTileset();
-    if (tileset) select(tileset.id, { set, terrain });
+    if (tileset) select(tileset.id, { set, terrain }, true);
 }
 
 export function isCollapsed(tilesetId: string, set: number): boolean {
@@ -189,7 +211,7 @@ export function newTerrainSet(type: TerrainSetType): boolean {
     const tileset = currentTileset();
     if (!tileset || !run(addTerrainSetCommand(tileset.id, type))) return false;
     const set = tileset.terrainSets.length - 1;
-    select(tileset.id, { set, terrain: 1 });
+    select(tileset.id, { set, terrain: 1 }, true);
     toggleCollapsed(set, false);
     startTerrainRename(set, null);
     return true;
@@ -240,7 +262,7 @@ export function addTerrainToSelectedSet(): boolean {
     const { tileset, selection } = selected;
     if (!run(addTerrainCommand(tileset.id, selection.set))) return false;
     const terrain = tileset.terrainSets[selection.set]!.colors.length;
-    select(tileset.id, { set: selection.set, terrain });
+    select(tileset.id, { set: selection.set, terrain }, true);
     toggleCollapsed(selection.set, false);
     startTerrainRename(selection.set, terrain);
     return true;
