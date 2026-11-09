@@ -1,9 +1,11 @@
 // The runtime of an exported tilemap (SPEC 11): the reader of `ngne-tilemap` version 1
-// (FORMAT 3.8) and its error. The export copies this file into `ngne-tilemap.ts` behind a
-// header (TE-053), and the editor imports it as code, so editor and games carry one reader.
-// That is why the file:
+// (FORMAT 3.8) and its error, loading, assets and the data functions. The generator copies
+// this file into `ngne-tilemap.ts` behind a header and the quad emitter, and replaces its last
+// part with the export folder's tables; the editor imports it as code, so editor and games
+// carry one reader. That is why the file:
 // - has no import: the generated module stands alone, and `src/core` stays free of the engine;
-// - uses nothing but ECMAScript 2022: no DOM global, no engine type;
+// - uses nothing but ECMAScript 2022 and, in `loadTilemap` alone, `fetch`
+//   (SPEC 11.4): no other DOM global, no engine type;
 // - compiles under `strict`, `exactOptionalPropertyTypes`, `noUnusedLocals` and
 //   `noUnusedParameters` (SPEC 11.4);
 // - is ASCII, comments included, as every text file of an export is.
@@ -1026,3 +1028,661 @@ export function validateTilemap(
         throw new TilemapError("format", "", "The tilemap cannot be read.", { cause: error });
     }
 }
+
+/**
+ * Reads a parsed `ngne-tilemap` with the parsed atlas JSON of its tilesets, by tileset name: the
+ * checks of `validateTilemap`, atlases included, after migrating an older version to the newest
+ * (version 1 is the only one so far, so nothing is migrated yet).
+ *
+ * Each call returns new objects; each tile layer's `data` is a new `Uint32Array` of cell values
+ * that the game may change. The draw and data functions read the current arrays, so an edit
+ * shows and collides at once; a game that wants the original keeps a copy (`data.slice()`).
+ *
+ * Throws `TilemapError`, and nothing else.
+ */
+export function readTilemap(json: unknown, atlases: Readonly<Record<string, unknown>>): Tilemap {
+    const tilemap = validateTilemap(json, atlases);
+    lookupOf(tilemap);
+    return tilemap;
+}
+
+/** Where the files of a tileset's atlas are. */
+export interface AtlasUrls {
+    readonly json: string;
+    readonly png: string;
+}
+
+/** The response of `fetch` as `loadTilemap` uses it. */
+interface FetchedFile {
+    readonly ok: boolean;
+    readonly status: number;
+    readonly headers: { get(name: string): string | null };
+    text(): Promise<string>;
+}
+
+/** The number of bytes `text` takes in UTF-8. */
+function utf8Size(text: string): number {
+    let size = 0;
+    for (let index = 0; index < text.length; index += 1) {
+        const code = text.charCodeAt(index);
+        if (code < 0x80) size += 1;
+        else if (code < 0x800) size += 2;
+        else if (code >= 0xd800 && code < 0xdc00 && index + 1 < text.length) {
+            const next = text.charCodeAt(index + 1);
+            const pair = next >= 0xdc00 && next < 0xe000;
+            size += pair ? 4 : 3;
+            if (pair) index += 1;
+        } else size += 3;
+    }
+    return size;
+}
+
+/**
+ * Fetches a text file whole; refuses an HTTP status that is not ok, and a file above `limit`
+ * bytes (by its declared length before reading it, then by its UTF-8 size).
+ */
+async function fetchText(
+    url: string,
+    signal: AbortSignal | undefined,
+    limit: number,
+): Promise<string> {
+    const response: FetchedFile = await fetch(url, signal === undefined ? undefined : { signal });
+    if (!response.ok) {
+        throw new Error(`Loading ${url} failed with HTTP status ${response.status}.`);
+    }
+    const tooLarge = (size: number) =>
+        new TilemapError(
+            "limit",
+            "",
+            `The tilemap file holds ${size} bytes; at most ${limit} are allowed.`,
+        );
+    const declared = Number(response.headers.get("content-length") ?? "0");
+    if (declared > limit) throw tooLarge(declared);
+    const text = await response.text();
+    // Only a file that may be too large is counted: UTF-8 never takes fewer bytes than UTF-16
+    // code units, nor more than three per unit.
+    if (text.length * 3 > limit) {
+        const size = utf8Size(text);
+        if (size > limit) throw tooLarge(size);
+    }
+    return text;
+}
+
+/** Parses JSON text; null when it is no JSON. */
+function parseJson(text: string): { readonly value: unknown } | null {
+    try {
+        return { value: JSON.parse(text) as unknown };
+    } catch {
+        return null;
+    }
+}
+
+/** The tileset names a parsed tilemap lists, as far as they can be read; the reader checks them. */
+function listedTilesets(json: unknown): string[] {
+    if (!isObject(json) || !Object.hasOwn(json, "tilesets")) return [];
+    const list: unknown = json.tilesets;
+    if (!Array.isArray(list) || list.length > MAX_TILEMAP_TILESETS) return [];
+    const names: string[] = [];
+    for (const item of list as readonly unknown[]) {
+        if (!isObject(item) || !Object.hasOwn(item, "name")) continue;
+        const name = item.name;
+        if (typeof name === "string" && isSlug(name) && !names.includes(name)) names.push(name);
+    }
+    return names;
+}
+
+/**
+ * Loads the tilemap `name` of this folder: fetches its JSON and the atlas JSON of its tilesets
+ * through `TILEMAP_URLS` and `ATLAS_URLS`, then reads them with `readTilemap`. `signal` aborts
+ * every request.
+ *
+ * Rejects with a `TilemapError` when a file is not a valid tilemap or atlas, or when the tilemap
+ * file is above `MAX_TILEMAP_BYTES` (refused before it is parsed); with an `Error` for a name
+ * the tables lack or an HTTP status that is not ok; and with what `fetch` rejects with when a
+ * request fails or is aborted.
+ */
+export async function loadTilemap(name: TilemapName, signal?: AbortSignal): Promise<Tilemap> {
+    const tilemapUrls: Readonly<Record<string, string | undefined>> = TILEMAP_URLS;
+    const atlasUrls: Readonly<Record<string, AtlasUrls | undefined>> = ATLAS_URLS;
+    const url = Object.hasOwn(tilemapUrls, name) ? tilemapUrls[name] : undefined;
+    if (url === undefined) throw new Error(`This folder has no tilemap named ${quoted(name)}.`);
+    const parsed = parseJson(await fetchText(url, signal, MAX_TILEMAP_BYTES));
+    if (parsed === null) throw new TilemapError("format", "", "The tilemap is not JSON.");
+    const atlases: Record<string, unknown> = {};
+    await Promise.all(
+        listedTilesets(parsed.value).map(async (tileset) => {
+            const urls = Object.hasOwn(atlasUrls, tileset) ? atlasUrls[tileset] : undefined;
+            if (urls === undefined) return;
+            const atlas = parseJson(await fetchText(urls.json, signal, Infinity));
+            // An atlas that is no JSON is reported by the reader as not an object.
+            atlases[tileset] = atlas === null ? null : atlas.value;
+        }),
+    );
+    return readTilemap(parsed.value, atlases);
+}
+
+/** Asset definitions by ID, made once per module: NGNE checks assets by identity. */
+const assetDefinitions = new Map<string, unknown>();
+
+/**
+ * The image assets a scene needs to draw `tilemap`: one per tileset and one per image, in that
+ * order, each with the ID `ngne-tilemap:<project>/<export name>` and the URL of its PNG in this
+ * folder. `imageAsset` is the game's engine's `imageAsset`; it is called once per ID for the
+ * life of the module, so every call returns the same objects.
+ */
+export function assetsFor<A>(
+    tilemap: Tilemap,
+    imageAsset: (id: string, url: string) => A,
+): readonly A[] {
+    const atlasUrls: Readonly<Record<string, AtlasUrls | undefined>> = ATLAS_URLS;
+    const imageUrls: Readonly<Record<string, string | undefined>> = IMAGE_URLS;
+    const assets: A[] = [];
+    const listed = new Set<string>();
+    const add = (name: string, url: string) => {
+        const id = `ngne-tilemap:${tilemap.project}/${name}`;
+        if (listed.has(id)) return;
+        listed.add(id);
+        if (!assetDefinitions.has(id)) assetDefinitions.set(id, imageAsset(id, url));
+        assets.push(assetDefinitions.get(id) as A);
+    };
+    for (const tileset of tilemap.tilesets) {
+        const urls = Object.hasOwn(atlasUrls, tileset.name) ? atlasUrls[tileset.name] : undefined;
+        add(tileset.name, urls?.png ?? `${tileset.name}.png`);
+    }
+    for (const layer of tilemap.layers) {
+        if (layer.type !== "image") continue;
+        const name = layer.image.slice(0, -".png".length);
+        const url = Object.hasOwn(imageUrls, name) ? imageUrls[name] : undefined;
+        add(name, url ?? layer.image);
+    }
+    return assets;
+}
+
+/** A cell's tile: its tileset, its ID in the tileset and its orientation (FORMAT 1.2). */
+export interface TileRef {
+    readonly tileset: TilemapTileset;
+    readonly id: number;
+    readonly flipH: boolean;
+    readonly flipV: boolean;
+    readonly flipD: boolean;
+}
+
+/** A cell's tile with what its tileset says of it; a tile without tile data has none of it. */
+export interface TileInfo extends TileRef {
+    /** "" for none. */
+    readonly class: string;
+    readonly properties: readonly TilemapProperty[];
+    /** In tile pixels, untransformed. */
+    readonly collision: readonly TilemapShape[];
+}
+
+/** A collision shape in map pixels, with the cell and the tile it came from. */
+export type CollisionShape = TilemapShape & {
+    readonly cellX: number;
+    readonly cellY: number;
+    readonly tile: TileRef;
+};
+
+/** An axis-aligned rectangle in map pixels. */
+export interface Rect {
+    readonly x: number;
+    readonly y: number;
+    readonly width: number;
+    readonly height: number;
+}
+
+/** What the data functions computed for a tile layer, until its cells change. */
+interface LayerCache {
+    // By property name; by predicate in a WeakMap, so a predicate made anew per call is not kept.
+    readonly grids: Map<string, Uint8Array>;
+    readonly predicateGrids: WeakMap<(tile: TileInfo) => boolean, Uint8Array>;
+    shapes: readonly CollisionShape[] | null;
+    rects: readonly Rect[] | null;
+}
+
+/** How the cell values of a tilemap name tiles, and the caches of its layers. */
+interface Lookup {
+    /** Tilesets by ascending `firstGid`, and those `firstGid`s. */
+    readonly order: readonly TilemapTileset[];
+    readonly starts: readonly number[];
+    /** Per entry of `order`: tile data by tile ID. */
+    readonly tileData: readonly ReadonlyMap<number, TileData>[];
+    /** The tile of each non-empty cell value met so far. */
+    readonly tiles: Map<number, TileInfo | null>;
+    readonly caches: Map<TileLayerData, LayerCache>;
+}
+
+const lookups = new WeakMap<Tilemap, Lookup>();
+
+function lookupOf(tilemap: Tilemap): Lookup {
+    let lookup = lookups.get(tilemap);
+    if (lookup === undefined) {
+        const order = [...tilemap.tilesets].sort((a, b) => a.firstGid - b.firstGid);
+        lookup = {
+            order,
+            starts: order.map((tileset) => tileset.firstGid),
+            tileData: order.map(
+                (tileset) =>
+                    new Map(tileset.tiles.map((tile): [number, TileData] => [tile.id, tile])),
+            ),
+            tiles: new Map(),
+            caches: new Map(),
+        };
+        lookups.set(tilemap, lookup);
+    }
+    return lookup;
+}
+
+const NO_SHAPES: readonly TilemapShape[] = [];
+const NO_PROPERTIES: readonly TilemapProperty[] = [];
+
+/**
+ * The tile a cell value names, or null for an empty cell and for a value that names no tile
+ * (reserved bit set, flags without a GID, a GID outside every span), as a game's own write may.
+ */
+function tileOf(tilemap: Tilemap, value: number): TileInfo | null {
+    const cell = value >>> 0;
+    if (cell === 0) return null;
+    const lookup = lookupOf(tilemap);
+    const known = lookup.tiles.get(cell);
+    if (known !== undefined) return known;
+    let tile: TileInfo | null = null;
+    const gid = cell & GID_MASK;
+    if ((cell & RESERVED_BIT) === 0 && gid !== 0) {
+        // The last span that starts at or below the GID.
+        const { starts } = lookup;
+        let low = 0;
+        let high = starts.length - 1;
+        while (low <= high) {
+            const middle = (low + high) >> 1;
+            if (starts[middle]! <= gid) low = middle + 1;
+            else high = middle - 1;
+        }
+        const tileset = lookup.order[high];
+        if (tileset !== undefined && gid - tileset.firstGid < tileset.nextTileId) {
+            const id = gid - tileset.firstGid;
+            const data = lookup.tileData[high]!.get(id);
+            tile = {
+                tileset,
+                id,
+                flipH: cell >>> 31 === 1,
+                flipV: ((cell >>> 30) & 1) === 1,
+                flipD: ((cell >>> 29) & 1) === 1,
+                class: data?.class ?? "",
+                properties: data?.properties ?? NO_PROPERTIES,
+                collision: data?.collision ?? NO_SHAPES,
+            };
+        }
+    }
+    lookup.tiles.set(cell, tile);
+    return tile;
+}
+
+/** The index in `data` of the cell under the map pixel `x, y`, or -1 outside the map. */
+function cellIndexAt(tilemap: Tilemap, layer: TileLayerData, x: number, y: number): number {
+    const cellX = Math.floor((x - layer.offsetX) / tilemap.tileWidth);
+    const cellY = Math.floor((y - layer.offsetY) / tilemap.tileHeight);
+    if (!(cellX >= 0 && cellX < tilemap.width && cellY >= 0 && cellY < tilemap.height)) return -1;
+    return cellY * tilemap.width + cellX;
+}
+
+function tileUnder(tilemap: Tilemap, layer: TileLayerData, x: number, y: number): TileInfo | null {
+    const index = cellIndexAt(tilemap, layer, x, y);
+    return index < 0 ? null : tileOf(tilemap, layer.data[index] ?? 0);
+}
+
+function cacheOf(tilemap: Tilemap, layer: TileLayerData): LayerCache {
+    const { caches } = lookupOf(tilemap);
+    let cache = caches.get(layer);
+    if (cache === undefined) {
+        cache = { grids: new Map(), predicateGrids: new WeakMap(), shapes: null, rects: null };
+        caches.set(layer, cache);
+    }
+    return cache;
+}
+
+/**
+ * The first layer named `name`, from the bottom (as Tiled's `Map::findLayer`); undefined for
+ * none. Names are case-sensitive and need not be unique.
+ */
+export function findLayer(tilemap: Tilemap, name: string): TilemapLayer | undefined {
+    return tilemap.layers.find((layer) => layer.name === name);
+}
+
+/**
+ * The tile of the cell under the map pixel `x, y` of `layer` (parallax 1, the layer's offset
+ * included), or null for an empty cell or a point outside the map. Every cell with the same
+ * value gives the same object.
+ */
+export function tileAt(
+    tilemap: Tilemap,
+    layer: TileLayerData,
+    x: number,
+    y: number,
+): TileRef | null {
+    return tileUnder(tilemap, layer, x, y);
+}
+
+/** The class of the tile under the map pixel `x, y`; "" for none or no tile. */
+export function classAt(tilemap: Tilemap, layer: TileLayerData, x: number, y: number): string {
+    return tileUnder(tilemap, layer, x, y)?.class ?? "";
+}
+
+/** The value of the property `name` of the tile under the map pixel `x, y`, if it has one. */
+export function propertyAt(
+    tilemap: Tilemap,
+    layer: TileLayerData,
+    x: number,
+    y: number,
+    name: string,
+): PropertyValue | undefined {
+    const tile = tileUnder(tilemap, layer, x, y);
+    return tile?.properties.find((property) => property.name === name)?.value;
+}
+
+/** Whether a property value counts as set: `true`, a non-zero number or a non-empty string. */
+function isSet(value: PropertyValue | undefined): boolean {
+    if (typeof value === "number") return value !== 0;
+    if (typeof value === "string") return value !== "";
+    return value === true;
+}
+
+/**
+ * `width * height` bytes, row by row from the top-left as `data`: 1 where the cell's tile has
+ * the property `select` set (`true`, a non-zero number or a non-empty string), or where the
+ * predicate `select` holds; 0 elsewhere and for empty cells. The predicate is called once per
+ * distinct cell value. Cached per layer and `select` until `setCell` or `invalidate`; the array
+ * is shared, so copy it before changing it.
+ */
+export function grid(
+    tilemap: Tilemap,
+    layer: TileLayerData,
+    select: string | ((tile: TileInfo) => boolean),
+): Uint8Array {
+    const cache = cacheOf(tilemap, layer);
+    const cached =
+        typeof select === "string" ? cache.grids.get(select) : cache.predicateGrids.get(select);
+    if (cached !== undefined) return cached;
+    const holds =
+        typeof select === "string"
+            ? (tile: TileInfo) =>
+                  isSet(tile.properties.find((property) => property.name === select)?.value)
+            : select;
+    const count = tilemap.width * tilemap.height;
+    const result = new Uint8Array(count);
+    const verdicts = new Map<number, boolean>();
+    for (let index = 0; index < count; index += 1) {
+        const value = layer.data[index] ?? 0;
+        if (value === 0) continue;
+        let verdict = verdicts.get(value);
+        if (verdict === undefined) {
+            const tile = tileOf(tilemap, value);
+            verdict = tile !== null && holds(tile);
+            verdicts.set(value, verdict);
+        }
+        if (verdict) result[index] = 1;
+    }
+    if (typeof select === "string") cache.grids.set(select, result);
+    else cache.predicateGrids.set(select, result);
+    return result;
+}
+
+/**
+ * Where the tile of a cell is drawn (FORMAT 1.3): the centre of its content in map pixels at
+ * parallax 1, half its size, and its orientation as NGNE sprite values (FORMAT 1.2).
+ */
+interface Placement {
+    readonly centreX: number;
+    readonly centreY: number;
+    readonly halfWidth: number;
+    readonly halfHeight: number;
+    readonly fx: number;
+    readonly fy: number;
+    /** theta is pi/2 (D set) rather than 0. */
+    readonly turned: boolean;
+}
+
+function placementOf(
+    tilemap: Tilemap,
+    layer: TileLayerData,
+    tile: TileRef,
+    cellX: number,
+    cellY: number,
+): Placement {
+    const { tileWidth, tileHeight, offsetX, offsetY } = tile.tileset;
+    const boxWidth = tile.flipD ? tileHeight : tileWidth;
+    const boxHeight = tile.flipD ? tileWidth : tileHeight;
+    // With D set, Tiled draws at 90 degrees with H' = V and V' = not H (FORMAT 1.2).
+    const mirrorX = tile.flipD ? tile.flipV : tile.flipH;
+    const mirrorY = tile.flipD ? !tile.flipH : tile.flipV;
+    return {
+        centreX: cellX * tilemap.tileWidth + offsetX + boxWidth / 2 + layer.offsetX,
+        centreY: (cellY + 1) * tilemap.tileHeight + offsetY - boxHeight / 2 + layer.offsetY,
+        halfWidth: tileWidth / 2,
+        halfHeight: tileHeight / 2,
+        fx: mirrorX ? -1 : 1,
+        fy: mirrorY ? -1 : 1,
+        turned: tile.flipD,
+    };
+}
+
+/** x of `R(theta) (fx a, fy b)`: where the offset `(a, b)` from the tile's centre lands. */
+function turnedX(place: Placement, a: number, b: number): number {
+    // `+ 0` turns -0 into 0.
+    return (place.turned ? -place.fy * b : place.fx * a) + 0;
+}
+
+/** y of `R(theta) (fx a, fy b)`. */
+function turnedY(place: Placement, a: number, b: number): number {
+    return (place.turned ? place.fx * a : place.fy * b) + 0;
+}
+
+/** A shape in tile pixels, oriented about the tile's centre and placed, in map pixels. */
+function placeShape(shape: TilemapShape, place: Placement): TilemapShape {
+    const pointX = (x: number, y: number) =>
+        place.centreX + turnedX(place, x - place.halfWidth, y - place.halfHeight);
+    const pointY = (x: number, y: number) =>
+        place.centreY + turnedY(place, x - place.halfWidth, y - place.halfHeight);
+    switch (shape.shape) {
+        case "rectangle":
+        case "ellipse": {
+            const x0 = pointX(shape.x, shape.y);
+            const y0 = pointY(shape.x, shape.y);
+            const x1 = pointX(shape.x + shape.width, shape.y + shape.height);
+            const y1 = pointY(shape.x + shape.width, shape.y + shape.height);
+            return {
+                shape: shape.shape,
+                x: Math.min(x0, x1),
+                y: Math.min(y0, y1),
+                width: Math.abs(x1 - x0),
+                height: Math.abs(y1 - y0),
+            };
+        }
+        case "point":
+            return { shape: "point", x: pointX(shape.x, shape.y), y: pointY(shape.x, shape.y) };
+        case "polygon":
+        case "polyline":
+            return {
+                shape: shape.shape,
+                x: pointX(shape.x, shape.y),
+                y: pointY(shape.x, shape.y),
+                points: shape.points.map(([a, b]): TilemapPoint => [
+                    turnedX(place, a, b),
+                    turnedY(place, a, b),
+                ]),
+            };
+    }
+}
+
+/**
+ * The collision shapes of every non-empty cell of `layer`, row by row from the top-left and in
+ * each tile's order: oriented as the cell is, about the tile's centre, and placed as FORMAT 1.3
+ * places the tile, in map pixels at parallax 1 with the layer's offset. Rectangles and ellipses
+ * stay axis-aligned under every orientation. Cached per layer until `setCell` or `invalidate`.
+ */
+export function collisionShapes(tilemap: Tilemap, layer: TileLayerData): readonly CollisionShape[] {
+    const cache = cacheOf(tilemap, layer);
+    if (cache.shapes !== null) return cache.shapes;
+    const shapes: CollisionShape[] = [];
+    for (let cellY = 0; cellY < tilemap.height; cellY += 1) {
+        for (let cellX = 0; cellX < tilemap.width; cellX += 1) {
+            const tile = tileOf(tilemap, layer.data[cellY * tilemap.width + cellX] ?? 0);
+            if (tile === null || tile.collision.length === 0) continue;
+            const place = placementOf(tilemap, layer, tile, cellX, cellY);
+            for (const shape of tile.collision) {
+                shapes.push({ ...placeShape(shape, place), cellX, cellY, tile });
+            }
+        }
+    }
+    cache.shapes = shapes;
+    return shapes;
+}
+
+/** Whether a tile's collision is exactly one rectangle covering the whole tile. */
+function isSolid(tile: TileInfo): boolean {
+    if (tile.collision.length !== 1) return false;
+    const shape = tile.collision[0]!;
+    return (
+        shape.shape === "rectangle" &&
+        shape.x === 0 &&
+        shape.y === 0 &&
+        shape.width === tile.tileset.tileWidth &&
+        shape.height === tile.tileset.tileHeight
+    );
+}
+
+interface GrowingRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
+/**
+ * The cells of `layer` whose tile's collision is exactly one rectangle covering the whole tile,
+ * merged into rectangles in map pixels: in each row, the drawn boxes of neighbouring cells that
+ * meet edge to edge make one run; a run with the same x range as a rectangle that ends, in the
+ * row above, where the run starts extends that rectangle down. Rectangles come in the order
+ * they start, row by row from the top-left, so the result depends on the cells alone. Other
+ * shapes are only in `collisionShapes`. Cached per layer until `setCell` or `invalidate`.
+ */
+export function collisionRects(tilemap: Tilemap, layer: TileLayerData): readonly Rect[] {
+    const cache = cacheOf(tilemap, layer);
+    if (cache.rects !== null) return cache.rects;
+    const rects: GrowingRect[] = [];
+    // The rectangles that took a run in the row above, by their left edge.
+    let above = new Map<number, GrowingRect[]>();
+    const runs: GrowingRect[] = [];
+    for (let cellY = 0; cellY < tilemap.height; cellY += 1) {
+        runs.length = 0;
+        for (let cellX = 0; cellX < tilemap.width; cellX += 1) {
+            const tile = tileOf(tilemap, layer.data[cellY * tilemap.width + cellX] ?? 0);
+            if (tile === null || !isSolid(tile)) continue;
+            const { tileWidth, tileHeight, offsetX, offsetY } = tile.tileset;
+            const width = tile.flipD ? tileHeight : tileWidth;
+            const height = tile.flipD ? tileWidth : tileHeight;
+            const x = cellX * tilemap.tileWidth + offsetX + layer.offsetX;
+            const y = (cellY + 1) * tilemap.tileHeight + offsetY + layer.offsetY - height;
+            const run = runs[runs.length - 1];
+            if (
+                run !== undefined &&
+                run.x + run.width === x &&
+                run.y === y &&
+                run.height === height
+            ) {
+                run.width += width;
+            } else {
+                runs.push({ x, y, width, height });
+            }
+        }
+        const taken = new Map<number, GrowingRect[]>();
+        for (const run of runs) {
+            const candidates = above.get(run.x) ?? [];
+            const index = candidates.findIndex(
+                (rect) => rect.width === run.width && rect.y + rect.height === run.y,
+            );
+            let rect: GrowingRect;
+            if (index >= 0) {
+                rect = candidates.splice(index, 1)[0]!;
+                rect.height += run.height;
+            } else {
+                rect = { ...run };
+                rects.push(rect);
+            }
+            const list = taken.get(rect.x);
+            if (list === undefined) taken.set(rect.x, [rect]);
+            else list.push(rect);
+        }
+        above = taken;
+    }
+    cache.rects = rects;
+    return rects;
+}
+
+/**
+ * The markers of every marker layer, bottom to top and in each layer's order, with positions in
+ * map pixels at parallax 1 (the layer's offset added). `filter` keeps those of layers named
+ * `layer`, named `name` and of class `class`; each part given must match exactly.
+ */
+export function markers(
+    tilemap: Tilemap,
+    filter?: { readonly layer?: string; readonly name?: string; readonly class?: string },
+): readonly TilemapMarker[] {
+    const found: TilemapMarker[] = [];
+    for (const layer of tilemap.layers) {
+        if (layer.type !== "marker") continue;
+        if (filter?.layer !== undefined && layer.name !== filter.layer) continue;
+        for (const marker of layer.markers) {
+            if (filter?.name !== undefined && marker.name !== filter.name) continue;
+            if (filter?.class !== undefined && marker.class !== filter.class) continue;
+            found.push(
+                layer.offsetX === 0 && layer.offsetY === 0
+                    ? marker
+                    : { ...marker, x: marker.x + layer.offsetX, y: marker.y + layer.offsetY },
+            );
+        }
+    }
+    return found;
+}
+
+/**
+ * Writes the cell value `value` (FORMAT 1.2) into the cell `cellX, cellY` of `layer`, in cells
+ * as Tiled's `TileLayer.setTile` takes them, and drops the layer's cached `grid`,
+ * `collisionShapes` and `collisionRects`. A cell outside the map is not written. A value with
+ * the reserved bit 28 set, flags without a GID or a GID outside every span reads as an empty
+ * cell.
+ */
+export function setCell(
+    tilemap: Tilemap,
+    layer: TileLayerData,
+    cellX: number,
+    cellY: number,
+    value: number,
+): void {
+    if (!Number.isInteger(cellX) || !Number.isInteger(cellY)) return;
+    if (cellX < 0 || cellY < 0 || cellX >= tilemap.width || cellY >= tilemap.height) return;
+    layer.data[cellY * tilemap.width + cellX] = value;
+    invalidate(tilemap, layer);
+}
+
+/** Drops the cached results of `layer`; call it after writing the layer's `data` directly. */
+export function invalidate(tilemap: Tilemap, layer: TileLayerData): void {
+    lookupOf(tilemap).caches.delete(layer);
+}
+
+// The export folder's tables. The generator replaces this line and everything below it.
+
+/** The export names of this folder's tilemaps. */
+export type TilemapName = string;
+
+/** The export names of this folder's tilesets. */
+export type TilesetName = string;
+
+/** Each tilemap's `.tilemap.json`, by export name. */
+export const TILEMAP_URLS: Readonly<Record<TilemapName, string>> = {};
+
+/** Each tileset's atlas, by export name. */
+export const ATLAS_URLS: Readonly<Record<TilesetName, AtlasUrls>> = {};
+
+/** Each image's `.png`, by export name. */
+export const IMAGE_URLS: Readonly<Record<string, string>> = {};

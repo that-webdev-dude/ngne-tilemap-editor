@@ -1,9 +1,9 @@
-// The quad emitter shared by the editor's live tier and the generated runtime (SPEC §11.3,
-// ENGINE §4): one tile layer into a sprite sink, tiles placed as FORMAT §1.2 and §1.3 say. The
+// The quad emitter shared by the editor's live tier and the generated runtime (SPEC 11.3,
+// ENGINE 4): one tile layer into a sprite sink, tiles placed as FORMAT 1.2 and 1.3 say. The
 // generator inlines this file into `ngne-tilemap.ts` (TE-050), so it has no imports and no
 // export the runtime cannot carry.
 
-/** The sprite fields the emitter sets; NGNE's `Sprite` has them all (SPEC §11.4). */
+/** The sprite fields the emitter sets; NGNE's `Sprite` has them all (SPEC 11.4). */
 export interface SpriteLike {
     x: number;
     y: number;
@@ -32,7 +32,7 @@ export interface CellSource {
     get(x: number, y: number): number;
 }
 
-/** A row-major array of `width × height` cell values as a `CellSource`; outside it is empty. */
+/** A row-major array of `width x height` cell values as a `CellSource`; outside it is empty. */
 export class FlatCells implements CellSource {
     constructor(
         readonly data: ArrayLike<number>,
@@ -49,10 +49,10 @@ export class FlatCells implements CellSource {
 
 /**
  * How cell values name a tileset and a tile:
- * - `"slot"`: the editor's in-memory values (SPEC §2.2): bits 20..27 the tileset's slot, bits
+ * - `"slot"`: the editor's in-memory values (SPEC 2.2): bits 20..27 the tileset's slot, bits
  *   0..19 the tile ID.
- * - `"gid"`: the values of a file (FORMAT §1.2): the GID below the flags; the tileset is the one
- *   with the largest `firstGid` not above it, the tile `GID − firstGid`.
+ * - `"gid"`: the values of a file (FORMAT 1.2): the GID below the flags; the tileset is the one
+ *   with the largest `firstGid` not above it, the tile `GID - firstGid`.
  * The flag bits are the same in both.
  */
 export type CellMode = "slot" | "gid";
@@ -84,7 +84,7 @@ export interface EmitLayerOptions {
     gridHeight: number;
     /**
      * The rectangle to draw, in the layer's own map pixels (the view moved by the layer's shift,
-     * FORMAT §3.4). A tile is skipped only when none of its pixels lies inside it.
+     * FORMAT 3.4). A tile is skipped only when none of its pixels lies inside it.
      */
     viewX: number;
     viewY: number;
@@ -93,7 +93,7 @@ export interface EmitLayerOptions {
     /** Added to every map position before `scale`; the layer's shift, or shift minus view origin. */
     translateX: number;
     translateY: number;
-    /** Multiplies every position and size (FORMAT §1.3). */
+    /** Multiplies every position and size (FORMAT 1.3). */
     scale: number;
     alpha: number;
     color: number;
@@ -109,12 +109,12 @@ const BUCKET_STRIDE = 3;
 /** Slack for the cell-range arithmetic: a cell too many is scanned, never one too few. */
 const EPSILON = 1e-9;
 
-/** `fx` and `fy` of the 8 orientations indexed `H<<2 | V<<1 | D`; `θ` is π/2 when `D` is set (FORMAT §1.2). */
+/** `fx` and `fy` of the 8 orientations indexed `H<<2 | V<<1 | D`; `theta` is pi/2 when `D` is set (FORMAT 1.2). */
 const FX = [1, 1, 1, -1, -1, 1, -1, -1] as const;
 const FY = [1, -1, -1, -1, 1, 1, -1, 1] as const;
 
 /**
- * The placement table of a tileset (FORMAT §1.3): per orientation, the quad centre relative to
+ * The placement table of a tileset (FORMAT 1.3): per orientation, the quad centre relative to
  * the cell's bottom-left corner `B`, and the quad's signed size and rotation. Odd tile sizes
  * draw their even rectangle moved so the content stays on the centre.
  */
@@ -143,7 +143,7 @@ function placementTable(tileset: EmitTileset): Float64Array {
 
 interface Prepared {
     tileset: EmitTileset;
-    /** Entry of a tile ID in `ids`/`uv`, −1 for none; length `span`. */
+    /** Entry of a tile ID in `ids`/`uv`, -1 for none; length `span`. */
     entryOf: Int32Array;
     placement: Float64Array;
     /** Widest the tile is drawn in either direction: `max(tw, th)`. */
@@ -174,7 +174,7 @@ export class QuadEmitter {
 
     private readonly mode: CellMode;
     private readonly sets: Prepared[];
-    /** `"slot"` mode: index in `sets` by slot, −1 for none. */
+    /** `"slot"` mode: index in `sets` by slot, -1 for none. */
     private readonly bySlot = new Int16Array(256).fill(-1);
     /** `"gid"` mode: `sets` indexes ordered by `firstGid`. */
     private readonly byGid: number[];
@@ -298,7 +298,7 @@ export class QuadEmitter {
         }
     }
 
-    /** The index in `sets` of the tileset a non-empty value names, or −1. */
+    /** The index in `sets` of the tileset a non-empty value names, or -1. */
     private resolve(value: number): number {
         if (this.mode === "slot") return this.bySlot[(value >>> 20) & 255]!;
         const gid = value & 0x0fffffff;

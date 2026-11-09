@@ -882,6 +882,7 @@ export function invalidate(tilemap: Tilemap, layer: TileLayerData): void;
     `options.report` (default `console.warn`).
 - Data functions use map pixels at parallax 1: positions include the layer's offset and no
   parallax shift. Cells outside the map are empty.
+  - `findLayer` returns the first layer of that name from the bottom (Tiled's `Map::findLayer`).
   - `tileAt` returns `{ tileset, id, flipH, flipV, flipD }`; `classAt` `""` for none;
     `propertyAt` the tile's property value.
   - `grid` returns `width × height` bytes, 1 where the cell's tile has the named property with a
@@ -895,7 +896,8 @@ export function invalidate(tilemap: Tilemap, layer: TileLayerData): void;
   - `markers` returns the markers of marker layers, optionally filtered by layer name, marker
     name and class, with positions in map pixels.
 - Results of `collisionShapes`, `collisionRects` and `grid` are cached per layer. `setCell`
-  writes a cell value and drops that layer's cache; a game that writes `data` directly calls
+  writes a cell value at cell coordinates (as Tiled's `TileLayer.setTile`; a cell outside the
+  map is not written) and drops that layer's cache; a game that writes `data` directly calls
   `invalidate(tilemap, layer)` afterwards.
 
 ### 11.3 Performance
