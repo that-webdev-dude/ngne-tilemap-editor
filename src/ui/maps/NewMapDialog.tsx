@@ -17,6 +17,91 @@ const PRESET_OPTIONS = NEW_MAP_SIZE_PRESETS.map(([width, height]) => ({
     label: `${width} × ${height}`,
 }));
 
+export interface NewMapFieldsProps {
+    values: NewMapValues;
+    problems: Partial<Record<keyof NewMapValues, string>>;
+    onChange(patch: Partial<NewMapValues>): void;
+}
+
+/**
+ * The fields of a new map, inside a `map-form` grid: name, width and height in cells with the
+ * size presets, tile width and height in pixels. New Map shows them, and New Project for its
+ * first map (TE-047).
+ */
+export function NewMapFields({ values, problems, onChange }: NewMapFieldsProps) {
+    const nameId = useId();
+    const sizeId = useId();
+    const tileId = useId();
+    const preset = NEW_MAP_SIZE_PRESETS.some(
+        ([width, height]) => width === values.width && height === values.height,
+    )
+        ? presetValue(values.width, values.height)
+        : "";
+    return (
+        <>
+            <label className="ui-field__label" htmlFor={nameId}>
+                Name
+            </label>
+            <input
+                id={nameId}
+                className="map-form__text"
+                type="text"
+                autoComplete="off"
+                spellCheck={false}
+                maxLength={MAX_TEXT_LENGTH}
+                aria-invalid={problems.name !== undefined || undefined}
+                data-map-field="name"
+                value={values.name}
+                onChange={(event) => onChange({ name: event.target.value })}
+            />
+            <span className="ui-field__label" id={sizeId}>
+                Map size
+            </span>
+            <div className="map-form__row" role="group" aria-labelledby={sizeId}>
+                <NumberField
+                    label="Width"
+                    value={values.width}
+                    onChange={(width) => onChange({ width })}
+                    unit="cells"
+                />
+                <NumberField
+                    label="Height"
+                    value={values.height}
+                    onChange={(height) => onChange({ height })}
+                    unit="cells"
+                />
+            </div>
+            <span className="map-form__gap" />
+            <SegmentedControl
+                label="Size presets"
+                value={preset}
+                onChange={(value) => {
+                    const [width, height] = value.split("x").map(Number);
+                    onChange({ width: width!, height: height! });
+                }}
+                options={PRESET_OPTIONS}
+            />
+            <span className="ui-field__label" id={tileId}>
+                Tile size
+            </span>
+            <div className="map-form__row" role="group" aria-labelledby={tileId}>
+                <NumberField
+                    label="Width"
+                    value={values.tileWidth}
+                    onChange={(tileWidth) => onChange({ tileWidth })}
+                    unit="px"
+                />
+                <NumberField
+                    label="Height"
+                    value={values.tileHeight}
+                    onChange={(tileHeight) => onChange({ tileHeight })}
+                    unit="px"
+                />
+            </div>
+        </>
+    );
+}
+
 /**
  * New Map (DESIGN §9; the sprite editor's New sprite dialog): name, width and height in cells,
  * tile width and height in pixels, and the size presets. The number fields take any number, so
@@ -26,17 +111,9 @@ const PRESET_OPTIONS = NEW_MAP_SIZE_PRESETS.map(([width, height]) => ({
 export function NewMapDialog({ request }: { request: NewMapRequest }) {
     const [values, setValues] = useState<NewMapValues>(request.initial);
     const formId = useId();
-    const nameId = useId();
-    const sizeId = useId();
-    const tileId = useId();
     const problems = request.problems(values);
     const messages = [...new Set(Object.values(problems))];
     const valid = messages.length === 0;
-    const preset = NEW_MAP_SIZE_PRESETS.some(
-        ([width, height]) => width === values.width && height === values.height,
-    )
-        ? presetValue(values.width, values.height)
-        : "";
     const change = (patch: Partial<NewMapValues>) =>
         setValues((current) => ({ ...current, ...patch }));
 
@@ -71,65 +148,7 @@ export function NewMapDialog({ request }: { request: NewMapRequest }) {
                     if (valid) request.answer(values);
                 }}
             >
-                <label className="ui-field__label" htmlFor={nameId}>
-                    Name
-                </label>
-                <input
-                    id={nameId}
-                    className="map-form__text"
-                    type="text"
-                    autoComplete="off"
-                    spellCheck={false}
-                    maxLength={MAX_TEXT_LENGTH}
-                    aria-invalid={problems.name !== undefined || undefined}
-                    data-map-field="name"
-                    value={values.name}
-                    onChange={(event) => change({ name: event.target.value })}
-                />
-                <span className="ui-field__label" id={sizeId}>
-                    Map size
-                </span>
-                <div className="map-form__row" role="group" aria-labelledby={sizeId}>
-                    <NumberField
-                        label="Width"
-                        value={values.width}
-                        onChange={(width) => change({ width })}
-                        unit="cells"
-                    />
-                    <NumberField
-                        label="Height"
-                        value={values.height}
-                        onChange={(height) => change({ height })}
-                        unit="cells"
-                    />
-                </div>
-                <span className="map-form__gap" />
-                <SegmentedControl
-                    label="Size presets"
-                    value={preset}
-                    onChange={(value) => {
-                        const [width, height] = value.split("x").map(Number);
-                        change({ width: width!, height: height! });
-                    }}
-                    options={PRESET_OPTIONS}
-                />
-                <span className="ui-field__label" id={tileId}>
-                    Tile size
-                </span>
-                <div className="map-form__row" role="group" aria-labelledby={tileId}>
-                    <NumberField
-                        label="Width"
-                        value={values.tileWidth}
-                        onChange={(tileWidth) => change({ tileWidth })}
-                        unit="px"
-                    />
-                    <NumberField
-                        label="Height"
-                        value={values.tileHeight}
-                        onChange={(tileHeight) => change({ tileHeight })}
-                        unit="px"
-                    />
-                </div>
+                <NewMapFields values={values} problems={problems} onChange={change} />
                 <div className="map-form__messages" role="alert">
                     {messages.map((message) => (
                         <p key={message} className="map-form__message" data-map-problem="">

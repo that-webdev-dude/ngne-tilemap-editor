@@ -65,8 +65,11 @@ test("a renderer that cannot recover shows the failure notice with Reload", asyn
     await expect(notice.getByRole("button", { name: "Reload" })).toBeEnabled();
     expect(await status(page)).toBe("failed");
 
-    // Reload creates a renderer again.
+    // Reload creates a renderer again, once the reloaded page, which starts on the empty state
+    // (TE-047), has a project open.
     await notice.getByRole("button", { name: "Reload" }).click();
+    await page.waitForFunction(() => window.__ngneTest?.session.getState().open === false);
+    await page.evaluate(() => window.__ngneTest!.newProject());
     await page.waitForFunction(() => window.__ngneTest?.viewport?.status === "ready");
     await expect(page.locator("[data-viewport-failure]")).toHaveCount(0);
 });

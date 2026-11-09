@@ -62,10 +62,18 @@ export function activeMap(): ProjectMap | null {
 /** Whether the history can take a map command now: not during a stroke. */
 export const mapsIdle = tabsAvailable;
 
-/** Shows the map `id` that New Map or Duplicate added, fitted once the viewport has a size. */
-function showAdded(id: string): string {
+/**
+ * Fits map `id` the first time it is shown once the viewport has a size: a map New Map or
+ * Duplicate added, or the first map of a new project (TE-047).
+ */
+export function fitWhenShown(id: string): void {
     unfitted.add(id);
     fitFirstShown();
+}
+
+/** Shows the map `id` that New Map or Duplicate added, fitted once the viewport has a size. */
+function showAdded(id: string): string {
+    fitWhenShown(id);
     return id;
 }
 

@@ -1,5 +1,6 @@
 import type { CSSProperties, ReactNode } from "react";
 import { useBottomPanel } from "../../app/shell/bottomPanel";
+import { useSession } from "../../app/state/session";
 import { useWindowHeight } from "../platform/useWindowSize";
 import { Splitter } from "../primitives/Splitter";
 import {
@@ -45,7 +46,9 @@ export interface AppShellProps {
  * App shell: the region frames, their error boundaries and the two splitters. Region content
  * lives in `regions/`, one module per region, so a feature edits only its own region. The
  * bottom panel takes the sprite editor's timeline slot with its sizes (layout.ts), beside the
- * tool rail (DESIGN §2).
+ * tool rail (DESIGN §2). While no project is open (TE-047) the viewport shows the empty state
+ * and the tool rail, context bar, dock, bottom panel and status bar are empty frames, as the
+ * sprite editor's are with no document.
  */
 export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
     const windowHeight = useWindowHeight();
@@ -58,6 +61,9 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
     const setPanelHeight = useLayout((state) => state.setTimelineHeight);
     // Tab toggles the bottom panel (DESIGN §10.3, TE-007); hidden, its row of the grid is empty.
     const panelVisible = useBottomPanel((state) => state.visible);
+    const open = useSession((state) => state.open);
+    /** A region's own content, or nothing while no project is open. */
+    const content = (node: ReactNode) => (open ? node : null);
     const sizes = {
         "--shell-dock-width": `${dockWidth}px`,
         "--shell-panel-height": panelVisible ? `${panelHeight}px` : "0px",
@@ -71,11 +77,11 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
                 </RegionBoundary>
             </header>
             <RailFrame footer={STAMP_PREVIEW_SIZE}>
-                {regions["tool-rail"] ?? <ToolRail />}
+                {regions["tool-rail"] ?? content(<ToolRail />)}
             </RailFrame>
             <section className="shell-context" data-region="context-bar" aria-label="Tool options">
                 <RegionBoundary name="Context bar">
-                    {regions["context-bar"] ?? <ContextBar />}
+                    {regions["context-bar"] ?? content(<ContextBar />)}
                 </RegionBoundary>
             </section>
             <main className="shell-viewport" data-region="viewport">
@@ -94,7 +100,9 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
                     onReset={() => setDockWidth(null)}
                 />
                 <div className="shell-dock__scroll">
-                    <RegionBoundary name="Panels">{regions.dock ?? <Dock />}</RegionBoundary>
+                    <RegionBoundary name="Panels">
+                        {regions.dock ?? content(<Dock />)}
+                    </RegionBoundary>
                 </div>
             </aside>
             <section
@@ -116,13 +124,13 @@ export function AppShell({ regions = {}, hidden = false }: AppShellProps) {
                 />
                 <div className="shell-panel__content">
                     <RegionBoundary name="Bottom panel">
-                        {regions["bottom-panel"] ?? <BottomPanel />}
+                        {regions["bottom-panel"] ?? content(<BottomPanel />)}
                     </RegionBoundary>
                 </div>
             </section>
             <footer className="shell-status" data-region="status-bar">
                 <RegionBoundary name="Status bar">
-                    {regions["status-bar"] ?? <StatusBar />}
+                    {regions["status-bar"] ?? content(<StatusBar />)}
                 </RegionBoundary>
             </footer>
         </div>

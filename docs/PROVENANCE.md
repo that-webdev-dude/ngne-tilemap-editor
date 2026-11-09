@@ -31,6 +31,13 @@ rows.
 | `src/app/commands/registry.ts` | `src/app/commands/registry.ts` | verbatim | `ea5c91d` | `acd66e0e604dd887ce3e79fbf6e92b61403981418bce8cc18da8e4fa5da70281` | |
 | `src/app/commands/types.ts` | `src/app/commands/types.ts` | adapt | `ea5c91d` | | `KEY_CONTEXTS` of DESIGN §10.1 (`markers`, `panel`); `MENU_BAR` of DESIGN §5 |
 | `src/app/dialogs/dialogRequests.ts` | `src/app/dialogs/dialogRequests.ts` | verbatim | `ea5c91d` | `514a85c12e26dc3c93a169ac55c68f75b64b15ae2268b9c76127d7eeec67c781` | |
+| `src/app/file/dialogs.ts` | `src/app/file/dialogs.ts` | adapt | `ea5c91d` | | The project instead of a document; adds the Save / Discard / Cancel question (`save-changes`) of New Project, Open and Close Project and the New Project request (`new-project`); `confirmDiscard` (Revert) unchanged |
+| `src/app/file/file.commands.ts` | `src/app/file/file.commands.ts` | adapt | `ea5c91d` | | The commands of the one project: `file.newProject` (Ctrl+Alt+N), Open, Save, Save As, Revert, `file.closeProject` (no key; Alt+W is Close Map); no floating selection |
+| `src/app/file/fileName.ts` | `src/app/file/fileName.ts` | adapt | `ea5c91d` | | Takes the project's name; the fallback stem is the new project's name (`DEFAULT_PROJECT_NAME`, "Untitled") instead of "Sprite"; the extension is `.ngtilemap` through `core/project` |
+| `src/app/file/install.ts` | `src/app/file/install.ts` | adapt | `ea5c91d` | | Guards unload while the open project is dirty (no floating selection); a drop without a project file but with a `.ngsprite` is left to the tileset import while a project is open (no Import PNG) |
+| `src/app/file/recent.commands.ts` | `src/app/file/recent.commands.ts` | adapt | `ea5c91d` | | Files start at File menu order 125; Clear Recent Files replaces the planned placeholder `file.openRecent.none` |
+| `src/app/file/recentFiles.ts` | `src/app/file/recentFiles.ts` | adapt | `ea5c91d` | | Database `ngne-tilemap-editor-recent` (SUITE §7); comments cite this editor's SPEC |
+| `src/app/file/workflows.ts` | `src/app/file/workflows.ts` | adapt | `ea5c91d` | | One project per window instead of tabs of documents: New Project, Open, Close Project ask Save / Discard / Cancel before the project goes; Revert keeps the views of the maps still there; bytes written and read in the worker (`projectCodec.ts`); no floating selection or export-on-save steps; idle also waits for a tileset import or update |
 | `src/app/keymap/contextState.ts` | `src/app/keymap/contextState.ts` | adapt | `ea5c91d` | | Contexts `gesture` and `markers` (DESIGN §10.1) |
 | `src/app/keymap/environment.ts` | `src/app/keymap/environment.ts` | adapt | `ea5c91d` | | `inPanel` from `PANEL_SELECTOR` (the bottom panel region or `data-keymap-panel`) instead of `inTimeline`; `markers` instead of `floating` |
 | `src/app/keymap/install.ts` | `src/app/keymap/install.ts` | adapt | `ea5c91d` | | No change: it reads the contexts through contextState.ts and environment.ts |
@@ -47,6 +54,7 @@ rows.
 | `src/app/overlay/overlayController.ts` | `src/app/overlay/overlayController.ts` | adapt | `ea5c91d` |  | Active map, its geometry and view as the redraw key; cursor carries map position and cell; no stretched mapping; theme is the grid ink, `--accent`, `--danger`, and `--text`, `--bg-panel` and `--font-ui` for marker names |
 | `src/app/overlay/overlayLayers.ts` | `src/app/overlay/overlayLayers.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/app/overlay/types.ts` | `src/app/overlay/types.ts` | adapt | `ea5c91d` |  | Frame carries the map, a cell mapping and the cursor's cell; theme is the grid ink, `--accent`, `--danger`, and `--text`, `--bg-panel` and `--font-ui` for marker names |
+| `src/app/platform/projectFiles.ts` | `src/app/platform/projectFiles.ts` | adapt | `ea5c91d` | | Picker types "NGNE tilemap project" (`application/zip`, `.ngtilemap`) and picker id `ngne-tilemap-project` (SUITE §7); comments without the sprite editor's ticket ids |
 | `src/app/platform/storage.ts` | `src/app/platform/storage.ts` | verbatim | `ea5c91d` | `79c92ee9e714fa52d8816918e78c0c2abf6c055b2f4297df7fa39f8fa30a80f3` | |
 | `src/app/preferences/preferences.commands.ts` | `src/app/preferences/preferences.commands.ts` | adapt | `ea5c91d` | | Comment cites DESIGN §10.3 |
 | `src/app/preferences/preferences.ts` | `src/app/preferences/preferences.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.preferences`; sections `checkerboard`, `grid` (colour `"theme"` or 0xRRGGBB, opacity in percent), `highlight` (opacity in percent, default 25) and `autosave` instead of the sprite editor's grid, onion and import defaults; `ColourChoice` and the `percent` range |
@@ -191,6 +199,9 @@ rows.
 | `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
 | `src/ui/dock/registry.ts` | `src/ui/dock/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
+| `src/ui/file/DiscardChangesDialog.tsx` | `src/ui/file/DiscardChangesDialog.tsx` | verbatim | `ea5c91d` | `d06dfcd6a681954c348c77cfbb1cfadb7395f652708f13791df237359f324415` | |
+| `src/ui/file/FileWorkflows.tsx` | `src/ui/file/FileWorkflows.tsx` | adapt | `ea5c91d` | | Installs the file workflows only: the notice toasts are `App`'s (TE-028), autosave TE-048's, the launch queue TE-066's |
+| `src/ui/file/file.dialog.tsx` | `src/ui/file/file.dialog.tsx` | adapt | `ea5c91d` | | Adds the Save / Discard / Cancel question and the New Project dialog |
 | `src/ui/focus/inertOutside.ts` | `src/ui/focus/inertOutside.ts` | verbatim | `ea5c91d` | `b6a211b7c790c44abf0cc688082b60da14552729402fcfea43c108fa60377b32` | |
 | `src/ui/focus/menuOpener.ts` | `src/ui/focus/menuOpener.ts` | verbatim | `ea5c91d` | `b61a40a2721132e675858320c17f49c84f72947e52fd85fe3b7afda8c584f572` | |
 | `src/ui/focus/modality.ts` | `src/ui/focus/modality.ts` | verbatim | `ea5c91d` | `6ac8166dda8f7ccca4277d23bc58b945e9393590c33eec26044835948ee50917` | |
@@ -252,7 +263,9 @@ rows.
 | `src/ui/shell/shell.css` | `src/ui/shell/shell.css` | adapt | `ea5c91d` | | Tool rail beside the bottom panel, which spans the viewport and dock columns (DESIGN §2); `shell-panel` classes and `--shell-panel-height` for the timeline's; bottom panel tab strip |
 | `src/ui/shortcuts/ShortcutSheet.tsx` | `src/ui/shortcuts/ShortcutSheet.tsx` | verbatim | `ea5c91d` | `a76a9882845fd8434ef08519ea1db19748dd25b14d1c7f144f9fba7cd69db929` | |
 | `src/ui/shortcuts/shortcuts.css` | `src/ui/shortcuts/shortcuts.css` | verbatim | `ea5c91d` | `4af0e022d12297df189fdb6ebb3283063b1538f538c497e75c3d69c641600a6d` | |
+| `src/ui/sprite/EmptyState.tsx` | `src/ui/sprite/EmptyState.tsx` | adapt | `ea5c91d` | | Actions New Project, Open, Import Tiled Map, each disabled while its command is; the list is titled "Recent projects"; styles from `./emptyState.css` |
 | `src/ui/sprite/PivotGrid.tsx` | `src/ui/sprite/PivotGrid.tsx` | adapt | `ea5c91d` | | Anchor grid of Resize / Offset Map (DESIGN §3.3): the nine anchors are `RESIZE_ANCHORS` of `core/maps` instead of the sprite pivot presets (`ui` does not import `core/sprite`); `Pivot` is declared here and `value` may be null (an offset that is no anchor's: no cell checked); styles from `./pivotGrid.css` instead of `./sprite.css` |
+| `src/ui/sprite/emptyState.css` | `src/ui/sprite/sprite.css` | adapt | `ea5c91d` | | Only the `.empty-state` rules, unchanged; the comment names the empty state |
 | `src/ui/sprite/pivotGrid.css` | `src/ui/sprite/sprite.css` | adapt | `ea5c91d` | | Only the `.pivot-grid` rules, unchanged; the comment names the anchor grid |
 | `src/ui/sprite/pivotGridKeys.ts` | `src/ui/sprite/pivotGridKeys.ts` | adapt | `ea5c91d` | | Counts `RESIZE_ANCHOR_COLUMNS` and `RESIZE_ANCHORS` of `core/maps` instead of the sprite pivot presets |
 | `src/ui/status/status.css` | `src/ui/status/status.css` | adapt | `ea5c91d` |  | Widths reserved by the field (inline), not by CSS rules for the cursor field |
@@ -274,7 +287,7 @@ rows.
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
 | `tests/e2e/harness/te-003-boundary.html` | `tests/e2e/harness/se-006-boundary.html` | adapt | `ea5c91d` | | Ticket name |
-| `tests/e2e/harness/te-003-boundary.tsx` | `tests/e2e/harness/se-006-boundary.tsx` | adapt | `ea5c91d` | | Ticket name; `window.te003Repaired` declared |
+| `tests/e2e/harness/te-003-boundary.tsx` | `tests/e2e/harness/se-006-boundary.tsx` | adapt | `ea5c91d` | | Ticket name; `window.te003Repaired` declared; opens a new project first (TE-047) |
 | `tests/e2e/harness/te-007-chords.html` | `tests/e2e/harness/se-007-keymap.html` | adapt | `ea5c91d` | | Ticket name |
 | `tests/e2e/harness/te-007-chords.tsx` | `tests/e2e/harness/se-007-keymap.tsx` | adapt | `ea5c91d` | | Probes of DESIGN §10.3 with the layer-kind and marker-selection conditions; a bottom-panel cell instead of a timeline cell; `?probe` mode for the owner check lists the chords received |
 | `tests/e2e/harness/te-007-design-keys.ts` | `tests/e2e/se-007-spec-keys.ts` | adapt | `ea5c91d` | | Parses the Key / Context / Action / Source table of DESIGN §10.3: this editor's contexts, the layer-kind and marker-selection conditions, digit ranges, `[ ]`; pure, for the browser |
@@ -293,6 +306,7 @@ rows.
 | `tests/e2e/te-008-preferences.spec.ts` | `tests/e2e/se-064-preferences.spec.ts` | adapt | `ea5c91d` | | This editor's sections (Theme, Checkerboard, Grid, Highlight current layer, Autosave) and the grid swatch; the view preferences of SPEC §3 added |
 | `tests/e2e/te-008-sheet.spec.ts` | `tests/e2e/se-064-shortcut-sheet.spec.ts` | adapt | `ea5c91d` | | DESIGN §5 menus; probes `te008.*`; Preferences stands in for the New Sprite dialog |
 | `tests/e2e/te-008-support.ts` | `tests/e2e/se-064-support.ts`, `se-008-support.ts` | adapt | `ea5c91d` | | This editor's keys (SUITE §7); `field`, `setNumber`, `dialogButton` from se-008-support; no `spyOnCommands`, themes or audit |
+| `tests/e2e/te-047-support.ts` | `tests/e2e/se-047-support.ts` | adapt | `ea5c91d` | | The OPFS picker stub only, every permission granted, with the suggested names recorded; File System Access taken away as `se-041-support.ts` does; this editor's project, New Project dialog, empty state and dialogs |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14 |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/`; references to this repo's docs and ids |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
@@ -305,6 +319,7 @@ rows.
 | `tests/unit/te-007-resolve.test.ts` | `tests/unit/se-007-keymap.test.ts` | adapt | `ea5c91d` | | Contexts `markers` and `panel` of DESIGN §10.1; every † chord of DESIGN §10.3 in the text context; `PANEL_SELECTOR` |
 | `tests/unit/te-008-commands.test.ts` | `tests/unit/se-064-commands.test.ts`, `se-064-palette.test.ts`, `se-064-shortcut-sheet.test.ts` | adapt | `ea5c91d` | | DESIGN §10.3 chords checked on the registry (no key-table parser); `inPanel` and `markers`; the palette and sheet models over the app's registry only |
 | `tests/unit/te-008-preferences.test.ts` | `tests/unit/se-064-preferences.test.ts` | adapt | `ea5c91d` | | This editor's fields, ranges and defaults; corrupt and older records; the view preferences of SPEC §3 |
+| `tests/unit/te-047-support.ts` | `tests/unit/se-041-support.ts` | adapt | `ea5c91d` | | The memory disk, fake handles and platform kept (fewer counters); the questions answered from lists; the codec of `core/project` in place of the worker; a store of one project |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); PWA plugin, manifest, file handler and theme colour are TE-066's; base path from the deploy build |

@@ -1,10 +1,29 @@
 // Declares `import.meta.glob` wherever this module is compiled.
 import type {} from "../../import-meta";
 import { keyContextStore } from "../keymap/contextState";
-import { sessionStore } from "../state/session";
+import { projectOpen, sessionStore } from "../state/session";
 import { createCommandRegistry, registerCommandModules } from "./registry";
 import type { CommandRegistry } from "./registry";
-import type { CommandModule } from "./types";
+import type { CommandModule, CommandSpec } from "./types";
+
+/**
+ * The commands that act while no project is open (the empty state, TE-047): those that open
+ * or create one, and those of the window itself (command palette, shortcut sheet,
+ * preferences, regions, bottom panel). Every other command is disabled until a project opens,
+ * whatever its own `enabled` says: it acts on a project.
+ */
+const WITHOUT_PROJECT =
+    /^(file\.(newProject|open|openRecent\..+|clearRecent|importTiledMap)|edit\.(commandPalette|shortcuts|preferences)|focus\.(nextRegion|previousRegion)|view\.bottomPanel)$/;
+
+/** `registry`, whose commands outside `WITHOUT_PROJECT` are enabled only with a project open. */
+function withProjectGate(registry: CommandRegistry): CommandRegistry {
+    const gate = (spec: CommandSpec): CommandSpec => {
+        if (WITHOUT_PROJECT.test(spec.id)) return spec;
+        const { enabled } = spec;
+        return { ...spec, enabled: () => projectOpen() && (enabled ? enabled() : true) };
+    };
+    return { ...registry, register: (spec, source) => registry.register(gate(spec), source) };
+}
 
 /**
  * The command registry of the app. It holds what every module named `*.commands.ts` or
@@ -15,7 +34,7 @@ import type { CommandModule } from "./types";
  * A command module is evaluated while this one loads: it may import the registry, but must
  * not use it before a command runs.
  */
-export const appCommands: CommandRegistry = createCommandRegistry();
+export const appCommands: CommandRegistry = withProjectGate(createCommandRegistry());
 
 const modules = import.meta.glob<CommandModule>("../../**/*.commands.{ts,tsx}", { eager: true });
 

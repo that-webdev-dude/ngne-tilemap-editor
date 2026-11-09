@@ -1,7 +1,9 @@
 import { lazy, Suspense, useEffect } from "react";
 import { notices } from "../app/notices/notices";
+import { useSession } from "../app/state/session";
 import { installTestHooks } from "../app/testing/testHooks";
 import { useEditorKeymap } from "./commands/useEditorKeymap";
+import { FileWorkflows } from "./file/FileWorkflows";
 import { useTilesetDrop } from "./import/useTilesetDrop";
 import { useWindowHeight, useWindowWidth } from "./platform/useWindowSize";
 import { useWebGpuSupport } from "./platform/webgpu";
@@ -33,8 +35,9 @@ function Editor() {
     const tooSmall = isWindowTooSmall(width, height);
     // Shortcuts act only while the shell is on screen.
     useEditorKeymap(gpu.status === "supported" && !tooSmall);
-    // A `.ngsprite` dropped on the window, likewise (TE-024).
-    useTilesetDrop(gpu.status === "supported" && !tooSmall);
+    // A `.ngsprite` dropped on the window, likewise (TE-024), while a project is open (TE-047).
+    const open = useSession((state) => state.open);
+    useTilesetDrop(gpu.status === "supported" && !tooSmall && open);
     if (gpu.status === "checking") return null;
     if (gpu.status === "unsupported") {
         return <WebGpuRequired reason={gpu.reason} detail={gpu.detail} />;
@@ -44,6 +47,8 @@ function Editor() {
     return (
         <>
             <AppShell hidden={tooSmall} />
+            {/* Mounted while the notice covers the shell too: the unload guard and the drop stay. */}
+            <FileWorkflows />
             {tooSmall ? <WindowTooSmall width={width} height={height} /> : null}
             <AppSurfaces />
         </>

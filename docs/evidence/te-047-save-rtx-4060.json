@@ -1,0 +1,49 @@
+{
+    "id": "te-047-save-rtx-4060",
+    "ticket": "TE-047",
+    "measurement": "Save of the reference project (524288 cells, 2 tilesets) through the file workflows and the worker, to a file in memory, main-thread task max; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "max of 10 saves, 1500 ms apart, after 2 warm-up saves",
+    "budgetMs": 16,
+    "resultMs": 5.600000023841858,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "totalBudgetMs": 3000,
+        "totalMaxMs": 331.60000002384186,
+        "totalMedianMs": 305.5,
+        "fileBytes": 1419753,
+        "longestTaskMs": [
+            3.8000000715255737,
+            4.799999952316284,
+            5.5,
+            5.600000023841858,
+            4.599999904632568,
+            5.399999976158142,
+            5.399999976158142,
+            4.5,
+            5.199999928474426,
+            5.600000023841858
+        ],
+        "totalMs": [
+            304.3000000715256,
+            305.59999990463257,
+            331.60000002384186,
+            315.60000002384186,
+            318.7000000476837,
+            298.7999999523163,
+            304.7999999523163,
+            305.5,
+            299.10000002384186,
+            299
+        ]
+    },
+    "benchmarkId": "te-047-save",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T10:25:55.869Z"
+}

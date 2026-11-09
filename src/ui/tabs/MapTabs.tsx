@@ -1,7 +1,8 @@
 import { ChevronDown, X } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
-import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useLayoutEffect, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
+import { projectDirty, subscribeDirty } from "../../app/file/workflows";
 import { useSession } from "../../app/state/session";
 import {
     activateMap,
@@ -31,15 +32,15 @@ interface TabInfo {
 /** How far a press moves along the strip before it is a drag, in CSS pixels. */
 const DRAG_THRESHOLD = 4;
 
-/** The project's name and unsaved state; renders again only when one of them changes. */
+/**
+ * The project's name and unsaved state; renders again only when one of them changes. A save
+ * records the saved state without a change of the session store (TE-047), so the unsaved state
+ * follows the file workflows as well.
+ */
 function useProjectLabel(): { name: string; dirty: boolean } {
-    const key = useSession((state) =>
-        JSON.stringify([state.session.project.name, state.history.dirty]),
-    );
-    return useMemo(() => {
-        const [name, dirty] = JSON.parse(key) as [string, boolean];
-        return { name, dirty };
-    }, [key]);
+    const name = useSession((state) => state.session.project.name);
+    const dirty = useSyncExternalStore(subscribeDirty, projectDirty);
+    return useMemo(() => ({ name, dirty }), [name, dirty]);
 }
 
 /** The tabs and the active map; renders again only when one of them changes. */

@@ -109,6 +109,9 @@ export async function openApp(ratio: number): Promise<BrowserRun> {
         const page = await context.newPage();
         await page.goto(`http://127.0.0.1:${port}/`);
         await page.waitForSelector("html[data-app-ready]");
+        // The app starts on the empty state (TE-047): the benchmarks start on a new project.
+        await page.waitForFunction(() => window.__ngneTest !== undefined);
+        await page.evaluate(() => window.__ngneTest!.newProject());
         const adapter = await page.evaluate(async () => {
             // The DOM library of the pinned TypeScript has no WebGPU types.
             const { gpu } = navigator as unknown as {

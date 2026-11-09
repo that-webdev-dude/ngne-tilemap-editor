@@ -1,0 +1,49 @@
+{
+    "id": "te-047-open-rtx-4060",
+    "ticket": "TE-047",
+    "measurement": "Open of the reference project from a file in memory, from the empty state: the call to the frame that draws the map with both tileset textures uploaded; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "max of 10 opens, 1500 ms apart, after 2 warm-up opens",
+    "budgetMs": 3000,
+    "resultMs": 274.8000000715256,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 264.39999997615814,
+        "firstFrameMaxMs": 242.20000004768372,
+        "firstFrameMedianMs": 234.79999995231628,
+        "longestTaskMaxMs": 104.70000004768372,
+        "drawnMs": [
+            261.8000000715256,
+            257.6999999284744,
+            262.3000000715256,
+            263.6999999284744,
+            264.39999997615814,
+            265.2000000476837,
+            267.60000002384186,
+            264,
+            266.89999997615814,
+            274.8000000715256
+        ],
+        "firstFrameMs": [
+            241.89999997615814,
+            234.79999995231628,
+            227.5,
+            234.79999995231628,
+            234.79999995231628,
+            231.5,
+            242.20000004768372,
+            234.39999997615814,
+            241.09999990463257,
+            221.10000002384186
+        ]
+    },
+    "benchmarkId": "te-047-open",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T10:26:25.546Z"
+}

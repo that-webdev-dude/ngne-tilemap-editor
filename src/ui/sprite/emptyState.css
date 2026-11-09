@@ -1,0 +1,37 @@
+/*
+ * TE-047: the empty state of the workspace (the sprite editor's sprite.css rules for it): the
+ * actions in a centred column, the recent projects under them, newest first.
+ */
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.empty-state__recent {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-4);
+    margin: var(--space-8) 0 0;
+    padding: 0;
+    list-style: none;
+}
+
+.empty-state__recent-title {
+    margin: var(--space-8) 0 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-label);
+    font-weight: var(--font-weight);
+}
+
+.empty-state__recent .ui-button {
+    max-width: 320px;
+}
+
+.empty-state__recent-name {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}

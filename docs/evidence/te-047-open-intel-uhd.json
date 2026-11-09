@@ -1,0 +1,49 @@
+{
+    "id": "te-047-open-intel-uhd",
+    "ticket": "TE-047",
+    "measurement": "Open of the reference project from a file in memory, from the empty state: the call to the frame that draws the map with both tileset textures uploaded; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "max of 10 opens, 1500 ms apart, after 2 warm-up opens",
+    "budgetMs": 3000,
+    "resultMs": 258.89999997615814,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "medianMs": 247.20000004768372,
+        "firstFrameMaxMs": 226.39999997615814,
+        "firstFrameMedianMs": 218.20000004768372,
+        "longestTaskMaxMs": 102.79999995231628,
+        "drawnMs": [
+            243.79999995231628,
+            247.20000004768372,
+            244.20000004768372,
+            256.2999999523163,
+            245,
+            251.70000004768372,
+            258.89999997615814,
+            247.79999995231628,
+            235.20000004768372,
+            243.89999997615814
+        ],
+        "firstFrameMs": [
+            226.39999997615814,
+            226.10000002384186,
+            217.80000007152557,
+            214.60000002384186,
+            217.5,
+            218.20000004768372,
+            225.60000002384186,
+            225.10000002384186,
+            207.79999995231628,
+            206.39999997615814
+        ]
+    },
+    "benchmarkId": "te-047-open",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T10:25:28.628Z"
+}

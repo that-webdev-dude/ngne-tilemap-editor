@@ -10,8 +10,15 @@ import type { ProjectSession } from "../../core/model";
  * The one project of the window (SPEC §3, §10.1). `session` and `history` are the mutable
  * objects of `core`; the state is replaced (with a higher `revision`) on every step of the
  * history and on `touch`, so a subscriber that selects it is told about each change.
+ *
+ * While no project is open (TE-047: the app starts with the empty state, and Close Project
+ * returns to it), `open` is false and `session` holds an empty project nobody sees: the
+ * interface shows the empty state, and the commands that act on a project are disabled
+ * (`app/commands/appCommands.ts`).
  */
 export interface SessionState {
+    /** Whether a project is open; false on the empty state. */
+    readonly open: boolean;
     readonly session: ProjectSession;
     /** The only way the project changes (SPEC §3). */
     readonly history: History;
@@ -19,10 +26,12 @@ export interface SessionState {
     readonly revision: number;
 
     /**
-     * Makes `session` the project of the window with a new history: New Project and Open
-     * (TE-047). The previous history is dropped.
+     * Makes `session` the open project of the window with a new history: New Project, Open
+     * and Revert (TE-047). The previous history is dropped.
      */
     replace(session: ProjectSession, options?: HistoryOptions): void;
+    /** Closes the project (Close Project, TE-047): the empty state, with an empty history. */
+    close(): void;
     /**
      * Tells subscribers that the session changed outside the history: the active map or
      * layer, a selection, the view, or a test hook that set a field.
@@ -30,9 +39,17 @@ export interface SessionState {
     touch(): void;
 }
 
-/** A store of one project session. The app has one (`sessionStore`); tests create their own. */
+/** The project held while none is open: never shown, never saved. */
+function closedSession(): ProjectSession {
+    return createProjectSession(createProject());
+}
+
+/**
+ * A store of one project session, open on `initial`, or on the empty state when `initial` is
+ * null. The app has one (`sessionStore`); tests create their own.
+ */
 export function createSessionStore(
-    initial: ProjectSession,
+    initial: ProjectSession | null,
     options?: HistoryOptions,
 ): StoreApi<SessionState> {
     /** Stops the subscription to the current history. */
@@ -54,14 +71,26 @@ export function createSessionStore(
             });
             return history;
         };
+        const first = initial ?? closedSession();
         return {
-            session: initial,
-            history: attach(initial, options),
+            open: initial !== null,
+            session: first,
+            history: attach(first, options),
             revision: 0,
             replace(session, historyOptions) {
                 set({
+                    open: true,
                     session,
                     history: attach(session, historyOptions),
+                    revision: get().revision + 1,
+                });
+            },
+            close() {
+                const session = closedSession();
+                set({
+                    open: false,
+                    session,
+                    history: attach(session, options),
                     revision: get().revision + 1,
                 });
             },
@@ -70,8 +99,13 @@ export function createSessionStore(
     });
 }
 
-/** The project of the app. Until TE-047 adds the empty state, the app starts with a new project. */
-export const sessionStore = createSessionStore(createProjectSession(createProject()));
+/** The project of the app: none at launch, the empty state shows (TE-047). */
+export const sessionStore = createSessionStore(null);
+
+/** Whether the app has a project open. */
+export function projectOpen(): boolean {
+    return sessionStore.getState().open;
+}
 
 export function useSession<Slice>(selector: (state: SessionState) => Slice): Slice {
     return useStore(sessionStore, selector);

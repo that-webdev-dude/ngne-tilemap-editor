@@ -21,5 +21,6 @@ export type {
     HistoryOptions,
     MemoryWarningListener,
     ProjectVerifier,
+    SavedState,
 } from "./history";
 export type { Transaction, TransactionOptions } from "./transaction";

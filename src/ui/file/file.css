@@ -1,0 +1,7 @@
+/* TE-047: the New Project dialog's label over its first map's fields, across both columns. */
+.new-project__section {
+    grid-column: 1 / -1;
+    margin: var(--space-8) 0 0;
+    color: var(--text-muted);
+    font-size: var(--font-size-label);
+}

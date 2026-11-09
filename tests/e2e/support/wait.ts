@@ -1,5 +1,7 @@
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
+// Declares `window.__ngneTest`, the development-only test hook of the app.
+import type {} from "../../../src/app/testing/testHooks";
 
 // Shared E2E wait helpers (SUITE §8): wait for a state the page reports, never for a time.
 // Adapted from the sprite editor's se-006, se-012 and se-022 support files.
@@ -10,10 +12,22 @@ export interface Size {
 }
 
 /**
- * Opens `path` (the app by default) and waits until the app has started: `<html
- * data-app-ready>`, which the app sets once React has committed its root (src/main.tsx).
+ * Opens `path` (the app by default), waits until the app has started (`openEmptyApp`) and
+ * opens a new default project in it.
  */
 export async function openApp(page: Page, path = "/"): Promise<void> {
+    await openEmptyApp(page, path);
+    // The app starts on the empty state (TE-047); the specs before it start on a new project.
+    await page.waitForFunction(() => window.__ngneTest !== undefined);
+    await page.evaluate(() => window.__ngneTest!.newProject());
+}
+
+/**
+ * Opens `path` and waits until the app has started: `<html data-app-ready>`, which the app sets
+ * once React has committed its root (src/main.tsx). The app is on its empty state, no project
+ * open (TE-047).
+ */
+export async function openEmptyApp(page: Page, path = "/"): Promise<void> {
     await page.goto(path);
     await expect(page.locator("html")).toHaveAttribute("data-app-ready", "");
 }

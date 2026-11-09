@@ -71,9 +71,52 @@ function chunkRange(rect: CellRect): [number, number, number, number] | null {
     return [rect.x >> CHUNK_BITS, rect.y >> CHUNK_BITS, right >> CHUNK_BITS, bottom >> CHUNK_BITS];
 }
 
+/** The whole coordinate range: every chunk of a store lies inside it. */
+const ALL_CELLS: CellRect = {
+    x: -MAX_COORD,
+    y: -MAX_COORD,
+    width: 2 * MAX_COORD,
+    height: 2 * MAX_COORD,
+};
+
 export class CellStore {
     private readonly chunks = new Map<number, Chunk>();
     private total = 0;
+
+    /**
+     * A store of the chunks given, each `cells` array of 32 × 32 values adopted, not copied:
+     * the way a project read in the background worker becomes the page's (TE-047). A chunk
+     * without a non-empty cell is left out. Throws `RangeError` on a chunk coordinate out of
+     * range, an array of another length, a chunk given twice or a value `isCellValue` refuses.
+     */
+    static fromChunks(chunks: Iterable<Pick<CellChunk, "cx" | "cy" | "cells">>): CellStore {
+        const store = new CellStore();
+        for (const { cx, cy, cells } of chunks) {
+            assertCoord(cx * CHUNK_SIZE);
+            assertCoord(cy * CHUNK_SIZE);
+            if (cells.length !== CHUNK_SIZE * CHUNK_SIZE) {
+                throw new RangeError(`A chunk holds ${CHUNK_SIZE * CHUNK_SIZE} cells.`);
+            }
+            const key = chunkKey(cx, cy);
+            if (store.chunks.has(key)) throw new RangeError(`Chunk ${cx}, ${cy} given twice.`);
+            let count = 0;
+            for (const value of cells) {
+                if (value === 0) continue;
+                if (!isCellValue(value))
+                    throw new RangeError(`Not an in-memory cell value: ${value}.`);
+                count += 1;
+            }
+            if (count === 0) continue;
+            store.chunks.set(key, { cx, cy, cells, count });
+            store.total += count;
+        }
+        return store;
+    }
+
+    /** Every allocated chunk, in no particular order: `chunksIn` over the whole range. */
+    allChunks(): Generator<CellChunk> {
+        return this.chunksIn(ALL_CELLS);
+    }
 
     /** Non-empty cells in the whole store. */
     get count(): number {

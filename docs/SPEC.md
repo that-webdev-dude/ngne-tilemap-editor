@@ -725,7 +725,21 @@ differences:
 - Open accepts `.ngtilemap` by picker, drop, OS file handling (SUITE §7) and recent files (10,
   IndexedDB `ngne-tilemap-editor-recent`).
 - The default file name is the project name sanitised as the sprite editor does, with
-  `.ngtilemap`.
+  `.ngtilemap`; `Untitled.ngtilemap` when nothing is left of the name.
+- The app starts on the empty state (no project open), and Close Project returns to it. While
+  no project is open only New Project, Open, Open Recent, Import Tiled Map and the window's own
+  commands (command palette, shortcut sheet, preferences, regions, bottom panel) act.
+- New Project, Open (picker, drop, recent file) and Close Project ask Save / Discard / Cancel
+  before an unsaved project goes, as Tiled asks before a document with changes is closed; Save
+  saves it first and goes on only when that save succeeds. New Project asks once its dialog is
+  answered, Open once the file has been read (a file that cannot be opened asks nothing).
+  Revert asks Discard / Cancel, as the sprite editor's. Opening the project's own file again
+  changes nothing ("… is open already"). Revert keeps the active map and the view of each map
+  still in the file.
+- A drop that holds a `.ngtilemap` opens it, whatever else it holds; a `.ngsprite` without one
+  goes to Import Tileset while a project is open; any other drop is reported as not a project.
+- The current stamp and the clipboard are emptied whenever another project takes the window
+  (New Project, Open, Revert, Close Project). A new project's map is shown fitted, as New Map's.
 - Autosave: 2 s after the last change, the dirty project is written to IndexedDB
   (`ngne-tilemap-editor-autosave`): `project.json`, changed maps' JSON and changed tileset and image
   pixels as raw buffers, keyed by ID. Launch offers recovery of unsaved snapshots. Each page
@@ -985,8 +999,8 @@ reference map:
 | Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket, TE-019: 41.3 / 43.1 ms (median 25.7 / 29.8 ms; flood alone 4.5 / 4.2 ms). Magic wand, TE-020: 20.0 / 18.9 ms (median 6.4 / 6.8 ms; flood alone 6.1 / 5.1 ms) |
 | Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.6 / 13.0 ms (overlay redraws ≤ 9.8 / 9.7 ms) |
 | Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | TE-044: 15.7 / 14.4 ms (median 14.5 / 10.5 ms, max 17.1 / 17.4 ms) |
-| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | — |
-| Open of the reference project to first frame | ≤ 3 s | — |
+| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | TE-047: 7.9 / 5.6 ms (median 5.0 / 5.4 ms); total 311.2 / 331.6 ms (median 308.2 / 305.5 ms) |
+| Open of the reference project to first frame | ≤ 3 s | TE-047: 258.9 / 274.8 ms (median 247.2 / 264.4 ms) |
 | Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
 | Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
 | 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | TE-037: 9.8 / 10.0 ms (overlay 0.2 / 0.2 ms), 0 / 0 frames; names shown at zoom 1.25: 4.1 / 4.3 ms, 0 / 0 frames |
@@ -1007,6 +1021,15 @@ the tile layer under the parallax layer filled with terrain 1; one stroke of ter
 corrections), timed from the event to the first frame submitted after it; live tier. Raw data:
 `te-044-terrain-brush-intel-uhd.json` and `te-044-terrain-brush-rtx-4060.json` in
 [evidence/](evidence/).
+
+Save and open rows: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The
+reference project (ENGINE §6's reference map with its two tilesets, a file of 1,419,753 bytes)
+saved and opened through the file workflows with the worker's writer and reader, to and from a
+file in memory. Save: the task max is the longest gap of a message loop from the call to the
+bytes written, as TE-015's; handing the project to the worker takes about 4 ms of it. Open: from
+the empty state, as at launch, from the call to the frame that draws the map with both tileset
+textures uploaded; its longest task is 102.8 / 104.7 ms (no budget). Raw data:
+`te-047-{save,open}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
 
 Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
 tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with

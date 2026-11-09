@@ -33,6 +33,12 @@ export interface HistoryOptions {
     verify?: ProjectVerifier | null;
 }
 
+/** What `History.markSaved` records: the position and the export settings of a save. */
+export interface SavedState {
+    readonly position: number;
+    readonly exportOnSave: boolean;
+}
+
 /** One step of a history, as reported to its subscribers. */
 export interface HistoryChange {
     /** "do" is a new command (executed, or committed by a transaction). */
@@ -165,10 +171,25 @@ export class History {
         return this.#transaction;
     }
 
-    /** Records the current state as the saved one: the project is clean until it changes. */
-    markSaved(): void {
-        this.#savedPosition = this.position;
-        this.#savedExportOnSave = this.session.project.exportSettings.exportOnSave;
+    /**
+     * The state a save records (TE-047): the position and the export settings now. A save
+     * takes it before the file is written and passes it to `markSaved` afterwards, so a change
+     * made while the bytes are written keeps the project dirty.
+     */
+    get state(): SavedState {
+        return {
+            position: this.position,
+            exportOnSave: this.session.project.exportSettings.exportOnSave,
+        };
+    }
+
+    /**
+     * Records `state` (by default the current one) as the saved one: the project is clean
+     * while it is at that state.
+     */
+    markSaved(state: SavedState = this.state): void {
+        this.#savedPosition = state.position;
+        this.#savedExportOnSave = state.exportOnSave;
     }
 
     /**

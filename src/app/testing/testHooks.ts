@@ -1,4 +1,4 @@
-import { assertInvariants } from "../../core/model";
+import { assertInvariants, createProject, createProjectSession } from "../../core/model";
 import { recentCommands } from "../commandPalette/recentCommands";
 import { appCommands } from "../commands/appCommands";
 import type { CommandRegistry } from "../commands/registry";
@@ -79,6 +79,11 @@ export interface EditorTestHooks {
     viewport: ViewportProbe | null;
     /** Throws when the project violates an invariant of SPEC §2.1. */
     assertInvariants(): void;
+    /**
+     * Opens a new default project (one empty map of 64 × 64 cells), as the app started until
+     * TE-047 gave it the empty state; the end-to-end helpers open one this way.
+     */
+    newProject(): void;
 }
 
 declare global {
@@ -99,6 +104,7 @@ export function installTestHooks(target: Window = window): EditorTestHooks {
         recentCommands,
         viewport: null,
         assertInvariants: () => assertInvariants(sessionStore.getState().session.project),
+        newProject: () => sessionStore.getState().replace(createProjectSession(createProject())),
     };
     target.__ngneTest = hooks;
     return hooks;

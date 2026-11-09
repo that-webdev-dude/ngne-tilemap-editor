@@ -1,0 +1,49 @@
+{
+    "id": "te-047-save-intel-uhd",
+    "ticket": "TE-047",
+    "measurement": "Save of the reference project (524288 cells, 2 tilesets) through the file workflows and the worker, to a file in memory, main-thread task max; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "max of 10 saves, 1500 ms apart, after 2 warm-up saves",
+    "budgetMs": 16,
+    "resultMs": 7.900000095367432,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "totalBudgetMs": 3000,
+        "totalMaxMs": 311.2000000476837,
+        "totalMedianMs": 308.1999999284744,
+        "fileBytes": 1419753,
+        "longestTaskMs": [
+            5,
+            4.799999952316284,
+            4.899999976158142,
+            4.200000047683716,
+            5.399999976158142,
+            5,
+            5.600000023841858,
+            7.900000095367432,
+            4.799999952316284,
+            5.199999928474426
+        ],
+        "totalMs": [
+            311.10000002384186,
+            310.7999999523163,
+            308.1999999284744,
+            298.90000009536743,
+            311.2000000476837,
+            299.39999997615814,
+            302.89999997615814,
+            305.40000009536743,
+            309.39999997615814,
+            298.39999997615814
+        ]
+    },
+    "benchmarkId": "te-047-save",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T10:25:00.685Z"
+}

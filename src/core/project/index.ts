@@ -8,3 +8,5 @@ export * from "./format";
 export { MIGRATIONS } from "./migrations";
 export type { Migration } from "./migrations";
 export { serialize } from "./serialize";
+export { projectFromWire, projectToWire, wireBuffers } from "./wire";
+export type { ProjectWire, WireChunk, WireLayer, WireMap } from "./wire";

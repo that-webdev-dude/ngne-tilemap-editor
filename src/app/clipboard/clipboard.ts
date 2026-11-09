@@ -9,8 +9,8 @@ import { onTilesetChange } from "../tilesets/tilesetChanges";
 
 // The editor's clipboard (SPEC §4.4; TE-021): the app's own, not the system's, one for the
 // window and so shared by every map of the project. It holds tileset slots and tile IDs, which
-// belong to the project: it loses its cells on tiles a change removes (SPEC §4.2), and clearing
-// it when another project opens is TE-047's. It holds cells or markers (TE-039), the last copy
+// belong to the project: it loses its cells on tiles a change removes (SPEC §4.2), and it is
+// cleared when another project takes the window (TE-047), as the current stamp is. It holds cells or markers (TE-039), the last copy
 // wins (SPEC §8): copying markers drops the cells and copying cells drops the markers.
 
 /** The cells the clipboard holds: a stamp whose empty cells were not selected. */
@@ -65,6 +65,16 @@ export function copyMarkersToClipboard(markers: readonly Marker[]): void {
     });
     clipboardStore.setState({ content: null, markers: copies });
 }
+
+// Another project in the window (New Project, Open, Revert, Close Project): its tilesets and
+// layers are others, so the clipboard is emptied.
+let project = sessionStore.getState().session.project;
+sessionStore.subscribe((state) => {
+    if (state.session.project === project) return;
+    project = state.session.project;
+    const { content, markers } = clipboardStore.getState();
+    if (content || markers) clipboardStore.setState({ content: null, markers: null });
+});
 
 // A removed tileset or tile: its cells leave the clipboard, and cells left all empty are none.
 onTilesetChange(sessionStore, (project) => {

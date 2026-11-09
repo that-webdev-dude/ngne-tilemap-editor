@@ -1,4 +1,6 @@
 import { createRoot } from "react-dom/client";
+import { sessionStore } from "../../../src/app/state/session";
+import { createProject, createProjectSession } from "../../../src/core/model";
 import { DockSection } from "../../../src/ui/dock/DockSection";
 import type { DockPanel } from "../../../src/ui/dock/registry";
 import { AppShell, REGION_IDS } from "../../../src/ui/shell/AppShell";
@@ -50,6 +52,9 @@ const regions =
         : REGION_IDS.includes(target as RegionId)
           ? { [target]: <Fragile /> }
           : {};
+
+// The shell shows its regions' content only while a project is open (TE-047).
+sessionStore.getState().replace(createProjectSession(createProject()));
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
