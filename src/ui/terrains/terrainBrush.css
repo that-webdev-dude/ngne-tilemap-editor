@@ -1,0 +1,53 @@
+/* TE-044: the terrain brush's swatches in the context bar (DESIGN §7): a 16 px colour chip
+   with the terrain's name each, Erase first; the selected one is pressed. */
+.terrain-swatches {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-width: 0;
+    overflow-x: auto;
+}
+
+.terrain-swatch {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    height: var(--control-height);
+    padding: 0 var(--space-4) 0 var(--space-2);
+    border: var(--border-width) solid transparent;
+    border-radius: var(--radius-control);
+    background: transparent;
+    color: var(--text);
+    font: inherit;
+    white-space: nowrap;
+    cursor: pointer;
+}
+
+.terrain-swatch:hover {
+    background: var(--bg-raised);
+}
+
+.terrain-swatch[aria-pressed="true"] {
+    border-color: var(--accent);
+    background: var(--bg-active);
+}
+
+.terrain-swatch:focus-visible {
+    outline: var(--focus-ring-width) solid var(--accent);
+    outline-offset: calc(-1 * var(--focus-ring-width));
+}
+
+/* The chip on the checkerboard so its alpha shows; Erase shows the checkerboard alone. */
+.terrain-swatch__chip {
+    display: grid;
+    width: 16px;
+    height: 16px;
+    border: var(--border-width) solid var(--border-input);
+    border-radius: 2px;
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 8px 8px;
+}
+
+.terrain-swatch__chip > span {
+    border-radius: 1px;
+}

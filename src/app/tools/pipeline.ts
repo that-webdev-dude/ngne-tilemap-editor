@@ -462,7 +462,10 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
             opened !== null && x >= 0 && y >= 0 && x < opened.map.width && y < opened.map.height;
         // The map's tile selection as at the press clips the stroke (SPEC §4.1, Tiled's
         // `TilePainter::paintableRegion`); a selection is a value nobody changes.
-        const selection = opened ? tileSelectionOf(session, opened.mapId) : null;
+        const selection =
+            opened && tool.clipsToSelection !== false
+                ? tileSelectionOf(session, opened.mapId)
+                : null;
         const paint: PaintStroke | null = opened && {
             mapId: opened.mapId,
             layerId: opened.layerId,

@@ -356,6 +356,41 @@ export class TerrainFiller {
         }
     }
 
+    /**
+     * The terrain brush's rotational symmetry (Tiled's `WangBrush::updateBrush`, tag v1.12.2):
+     * every cell `(x, y)` of the region passes its wishes, turned by 180°, to the cell
+     * `(width − x − 1, height − y − 1)`, where they replace the wishes at the indexes they
+     * constrain. Cells are taken in `QRegion` order from the region as it was before the call;
+     * a cell that is both a source and an earlier target passes on what it holds by then.
+     */
+    mirror(): void {
+        const sources = bandRects(
+            regionOf([...this.#region].map((key) => ({ x: keyX(key), y: keyY(key) }))),
+        );
+        const desired = new Uint8Array(WANG_INDEXES);
+        const mask = new Uint8Array(WANG_INDEXES);
+        for (const rect of sources) {
+            for (let y = rect.top; y <= rect.bottom; y++) {
+                for (let x = rect.left; x <= rect.right; x++) {
+                    const source = this.#grid.get(cellKey(x, y));
+                    // The arrays may grow when the target is added: copy the source first.
+                    for (let i = 0; i < WANG_INDEXES; i++) {
+                        const turned = (i + 4) % WANG_INDEXES;
+                        desired[turned] =
+                            source < 0 ? INDEX_MASK : this.#grid.desired[source * 8 + i]!;
+                        mask[turned] = source < 0 ? 0 : this.#grid.mask[source * 8 + i]!;
+                    }
+                    const target = this.changePosition(this.#width - x - 1, this.#height - y - 1);
+                    for (let i = 0; i < WANG_INDEXES; i++) {
+                        if (!mask[i]) continue;
+                        this.#grid.desired[target * 8 + i] = desired[i]!;
+                        this.#grid.mask[target * 8 + i] = INDEX_MASK;
+                    }
+                }
+            }
+        }
+    }
+
     /** Fill tools: the region to fill, replacing the region (Tiled's `setRegion`). */
     setRegion(region: Region): void {
         this.#region = new Set();

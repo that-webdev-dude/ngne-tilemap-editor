@@ -331,15 +331,31 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behaviour is Tiled's
 `wangbrush.cpp`, tag `v1.12.2`:
 
+- The set and terrain are the Terrains panel's selection for the active tileset (§5.1), as
+  Tiled's brush follows its terrain sets view; the context bar and right-click sampling change
+  that selection. "Erase terrain" is the brush's own choice, dropped when a terrain is selected
+  again. The painting mode is the terrain's effective type in its set (Tiled's
+  `effectiveTypeForColor`: in a mixed set a terrain used only at corners paints corners).
 - The painted index is picked from the cursor within the cell: corner sets round to the nearest
   corner; edge sets pick the edge by the cell's diagonals; mixed sets use a 3 × 3 grid of the
   cell (`WangId::indexByGrid`: sides = edges, corners = corners, the centre paints nothing).
-- Drag paints continuously; Shift: line from the press. **Full tile mode** (context bar toggle,
-  Ctrl inverts it while held) sets every index of the cell and the shared indexes of its
+- Drag paints continuously: each new target is joined to the one before by a line without
+  diagonal steps (corner and edge modes; in full tile mode with them), and in edge mode the
+  edge follows the direction of the drag (moving right paints the left edge of the cell
+  entered). Shift: a line from the last painted point; the first Shift+click after the tool is
+  selected only sets the start (Tiled's `mLineStartSet`); Shift pressed during a drag ends its
+  painting, as Tiled's brush then turns to its line behaviour. Lines of corner and edge modes
+  take no diagonal steps; a line in full tile mode may, and a line of a mixed set is painted in
+  full tile mode, as Tiled does. **Full tile mode** (context bar
+  toggle, Ctrl inverts it while held) sets every index of the cell and the shared indexes of its
   neighbours. Alt adds rotational symmetry: each painted index is also painted at the cell
   `(width − x − 1, height − y − 1)` with the terrain index turned by 180°.
-- Right click samples the terrain under the cursor into the context bar.
-- One stroke is one entry; the filler runs with corrections on at each step.
+- Right click without modifiers samples the terrain under the cursor into the context bar (an
+  empty cell or a tile outside the set samples "erase terrain").
+- One stroke is one entry; the filler runs with corrections on at each step. The tile selection
+  does not clip the brush (Tiled's brush paints through `PaintTileLayer`, not `TilePainter`;
+  §4.1 lists the tools it clips). Between strokes the overlay shows what a press at the cursor
+  would leave invalid (Tiled's brush preview).
 
 ### 5.4 Terrain fill mode
 
@@ -968,7 +984,7 @@ reference map:
 | ------ | ------ | ------------------------------- |
 | Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket, TE-019: 41.3 / 43.1 ms (median 25.7 / 29.8 ms; flood alone 4.5 / 4.2 ms). Magic wand, TE-020: 20.0 / 18.9 ms (median 6.4 / 6.8 ms; flood alone 6.1 / 5.1 ms) |
 | Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.6 / 13.0 ms (overlay redraws ≤ 9.8 / 9.7 ms) |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | — |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | TE-044: 15.7 / 14.4 ms (median 14.5 / 10.5 ms, max 17.1 / 17.4 ms) |
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | — |
 | Open of the reference project to first frame | ≤ 3 s | — |
 | Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
@@ -983,6 +999,14 @@ TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6
 TE-020 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. The wand changes
 no cells, so its frame is the overlay's redraw showing the selection's ants. Raw data:
 `te-020-magic-wand-intel-uhd.json` and `te-020-magic-wand-rtx-4060.json` in [evidence/](evidence/).
+
+Terrain brush row: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The
+reference map's first tileset given the 256 corner combinations of 4 terrains as one terrain set,
+the tile layer under the parallax layer filled with terrain 1; one stroke of terrain 2 at 100%,
+200 drag moves to a new cell each (each paints a new vertex and runs the filler with
+corrections), timed from the event to the first frame submitted after it; live tier. Raw data:
+`te-044-terrain-brush-intel-uhd.json` and `te-044-terrain-brush-rtx-4060.json` in
+[evidence/](evidence/).
 
 Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
 tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with

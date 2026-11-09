@@ -85,8 +85,9 @@ export interface PaintStroke {
      */
     get(x: number, y: number, layer?: number): number;
     /**
-     * Writes `value` (0 empties) to a cell of the layer. Painting is clipped to the map and
-     * to its tile selection as at the press (SPEC §4.1): a cell outside them is left alone. The viewport shows the change before
+     * Writes `value` (0 empties) to a cell of the layer. Painting is clipped to the map and,
+     * unless the tool says otherwise (`ToolSpec.clipsToSelection`), to its tile selection as
+     * at the press (SPEC §4.1): a cell outside them is left alone. The viewport shows the change before
      * the stroke ends. `layer` writes another of `paintableLayers` instead (the eraser's
      * all-layers mode, SPEC §4.3); any other layer is left alone.
      */
@@ -288,6 +289,12 @@ export interface ToolSpec {
      * began the stroke (a right drag of the stamp brush captures and paints nothing).
      */
     paints?: boolean | ((button: ToolButton) => boolean);
+    /**
+     * Whether the map's tile selection clips the stroke's cells (SPEC §4.1: the stamp brush,
+     * eraser, bucket and shape fill). The default is true; the terrain brush paints across it,
+     * as Tiled's `WangBrush` does.
+     */
+    clipsToSelection?: boolean;
     /** A key that makes this tool the active one while it is held. */
     hold?: ToolHold;
     /** CSS cursor over the viewport while the tool is active; the default is "default". */

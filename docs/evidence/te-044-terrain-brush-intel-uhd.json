@@ -1,0 +1,29 @@
+{
+    "id": "te-044-terrain-brush-intel-uhd",
+    "ticket": "TE-044",
+    "measurement": "Terrain brush step on a complete 4-terrain corner set on the reference map at 100%, pointer event to the frame containing it submitted; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 190 drag moves of one stroke after 10 warm-up moves",
+    "budgetMs": 33,
+    "resultMs": 15.700000047683716,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "pressMs": 13.299999952316284,
+        "medianMs": 14.5,
+        "maxMs": 17.100000023841858,
+        "tiers": [
+            "live"
+        ],
+        "layerId": 7,
+        "cellsChanged": 233
+    },
+    "benchmarkId": "te-044-terrain-brush",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-09T07:10:32.809Z"
+}

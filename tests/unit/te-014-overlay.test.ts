@@ -216,6 +216,7 @@ describe("overlay layer registry", () => {
             ["eraser-preview", 600],
             ["fill-preview", 600],
             ["stamp-preview", 600],
+            ["terrain-brush", 600],
         ]);
     });
 });

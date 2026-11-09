@@ -187,7 +187,8 @@ Every new element uses tokens and primitives only. Specifics:
   paint, with a 1 px `--accent` outline of its rectangle. Fill tools preview their region the
   same way. Erase previews show a 1 px `--danger` outline of the cells.
 - **Terrain brush**: the painted corner or edge marked by a 6 px `--accent` square (corner) or a
-  2 px bar (edge); cells that cannot be resolved get a 35% `--danger` fill.
+  2 px bar (edge), in full tile mode the cell by a 1 px `--accent` outline (the stamp preview's),
+  at the symmetric place too with Alt; cells that cannot be resolved get a 35% `--danger` fill.
 - **Markers**: outlines 1.5 CSS px in their layer's colour on a 1 px black halo; rectangles,
   ellipses and polygons filled with the colour at 15%; points as a 9 px pin (`MapPin`, 16 px)
   anchored at its tip; names in 11 px `--text` on a `--bg-panel` chip at 80% beside the shape.

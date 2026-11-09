@@ -7,6 +7,8 @@ export {
     wangIdOfCell,
 } from "./analysis";
 export type { TerrainAnalysis, TerrainCombination } from "./analysis";
+export { brushStep, brushTargetAt, mirroredTarget } from "./brush";
+export type { BrushBehaviour, BrushStep, BrushStepResult, BrushTarget } from "./brush";
 export { TerrainFiller } from "./filler";
 export type { TerrainBack, TerrainCell, TerrainFillResult, TerrainFillerOptions } from "./filler";
 export { TerrainEditError } from "./errors";
