@@ -5,11 +5,12 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createServer } from "vite";
 import { BROKEN_FIELD, renameSpriteField } from "../tests/runtime-compat/contract.ts";
+import { fixtureGame } from "../tests/runtime-compat/fixture.ts";
 import { COMPAT_TABLES } from "../tests/runtime-compat/tables.ts";
 
 // TE-052: the runtime compile matrix (SPEC 11.4). For each folder of tests/runtime-compat/,
-// installs its engine, writes the generated `ngne-tilemap.ts` beside its fixture game and
-// compiles both with `tsc` under the settings of BRIEF 6 plus `strict`,
+// installs its engine, writes the generated `ngne-tilemap.ts` and the fixture game (game.ts,
+// importing the folder's engine) into it and compiles both with `tsc` under the settings of BRIEF 6 plus `strict`,
 // `exactOptionalPropertyTypes`, `noUnusedLocals` and `noUnusedParameters`
 // (tests/runtime-compat/tsconfig.base.json). Then breaks the engine contract on purpose: a copy
 // of the folder's engine declarations with the `Sprite` field `depth` renamed must fail the
@@ -28,6 +29,7 @@ const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const FOLDERS = join(ROOT, "tests/runtime-compat");
 const PINNED = ["0.1.0", "0.2.2", "0.3.0"];
 const TSC = join(ROOT, "node_modules/typescript/bin/tsc");
+const GAME = readFileSync(join(FOLDERS, "game.ts"), "utf8");
 
 /** Runs a command; its output is returned, and printed when it fails. */
 function run(command: string, args: readonly string[], cwd: string): { ok: boolean; out: string } {
@@ -137,6 +139,7 @@ function check(version: string, runtime: string): string[] {
     console.log(`${version}: ${name} ${manifest.version}`);
 
     writeFileSync(join(folder, "ngne-tilemap.ts"), runtime);
+    writeFileSync(join(folder, "game.ts"), fixtureGame(GAME, name));
     const compiled = run(process.execPath, [TSC, "-p", join(folder, "tsconfig.json")], folder);
     if (!compiled.ok) return [`The fixture game does not compile:\n${compiled.out}`];
     console.log(`${version}: compiles`);

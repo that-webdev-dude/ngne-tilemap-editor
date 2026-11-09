@@ -25,9 +25,9 @@ import {
     type Tilemap,
 } from "./ngne-tilemap";
 
-// TE-052: a game on this engine version that uses the generated runtime (SPEC 11.4). It only
-// has to compile; the compat script builds it under the settings of BRIEF 6 and keeps the four
-// folders' copies equal but for the engine's package name.
+// TE-052: a game that uses the generated runtime (SPEC 11.4). It only has to compile; the compat
+// script writes it into each engine folder, with that folder's engine package name in the import
+// above (fixture.ts), and builds it there under the settings of BRIEF 6.
 
 /**
  * The engine contract: every sprite field the runtime sets is a field of the engine's `Sprite`

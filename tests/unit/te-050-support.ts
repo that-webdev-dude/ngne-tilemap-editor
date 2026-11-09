@@ -129,12 +129,14 @@ export function tilemapJson(
 /** The 8 orientations in the order of the FORMAT 1.2 table, as flag bits. */
 export const ORIENTATIONS = [0, H, V, H | V, H | D, V | D, D, H | V | D] as const;
 
+const NO_OFFSET = { x: 0, y: 0 } as const;
+
 /**
  * The rotated-tile fixture: a 3 x 2 tile (odd width, asymmetric) with a rectangle in its top
  * right and a triangle in its top left, drawn once in each orientation along one row of 4 x 4
  * cells. `offset` is the tileset's tile offset.
  */
-export function rotatedFixture(offset = { x: 0, y: 0 }): {
+export function rotatedFixture(offset: { x: number; y: number } = NO_OFFSET): {
     json: Json;
     atlases: Record<string, unknown>;
 } {

@@ -5,7 +5,7 @@ import { fileURLToPath, pathToFileURL } from "node:url";
 import ts from "typescript";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { GENERATOR } from "../../src/core/generator";
-import { generateRuntime, TABLES_MARKER } from "../../src/core/runtime/generate";
+import { generateRuntime, importsModule, TABLES_MARKER } from "../../src/core/runtime/generate";
 import type * as Runtime from "../../src/core/runtime/runtime";
 import { FIXTURE_DIR, meadowAtlases, meadowJson } from "./te-050-support";
 
@@ -302,5 +302,32 @@ describe("the generated module", () => {
         } finally {
             vi.unstubAllGlobals();
         }
+    });
+});
+
+describe("importsModule", () => {
+    it("finds an import or a re-export at the start of a line", () => {
+        expect(importsModule('import { a } from "./a";\n')).toBe(true);
+        expect(importsModule('  import * as a from "./a";\n')).toBe(true);
+        expect(importsModule('\timport "./a";\n')).toBe(true);
+        expect(importsModule("import{a}from'./a';\n")).toBe(true);
+        expect(importsModule('export { a } from "./a";\n')).toBe(true);
+        expect(importsModule('export * from "./a";\n')).toBe(true);
+        expect(importsModule('export {\n    a,\n    b,\n} from "./a";\n')).toBe(true);
+        expect(importsModule('const x = 1;\n    export type { A } from "./a";\n')).toBe(true);
+    });
+
+    it("finds none in code that only exports its own names", () => {
+        expect(importsModule("export const a = 1;\nexport function f() {}\n")).toBe(false);
+        expect(importsModule("const importer = 1;\nconst x = importer;\n")).toBe(false);
+        expect(importsModule("export const a = 1; const from = 2;\n")).toBe(false);
+        expect(importsModule("// import a from b\n")).toBe(false);
+        expect(importsModule("const a = `\nexport` + 1;\nconst b = 2;\n")).toBe(false);
+    });
+
+    it("takes time linear in the code, on many lines that start a statement", () => {
+        expect(importsModule("export a\n".repeat(200_000))).toBe(false);
+        expect(importsModule(`${" ".repeat(200_000)}x\n`)).toBe(false);
+        expect(importsModule(`${"\n".repeat(200_000)}x`)).toBe(false);
     });
 });

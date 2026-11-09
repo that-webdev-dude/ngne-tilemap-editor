@@ -21,8 +21,11 @@ export interface RuntimeTables {
 }
 
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
-const IMPORT = /^\s*import[\s{*"']/m;
-const RE_EXPORT = /^\s*export\s[^;]*\sfrom\s/m;
+// Line starts only, with `[ \t]*` rather than `\s*`: a `\s*` there spans lines, which makes a
+// match take time quadratic in the number of lines.
+const IMPORT = /^[ \t]*import[\s{*"']/m;
+const EXPORT = /^[ \t]*export\s/m;
+const FROM = /\sfrom\s/;
 /** An import of the emitter, the one import the runtime source may have: the emitter is inlined. */
 const EMIT_IMPORT = /^import\s[^;]*?\sfrom\s+"\.\/emit(?:\.ts)?";\n/gm;
 
@@ -91,6 +94,16 @@ function tablesCode(tables: RuntimeTables): string {
     ].join("\n");
 }
 
+/** Whether `code` imports a module: a line that starts an `import` or an `export ... from`. */
+export function importsModule(code: string): boolean {
+    if (IMPORT.test(code)) return true;
+    // An `export` at a line start with ` from ` after it in the same statement, up to its `;`.
+    return code.split(";").some((statement) => {
+        const exported = EXPORT.exec(statement);
+        return exported !== null && FROM.test(statement.slice(exported.index + exported[0].length));
+    });
+}
+
 /** The runtime source before its placeholder tables, without its import of the emitter. */
 function runtimeBody(source: string): string {
     const at = source.indexOf(`${TABLES_MARKER}\n`);
@@ -118,7 +131,7 @@ export function generateRuntime(tables: RuntimeTables): string {
         "",
         tablesCode(tables),
     ].join("\n");
-    if (IMPORT.test(body) || RE_EXPORT.test(body)) {
+    if (importsModule(body)) {
         throw new Error("The generated runtime would import a module.");
     }
     return body;

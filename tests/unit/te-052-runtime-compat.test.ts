@@ -15,6 +15,7 @@ import ts from "typescript";
 import { afterAll, describe, expect, it } from "vitest";
 import { generateRuntime } from "../../src/core/runtime/generate";
 import { BROKEN_FIELD, RENAMED_FIELD, renameSpriteField } from "../runtime-compat/contract";
+import { GAME_ENGINE, fixtureGame } from "../runtime-compat/fixture";
 import { COMPAT_TABLES } from "../runtime-compat/tables";
 
 // TE-052: the runtime compile matrix (SPEC 11.4). `npm run compat` installs each folder's engine
@@ -125,19 +126,20 @@ describe("runtime compat folders", () => {
         }
     });
 
-    it("keeps the fixture games equal but for the engine's package name", () => {
-        const game = read("tests/runtime-compat/0.3.0/game.ts");
+    it("writes one fixture game into each folder, with the folder's engine package name", () => {
+        const game = read("tests/runtime-compat/game.ts");
+        expect(GAME_ENGINE).toBe("@ngne/core");
         expect(game.split("\n")[0]).toContain('from "@ngne/core";');
-        expect(read("tests/runtime-compat/0.2.2/game.ts")).toBe(game);
-        expect(read("tests/runtime-compat/latest/game.ts")).toBe(game);
-        expect(read("tests/runtime-compat/0.1.0/game.ts")).toBe(
-            game.replace('from "@ngne/core";', 'from "ngne";'),
-        );
+        expect(fixtureGame(game, "@ngne/core")).toBe(game);
+        expect(fixtureGame(game, "ngne")).toBe(game.replace('from "@ngne/core";', 'from "ngne";'));
+        expect(() => fixtureGame("export {};\n", "ngne")).toThrow(/does not import @ngne\/core/);
+        // The folders keep no copy: the compat script writes it, and git ignores it.
+        expect(read(".gitignore")).toContain("\ntests/runtime-compat/*/game.ts\n");
     });
 
     it("calls every function the generated runtime exports, and draws in scene.render", () => {
         const runtime = generateRuntime(COMPAT_TABLES);
-        const game = read("tests/runtime-compat/0.3.0/game.ts");
+        const game = read("tests/runtime-compat/game.ts");
         const functions = [...runtime.matchAll(/^export (?:async )?function (\w+)/gm)].map(
             (match) => match[1]!,
         );
@@ -153,7 +155,7 @@ describe("the 0.3.0 fixture game against the app's @ngne/core 0.3.0", () => {
     const folder = mkdtempSync(join(tmpdir(), "te-052-"));
     afterAll(() => rmSync(folder, { recursive: true, force: true }));
     writeFileSync(join(folder, "ngne-tilemap.ts"), generateRuntime(COMPAT_TABLES));
-    writeFileSync(join(folder, "game.ts"), read("tests/runtime-compat/0.3.0/game.ts"));
+    writeFileSync(join(folder, "game.ts"), read("tests/runtime-compat/game.ts"));
 
     const engine = join(ROOT, "node_modules/@ngne/core");
     const renderer = join(engine, "dist/engine/renderer.d.ts").replace(/\\/g, "/");
@@ -222,7 +224,7 @@ describe("workflows", () => {
     it("compile the pinned folders in the required CI run", () => {
         const ci = read(".github/workflows/ci.yml");
         const job = /^ {4}runtime-compat:\n((?: {8}.*\n|\n)*)/m.exec(ci)?.[1] ?? "";
-        expect(job).toContain("- run: npm ci\n");
+        expect(job).toContain("- run: npm ci --ignore-scripts\n");
         expect(job).toContain("- run: npm run compat\n");
         expect(ci).not.toContain("continue-on-error");
         expect(ci).not.toMatch(/compat -- latest/);
@@ -234,5 +236,13 @@ describe("workflows", () => {
         expect(latest).toContain("workflow_dispatch:");
         expect(latest).not.toMatch(/^ {4}(push|pull_request):/m);
         expect(latest).toContain("- run: npm run compat -- latest\n");
+    });
+
+    it("install the app's dependencies without their lifecycle scripts", () => {
+        for (const file of ["ci.yml", "runtime-latest.yml"]) {
+            const installs = read(`.github/workflows/${file}`).match(/\bnpm (?:ci|install)\b.*$/gm);
+            expect(installs?.length, file).toBeGreaterThan(0);
+            for (const line of installs ?? []) expect(line, file).toContain("--ignore-scripts");
+        }
     });
 });

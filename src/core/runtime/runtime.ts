@@ -1884,7 +1884,7 @@ function newDrawState(
         tilesets,
         available: new Uint8Array(tilesets.length),
         emitter: null,
-        elapsedMs: NaN,
+        elapsedMs: Number.NaN,
         cells: tilemap.layers.map(() => null),
         images: tilemap.layers.map((layer) =>
             layer.type === "image" ? assetId(tilemap, imageName(layer)) : "",
@@ -2112,8 +2112,8 @@ function drawLayers(
     const scale = finite(options.scale, 1);
     const viewWidth = finite(options.viewWidth, 0) / scale;
     const viewHeight = finite(options.viewHeight, 0) / scale;
-    const viewX = finite(camera.x, NaN) / scale;
-    const viewY = finite(camera.y, NaN) / scale;
+    const viewX = finite(camera.x, Number.NaN) / scale;
+    const viewY = finite(camera.y, Number.NaN) / scale;
     if (!(scale > 0) || !(viewWidth > 0) || !(viewHeight > 0)) return;
     if (!Number.isFinite(viewX) || !Number.isFinite(viewY)) return;
     // The centre of the view, which gives each layer's parallax shift (FORMAT 3.4).

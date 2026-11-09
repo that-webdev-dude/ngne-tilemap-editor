@@ -16,7 +16,7 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
+            - run: npm ci --ignore-scripts
             - run: npm run check
 
     # The generated runtime compiles in a game on each pinned engine version (SPEC §11.4).
@@ -29,7 +29,7 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
+            - run: npm ci --ignore-scripts
             - run: npm run compat
 
     # The E2E suite on one worker per job (see playwright.config.ts), split across jobs:
@@ -66,7 +66,7 @@ jobs:
               with:
                   node-version: 24
                   cache: npm
-            - run: npm ci
+            - run: npm ci --ignore-scripts
             # Software WebGPU as in NGNE's own CI: headed Chrome under xvfb with SwiftShader.
             - name: Install software WebGPU presentation dependencies
               run: sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
