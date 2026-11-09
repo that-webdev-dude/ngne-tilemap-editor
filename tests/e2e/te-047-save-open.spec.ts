@@ -410,14 +410,16 @@ test("an unsaved project keeps the unload guard, also while the window is too sm
     await addLayer(page);
     await page.setViewportSize({ width: 1000, height: 600 });
     await expect(page.locator("[data-notice=window-too-small]")).toBeVisible();
-    const asked = new Promise<string>((resolve) =>
-        page.once("dialog", (dialog) => {
-            resolve(dialog.type());
-            void dialog.dismiss();
-        }),
-    );
+    const asked = page.waitForEvent("dialog");
     // A page with sticky activation may ask before it is left: a click gives it.
     await page.mouse.click(5, 5);
     await page.close({ runBeforeUnload: true });
-    expect(await asked).toBe("beforeunload");
+    const dialog = await asked;
+    expect(dialog.type()).toBe("beforeunload");
+    // The dismissal settles before the test ends: a context closed while Chrome is still
+    // cancelling the unload can take the browser down with it (headed Linux CI).
+    await dialog.dismiss();
+    await expect(projectName(page)).toHaveText("Guarded");
+    expect(page.isClosed()).toBe(false);
+    await page.close();
 });
