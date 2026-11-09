@@ -1,0 +1,26 @@
+{
+    "name": "ngne",
+    "version": "0.1.0",
+    "type": "module",
+    "private": true,
+    "files": [
+        "dist/engine",
+        "docs/guide.md",
+        "docs/contracts"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/engine/index.d.ts",
+            "import": "./dist/engine/index.js"
+        }
+    },
+    "description": "A TypeScript 2D sprite engine with a playable retro showcase and zero runtime dependencies.",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/that-webdev-dude/ngne.git"
+    },
+    "engines": {
+        "node": ">=24"
+    }
+}

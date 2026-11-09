@@ -8,3 +8,5 @@ coverage
 docs
 # Byte-exact output of the tilemap writer (FORMAT §3.7); a test compares it byte for byte.
 tests/fixtures/format/meadow.tilemap.json
+# The unpacked ngne 0.1.0 package, byte for byte as published (its engine.json lists the hashes).
+tests/runtime-compat/0.1.0/vendor/ngne-0.1.0

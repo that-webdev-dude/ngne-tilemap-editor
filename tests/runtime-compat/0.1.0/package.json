@@ -1,0 +1,8 @@
+{
+    "name": "ngne-tilemap-runtime-compat-0.1.0",
+    "private": true,
+    "type": "module",
+    "dependencies": {
+        "ngne": "file:vendor/ngne-0.1.0"
+    }
+}

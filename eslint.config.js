@@ -128,6 +128,8 @@ export default tseslint.config(
             "playwright-report",
             "coverage",
             "**/.*/",
+            // The unpacked ngne 0.1.0 package of the runtime compile matrix (TE-052).
+            "tests/runtime-compat/0.1.0/vendor/ngne-0.1.0",
         ],
     },
     js.configs.recommended,

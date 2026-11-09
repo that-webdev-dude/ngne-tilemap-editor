@@ -4,5 +4,5 @@
         "types": ["node"]
     },
     "include": ["*.config.ts", "tests", "src/raw.d.ts"],
-    "exclude": ["tests/e2e/harness", "tests/fixtures"]
+    "exclude": ["tests/e2e/harness", "tests/fixtures", "tests/runtime-compat"]
 }
