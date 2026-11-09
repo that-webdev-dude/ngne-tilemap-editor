@@ -193,7 +193,9 @@ test("the bottom panel holds the tabs Tilesets and Terrains and resizes like the
         "true",
     );
     await expect(panel.locator('[data-panel-tab="terrains"]')).toBeVisible();
-    await expect(panel.locator('[data-panel-tab="terrains"]')).toBeEmpty();
+    await expect(
+        panel.locator('[data-panel-tab="terrains"] [data-terrains-panel] [data-terrains-empty]'),
+    ).toBeVisible();
     await expect(panel.locator('[data-panel-tab="tilesets"]')).toBeHidden();
 
     const height = async () => (await boxOf(panel)).height;
