@@ -395,6 +395,9 @@ test("the reference project's cells and tileset pixels come back the same after 
     await saveAs(page, "reference.ngtilemap");
     await page.reload();
     await page.waitForFunction(() => window.__ngneTest !== undefined);
+    // The test hooks come before the keymap, which waits for the WebGPU check: Ctrl+O is
+    // pressed once the empty state shows.
+    await expect(emptyState(page)).toBeVisible();
     await open(page, "reference.ngtilemap");
     await expect(infoToast(page, "Opened reference.ngtilemap")).toBeVisible();
     expect(await digest()).toEqual(before);
