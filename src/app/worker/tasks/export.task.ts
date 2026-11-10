@@ -1,5 +1,5 @@
-import { exportFiles } from "../../../core/export";
-import type { ExportFile } from "../../../core/export";
+import { exportFiles, exportPreview } from "../../../core/export";
+import type { ExportFile, ExportPreview } from "../../../core/export";
 import { TilesetPackError } from "../../../core/pack";
 import { projectFromWire } from "../../../core/project";
 import type { ProjectWire } from "../../../core/project";
@@ -16,6 +16,8 @@ declare module "../protocol" {
     interface WorkerTaskTypes {
         /** `exportFiles`; every file's bytes are transferred. */
         "export.files": TaskType<ExportFilesInput, ExportFile[], TilesetPackError>;
+        /** `exportPreview`, for the Export dialog; the PNGs of the atlases are transferred. */
+        "export.preview": TaskType<ExportFilesInput, ExportPreview, TilesetPackError>;
     }
 }
 
@@ -23,6 +25,11 @@ export const tasks = [
     defineTask("export.files", {
         run: ({ project }) => exportFiles(projectFromWire(project)),
         transfer: (files) => buffersOf(...files.map((file) => file.bytes)),
+        failures: [TilesetPackError],
+    }),
+    defineTask("export.preview", {
+        run: ({ project }) => exportPreview(projectFromWire(project)),
+        transfer: (preview) => buffersOf(...preview.atlases.map((atlas) => atlas.png)),
         failures: [TilesetPackError],
     }),
 ];

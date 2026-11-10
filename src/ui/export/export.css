@@ -1,7 +1,169 @@
 /*
- * The export's question (SPEC §10.2): the list of files a Replace overwrites. The rule is the
- * sprite editor's `ui/export/export.css` for the same list.
+ * The Export dialog (DESIGN §9), a large dialog: the destination and settings on the left, the
+ * files they make on the right; and the export's question, the list of files a Replace
+ * overwrites. The rules are the sprite editor's `ui/export/export.css` for the same elements.
  */
+.export-dialog__columns {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+    gap: var(--space-24);
+    align-items: start;
+}
+
+/* A column of names and a column of controls, as Preferences has. */
+.export-dialog__form {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: var(--space-12) var(--space-16);
+    align-items: start;
+}
+
+.export-dialog__label {
+    line-height: var(--control-height);
+}
+
+.export-dialog__group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+    min-width: 0;
+}
+
+.export-dialog__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8) var(--space-12);
+    min-width: 0;
+}
+
+.export-dialog__destination {
+    min-width: 0;
+    overflow: hidden;
+    line-height: var(--control-height);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.export-dialog__text {
+    width: 100%;
+    min-width: 0;
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border: var(--border-width) solid var(--border-input);
+    border-radius: var(--radius-control);
+    background: var(--bg-raised);
+    color: var(--text);
+    user-select: text;
+}
+
+.export-dialog__text[aria-invalid="true"] {
+    border-color: var(--danger);
+}
+
+.export-dialog__result {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-12);
+    min-width: 0;
+}
+
+.export-dialog__files,
+.export-dialog__file-group {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    min-width: 0;
+}
+
+.export-dialog__files {
+    gap: var(--space-12);
+}
+
+.export-dialog__heading {
+    margin: 0;
+    font: inherit;
+}
+
+.export-dialog__list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-variant-numeric: tabular-nums;
+}
+
+.export-dialog__list li {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-12);
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.export-dialog__size {
+    flex: none;
+    color: var(--text-muted);
+}
+
+.export-dialog__atlases {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--space-12);
+    margin-top: var(--space-4);
+}
+
+.export-dialog__making {
+    margin: 0;
+    color: var(--text-muted);
+}
+
+.export-dialog__error {
+    margin: 0;
+    color: var(--danger);
+}
+
+.export-atlas {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+    max-width: 100%;
+    margin: 0;
+}
+
+/* The atlas over the transparency checkerboard; the rectangles drawn above it. */
+.export-atlas__frame {
+    position: relative;
+    max-width: 100%;
+    border: var(--border-width) solid var(--border-strong);
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 /
+        var(--space-16) var(--space-16);
+    box-sizing: content-box;
+}
+
+.export-atlas__image {
+    display: block;
+    image-rendering: pixelated;
+}
+
+.export-atlas__rects {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.export-atlas__rects rect {
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1px;
+    vector-effect: non-scaling-stroke;
+}
+
+.export-atlas__caption {
+    color: var(--text-muted);
+    font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
+}
+
 .export-overwrite__files {
     margin: var(--space-8) 0 0;
     padding-left: var(--space-16);

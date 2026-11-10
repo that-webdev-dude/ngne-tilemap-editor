@@ -1,4 +1,5 @@
-// The export folder of SPEC §10.2 and FORMAT §5: its files in write order and its marker.
+// The export folder of SPEC §10.2 and FORMAT §5: its files in write order, its marker, and the
+// preview the Export dialog shows of them.
 
 export { RUNTIME_FILE, exportFileNames, exportFiles } from "./exportFiles";
 export type { ExportFile, ExportFileKind } from "./exportFiles";
@@ -10,3 +11,11 @@ export {
     readExportMarker,
 } from "./marker";
 export type { ExportMarker } from "./marker";
+export { EXPORT_FILE_GROUPS, exportFileGroup, exportPreview, previewOf } from "./preview";
+export type {
+    AtlasRect,
+    ExportFileGroup,
+    ExportPreview,
+    ExportPreviewAtlas,
+    ExportPreviewFile,
+} from "./preview";

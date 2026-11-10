@@ -50,9 +50,10 @@ import type { RecentEntry, RecentFiles } from "./recentFiles";
 //
 // One operation at a time: while one runs (a picker, a question, a read or a write), `busy` is
 // true and the others do nothing. None acts during a stroke or while a tileset is imported or
-// updated. Results and failures are reported as notices (toasts): one for each operation that
-// fails or is given up after it started, none when the user cancels. A failure leaves the
-// project as it was.
+// updated. A successful save runs the steps added with `onSaved` (Export on Save, TE-054)
+// before its operation ends. Results and failures are reported as notices (toasts): one for
+// each operation that fails or is given up after it started, none when the user cancels. A
+// failure leaves the project as it was.
 
 /** Zip framing allowed per entry on top of the content of a project (headers, names). */
 const ZIP_FRAMING_BYTES_PER_ENTRY = 1024;
@@ -137,6 +138,13 @@ export interface FileWorkflows {
      * runs (it resolves false then), and with `busy` true meanwhile.
      */
     run(task: () => Promise<boolean>): Promise<boolean>;
+    /**
+     * Adds a step that every successful save runs, inside its operation, after the file is
+     * written (Export on Save, TE-054). The save has succeeded whatever the step does; the step
+     * reports its own failures (one that throws is reported by an error toast). Returns the
+     * function that removes it.
+     */
+    onSaved(step: () => Promise<void>): () => void;
 }
 
 /** The file a handle names is gone: moved or deleted since it was chosen. */
@@ -201,6 +209,7 @@ export function createFileWorkflows(options: FileWorkflowOptions = {}): FileWork
 
     let file: ProjectFile | null = null;
     const listeners = new Set<() => void>();
+    const savedSteps = new Set<() => Promise<void>>();
     let busy = false;
 
     const changed = () => {
@@ -355,6 +364,15 @@ export function createFileWorkflows(options: FileWorkflowOptions = {}): FileWork
         }
         remember(target);
         notices.info(`Saved ${name}`);
+        if (sessions.getState().session.project === current.session.project) {
+            for (const step of [...savedSteps]) {
+                try {
+                    await step();
+                } catch (error) {
+                    notices.error(reason(error));
+                }
+            }
+        }
         return true;
     };
 
@@ -594,6 +612,13 @@ export function createFileWorkflows(options: FileWorkflowOptions = {}): FileWork
             }),
 
         run: (task) => exclusive(task),
+        onSaved(step) {
+            const own = () => step();
+            savedSteps.add(own);
+            return () => {
+                savedSteps.delete(own);
+            };
+        },
     };
 }
 
