@@ -1019,7 +1019,7 @@ reference map:
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | TE-047: 7.9 / 5.6 ms (median 5.0 / 5.4 ms); total 311.2 / 331.6 ms (median 308.2 / 305.5 ms) |
 | Open of the reference project to first frame | ≤ 3 s | TE-047: 258.9 / 274.8 ms (median 247.2 / 264.4 ms) |
 | Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | TE-048: 8.3 / 13.5 ms (median 7.2 / 7.0 ms) |
-| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | — |
+| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | TE-053: task max 7.1 / 5.6 ms (median 5.2 / 5.1 ms); total 75.6 / 70.9 ms (median 67.9 / 66.7 ms) |
 | Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
 | 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | TE-037: 9.8 / 10.0 ms (overlay 0.2 / 0.2 ms), 0 / 0 frames; names shown at zoom 1.25: 4.1 / 4.3 ms, 0 / 0 frames |
 
@@ -1057,6 +1057,14 @@ stored; 5 runs of both. The task max is the longest gap of a message loop, as TE
 7.6 / 12.4 ms and a map thumbnail 7.0 / 12.3 ms, each a task of its own; the snapshot is stored
 95.7 / 106.9 ms after the delay ends at most. Raw data: `te-048-autosave-intel-uhd.json` and
 `te-048-autosave-rtx-4060.json` in [evidence/](evidence/).
+
+Export row: 2026-11-10, the machine, power plan and window of ENGINE §6, Chrome 157.0.8103.50.
+The reference project (524,288 cells, 2 tilesets, 1 map; 7 files, 3,664,381 bytes) exported
+through the app's export pipeline and the worker into an empty folder in memory, 10 runs after
+2 warm-up runs, each with a new pipeline. The task max is the longest gap of a message loop from
+the call to the last file written, as TE-015's. A re-export into the same folder, every file
+unchanged, has a task max of 6.5 / 6.0 ms and a total of 77.0 / 78.9 ms. Raw data:
+`te-053-export-intel-uhd.json` and `te-053-export-rtx-4060.json` in [evidence/](evidence/).
 
 Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
 tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with

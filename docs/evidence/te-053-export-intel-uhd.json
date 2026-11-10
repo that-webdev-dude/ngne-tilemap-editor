@@ -1,0 +1,72 @@
+{
+    "id": "te-053-export-intel-uhd",
+    "ticket": "TE-053",
+    "measurement": "Export of the reference project (524288 cells, 2 tilesets, 1 map; 7 files, 3664381 bytes) through the export pipeline and the worker into an empty folder in memory, main-thread task max; Intel UHD, window 1920 × 1080, DPR 1",
+    "statistic": "max of 10 exports, 1500 ms apart, after 2 warm-up exports",
+    "budgetMs": 16,
+    "resultMs": 7.100000023841858,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "totalBudgetMs": 3000,
+        "totalMaxMs": 75.60000002384186,
+        "totalMedianMs": 67.89999997615814,
+        "longestTaskMs": [
+            5.399999976158142,
+            4.199999928474426,
+            4.399999976158142,
+            6,
+            5.200000047683716,
+            5.700000047683716,
+            7.100000023841858,
+            5,
+            4.800000071525574,
+            4.600000023841858
+        ],
+        "totalMs": [
+            75.60000002384186,
+            69.5,
+            67.89999997615814,
+            67.60000002384186,
+            65.10000002384186,
+            71,
+            67.10000002384186,
+            64.79999995231628,
+            64.10000002384186,
+            71.89999997615814
+        ],
+        "unchangedTotalMs": [
+            76.5,
+            77,
+            73.30000007152557,
+            72.20000004768372,
+            66.30000007152557,
+            66.60000002384186,
+            71,
+            66.70000004768372,
+            72.40000009536743,
+            65.70000004768372
+        ],
+        "unchangedLongestTaskMs": [
+            4.899999976158142,
+            4.5,
+            5.100000023841858,
+            6.5,
+            5.600000023841858,
+            5.200000047683716,
+            4.200000047683716,
+            5,
+            5.900000095367432,
+            4.899999976158142
+        ]
+    },
+    "benchmarkId": "te-053-export",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-10T16:49:56.811Z"
+}

@@ -1,0 +1,72 @@
+{
+    "id": "te-053-export-rtx-4060",
+    "ticket": "TE-053",
+    "measurement": "Export of the reference project (524288 cells, 2 tilesets, 1 map; 7 files, 3664381 bytes) through the export pipeline and the worker into an empty folder in memory, main-thread task max; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "max of 10 exports, 1500 ms apart, after 2 warm-up exports",
+    "budgetMs": 16,
+    "resultMs": 5.600000023841858,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "totalBudgetMs": 3000,
+        "totalMaxMs": 70.90000009536743,
+        "totalMedianMs": 66.69999992847443,
+        "longestTaskMs": [
+            5.100000023841858,
+            4.899999976158142,
+            5.299999952316284,
+            5.600000023841858,
+            4.899999976158142,
+            4.100000023841858,
+            4.5,
+            5.599999904632568,
+            4,
+            5.400000095367432
+        ],
+        "totalMs": [
+            66.69999992847443,
+            67.30000007152557,
+            67.19999992847443,
+            65.30000007152557,
+            66.29999995231628,
+            70.90000009536743,
+            70.10000002384186,
+            64.19999992847443,
+            64.70000004768372,
+            65.20000004768372
+        ],
+        "unchangedTotalMs": [
+            72.89999997615814,
+            78.89999997615814,
+            75.10000002384186,
+            65.29999995231628,
+            67.69999992847443,
+            65.30000007152557,
+            68.60000002384186,
+            68.89999997615814,
+            64.40000009536743,
+            65.59999990463257
+        ],
+        "unchangedLongestTaskMs": [
+            5.299999952316284,
+            4.900000095367432,
+            6,
+            5.100000023841858,
+            4.299999952316284,
+            4.300000071525574,
+            5,
+            4.299999952316284,
+            4.200000047683716,
+            4.5
+        ]
+    },
+    "benchmarkId": "te-053-export",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-10T16:50:39.777Z"
+}
