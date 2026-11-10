@@ -201,7 +201,7 @@ rows.
 | `src/ui/commands/chord.css` | `src/ui/commands/chord.css` | verbatim | `ea5c91d` | `c94a08c100868e5877de06530839692722ba17c41cf6eb21580213fbce21020d` | |
 | `src/ui/commands/contextMenu.ts` | `src/ui/commands/contextMenu.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
 | `src/ui/commands/runCommand.ts` | `src/ui/commands/runCommand.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
-| `src/ui/commands/useCommands.ts` | `src/ui/commands/useCommands.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` keeps its exports |
+| `src/ui/commands/useCommands.ts` | `src/ui/commands/useCommands.ts` | adapt | `ea5c91d` | | A component renders again only when a command it read changed (`commandTracker.ts`), not on every registry refresh |
 | `src/ui/commands/useEditorKeymap.ts` | `src/ui/commands/useEditorKeymap.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `install` keep their exports |
 | `src/ui/dialogs/DialogHost.tsx` | `src/ui/dialogs/DialogHost.tsx` | verbatim | `ea5c91d` | `d80f3e296fc4dce2ccb5dd09023ec782594b82a47e0e3bf1261e7055bb2c23df` | |
 | `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
