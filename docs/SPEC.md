@@ -966,11 +966,18 @@ until the user accepts the report.
   tilesets; `.tj` templates.
 - **Into the current project** as one new map (name from the file, export name made unique).
   External tilesets already imported into this project from a file of the same name with the
-  same tile fingerprints are reused; every other tileset becomes a new one.
+  same tile fingerprints are reused; every other tileset becomes a new one. An external tileset
+  is named after its file (as §6.1 names imports), an embedded one keeps Tiled's name; reuse
+  takes a project tileset of that name with the same source, tile size, tile IDs and
+  fingerprints, and the same tile data, terrain sets, class, properties and offset as the file
+  converts to (so reuse loses nothing the file holds), and reports nothing of the reused file.
+  A tileset without tiles (Tiled opens one) is left out and reported when no cell uses it.
 - **Conversion** beyond the table of BRIEF §7:
   - IDs: layer IDs, object IDs (→ marker IDs), `nextlayerid` and `nextobjectid` kept; tile IDs
     are Tiled's local IDs; `nextTileId` = Tiled's tile count (image tilesets) or its next tile
-    ID (collections).
+    ID (collections: one above the highest tile ID, as Tiled's `Tileset::addTile` sets it).
+    An image tileset's tiles are the grid cells of its image, cut as §6.1 cuts a grid PNG
+    (Tiled's `initializeTilesetTiles`); a cell naming a tile the tileset lacks refuses the map.
   - Tile layers: `csv`, `base64` with no compression, `zlib` or `gzip` (fflate) decoded; GIDs
     decoded with `>>> 0`, bits 31/30/29 kept, bit 28 cleared; local ID via `firstgid`.
   - Infinite maps: the union of used chunks becomes the map; every layer and marker moves by the
@@ -981,7 +988,9 @@ until the user accepts the report.
     (`objectgroup`: rectangles, ellipses, polygons kept; points, polylines, rotation, names and
     properties of shapes dropped, reported), wang sets → terrain sets (colours, tiles; class,
     properties, probabilities dropped, reported). `transparentcolor` of tilesets and image layers
-    is applied as a colour key (alpha 0) when the pixels are copied. `tilerendersize: "grid"`
+    is applied as a colour key (alpha 0) when the pixels are copied: opaque pixels of its red,
+    green and blue, as Tiled masks `transparentColor.rgb()`. Two tiles of one collection showing
+    one image file refuse the map (the source key is the file name). `tilerendersize: "grid"`
     is dropped (tiles draw at tile size; reported). Tile sizes above 256 refuse the map.
   - Object layers → marker layers (layer `color` kept); a template instance is merged with its
     template first; then BRIEF §7 rows apply. `visible: false` objects import visible (reported).

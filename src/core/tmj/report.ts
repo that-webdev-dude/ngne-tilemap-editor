@@ -15,7 +15,11 @@ export const TMJ_REPORT_ROWS = [
     "dropped-properties",
     "enum-properties",
     "tint-blend",
+    "terrain-probability",
     "layer-offsets",
+    "collision-shapes",
+    "terrain-sets",
+    "tile-render-size",
     "hidden-objects",
     "render-order",
     "out-of-range",
@@ -33,7 +37,11 @@ export const TMJ_REPORT_TITLES: Readonly<Record<TmjReportRow, string>> = {
     "dropped-properties": "object, list and class-typed properties",
     "enum-properties": "Enum properties",
     "tint-blend": "Layer tint, blend mode",
+    "terrain-probability": "Terrain probability, terrain-set transformations, tile probability",
     "layer-offsets": "Fractional layer offsets",
+    "collision-shapes": "Tile collision shapes",
+    "terrain-sets": "Terrain set classes and properties",
+    "tile-render-size": "Tile render size",
     "hidden-objects": "Hidden objects",
     "render-order": "Render order",
     "out-of-range": "Values outside the editor's ranges",
@@ -41,10 +49,14 @@ export const TMJ_REPORT_TITLES: Readonly<Record<TmjReportRow, string>> = {
 
 /**
  * Where an item was. Layer and object are Tiled's IDs and names, as the user saw them in Tiled;
- * none of them for the map itself.
+ * a tileset is named as the project will name it, a tile by Tiled's local ID; none of them for
+ * the map itself. An object of a tile is one of its collision shapes.
  */
 export interface TmjLocation {
     readonly layer?: { readonly id: number; readonly name: string };
+    readonly tileset?: string;
+    readonly terrainSet?: string;
+    readonly tile?: number;
     readonly object?: { readonly id: number; readonly name: string };
     /** A property's name, when the item is a property or its owner's property was. */
     readonly property?: string;
@@ -77,10 +89,16 @@ export function groupReport(entries: readonly TmjReportEntry[]): TmjReportGroup[
     });
 }
 
-/** The location text of an entry: `Layer "Markers" (2) › Object "Door" (1) › Property "hp"`. */
+/**
+ * The location text of an entry: `Layer "Markers" (2) › Object "Door" (1) › Property "hp"`,
+ * `Tileset "dungeon" › Tile 21 › Object "anchor" (2)`.
+ */
 export function formatLocation(where: TmjLocation): string {
     const parts: string[] = [];
     if (where.layer) parts.push(`Layer "${where.layer.name}" (${where.layer.id})`);
+    if (where.tileset !== undefined) parts.push(`Tileset "${where.tileset}"`);
+    if (where.terrainSet !== undefined) parts.push(`Terrain set "${where.terrainSet}"`);
+    if (where.tile !== undefined) parts.push(`Tile ${where.tile}`);
     if (where.object) parts.push(`Object "${where.object.name}" (${where.object.id})`);
     if (where.property !== undefined) parts.push(`Property "${where.property}"`);
     return parts.length === 0 ? "Map" : parts.join(" › ");

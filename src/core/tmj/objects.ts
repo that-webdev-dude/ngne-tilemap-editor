@@ -54,7 +54,7 @@ function inlineTemplate(instance: JsonObject, templates: Templates): JsonObject 
 }
 
 /** A polygon's or polyline's points, relative to the object; null when one is malformed. */
-function readPoints(value: unknown): ShapePoint[] | null {
+export function readPoints(value: unknown): ShapePoint[] | null {
     if (!Array.isArray(value)) return null;
     const points: ShapePoint[] = [];
     for (const point of value) {
@@ -68,7 +68,7 @@ function readPoints(value: unknown): ShapePoint[] | null {
 }
 
 /** The kind of object Tiled saved, by the members that mark it. */
-function objectKind(object: JsonObject): string {
+export function objectKind(object: JsonObject): string {
     if (object.gid !== undefined) return "Tile object";
     if (object.text !== undefined) return "Text object";
     if (object.capsule === true) return "Capsule object";
