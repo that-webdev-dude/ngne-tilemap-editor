@@ -10,3 +10,5 @@ docs
 tests/fixtures/format/meadow.tilemap.json
 # The unpacked ngne 0.1.0 package, byte for byte as published (its engine.json lists the hashes).
 tests/runtime-compat/0.1.0/vendor/ngne-0.1.0
+# Tiled XML tilesets of the TMJ fixtures (TE-058), written byte for byte by their build script.
+tests/fixtures/tmj/**/*.tsx

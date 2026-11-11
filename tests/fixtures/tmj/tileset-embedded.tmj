@@ -1,0 +1,44 @@
+{ "compressionlevel":-1,
+ "height":4,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 1, 1, 1,
+            1, 25, 5, 5, 5, 1,
+            1, 5, 4, 4, 5, 1,
+            1, 1, 1, 1, 1, 10],
+         "height":4,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":6,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "columns":8,
+         "firstgid":1,
+         "image":"tiles.png",
+         "imageheight":64,
+         "imagewidth":128,
+         "margin":0,
+         "name":"tiles-embedded",
+         "spacing":0,
+         "tilecount":32,
+         "tileheight":16,
+         "tilewidth":16
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.11",
+ "width":6
+}

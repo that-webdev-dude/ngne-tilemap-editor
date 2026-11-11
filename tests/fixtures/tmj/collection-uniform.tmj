@@ -1,0 +1,54 @@
+{ "compressionlevel":-1,
+ "height":4,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4,
+            4, 4, 4, 4, 4, 4, 4],
+         "height":4,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":7,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "data":[0, 0, 0, 0, 0, 0, 0,
+            0, 1, 0, 2, 0, 3, 0,
+            0, 0, 0, 0, 0, 0, 0,
+            0, 3, 0, 1, 0, 2, 0],
+         "height":4,
+         "id":2,
+         "name":"Props",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":7,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":3,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"props.tsj"
+        }, 
+        {
+         "firstgid":4,
+         "source":"tiles.tsj"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.11",
+ "width":7
+}

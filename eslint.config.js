@@ -130,6 +130,8 @@ export default tseslint.config(
             "**/.*/",
             // The unpacked ngne 0.1.0 package of the runtime compile matrix (TE-052).
             "tests/runtime-compat/0.1.0/vendor/ngne-0.1.0",
+            // Tiled XML tilesets of the TMJ fixtures (TE-058): `.tsx` here is not TypeScript.
+            "tests/fixtures/tmj/**/*.tsx",
         ],
     },
     js.configs.recommended,

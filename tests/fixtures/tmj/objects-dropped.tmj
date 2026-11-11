@@ -1,0 +1,106 @@
+{ "compressionlevel":-1,
+ "height":8,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+            1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1],
+         "height":8,
+         "id":1,
+         "name":"Ground",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":12,
+         "x":0,
+         "y":0
+        }, 
+        {
+         "draworder":"topdown",
+         "id":2,
+         "name":"Things",
+         "objects":[
+                {
+                 "gid":20,
+                 "height":16,
+                 "id":1,
+                 "name":"Chest",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":32,
+                 "y":48
+                }, 
+                {
+                 "gid":2147483673,
+                 "height":16,
+                 "id":2,
+                 "name":"Flipped arrow",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":16,
+                 "x":56,
+                 "y":48
+                }, 
+                {
+                 "height":32,
+                 "id":3,
+                 "name":"Sign",
+                 "opacity":1,
+                 "rotation":0,
+                 "text":
+                    {
+                     "text":"Hello, Tiled",
+                     "wrap":true
+                    },
+                 "type":"",
+                 "visible":true,
+                 "width":96,
+                 "x":88,
+                 "y":16
+                }, 
+                {
+                 "capsule":true,
+                 "height":24,
+                 "id":4,
+                 "name":"Pill",
+                 "opacity":1,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":64,
+                 "x":40,
+                 "y":80
+                }],
+         "opacity":1,
+         "type":"objectgroup",
+         "visible":true,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":3,
+ "nextobjectid":5,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"tiles.tsj"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.11",
+ "width":12
+}

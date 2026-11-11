@@ -1,0 +1,61 @@
+{
+    "automappingRulesFile": "",
+    "commands": [
+    ],
+    "compatibilityVersion": 1100,
+    "extensionsPath": "extensions",
+    "folders": [
+        "."
+    ],
+    "properties": [
+    ],
+    "propertyTypes": [
+        {
+            "id": 1,
+            "name": "Facing",
+            "storageType": "string",
+            "type": "enum",
+            "values": [
+                "north",
+                "east",
+                "south",
+                "west"
+            ],
+            "valuesAsFlags": false
+        },
+        {
+            "id": 2,
+            "name": "Layers",
+            "storageType": "int",
+            "type": "enum",
+            "values": [
+                "ground",
+                "water",
+                "air"
+            ],
+            "valuesAsFlags": true
+        },
+        {
+            "color": "#ffa0a0a4",
+            "drawFill": true,
+            "id": 3,
+            "members": [
+                {
+                    "name": "hp",
+                    "type": "int",
+                    "value": 10
+                },
+                {
+                    "name": "speed",
+                    "type": "float",
+                    "value": 1
+                }
+            ],
+            "name": "Stats",
+            "type": "class",
+            "useAs": [
+                "property"
+            ]
+        }
+    ]
+}

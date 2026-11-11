@@ -1,0 +1,33 @@
+{ "compressionlevel":-1,
+ "height":2,
+ "infinite":false,
+ "layers":[
+        {
+         "data":[25, 2147483673, 1073741849, 3221225497, 536870937, 2684354585, 1610612761, 3758096409,
+            268435481, 2415919129, 1342177305, 3489660953, 805306393, 2952790041, 1879048217, 4026531865],
+         "height":2,
+         "id":1,
+         "name":"Flips",
+         "opacity":1,
+         "type":"tilelayer",
+         "visible":true,
+         "width":8,
+         "x":0,
+         "y":0
+        }],
+ "nextlayerid":2,
+ "nextobjectid":1,
+ "orientation":"orthogonal",
+ "renderorder":"right-down",
+ "tiledversion":"1.12.2",
+ "tileheight":16,
+ "tilesets":[
+        {
+         "firstgid":1,
+         "source":"tiles.tsj"
+        }],
+ "tilewidth":16,
+ "type":"map",
+ "version":"1.11",
+ "width":8
+}

@@ -14,3 +14,5 @@ tests/runtime-compat/*/ngne-tilemap.ts
 tests/runtime-compat/*/game.ts
 # The unpacked ngne 0.1.0 package of the compile matrix keeps its own dist/.
 !tests/runtime-compat/0.1.0/vendor/ngne-0.1.0/dist/
+# Tiled's per-user session, written next to a project file it opens (TE-058 fixtures).
+*.tiled-session

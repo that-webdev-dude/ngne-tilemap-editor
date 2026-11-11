@@ -1,0 +1,18 @@
+{ "object":
+    {
+     "height":32,
+     "name":"Door",
+     "opacity":1,
+     "properties":[
+            {
+             "name":"locked",
+             "type":"bool",
+             "value":false
+            }],
+     "rotation":0,
+     "type":"Door",
+     "visible":true,
+     "width":16
+    },
+ "type":"template"
+}
