@@ -1,0 +1,71 @@
+/* The Preview dock section (DESIGN §8.4): the sprite editor's preview stage and row. */
+.preview-panel {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+/* The stage: the game's canvas centred; a chosen scale larger than the stage scrolls. */
+.preview-panel__stage {
+    display: grid;
+    position: relative;
+    place-items: center;
+    height: 132px;
+    overflow: auto;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+}
+
+.preview-panel__game {
+    display: flex;
+    /* Wheel and clicks go to the stage, so the dock scrolls and no focus moves. */
+    pointer-events: none;
+}
+
+.preview-panel__game.is-hidden {
+    display: none;
+}
+
+.preview-panel__canvas {
+    display: block;
+    flex: none;
+    image-rendering: pixelated;
+    pointer-events: none;
+}
+
+.preview-panel__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--space-8);
+}
+
+.preview-panel__resolution {
+    flex: none;
+    width: 104px;
+}
+
+.preview-panel__scale {
+    flex: none;
+    width: 64px;
+}
+
+.preview-panel__layers {
+    flex: 1;
+    min-width: 0;
+}
+
+.preview-panel__resolution .ui-select,
+.preview-panel__scale .ui-select,
+.preview-panel__layers .ui-select {
+    width: 100%;
+}
+
+.preview-panel__diagnostics {
+    margin: 0;
+    padding: 0;
+    color: var(--warn);
+    font-size: var(--font-size-label);
+    list-style: none;
+    overflow-wrap: anywhere;
+}

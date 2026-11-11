@@ -141,6 +141,9 @@ test("the dock sections follow DESIGN §2 in order, each collapsible", async ({ 
                 "data-properties-kind",
                 "layer",
             );
+        // TE-056 fills Preview: the game's canvas, drawing the new project's one map.
+        else if (id === "preview")
+            await expect(body.locator("[data-preview-canvas] canvas")).toHaveCount(1);
         else await expect(body).toBeEmpty();
         await toggle.click();
         await expect(toggle).toHaveAttribute("aria-expanded", "false");

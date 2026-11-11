@@ -311,6 +311,14 @@ Rename edits the name in place; Change Type is a submenu of the six types.
 The `se-design` §5.5 stage and row, with: resolution select, scale select, play/pause, layer
 filter select. Header "Preview · NGNE". Diagnostics in `--warn` under the row.
 
+Recorded by TE-056, as the sprite editor's preview does: the stage is 132 px high and centres
+the canvas. The scale is in device pixels per game pixel: Fit (the default) takes the largest
+whole scale that fits the stage, and 1/n, the largest that fits, when even 1 does not; 1× to 4×
+are used as chosen, and a canvas larger than the stage scrolls in it. The game clears to the
+map's background colour over #202020 (#202020 alone without one). The default resolution is
+480 × 270. "This layer and below" draws the visible layers up to the active layer, or up to the
+top layer inside an active group.
+
 ### 8.5 Tilesets (bottom panel)
 
 Tabs per tileset along the top (the sprite editor's tab metrics at 24 px), New Tileset (+) at the
