@@ -61,7 +61,7 @@ export type {
 } from "./updateMatch";
 export { UPDATE_FROM_SOURCE_LABEL, updateFromSourceCommand } from "./updateApply";
 export type { TileResolution } from "./updateApply";
-export { readUpdateSource, tileBytes } from "./updateSource";
+export { readUpdateSource, tileBytes, tileSizeChanged } from "./updateSource";
 export { tileUsage } from "./updateUsage";
 export type { MapUsage } from "./updateUsage";
 export type {

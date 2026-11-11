@@ -39,7 +39,10 @@ export interface SourceTiles {
     warnings: TilesetImportWarning[];
 }
 
-/** The files of a source, by kind; `"collection"` sources are TE-062's. */
+/**
+ * The files of a source, by kind. A `"collection"` source is a Tiled file, read by
+ * `core/tmj`'s `readTmjCollection` (TE-062).
+ */
 export type UpdateSourceFiles =
     | { kind: "image"; png: Uint8Array }
     | { kind: "sprite"; bytes: Uint8Array }
@@ -115,7 +118,7 @@ function sourceTilesOf({ tileset, warnings }: TilesetImport): SourceTiles {
 /**
  * Re-reads the source of tileset `tilesetId` of `project` from `files` with the tileset's
  * recorded parameters. Rejects with `TilesetUpdateError`: "not-found", "source-kind" for files
- * of another kind than the tileset's source (or a `"collection"` tileset), "tile-size" for an
+ * of another kind than the tileset's source (a `"collection"` tileset among them), "tile-size" for an
  * atlas whose frames are of another size ("The tile size changed from 16 × 16 to 32 × 32.");
  * else as the import of that kind rejects (`TilesetImportError`, the decoder's `PngError`).
  */

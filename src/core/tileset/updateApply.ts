@@ -164,7 +164,7 @@ function rebuildImage(
  * The command that updates tileset `tilesetId` of `project` from `source` (its source re-read,
  * `readUpdateSource`), with `resolutions` by tile ID for every ambiguous and missing tile of
  * `matchTiles`; null when the update changes nothing. Throws, before any change:
- * `TilesetUpdateError` "not-found", "source-kind" for a `"collection"` tileset, "tile-size"
+ * `TilesetUpdateError` "not-found", "tile-size"
  * ("The tile size changed from 16 × 16 to 32 × 32."), "resolution" for an ambiguous or missing
  * tile without a resolution, a resolution for another tile, a candidate not among the tile's
  * or taken twice, or an entry out of range; `TilesetImportError` ("limit", "packability") when
@@ -178,12 +178,6 @@ export function updateFromSourceCommand(
 ): Command | null {
     const tileset = updatedTileset(project, tilesetId);
     const { tileWidth, tileHeight, slot } = tileset;
-    if (tileset.source.kind === "collection") {
-        throw new TilesetUpdateError(
-            "source-kind",
-            "A tileset of a collection of images is updated from its Tiled file.",
-        );
-    }
     if (source.tileWidth !== tileWidth || source.tileHeight !== tileHeight) {
         throw tileSizeChanged(tileset, source);
     }

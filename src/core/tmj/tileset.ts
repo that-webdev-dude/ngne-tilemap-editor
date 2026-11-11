@@ -879,6 +879,53 @@ async function convertOne(
     return tileset;
 }
 
+/** Where a collection re-read for an update comes from (`convertTmjCollection`). */
+export interface TmjCollectionOrigin {
+    /** The name the conversion gives it, and its messages. */
+    readonly name: string;
+    /** Its source file's name: TSJ, TSX or TMJ (FORMAT §2.4 `fileName`). */
+    readonly fileName: string;
+}
+
+/**
+ * An image collection converted as the import converts it (SPEC §13), for Update Tileset from
+ * Source (SPEC §6.3; TE-062): `json` is a TSJ's, a TSX's read into it or one embedded in a TMJ,
+ * its image paths relative to the source file's folder, which `files` reads from. Its tiles are
+ * in Tiled's order with Tiled's IDs, keys the image file names, with the import's tile data
+ * (animations among them) and the import's limits and packability checked as for a tileset of
+ * its own. Null when it holds no tile with an image. Rejects with `TmjError`.
+ */
+export async function convertTmjCollection(
+    json: JsonObject,
+    origin: TmjCollectionOrigin,
+    files: TmjFiles,
+    decode: PngDecoder = decodePng,
+): Promise<Tileset | null> {
+    const report = new TmjReporter();
+    const context: Context = {
+        project: NO_PROJECT,
+        files,
+        decode,
+        newId: randomId,
+        report,
+        added: [],
+    };
+    const { name, fileName } = origin;
+    const source: Source = {
+        json,
+        path: fileName,
+        folder: "",
+        name,
+        what: `Tileset ${fileName}`,
+        where: { tileset: name },
+    };
+    const tileset = await collectionTileset(context, source, fileName);
+    if (tileset === null) return null;
+    tileset.name = name;
+    readTileData(tileset, source, report);
+    return tileset;
+}
+
 /**
  * Converts the tilesets a converted map names (`convertTmjMap`'s `tilesets`). Rejects with
  * `TmjError` when the map is refused: a file missing, a tileset malformed, an image collection

@@ -8,13 +8,19 @@ import { sessionStore } from "../../state/session";
 import { backgroundWorker } from "../../worker/client";
 import type { WorkerClient } from "../../worker/client";
 // The task type, so that `run("tileset.updateSource")` is typed outside the worker's own glob.
-import type { UpdateTilesetInput } from "../../worker/tasks/tilesetUpdate.task";
+import type {
+    CollectionSourceFiles,
+    UpdateTilesetInput,
+} from "../../worker/tasks/tilesetUpdate.task";
+import { fileSetOf } from "../../tmj/tmjFiles";
+import type { TmjFileSet } from "../../tmj/tmjFiles";
 import { currentTileset, historyIdle } from "../edit/tilesetEdit";
 import { reason } from "../../worker/errorReason";
 import { readImportSource } from "../import/importSources";
 import type { PickedFile } from "../import/importSources";
 import { pickedFile } from "../import/pickTilesetFiles";
 import { runTilesetWorkflow, tilesetWorkflowBusy } from "../tilesetWorkflow";
+import { collectionSourceFiles, pickCollectionSource } from "./collectionSource";
 import { createUpdateSession } from "./updateSession";
 import type { UpdateSession } from "./updateSession";
 
@@ -27,7 +33,9 @@ import type { UpdateSession } from "./updateSession";
 // source's kind and a toast names the recorded file as it opens. An update runs as a tileset file
 // operation (`tilesetWorkflow.ts`): one at a time, with the drops, the file commands and the
 // tileset dialogs unavailable meanwhile. One given up after it started, because another dialog
-// is open when it needs its own, is reported by a toast; one the user cancels is not.
+// is open when it needs its own, is reported by a toast; one the user cancels is not. A
+// `"collection"` tileset (TE-062) asks for its TSJ, TSX or TMJ and the tile images as Import
+// Tiled Map picks files (`collectionSource.ts`); the worker converts them as the import does.
 
 export interface UpdateTilesetRequest {
     kind: "update-tileset";
@@ -66,9 +74,15 @@ export function updatingTileset(): boolean {
     return tilesetWorkflowBusy();
 }
 
+/** Picked or dropped files, or (a collection's source) the set of a folder or of files. */
+export type UpdateFiles = readonly PickedFile[] | TmjFileSet;
+
 /** The files of the source as the update reads them, or why there are none. */
-async function sourceFiles(files: readonly PickedFile[]): Promise<UpdateSourceFiles | string> {
-    const source = await readImportSource(files);
+async function sourceFiles(files: UpdateFiles): Promise<UpdateSourceFiles | string> {
+    const picked = isFileSet(files)
+        ? [...files.byPath.values(), ...files.byName.values()].map((entry) => entry.file)
+        : files;
+    const source = await readImportSource(picked);
     if (!source) return "The source is a .png, an .ngsprite, or an .atlas.json with its PNG.";
     switch (source.kind) {
         case "image":
@@ -82,6 +96,10 @@ async function sourceFiles(files: readonly PickedFile[]): Promise<UpdateSourceFi
     }
 }
 
+function isFileSet(files: UpdateFiles): files is TmjFileSet {
+    return !Array.isArray(files);
+}
+
 /**
  * Updates tileset `tilesetId` from `files`. Resolves true once the update is applied; false
  * when it is cancelled, changes nothing, is refused (reported by a toast), or a tileset file
@@ -89,7 +107,7 @@ async function sourceFiles(files: readonly PickedFile[]): Promise<UpdateSourceFi
  */
 export async function updateTilesetFromFiles(
     tilesetId: string,
-    files: readonly PickedFile[],
+    files: UpdateFiles,
     worker: Pick<WorkerClient, "run"> = backgroundWorker,
 ): Promise<boolean> {
     const project = () => sessionStore.getState().session.project;
@@ -101,7 +119,19 @@ export async function updateTilesetFromFiles(
         return false;
     };
     return runTilesetWorkflow(async () => {
-        const read = await sourceFiles(files);
+        let read: UpdateSourceFiles | CollectionSourceFiles | string;
+        try {
+            read =
+                tileset.source.kind === "collection"
+                    ? await collectionSourceFiles(
+                          { name, fileName: tileset.source.fileName },
+                          isFileSet(files) ? files : fileSetOf(files),
+                          worker,
+                      )
+                    : await sourceFiles(files);
+        } catch (error) {
+            return fail(reason(error));
+        }
         if (typeof read === "string") return fail(read);
         const input: UpdateTilesetInput = {
             tileset: {
@@ -202,15 +232,9 @@ export function pickUpdateFiles(
     });
 }
 
-/** Whether the shown tileset can be updated now: one is shown, of a kind TE-028 reads. */
+/** Whether the shown tileset can be updated now. */
 export function canUpdateCurrentTileset(): boolean {
-    const tileset = currentTileset();
-    return (
-        tileset !== null &&
-        tileset.source.kind !== "collection" &&
-        historyIdle() &&
-        !tilesetWorkflowBusy()
-    );
+    return currentTileset() !== null && historyIdle() && !tilesetWorkflowBusy();
 }
 
 /** Tileset → Update Tileset from Source…: asks for the source, then updates the shown tileset. */
@@ -218,7 +242,17 @@ export async function updateCurrentTileset(): Promise<boolean> {
     const tileset = currentTileset();
     if (!tileset || tilesetWorkflowBusy()) return false;
     const { kind, fileName } = tileset.source;
-    if (kind === "collection") return false;
+    if (kind === "collection") {
+        notices.info(`Pick “${fileName}” and its images, the source of tileset “${tileset.name}”.`);
+        let set: TmjFileSet | null;
+        try {
+            set = await pickCollectionSource();
+        } catch (error) {
+            notices.error(`Could not read the files. ${reason(error)}`);
+            return false;
+        }
+        return set ? updateTilesetFromFiles(tileset.id, set) : false;
+    }
     notices.info(`Pick “${fileName}”, the source of tileset “${tileset.name}”.`);
     const files = await pickUpdateFiles(kind);
     return files ? updateTilesetFromFiles(tileset.id, files) : false;

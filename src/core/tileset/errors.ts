@@ -82,7 +82,7 @@ export class TilesetEditError extends Error {
 export type TilesetUpdateErrorCode =
     /** No tileset of the project has the ID. */
     | "not-found"
-    /** The source is of another kind than the tileset's, or `"collection"` (TE-062). */
+    /** The source is of another kind than the tileset's. */
     | "source-kind"
     /** The source's tiles are of another size than the tileset's. */
     | "tile-size"

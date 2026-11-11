@@ -37,8 +37,15 @@ export type { TmjImageRef, TmjMapConversion, TmjMapOptions, TmjTilesetRef } from
 export type { TemplateReader } from "./objects";
 export { TMJ_REPORT_ROWS, TMJ_REPORT_TITLES, formatLocation, groupReport } from "./report";
 export type { TmjLocation, TmjReportEntry, TmjReportGroup, TmjReportRow } from "./report";
-export { applyColorKey, convertTmjTilesets, tmjImagePixels } from "./tileset";
-export type { TmjFiles, TmjTilesetConversion, TmjTilesetOptions } from "./tileset";
+export { applyColorKey, convertTmjCollection, convertTmjTilesets, tmjImagePixels } from "./tileset";
+export type {
+    TmjCollectionOrigin,
+    TmjFiles,
+    TmjTilesetConversion,
+    TmjTilesetOptions,
+} from "./tileset";
+export { readTmjCollection, tmjCollectionImages, tmjCollectionOf } from "./update";
+export type { TmjCollectionTileset } from "./update";
 export { tsxToJson } from "./tsx";
 export { parseXml } from "./xml";
 export type { XmlElement } from "./xml";

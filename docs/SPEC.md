@@ -460,7 +460,8 @@ with replacement).
 
 An explicit command (Tileset menu). It asks for the source file (the file picker opens with the
 recorded file name; drop works too; a `"collection"` tileset asks for its TSJ, TSX or TMJ and
-the tile images as TMJ import picks files, §13), reads it with the recorded parameters (tile
+the tile images as TMJ import picks files, §13, but a missing image refuses the update with a
+toast naming every missing file instead of a list to add to), reads it with the recorded parameters (tile
 size, margin, spacing; a `"sprite"` source is composited and sliced as at import, §6.1), and
 matches old tiles to new source entries in this order:
 

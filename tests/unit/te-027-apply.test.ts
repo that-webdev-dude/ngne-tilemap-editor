@@ -310,9 +310,7 @@ describe("refusals", () => {
         const image = readUpdateSource(project, "ts", { kind: "image", png: new Uint8Array() });
         await expect(image).rejects.toMatchObject({ code: "source-kind" });
         const source = sourceOf([{ key: "grass.png", color: 1 }]);
-        expect(refusal(() => updateFromSourceCommand(project, "ts", source)).code).toBe(
-            "source-kind",
-        );
+        expect(updateFromSourceCommand(project, "ts", source)).toBeNull();
     });
 });
 
