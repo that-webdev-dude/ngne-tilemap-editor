@@ -1,5 +1,5 @@
-import type { Project } from "../model";
-import { packTileset } from "../pack";
+import type { PixelBuffer, Project } from "../model";
+import { evenSide, packTileset } from "../pack";
 import type { PackedTileset } from "../pack";
 import { generateRuntime } from "../runtime/generate";
 import { encodePng } from "../sprite/png";
@@ -31,6 +31,25 @@ export interface ExportFile {
 const text = (content: string): Uint8Array<ArrayBuffer> => new TextEncoder().encode(content);
 
 /**
+ * An image as the export writes it (FORMAT §5): its pixels in the top-left corner of an image
+ * whose sides are rounded up to even, the extra column on the right and the extra row at the
+ * bottom transparent. So a renderer that rounds sprite centres, as NGNE does with `pixelSnap`,
+ * draws the image as a quad whose edges fall on whole pixels (FORMAT §3.4). An image of even
+ * sides is returned as it is.
+ */
+export function evenImage(pixels: PixelBuffer): PixelBuffer {
+    const width = evenSide(pixels.width);
+    const height = evenSide(pixels.height);
+    if (width === pixels.width && height === pixels.height) return pixels;
+    const data = new Uint8ClampedArray(width * height * 4);
+    const row = pixels.width * 4;
+    for (let y = 0; y < pixels.height; y += 1) {
+        data.set(pixels.data.subarray(y * row, (y + 1) * row), y * width * 4);
+    }
+    return { width, height, data };
+}
+
+/**
  * The names of `project`'s export files in write order, without making them: what the export
  * looks for in a folder before its first write there (SPEC §10.2).
  */
@@ -52,7 +71,8 @@ export function exportFileNames(project: Project): string[] {
  * - Per tileset, in project order: `<name>.png`, the image `packTileset` packs, and
  *   `<name>.atlas.json`, its `ngne-sprite-atlas` (FORMAT §4) as the sprite editor writes an
  *   atlas: four-space JSON with a line feed at the end.
- * - Per image, in project order: `<name>.png` of its pixels (colour type 6, bit depth 8).
+ * - Per image, in project order: `<name>.png` of its pixels (colour type 6, bit depth 8), its
+ *   sides rounded up to even with transparent pixels (`evenImage`).
  * - Per map, in project order: `<name>.tilemap.json` (`tilemapFor`).
  * - `ngne-tilemap.ts`: the runtime generated for these maps, tilesets and images.
  *
@@ -76,7 +96,7 @@ export function exportFiles(project: Project): ExportFile[] {
         files.push({
             name: `${image.exportName}.png`,
             kind: "image-png",
-            bytes: encodePng(image.pixels),
+            bytes: encodePng(evenImage(image.pixels)),
         });
     }
     project.tilesets.forEach((tileset, index) => {

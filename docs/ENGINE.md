@@ -171,10 +171,18 @@ is released on the switch and the new one is built in the background (§4). Raw 
 
 | Config (stacked HUD scene, `pixelSnap` on, tile animations on, panning) | Budget: p95 `game.stats.renderMs` | Measured |
 | --- | --- | --- |
-| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | 3.2 / 3.7 ms |
-| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | 8.4 / 8.2 ms |
+| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | TE-055: 1.1 / 1.1 ms (median 0.9 / 0.8 ms, max 1.8 / 1.6 ms) |
+| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | TE-055: 10.3 / 10.4 ms (median 9.5 / 9.4 ms, max 16.3 / 14.3 ms) |
 
-The worst case leaves ~8 ms of a 60 Hz frame for game updates. A runtime option that
+TE-055 rows: 2026-11-10, the machine, power plan and window of §6, Chrome 157.0.8103.50, 144 Hz
+panel. The fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.0) imports the exported
+`ngne-tilemap.ts` of the reference project with 32 animated tiles per tileset and draws the
+reference map under a stacked HUD scene of 200 sprites, `pixelSnap` on, the camera panning
+48 × 27 px/s; 10 s after 2 s, on `requestAnimationFrame`. Sprites per frame 4,664 and 66,992,
+17 draw calls. Raw data: `te-055-runtime-{480x270,1920x1080}-{intel-uhd,rtx-4060}.json` in
+[evidence/](evidence/).
+
+The worst case leaves ~6 ms of a 60 Hz frame for game updates. A runtime option that
 pre-composites static layers into chunk textures (as the editor's chunk tier does) is the
 answer if a game needs more; it is Later.
 
@@ -204,7 +212,7 @@ reads this table; costs are filled in from spike and ticket measurements.
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime |
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor |
 | The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU: 33.9 / 53.2 ms (TE-015, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor |
-| Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles | editor, runtime |
+| Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor |
 | Assets checked by object identity; no reference following; unlisted texture throws in render | Runtime caches one definition per ID, namespaces IDs, exposes `assetsFor(tilemap)`, skips unlisted tilesets | runtime |

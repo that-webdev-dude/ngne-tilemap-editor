@@ -2073,8 +2073,13 @@ function drawImage(
         return true;
     }
     if (!((x1 - x0 + 1) * (y1 - y0 + 1) <= MAX_IMAGE_COPIES)) return false;
-    sprite.width = width * scale;
-    sprite.height = height * scale;
+    // The exported PNG has even sides, the extra column and row transparent (FORMAT 3.4, 5): the
+    // whole PNG is drawn, so the quad's edges fall on whole pixels when the engine rounds its
+    // centre, and its top-left corner stays on the image's.
+    const evenWidth = width + (width % 2);
+    const evenHeight = height + (height % 2);
+    sprite.width = evenWidth * scale;
+    sprite.height = evenHeight * scale;
     sprite.rotation = 0;
     sprite.u = 0;
     sprite.v = 0;
@@ -2082,8 +2087,8 @@ function drawImage(
     sprite.vh = 1;
     for (let row = y0; row <= y1; row += 1) {
         for (let column = x0; column <= x1; column += 1) {
-            sprite.x = (shiftX + column * width + width / 2) * scale;
-            sprite.y = (shiftY + row * height + height / 2) * scale;
+            sprite.x = (shiftX + column * width + evenWidth / 2) * scale;
+            sprite.y = (shiftY + row * height + evenHeight / 2) * scale;
             frame.sprite(sprite);
         }
     }

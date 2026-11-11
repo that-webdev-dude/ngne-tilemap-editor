@@ -22,3 +22,34 @@ jobs:
                   cache: npm
             - run: npm ci --ignore-scripts
             - run: npm run compat -- latest
+
+    # The conformance draw of SPEC §10.3 (TE-055) with the fixture game on the same newest
+    # engine: NGNE_CORE_DIR makes the dev server resolve @ngne/core to that install
+    # (vite.config.ts). A job of its own, so a compile failure above does not skip it.
+    conformance:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci --ignore-scripts
+            - name: Install the newest published @ngne/core
+              working-directory: tests/runtime-compat/latest
+              run: npm install --no-package-lock --no-audit --no-fund --ignore-scripts && npm ls @ngne/core
+            # Software WebGPU as in the CI workflow's E2E jobs.
+            - name: Install software WebGPU presentation dependencies
+              run: sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+            - name: Conformance draw
+              env:
+                  E2E_HEADLESS: 0
+                  NGNE_CORE_DIR: tests/runtime-compat/latest/node_modules/@ngne/core
+              run: xvfb-run -a -s "-screen 0 4096x2304x24" npx playwright test tests/e2e/te-055-conformance.spec.ts tests/e2e/te-055-conformance-dpr125.spec.ts --project=parallel --no-deps
+            - name: Upload end-to-end artifacts
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: e2e-results-conformance-latest
+                  path: test-results
+                  if-no-files-found: ignore

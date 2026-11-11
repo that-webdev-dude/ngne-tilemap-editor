@@ -873,8 +873,8 @@ export function invalidate(tilemap: Tilemap, layer: TileLayerData): void;
   - Animated tiles show the frame at `options.elapsedMs` (required, the scene's own clock, so
     pause and freeze follow the game); all tiles share one clock from 0 (Tiled).
   - Alpha = layer opacity × `options.alpha` (default 1); `options.color` passes to every sprite.
-  - Image layers draw their image at the layer's shift; repeat draws a grid of quads covering
-    the view.
+  - Image layers draw their image at the layer's shift, as the whole even-sided PNG of the
+    export (FORMAT §3.4); repeat draws a grid of quads covering the view.
   - Within a layer, quads are emitted grouped by tileset, in row-major order inside a tileset,
     so NGNE batches them (ENGINE §4).
   - Never throws: a texture missing from `options.assets` (anything with `has(id)`, normally the

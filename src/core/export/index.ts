@@ -1,7 +1,7 @@
 // The export folder of SPEC §10.2 and FORMAT §5: its files in write order, its marker, and the
 // preview the Export dialog shows of them.
 
-export { RUNTIME_FILE, exportFileNames, exportFiles } from "./exportFiles";
+export { RUNTIME_FILE, evenImage, exportFileNames, exportFiles } from "./exportFiles";
 export type { ExportFile, ExportFileKind } from "./exportFiles";
 export {
     EXPORT_MARKER_FILE,

@@ -79,11 +79,36 @@ function freePort(): Promise<number> {
 }
 
 /**
- * Starts the dev server and Chrome at device pixel ratio `ratio` on the adapter of `PERF_GPU`,
- * opens the app and checks the adapter. Throws when there is no `PERF_GPU` or the adapter is
- * another one.
+ * The adapter Chrome gives `page`, as `vendor architecture`; throws when it is not the one
+ * `PERF_GPU` names.
  */
-export async function openApp(ratio: number): Promise<BrowserRun> {
+async function checkedAdapter(page: Page): Promise<string> {
+    if (!gpu) throw new Error("PERF_GPU is not set");
+    const adapter = await page.evaluate(async () => {
+        // The DOM library of the pinned TypeScript has no WebGPU types.
+        const { gpu } = navigator as unknown as {
+            gpu: {
+                requestAdapter(): Promise<{
+                    info: { vendor: string; architecture: string };
+                } | null>;
+            };
+        };
+        const adapter = await gpu.requestAdapter();
+        return adapter ? `${adapter.info.vendor} ${adapter.info.architecture}`.trim() : "none";
+    });
+    const [vendor = "", architecture = ""] = adapter.split(" ");
+    if (vendor !== gpu.vendor || !gpu.architecture.test(architecture)) {
+        throw new Error(
+            `PERF_GPU=${process.env.PERF_GPU} but Chrome gave the adapter "${adapter}"`,
+        );
+    }
+    return adapter;
+}
+
+/** The dev server and Chrome at device pixel ratio `ratio` on the adapter of `PERF_GPU`. */
+async function launch(
+    ratio: number,
+): Promise<{ server: ViteDevServer; browser: Browser; page: Page; port: number }> {
     if (!gpu) throw new Error("PERF_GPU is not set");
     const port = await freePort();
     const server: ViteDevServer = await createServer({
@@ -91,9 +116,8 @@ export async function openApp(ratio: number): Promise<BrowserRun> {
         logLevel: "error",
     });
     await server.listen();
-    let browser: Browser | null = null;
     try {
-        browser = await chromium.launch({
+        const browser = await chromium.launch({
             channel: "chrome",
             headless: true,
             args: [
@@ -102,46 +126,63 @@ export async function openApp(ratio: number): Promise<BrowserRun> {
                 ...gpu.args,
             ],
         });
-        const context = await browser.newContext({
-            viewport: WINDOW,
-            deviceScaleFactor: ratio,
-        });
-        const page = await context.newPage();
+        const context = await browser.newContext({ viewport: WINDOW, deviceScaleFactor: ratio });
+        return { server, browser, page: await context.newPage(), port };
+    } catch (error) {
+        await server.close();
+        throw error;
+    }
+}
+
+/**
+ * Starts the dev server and Chrome at device pixel ratio `ratio` on the adapter of `PERF_GPU`,
+ * opens the app and checks the adapter. Throws when there is no `PERF_GPU` or the adapter is
+ * another one.
+ */
+export async function openApp(ratio: number): Promise<BrowserRun> {
+    const { server, browser, page, port } = await launch(ratio);
+    try {
         await page.goto(`http://127.0.0.1:${port}/`);
         await page.waitForSelector("html[data-app-ready]");
         // The app starts on the empty state (TE-047): the benchmarks start on a new project.
         await page.waitForFunction(() => window.__ngneTest !== undefined);
         await page.evaluate(() => window.__ngneTest!.newProject());
-        const adapter = await page.evaluate(async () => {
-            // The DOM library of the pinned TypeScript has no WebGPU types.
-            const { gpu } = navigator as unknown as {
-                gpu: {
-                    requestAdapter(): Promise<{
-                        info: { vendor: string; architecture: string };
-                    } | null>;
-                };
-            };
-            const adapter = await gpu.requestAdapter();
-            return adapter ? `${adapter.info.vendor} ${adapter.info.architecture}`.trim() : "none";
-        });
-        const [vendor = "", architecture = ""] = adapter.split(" ");
-        if (vendor !== gpu.vendor || !gpu.architecture.test(architecture)) {
-            throw new Error(
-                `PERF_GPU=${process.env.PERF_GPU} but Chrome gave the adapter "${adapter}"`,
-            );
-        }
+        const adapter = await checkedAdapter(page);
         await page.waitForFunction(() => window.__ngneTest?.viewport?.status === "ready");
-        const opened = browser;
         return {
             page,
             adapter,
             async close() {
-                await opened.close();
+                await browser.close();
                 await server.close();
             },
         };
     } catch (error) {
-        await browser?.close();
+        await browser.close();
+        await server.close();
+        throw error;
+    }
+}
+
+/**
+ * Starts the dev server and Chrome as `openApp` does, but opens the page at `path` (a page of
+ * the checkout, not the app) and checks the adapter there.
+ */
+export async function openPage(ratio: number, path: string): Promise<BrowserRun> {
+    const { server, browser, page, port } = await launch(ratio);
+    try {
+        await page.goto(`http://127.0.0.1:${port}${path}`);
+        const adapter = await checkedAdapter(page);
+        return {
+            page,
+            adapter,
+            async close() {
+                await browser.close();
+                await server.close();
+            },
+        };
+    } catch (error) {
+        await browser.close();
         await server.close();
         throw error;
     }

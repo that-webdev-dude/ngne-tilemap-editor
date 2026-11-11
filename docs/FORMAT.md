@@ -634,7 +634,7 @@ already applied (§2.5), so a reader draws a layer from its own members alone.
 | ---------- | --------------- |
 | `"tile"`   | `data`: array of `width × height` cell values (§1.2), row by row from the top-left |
 | `"marker"` | `markers`: array of Marker (§3.5) |
-| `"image"`  | `image`: `<image>.png` in the folder, a plain file name as an atlas's `image` (sprite editor `FORMAT.md` §2.2); `imageWidth`, `imageHeight`: integer 1..8192; `repeatX`, `repeatY`: boolean |
+| `"image"`  | `image`: `<image>.png` in the folder, a plain file name as an atlas's `image` (sprite editor `FORMAT.md` §2.2); `imageWidth`, `imageHeight`: integer 1..8192, the image's size (its PNG has these sides rounded up to even, §5); `repeatX`, `repeatY`: boolean |
 
 **Position.** A layer is drawn moved by
 
@@ -646,7 +646,10 @@ shift = (offsetX + (Vx − parallaxOriginX) × (1 − parallaxX),
 where `V` is the centre of the view in map pixels (Tiled: the distance between parallax origin
 and view centre). With factor 1 a layer moves with the map; with 0 it stays fixed on screen. An
 image layer's image has its top-left corner at `shift`; `repeatX`/`repeatY` tile it without end
-along that axis.
+along that axis, one copy every `imageWidth` (`imageHeight`) pixels. A renderer that rounds sprite
+centres, as NGNE does with `pixelSnap`, draws the whole PNG, whose sides are even (§5), with its
+top-left corner at the image's: the quad's edges then fall on pixels, and its transparent extra
+column and row draw nothing.
 
 ### 3.5 Marker
 
@@ -839,7 +842,7 @@ One folder per project (BRIEF §5):
 | ---- | ------- | ------- |
 | `ngne-tilemap.export.json` | Marker naming the project that owns the folder | below |
 | `<tileset>.png`, `<tileset>.atlas.json` | Per tileset of the project | §4 |
-| `<image>.png` | Per image of the project, colour type 6, bit depth 8 | §2.6 |
+| `<image>.png` | Per image of the project, colour type 6, bit depth 8, its sides rounded up to even: the image in the top-left corner, the extra column on the right and the extra row at the bottom transparent | §2.6, §3.4 |
 | `<map>.tilemap.json` | Per map | §3 |
 | `ngne-tilemap.ts` | The generated runtime | `SPEC.md` |
 
