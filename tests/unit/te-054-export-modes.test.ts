@@ -46,7 +46,6 @@ function memoryFolder(name = "game") {
                 writes.push(file);
                 files.set(file, bytes.slice());
             },
-            isSame: async (other: ExportFolderHandle) => other.name === name,
             exists: async (): Promise<boolean> => folder.present,
         } satisfies ExportFolderHandle,
     };
@@ -77,8 +76,6 @@ function setup(options: Options = {}) {
         },
         folderFrom: (stored) =>
             (stored as { memory?: string }).memory === folder.handle.name ? folder.handle : null,
-        canChooseFile: () => false,
-        chooseFile: async () => null,
         download: () => {},
         hasUserActivation: () => activation,
     };
@@ -114,7 +111,7 @@ function setup(options: Options = {}) {
         },
         files: { run: (task) => task(), canSave: () => true },
         maker: {
-            files: async (project) => {
+            snapshot: (project) => async () => {
                 made += 1;
                 return exportFiles(project);
             },
@@ -342,8 +339,6 @@ function createExportPipelineOver(
         canChooseFolder: () => true,
         chooseFolder: async () => context.folder.handle,
         folderFrom: () => context.folder.handle,
-        canChooseFile: () => false,
-        chooseFile: async () => null,
         download: () => {},
         hasUserActivation: () => true,
     };
@@ -358,7 +353,7 @@ function createExportPipelineOver(
         },
         files,
         maker: {
-            files: async (project) => exportFiles(project),
+            snapshot: (project) => async () => exportFiles(project),
             zip: async () => new Uint8Array(),
         },
         previewer: async (project) => exportPreview(project),

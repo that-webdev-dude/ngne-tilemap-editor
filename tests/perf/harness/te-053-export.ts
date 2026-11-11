@@ -56,7 +56,6 @@ function memoryFolder(): ExportFolderHandle & { files: Map<string, Uint8Array> }
         async write(name, bytes) {
             files.set(name, bytes);
         },
-        isSame: async () => false,
         exists: async () => true,
     };
 }
@@ -66,8 +65,6 @@ const platform: ExportPlatform = {
     canChooseFolder: () => true,
     chooseFolder: async () => folder,
     folderFrom: () => null,
-    canChooseFile: () => false,
-    chooseFile: async () => null,
     download: () => {},
     hasUserActivation: () => true,
 };

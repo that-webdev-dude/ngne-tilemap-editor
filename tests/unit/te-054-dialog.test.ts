@@ -94,7 +94,6 @@ function setup(options: { previewer?: (project: Project) => Promise<ExportPrevie
         existing: async () => [],
         read: async () => null,
         write: async () => {},
-        isSame: async () => true,
         exists: async () => true,
     };
     const platform: ExportPlatform = {
@@ -104,8 +103,6 @@ function setup(options: { previewer?: (project: Project) => Promise<ExportPrevie
             return folder;
         },
         folderFrom: () => null,
-        canChooseFile: () => false,
-        chooseFile: async () => null,
         download: () => {},
         hasUserActivation: () => true,
     };
@@ -124,7 +121,7 @@ function setup(options: { previewer?: (project: Project) => Promise<ExportPrevie
         notices: { info: () => {}, error: () => {} },
         files: { run: (task) => task(), canSave: () => true },
         maker: {
-            files: async (project) => exportFiles(project),
+            snapshot: (project) => async () => exportFiles(project),
             zip: async () => new Uint8Array(),
         },
         previewer:

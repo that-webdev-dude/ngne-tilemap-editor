@@ -51,6 +51,8 @@ interface Built {
     readonly table: GidTable;
     /** The tile layers of the tilemap, by layer ID. */
     readonly tileLayers: ReadonlyMap<number, TileLayerData>;
+    /** The animations the content plays (`content.animations` is its list). */
+    readonly animations: PlacedAnimations;
 }
 
 interface PackEntry {
@@ -80,15 +82,56 @@ function tileLayersOf(tilemap: Tilemap): Map<number, TileLayerData> {
     return layers;
 }
 
-/** The frame durations of every animated tile of `tilesets`. */
-function animationsOf(tilesets: readonly Tileset[]): number[][] {
-    const out: number[][] = [];
-    for (const tileset of tilesets) {
-        for (const tile of tileset.tiles) {
-            if (tile.animation.length > 1) out.push(tile.animation.map((frame) => frame.ms));
+/** The GID bits of a cell value (FORMAT 1.2): the value without its flags. */
+const GID_MASK = 0x0fffffff;
+
+/** The frame durations of every animated tile of the tilesets `tilemap` lists, by GID. */
+function animatedGids(
+    tilemap: Tilemap,
+    byName: ReadonlyMap<string, Tileset>,
+): Map<number, number[]> {
+    const animated = new Map<number, number[]>();
+    for (const { name, firstGid } of tilemap.tilesets) {
+        for (const tile of byName.get(name)?.tiles ?? []) {
+            if (tile.animation.length > 1) {
+                animated.set(
+                    firstGid + tile.id,
+                    tile.animation.map((frame) => frame.ms),
+                );
+            }
         }
     }
-    return out;
+    return animated;
+}
+
+/**
+ * The animations a tilemap shows (ENGINE §4, redraw on demand): those of the animated tiles its
+ * visible tile layers place, each tile once, so a frame is asked for only when a tile that can
+ * be drawn changes. `add` lists the animation of a value written later.
+ */
+class PlacedAnimations {
+    /** The frame durations of each placed animated tile, in the order they were met. */
+    readonly list: number[][] = [];
+    readonly #animated: ReadonlyMap<number, number[]>;
+    readonly #placed = new Set<number>();
+
+    constructor(tilemap: Tilemap, byName: ReadonlyMap<string, Tileset>) {
+        this.#animated = animatedGids(tilemap, byName);
+        if (this.#animated.size === 0) return;
+        for (const layer of tilemap.layers) {
+            if (layer.type !== "tile" || !layer.visible) continue;
+            for (const value of layer.data) if (value !== 0) this.add(value);
+        }
+    }
+
+    /** Lists the animation of the tile `value` names when it has one not listed yet. */
+    add(value: number): void {
+        const gid = value & GID_MASK;
+        const durations = this.#animated.get(gid);
+        if (durations === undefined || this.#placed.has(gid)) return;
+        this.#placed.add(gid);
+        this.list.push(durations);
+    }
 }
 
 export class PreviewSource {
@@ -186,7 +229,9 @@ export class PreviewSource {
                     if (!rect) continue;
                     for (let y = rect.y; y < rect.y + rect.height; y += 1) {
                         for (let x = rect.x; x < rect.x + rect.width; x += 1) {
-                            data.data[y * map.width + x] = valueToGid(cells(x, y), built.table);
+                            const gid = valueToGid(cells(x, y), built.table);
+                            data.data[y * map.width + x] = gid;
+                            if (gid !== 0 && data.visible) built.animations.add(gid);
                         }
                     }
                 }
@@ -313,12 +358,13 @@ export class PreviewSource {
             key.push(`${id}#${this.#versionOf(image.pixels)}`);
         }
         const tilemap = readTilemap(json, atlases);
+        const animations = new PlacedAnimations(tilemap, byName);
         this.#built = {
             content: {
                 tilemap,
                 texturesKey: key.join("\n"),
                 textures,
-                animations: animationsOf(listed),
+                animations: animations.list,
             },
             generation: this.#generation,
             mapId: map.id,
@@ -326,6 +372,7 @@ export class PreviewSource {
             height: map.height,
             table: assignFirstGids(listed),
             tileLayers: tileLayersOf(tilemap),
+            animations,
         };
         this.#options.onContent(this.#built.content);
     }

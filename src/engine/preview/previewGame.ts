@@ -46,7 +46,10 @@ export interface PreviewContent {
     /** Equal keys have equal textures; another key restarts the map scene. */
     readonly texturesKey: string;
     readonly textures: readonly PreviewTexture[];
-    /** The frame durations of every animated tile, in milliseconds (frames on demand). */
+    /**
+     * The frame durations of the animated tiles the visible layers place, in milliseconds
+     * (frames on demand); the list grows when cells written in place add one.
+     */
     readonly animations: readonly (readonly number[])[];
 }
 

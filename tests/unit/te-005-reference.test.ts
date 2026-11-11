@@ -46,7 +46,8 @@ describe("the reference project", () => {
         }
     });
 
-    it("has two tilesets of 256 tiles that every layer uses", () => {
+    // One check per cell of every layer: about 2 s alone, near 5 s in the full suite.
+    it("has two tilesets of 256 tiles that every layer uses", { timeout: 60_000 }, () => {
         expect(project.tilesets).toHaveLength(2);
         for (const tileset of project.tilesets) {
             expect(tileset.tiles).toHaveLength(REFERENCE.tilesPerTileset);

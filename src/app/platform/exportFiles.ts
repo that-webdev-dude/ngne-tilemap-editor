@@ -1,8 +1,7 @@
 /**
  * Where exports go (SPEC §10.2; the sprite editor's SPEC §9.6): a folder chosen with the
  * directory picker of the File System Access API where the browser has it, otherwise a download.
- * Single files are saved through the save picker where there is one. Like
- * `projectFiles.ts`, everything here touches the page only when it is called, so the modules
+ * Like `projectFiles.ts`, everything here touches the page only when it is called, so the modules
  * that import it also load in Node; the export workflows take an `ExportPlatform`, and tests
  * give them a fake.
  */
@@ -34,41 +33,20 @@ export interface ExportFolderHandle {
     read(name: string): Promise<Uint8Array | null>;
     /** Creates or replaces a file of the folder; the file keeps its old content on failure. */
     write(name: string, bytes: Uint8Array<ArrayBuffer>): Promise<void>;
-    /** Whether `other` is the same folder of the disk (picked again, say). */
-    isSame(other: ExportFolderHandle): Promise<boolean>;
     /** False when the folder no longer exists (moved or deleted since it was chosen). */
     exists(): Promise<boolean>;
 }
 
-/** A file chosen with the save picker. */
-export interface ExportFileHandle {
-    readonly name: string;
-    write(bytes: Uint8Array<ArrayBuffer>): Promise<void>;
-}
-
-/** The type of a single file an export saves: what the save picker offers and the download's media type. */
+/** The type of a file an export downloads: its media type. */
 export interface ExportFileType {
-    /** A short name of the type: "png", "zip". */
+    /** A short name of the type: "zip". */
     readonly kind: string;
-    /** What the save picker calls it: "PNG image". */
-    readonly description: string;
     readonly mime: string;
-    /** With its dot: ".png". */
-    readonly extension: string;
 }
-
-export const PNG_FILE: ExportFileType = {
-    kind: "png",
-    description: "PNG image",
-    mime: "image/png",
-    extension: ".png",
-};
 
 export const ZIP_FILE: ExportFileType = {
     kind: "zip",
-    description: "Zip archive",
     mime: "application/zip",
-    extension: ".zip",
 };
 
 export interface ExportPlatform {
@@ -78,10 +56,6 @@ export interface ExportPlatform {
     chooseFolder(): Promise<ExportFolderHandle | null>;
     /** A folder from what IndexedDB kept of it (`stored`), or null when it is not one. */
     folderFrom(stored: unknown): ExportFolderHandle | null;
-    /** True when a single file is saved through a save picker; false when it downloads. */
-    canChooseFile(): boolean;
-    /** Asks where to save a single file; null when the user cancels. */
-    chooseFile(suggestedName: string, type: ExportFileType): Promise<ExportFileHandle | null>;
     /** Hands the bytes to the browser as a download named `name`. */
     download(name: string, bytes: Uint8Array<ArrayBuffer>, type: ExportFileType): void;
     /**
@@ -115,35 +89,19 @@ interface NativeDirectoryHandle {
     keys?(): AsyncIterator<string>;
     queryPermission?(descriptor: PermissionMode): Promise<PermissionState>;
     requestPermission?(descriptor: PermissionMode): Promise<PermissionState>;
-    isSameEntry?(other: unknown): Promise<boolean>;
-}
-
-interface PickerType {
-    description: string;
-    accept: Record<string, string[]>;
 }
 
 interface FileSystemAccessWindow {
     showDirectoryPicker?(options?: { id?: string; mode?: "read" | "readwrite" }): Promise<unknown>;
-    showSaveFilePicker?(options?: {
-        id?: string;
-        types?: PickerType[];
-        suggestedName?: string;
-    }): Promise<NativeFileHandle>;
 }
 
-/** The pickers remember the last folder under these ids. */
+/** The picker remembers the last folder under this id. */
 const FOLDER_PICKER_ID = "ngne-tilemap-export";
-const FILE_PICKER_ID = "ngne-tilemap-export-file";
 
 const WRITE: PermissionMode = { mode: "readwrite" };
 
 function pickers(): FileSystemAccessWindow {
     return window as unknown as FileSystemAccessWindow;
-}
-
-function pickerType(type: ExportFileType): PickerType {
-    return { description: type.description, accept: { [type.mime]: [type.extension] } };
 }
 
 /** True when the user closed a picker without choosing: not a failure. */
@@ -226,15 +184,6 @@ function wrapFolder(native: NativeDirectoryHandle): ExportFolderHandle {
         async write(name, bytes) {
             await writeTo(await native.getFileHandle(name, { create: true }), bytes);
         },
-        async isSame(other) {
-            if (other.stored === native) return true;
-            if (!native.isSameEntry || !isDirectory(other.stored)) return false;
-            try {
-                return await native.isSameEntry(other.stored);
-            } catch {
-                return false;
-            }
-        },
         async exists() {
             if (!native.keys) return true;
             try {
@@ -269,24 +218,6 @@ export function browserExportFiles(): ExportPlatform {
         },
 
         folderFrom: (stored) => (isDirectory(stored) ? wrapFolder(stored) : null),
-
-        canChooseFile: () => typeof pickers().showSaveFilePicker === "function",
-
-        async chooseFile(suggestedName, type) {
-            const show = pickers().showSaveFilePicker;
-            if (typeof show !== "function") return null;
-            try {
-                const native = await show.call(window, {
-                    id: FILE_PICKER_ID,
-                    types: [pickerType(type)],
-                    suggestedName,
-                });
-                return { name: native.name, write: (bytes) => writeTo(native, bytes) };
-            } catch (error) {
-                if (isAbort(error)) return null;
-                throw error;
-            }
-        },
 
         download(name, bytes, type) {
             const url = URL.createObjectURL(new Blob([bytes], { type: type.mime }));

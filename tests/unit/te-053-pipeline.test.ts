@@ -43,7 +43,6 @@ function memoryFolder(name = "game") {
                 writes.push(file);
                 files.set(file, bytes.slice());
             },
-            isSame: async (other: ExportFolderHandle) => other.name === name,
             exists: async () => true,
         } satisfies ExportFolderHandle,
     };
@@ -70,8 +69,6 @@ function setup(options: Setup = {}) {
         },
         folderFrom: (stored) =>
             (stored as { memory?: string }).memory === folder.handle.name ? folder.handle : null,
-        canChooseFile: () => false,
-        chooseFile: async () => null,
         download: (name, bytes) => downloads.push({ name, bytes }),
         hasUserActivation: () => true,
     };
@@ -87,7 +84,7 @@ function setup(options: Setup = {}) {
     const errors: string[] = [];
     const infos: string[] = [];
     const maker: ExportMaker = {
-        files: async (snapshot) => exportFiles(snapshot),
+        snapshot: (project) => async () => exportFiles(project),
         zip: async (all) =>
             writeZip(all.map(({ name, bytes }) => ({ name, data: bytes, stored: false }))),
     };
@@ -259,7 +256,7 @@ describe("export pipeline", () => {
         const { folder, errors, sessions } = setup();
         const grass = sessions.getState().session.project.tilesets[0]!;
         const maker: ExportMaker = {
-            files: async () => {
+            snapshot: () => async () => {
                 throw new Error(`Tileset "${grass.name}" cannot be packed: too large.`);
             },
             zip: async () => new Uint8Array(),
@@ -270,8 +267,6 @@ describe("export pipeline", () => {
                 canChooseFolder: () => true,
                 chooseFolder: async () => folder.handle,
                 folderFrom: () => null,
-                canChooseFile: () => false,
-                chooseFile: async () => null,
                 download: () => {},
                 hasUserActivation: () => true,
             },
@@ -298,8 +293,6 @@ describe("export pipeline", () => {
                 canChooseFolder: () => true,
                 chooseFolder: async () => null,
                 folderFrom: () => null,
-                canChooseFile: () => false,
-                chooseFile: async () => null,
                 download: () => {},
                 hasUserActivation: () => true,
             },
@@ -311,7 +304,7 @@ describe("export pipeline", () => {
             },
             files: { run: (task) => task(), canSave: () => true },
             maker: {
-                files: async (project) => exportFiles(project),
+                snapshot: (project) => async () => exportFiles(project),
                 zip: async () => new Uint8Array(),
             },
             stroking: () => false,
@@ -331,8 +324,6 @@ describe("export pipeline", () => {
                 canChooseFolder: () => false,
                 chooseFolder: async () => null,
                 folderFrom: () => null,
-                canChooseFile: () => false,
-                chooseFile: async () => null,
                 download: () => {},
                 hasUserActivation: () => true,
             },
@@ -341,7 +332,7 @@ describe("export pipeline", () => {
             notices: { info: () => {}, error: (message) => errors.push(message) },
             files: { run: (task) => task(), canSave: () => true },
             maker: {
-                files: async (project) => {
+                snapshot: (project) => async () => {
                     made += 1;
                     return exportFiles(project);
                 },
@@ -380,7 +371,7 @@ describe("worker export maker", () => {
                 return [] as ExportFile[];
             },
         } as unknown as WorkerClient;
-        await workerExportMaker(worker).files(project);
+        await workerExportMaker(worker).snapshot(project)();
         const { input, transfer } = sent!;
         // A change after the call does not reach the snapshot.
         const ground = project.maps[0]!.layers[1] as TileLayer;

@@ -62,8 +62,12 @@ import { setExportOnSave } from "./exportSettings";
 
 /** Where the export's files are made: the background worker, or `core` directly in tests. */
 export interface ExportMaker {
-    /** Every file of the folder; rejects with `TilesetPackError` when a tileset cannot pack. */
-    files(project: Project): Promise<ExportFile[]>;
+    /**
+     * Takes a snapshot of the project now and returns what makes every file of the folder from
+     * it, to be called once; that rejects with `TilesetPackError` when a tileset cannot pack.
+     * The project may change in between: the files are those of the snapshot (SPEC §10.2).
+     */
+    snapshot(project: Project): () => Promise<ExportFile[]>;
     /** A zip archive of the files, in their order. */
     zip(files: readonly ExportFile[]): Promise<Uint8Array<ArrayBuffer>>;
 }
@@ -78,15 +82,15 @@ function snapshotOf(project: Project) {
 }
 
 /**
- * The maker in the background worker. `files` takes a snapshot of the project when it is
- * called (`structuredClone` of its plain form), whose buffers are then transferred, so the
- * project can change while the worker works.
+ * The maker in the background worker. `snapshot` takes the snapshot when it is called
+ * (`structuredClone` of the project's plain form); the worker gets it, its buffers
+ * transferred, only when the returned function is called, so the project can change meanwhile.
  */
 export function workerExportMaker(worker: WorkerClient = backgroundWorker): ExportMaker {
     return {
-        files(project) {
+        snapshot(project) {
             const { snapshot, transfer } = snapshotOf(project);
-            return worker.run("export.files", { project: snapshot }, { transfer });
+            return () => worker.run("export.files", { project: snapshot }, { transfer });
         },
         zip(files) {
             // PNG data is compressed already; the text files are deflated.
@@ -133,10 +137,11 @@ export interface ExportPipeline {
     /** Whether an export can start now: a project is open and no file operation or stroke runs. */
     canExport(): boolean;
     /**
-     * Exports the window's project as it is now: into its folder (chosen first when none is
-     * known), or as a zip download without File System Access. Resolves true once every file
-     * is in place, false when it failed (reported) or was cancelled. The Export dialog's
-     * Export button does this.
+     * Exports the window's project as it is now, as the Export dialog's Export does once the
+     * dialog is closed, without the dialog: into its folder (chosen first when none is known),
+     * or as a zip download without File System Access. Resolves true once every file is in
+     * place, false when it failed (reported) or was cancelled. No command calls it; the tests
+     * and the export benchmark start an export with it.
      */
     exportProject(): Promise<boolean>;
     /** Export…: the Export dialog, then the export when the user says so. */
@@ -325,41 +330,39 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
     /**
      * Exports the project as it is now. `mode` says what happens without a folder or permission:
      * the dialog's export chooses a folder and reports a refusal; Export Again shows the dialog;
-     * Export on Save reports both.
+     * Export on Save reports both. `ready` is the files of the project as it is now when they
+     * are made already (the Export dialog's preview).
      */
-    const deliver = async (mode: Mode): Promise<boolean> => {
+    const deliver = async (
+        mode: Mode,
+        ready: Promise<ExportFile[]> | null = null,
+    ): Promise<boolean> => {
         const state = sessions.getState();
         if (!state.open) return false;
         const { id, name, exportName } = state.session.project;
         const project: Exporting = { id, name, exportName };
-        /**
-         * Why the files cannot be made now, or null: the project left the window, a stroke is in
-         * progress, or Export on Save finds an edit made after the save (not what was saved).
-         */
-        const notReady = (): string | null => {
-            const now = sessions.getState();
-            if (!now.open || now.session.project !== state.session.project) {
-                return "The project was closed meanwhile.";
-            }
-            if (stroking()) return "A stroke is in progress.";
-            if (mode === "save" && now.history.dirty) {
-                return "It changed after it was saved. Use Export Again.";
-            }
-            return null;
-        };
-        /** Starts making the files of the project as it is now in the worker. */
+        // A stroke in progress stops the export; Export on Save stops for an edit made after the
+        // save (not what was saved).
+        if (stroking()) return failed(name, "A stroke is in progress.");
+        if (mode === "save" && state.history.dirty) {
+            return failed(name, "It changed after it was saved. Use Export Again.");
+        }
+        // The export reads the project as of now (SPEC §10.2): its snapshot is taken here.
+        // Export… and the download make the files from it while the folder is found. Export
+        // Again and Export on Save make them once a folder that may be written is settled:
+        // where there is none they show the dialog or stop, and the worker is not kept busy for
+        // nothing.
+        const job = ready ? null : maker.snapshot(state.session.project);
         const make = (): Promise<ExportFile[]> => {
-            const files = maker.files(sessions.getState().session.project);
+            const files = job!();
             files.catch(() => {});
             return files;
         };
-        const early = notReady();
-        if (early) return failed(name, early);
-        // Export… and the download make the files while the folder is found. Export Again and
-        // Export on Save make them once a folder that may be written is settled: where there is
-        // none they show the dialog or stop, and the worker is not kept busy for nothing.
-        let made: Promise<ExportFile[]> | null = null;
-        if (mode === "dialog" || !platform.canChooseFolder()) made = make();
+        // A failure is reported where the files are awaited; an export that stops before then
+        // leaves it unread.
+        ready?.catch(() => {});
+        let made = ready;
+        if (!made && (mode === "dialog" || !platform.canChooseFolder())) made = make();
         if (!platform.canChooseFolder()) return download(project, made!);
 
         let folder: ExportFolderHandle | null = null;
@@ -409,11 +412,7 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
             return failed(name, lapsed && mode === "save" ? `${denied} Use Export Again.` : denied);
         }
 
-        if (!made) {
-            const late = notReady();
-            if (late) return failed(name, late);
-            made = make();
-        }
+        made ??= make();
         let all: ExportFile[];
         try {
             all = await made;
@@ -447,15 +446,18 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
         const preview = createStore<ExportPreviewState>(() => ({ status: "making" }));
 
         // The files are made again whenever the project changes (a step of its history): the
-        // newest result wins, and an earlier one that arrives later is dropped.
-        let shown: { project: Project; position: number } | null = null;
+        // newest result wins, and an earlier one that arrives later is dropped. The newest is
+        // kept: Export writes its files when the project has not changed since.
+        let shown: { project: Project; position: number; made: Promise<ExportPreview> } | null =
+            null;
         let generation = 0;
         const refresh = () => {
             const now = sessions.getState();
             if (!now.open || now.session.project.id !== id) return;
             const position = now.history.position;
             if (shown?.project === now.session.project && shown.position === position) return;
-            shown = { project: now.session.project, position };
+            const made = previewer(now.session.project);
+            shown = { project: now.session.project, position, made };
             const mine = ++generation;
             const before = preview.getState();
             preview.setState(
@@ -464,7 +466,7 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
                     : { status: "making" },
                 true,
             );
-            previewer(now.session.project).then(
+            made.then(
                 (result) => {
                     if (mine === generation)
                         preview.setState({ status: "ready", preview: result }, true);
@@ -475,6 +477,16 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
                     }
                 },
             );
+        };
+        /**
+         * The files of the last preview when it is of the project as it is now (made or still
+         * being made), so Export does not make them a second time; null otherwise.
+         */
+        const previewFiles = (): Promise<ExportFile[]> | null => {
+            const now = sessions.getState();
+            if (shown === null || !now.open || shown.project !== now.session.project) return null;
+            if (shown.position !== now.history.position) return null;
+            return shown.made.then((result) => [...result.plan]);
         };
         const stop = sessions.subscribe(refresh);
         refresh();
@@ -526,7 +538,7 @@ export function createExportPipeline(options: ExportProjectOptions = {}): Export
             generation += 1;
         }
         if (!answer) return false;
-        return deliver("dialog");
+        return deliver("dialog", previewFiles());
     };
 
     /** Runs an export as a file operation; what it throws is one error toast. */

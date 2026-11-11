@@ -69,6 +69,8 @@ export interface ExportPreview {
     files: ExportPreviewFile[];
     /** Every tileset's packed image, in project order. */
     atlases: ExportPreviewAtlas[];
+    /** The plan itself, with the bytes: what the dialog's Export writes when nothing changed. */
+    plan: readonly ExportFile[];
 }
 
 interface AtlasJson {
@@ -109,6 +111,7 @@ export function previewOf(files: readonly ExportFile[]): ExportPreview {
     return {
         files: files.map(({ name, kind, bytes }) => ({ name, kind, size: bytes.length })),
         atlases,
+        plan: files,
     };
 }
 
