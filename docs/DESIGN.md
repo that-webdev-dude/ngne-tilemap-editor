@@ -350,6 +350,15 @@ the active tool's modifier hint, or transient feedback in `--warn` ("Layer is lo
 The whole map from `core/compositor` at the dock width, with the viewport's rectangle as a 1 px
 `--accent` outline; drag pans; redrawn after a change settles (≤ 1 per 500 ms).
 
+Recorded by TE-057, as Tiled's minimap does: the map keeps its aspect with its longer side at the
+section's width, so a tall map is no taller than the section is wide; it is sampled as a
+thumbnail (FORMAT §2.7), over the map's background colour, without parallax. A press inside the
+rectangle grabs it; a press outside centres the view there first; dragging then moves the view
+within the pan limits. A history step of the shown map, a tileset or the project counts as a
+change; another map, another project or another section width redraws at once. Redraws start at
+least 500 ms apart, so a change after a quiet 500 ms shows within 500 ms, and one made just after
+a redraw starts shows with the next: at most 500 ms plus that redraw's time.
+
 ## 9. Dialogs and surfaces
 
 | Surface | Kind | Content |

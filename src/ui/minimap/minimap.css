@@ -1,0 +1,38 @@
+/* The Minimap dock section (DESIGN §8.8): the map image at the section's width. */
+.minimap-panel {
+    display: flex;
+    justify-content: center;
+}
+
+/* The image and the viewport's rectangle over it; drag pans. */
+.minimap-panel__stage {
+    position: relative;
+    flex: none;
+    cursor: grab;
+    touch-action: none;
+    user-select: none;
+}
+
+.minimap-panel__stage[hidden] {
+    display: none;
+}
+
+.minimap-panel__stage.is-dragging {
+    cursor: grabbing;
+}
+
+.minimap-panel__image {
+    display: block;
+    image-rendering: pixelated;
+}
+
+.minimap-panel__frame {
+    position: absolute;
+    box-sizing: border-box;
+    border: 1px solid var(--accent);
+    pointer-events: none;
+}
+
+.minimap-panel__frame[hidden] {
+    display: none;
+}
