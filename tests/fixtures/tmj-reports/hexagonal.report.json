@@ -1,0 +1,17 @@
+{
+    "fixture": "hexagonal.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "refused": {
+        "code": "orientation",
+        "message": "Only orthogonal maps can be imported; this map is hexagonal."
+    }
+}

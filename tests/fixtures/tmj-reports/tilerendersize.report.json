@@ -1,0 +1,45 @@
+{
+    "fixture": "tilerendersize.tmj",
+    "files": [
+        {
+            "path": "big.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "tilerendersize",
+        "exportName": "tilerendersize",
+        "width": 8,
+        "height": 6,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 1,
+        "tileLayers": 1,
+        "markerLayers": 0,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "big",
+                "tiles": 2,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "tile-render-size",
+            "title": "Tile render size",
+            "count": 1,
+            "entries": [
+                {
+                    "detail": "Tile render size Grid dropped: tiles draw at tile size",
+                    "count": 1,
+                    "where": "Tileset \"big\""
+                }
+            ]
+        }
+    ]
+}

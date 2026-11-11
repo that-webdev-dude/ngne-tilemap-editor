@@ -45,6 +45,7 @@ describe("te-047 empty state", () => {
             "edit.commandPalette",
             "edit.preferences",
             "edit.shortcuts",
+            "file.importTiledMap",
             "file.newProject",
             "file.open",
             "focus.nextRegion",

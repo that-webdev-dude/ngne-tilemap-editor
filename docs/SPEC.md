@@ -972,6 +972,9 @@ until the user accepts the report.
   fingerprints, and the same tile data, terrain sets, class, properties and offset as the file
   converts to (so reuse loses nothing the file holds), and reports nothing of the reused file.
   A tileset without tiles (Tiled opens one) is left out and reported when no cell uses it.
+  With no project open (the empty state's action), Import makes a new project, named after
+  the map, that holds the import alone, as Tiled opens a map as a document of its own; its
+  history starts empty and it is unsaved until saved, as a recovered project.
 - **Conversion** beyond the table of BRIEF §7:
   - IDs: layer IDs, object IDs (→ marker IDs), `nextlayerid` and `nextobjectid` kept; tile IDs
     are Tiled's local IDs; `nextTileId` = Tiled's tile count (image tilesets) or its next tile

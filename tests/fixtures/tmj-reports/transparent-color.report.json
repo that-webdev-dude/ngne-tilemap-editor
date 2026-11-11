@@ -1,0 +1,36 @@
+{
+    "fixture": "transparent-color.tmj",
+    "files": [
+        {
+            "path": "keyed.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/backdrop.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "transparent-color",
+        "exportName": "transparent-color",
+        "width": 6,
+        "height": 5,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 0,
+        "imageLayers": 1,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "keyed",
+                "tiles": 4,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 1
+    },
+    "groups": []
+}

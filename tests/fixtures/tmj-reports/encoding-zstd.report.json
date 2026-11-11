@@ -1,0 +1,17 @@
+{
+    "fixture": "encoding-zstd.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "refused": {
+        "code": "zstd",
+        "message": "This map uses zstd compression, which cannot be imported: re-save in Tiled with zlib or gzip."
+    }
+}

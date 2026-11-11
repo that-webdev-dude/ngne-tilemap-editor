@@ -1,0 +1,40 @@
+{
+    "fixture": "side-scroller.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/sky.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "side-scroller",
+        "exportName": "side-scroller",
+        "width": 1000,
+        "height": 40,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 4,
+        "tileLayers": 2,
+        "markerLayers": 1,
+        "imageLayers": 1,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 14,
+        "images": 1
+    },
+    "groups": []
+}

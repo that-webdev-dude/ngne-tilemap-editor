@@ -1,0 +1,82 @@
+{
+    "fixture": "properties.tmj",
+    "files": [
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "properties",
+        "exportName": "properties",
+        "width": 8,
+        "height": 6,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "typed",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 2,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "dropped-properties",
+            "title": "object, list and class-typed properties",
+            "count": 5,
+            "entries": [
+                {
+                    "detail": "Property of type list dropped",
+                    "count": 1,
+                    "where": "Property \"route\""
+                },
+                {
+                    "detail": "Property of type class Stats dropped",
+                    "count": 1,
+                    "where": "Property \"stats\""
+                },
+                {
+                    "detail": "Property of type object dropped",
+                    "count": 1,
+                    "where": "Property \"target\""
+                },
+                {
+                    "detail": "Property of type object dropped",
+                    "count": 1,
+                    "where": "Layer \"Actors\" (2) › Object \"Hero\" (1) › Property \"friend\""
+                },
+                {
+                    "detail": "Property of type class Stats dropped",
+                    "count": 1,
+                    "where": "Layer \"Actors\" (2) › Object \"Hero\" (1) › Property \"stats\""
+                }
+            ]
+        },
+        {
+            "row": "enum-properties",
+            "title": "Enum properties",
+            "count": 2,
+            "entries": [
+                {
+                    "detail": "Enum Facing imported as string \"east\"",
+                    "count": 1,
+                    "where": "Property \"facing\""
+                },
+                {
+                    "detail": "Enum Layers imported as int 5",
+                    "count": 1,
+                    "where": "Property \"flags\""
+                }
+            ]
+        }
+    ]
+}

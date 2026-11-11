@@ -1,0 +1,57 @@
+{
+    "fixture": "collection-uniform.tmj",
+    "files": [
+        {
+            "path": "props.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "images/crate.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/barrel.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/bush.png",
+            "kind": "image"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "collection-uniform",
+        "exportName": "collection-uniform",
+        "width": 7,
+        "height": 4,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 2,
+        "markerLayers": 0,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "props",
+                "tiles": 3,
+                "reused": false
+            },
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": []
+}

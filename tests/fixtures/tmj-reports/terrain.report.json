@@ -1,0 +1,59 @@
+{
+    "fixture": "terrain.tmj",
+    "files": [
+        {
+            "path": "terrain.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "terrain",
+        "exportName": "terrain",
+        "width": 8,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 1,
+        "tileLayers": 1,
+        "markerLayers": 0,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "terrain",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "terrain-probability",
+            "title": "Terrain probability, terrain-set transformations, tile probability",
+            "count": 3,
+            "entries": [
+                {
+                    "detail": "Terrain-set transformations dropped (hflip, vflip, rotate)",
+                    "count": 1,
+                    "where": "Tileset \"terrain\""
+                },
+                {
+                    "detail": "Tile probability 0.25 dropped",
+                    "count": 1,
+                    "where": "Tileset \"terrain\" › Tile 0"
+                },
+                {
+                    "detail": "Terrain \"Dirt\": probability 0.5 dropped",
+                    "count": 1,
+                    "where": "Tileset \"terrain\" › Terrain set \"Ground\""
+                }
+            ]
+        }
+    ]
+}

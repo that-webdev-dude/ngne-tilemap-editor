@@ -373,7 +373,7 @@ a redraw starts shows with the next: at most 500 ms plus that redraw's time.
 | Collision Editor | Large dialog | Tool strip (select, edit points, rectangle, ellipse, polygon, snap), tile canvas (`PixelCanvas`, zoom 1–32), shape list with X/Y/W/H fields; Close (edits are live commands) |
 | Animation Editor | Dialog | Frame list (thumbnail, duration field, drag handle), frame duration with Apply, Delete; the tileset's tile grid (the panel's zoom) with Add from selection, preview at 1×–4×; Close |
 | Tileset Properties | Dialog | Name, export name, class, tile offset X/Y, source (read-only: kind, file, tile size, margin, spacing) |
-| Import Tiled Map | Large dialog | Files: folder or files picked, required files with status (found, missing) and Add files…; then the report: summary, groups per BRIEF §7 row with counts and locations; Cancel / Import |
+| Import Tiled Map | Large dialog | Files: folder or files picked, the map (a select when they hold several), required files with status (found, missing) and Add files…; then the report: summary, groups per BRIEF §7 row with counts and locations; Cancel / Import |
 | Export | Large dialog | Left: destination folder, project export name, Export on save; right: file list with sizes grouped (tilemaps, tilesets, images, runtime), tileset atlas thumbnails, errors in `--danger`; Close / Export |
 | Preferences, Shortcut sheet, Recovery, WebGPU required | As `se-design` §7 | Preferences fields per §3.3 |
 

@@ -1,0 +1,59 @@
+{
+    "fixture": "objects-rotated.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "objects-rotated",
+        "exportName": "objects-rotated",
+        "width": 12,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 3,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "object-rotation",
+            "title": "Object rotation",
+            "count": 3,
+            "entries": [
+                {
+                    "detail": "Rotation 30° dropped",
+                    "count": 1,
+                    "where": "Layer \"Markers\" (2) › Object \"Tilted box\" (1)"
+                },
+                {
+                    "detail": "Rotation 45° dropped",
+                    "count": 1,
+                    "where": "Layer \"Markers\" (2) › Object \"Tilted oval\" (2)"
+                },
+                {
+                    "detail": "Rotation 90° dropped",
+                    "count": 1,
+                    "where": "Layer \"Markers\" (2) › Object \"Turned wedge\" (3)"
+                }
+            ]
+        }
+    ]
+}

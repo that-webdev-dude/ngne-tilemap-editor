@@ -14,8 +14,8 @@ const ACTIONS = [
 
 /**
  * What the workspace shows while no project is open (the sprite editor's DESIGN §6): plain
- * text buttons, centred, no illustration. New Project, Open and Import Tiled Map (enabled once
- * TE-061 implements its command) and, below them, the recent projects, newest first, each
+ * text buttons, centred, no illustration. New Project, Open and Import Tiled Map (TE-061) and,
+ * below them, the recent projects, newest first, each
  * opening its file through its File → Open Recent command; nothing of the list shows while it
  * is empty.
  */

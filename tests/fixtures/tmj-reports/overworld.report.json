@@ -1,0 +1,36 @@
+{
+    "fixture": "overworld.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "overworld",
+        "exportName": "overworld",
+        "width": 256,
+        "height": 256,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 6,
+        "tileLayers": 3,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 2,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 4,
+        "images": 0
+    },
+    "groups": []
+}

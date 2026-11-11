@@ -1,0 +1,49 @@
+{
+    "fixture": "infinite.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "infinite",
+        "exportName": "infinite",
+        "width": 64,
+        "height": 48,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 3,
+        "tileLayers": 2,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 2,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "infinite-map",
+            "title": "Infinite map",
+            "count": 1,
+            "entries": [
+                {
+                    "detail": "Converted to a fixed 64 × 48 map over the used chunks; every layer and marker moved by (16, 16) cells",
+                    "count": 1,
+                    "where": "Map"
+                }
+            ]
+        }
+    ]
+}

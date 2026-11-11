@@ -1,0 +1,49 @@
+{
+    "fixture": "objects-shapes.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "objects-shapes",
+        "exportName": "objects-shapes",
+        "width": 12,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 6,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "hidden-objects",
+            "title": "Hidden objects",
+            "count": 1,
+            "entries": [
+                {
+                    "detail": "Hidden object imported visible",
+                    "count": 1,
+                    "where": "Layer \"Markers\" (2) › Object \"Secret\" (6)"
+                }
+            ]
+        }
+    ]
+}

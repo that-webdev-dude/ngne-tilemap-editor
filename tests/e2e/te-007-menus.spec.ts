@@ -243,7 +243,7 @@ test("items of unimplemented commands are present and disabled", async ({ page }
     });
     const planned = (await registryItems(page)).filter((entry) => entry.planned);
     expect(planned.map((entry) => entry.id)).toContain("te007.planned");
-    expect(planned.map((entry) => entry.id)).toContain("file.importTiledMap");
+    expect(planned.map((entry) => entry.id)).toEqual(["te007.planned"]);
 
     // Every command that is still only planned has its item: visible, disabled, and without a
     // shortcut, because its binding is registered by its own ticket.

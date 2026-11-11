@@ -1,0 +1,64 @@
+{
+    "fixture": "objects-dropped.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "objects-dropped",
+        "exportName": "objects-dropped",
+        "width": 12,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "dropped-objects",
+            "title": "Tile objects, text, capsule",
+            "count": 4,
+            "entries": [
+                {
+                    "detail": "Tile object dropped",
+                    "count": 1,
+                    "where": "Layer \"Things\" (2) › Object \"Chest\" (1)"
+                },
+                {
+                    "detail": "Tile object dropped",
+                    "count": 1,
+                    "where": "Layer \"Things\" (2) › Object \"Flipped arrow\" (2)"
+                },
+                {
+                    "detail": "Text object dropped",
+                    "count": 1,
+                    "where": "Layer \"Things\" (2) › Object \"Sign\" (3)"
+                },
+                {
+                    "detail": "Capsule object dropped",
+                    "count": 1,
+                    "where": "Layer \"Things\" (2) › Object \"Pill\" (4)"
+                }
+            ]
+        }
+    ]
+}

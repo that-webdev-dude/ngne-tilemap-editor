@@ -11,6 +11,27 @@ export type { DecodedGid, GidDecode } from "./gid";
 export { formatColor, tiledColor } from "./json";
 export { baseName, folderOf, resolveTmjPath } from "./paths";
 export type { JsonObject } from "./json";
+export {
+    IMPORT_TILED_MAP_LABEL,
+    importTmj,
+    importTmjCommand,
+    isTmjMapFile,
+    rebindTmjImages,
+    tmjFileKind,
+    tmjImportProject,
+    tmjRequiredFiles,
+    tmjTilesetName,
+} from "./import";
+export type {
+    TmjFileKind,
+    TmjImport,
+    TmjImportOptions,
+    TmjImportReport,
+    TmjImportReportEntry,
+    TmjImportReportGroup,
+    TmjImportSummary,
+    TmjRequiredFile,
+} from "./import";
 export { convertTmjMap } from "./map";
 export type { TmjImageRef, TmjMapConversion, TmjMapOptions, TmjTilesetRef } from "./map";
 export type { TemplateReader } from "./objects";

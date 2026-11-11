@@ -1,0 +1,13 @@
+{
+    "fixture": "isometric.tmj",
+    "files": [
+        {
+            "path": "iso.png",
+            "kind": "image"
+        }
+    ],
+    "refused": {
+        "code": "orientation",
+        "message": "Only orthogonal maps can be imported; this map is isometric."
+    }
+}

@@ -1,0 +1,88 @@
+{
+    "fixture": "templates.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        },
+        {
+            "path": "templates/door.tj",
+            "kind": "template"
+        },
+        {
+            "path": "templates/coin.tj",
+            "kind": "template"
+        },
+        {
+            "path": "templates/zone.tj",
+            "kind": "template"
+        }
+    ],
+    "summary": {
+        "name": "templates",
+        "exportName": "templates",
+        "width": 12,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 2,
+        "tileLayers": 1,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 3,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "dropped-objects",
+            "title": "Tile objects, text, capsule",
+            "count": 1,
+            "entries": [
+                {
+                    "detail": "Tile object dropped",
+                    "count": 1,
+                    "where": "Layer \"Instances\" (2) › Object \"Coin\" (3)"
+                }
+            ]
+        },
+        {
+            "row": "template-instances",
+            "title": "Template instances",
+            "count": 4,
+            "entries": [
+                {
+                    "detail": "Template templates/door.tj inlined",
+                    "count": 1,
+                    "where": "Layer \"Instances\" (2) › Object \"Door\" (1)"
+                },
+                {
+                    "detail": "Template templates/door.tj inlined",
+                    "count": 1,
+                    "where": "Layer \"Instances\" (2) › Object \"Vault door\" (2)"
+                },
+                {
+                    "detail": "Template templates/coin.tj inlined",
+                    "count": 1,
+                    "where": "Layer \"Instances\" (2) › Object \"Coin\" (3)"
+                },
+                {
+                    "detail": "Template templates/zone.tj inlined",
+                    "count": 1,
+                    "where": "Layer \"Instances\" (2) › Object \"Zone\" (4)"
+                }
+            ]
+        }
+    ]
+}

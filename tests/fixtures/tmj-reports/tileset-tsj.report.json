@@ -1,0 +1,36 @@
+{
+    "fixture": "tileset-tsj.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "tileset-tsj",
+        "exportName": "tileset-tsj",
+        "width": 6,
+        "height": 4,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 1,
+        "tileLayers": 1,
+        "markerLayers": 0,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": []
+}

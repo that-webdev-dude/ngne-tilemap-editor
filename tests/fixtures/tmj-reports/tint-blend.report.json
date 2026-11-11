@@ -1,0 +1,59 @@
+{
+    "fixture": "tint-blend.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "tint-blend",
+        "exportName": "tint-blend",
+        "width": 10,
+        "height": 8,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 4,
+        "tileLayers": 4,
+        "markerLayers": 0,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "tiles",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 0,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "tint-blend",
+            "title": "Layer tint, blend mode",
+            "count": 3,
+            "entries": [
+                {
+                    "detail": "Tint #ff6060 dropped",
+                    "count": 1,
+                    "where": "Layer \"Tinted\" (2)"
+                },
+                {
+                    "detail": "Blend mode multiply dropped",
+                    "count": 1,
+                    "where": "Layer \"Multiply\" (3)"
+                },
+                {
+                    "detail": "Blend mode screen dropped",
+                    "count": 1,
+                    "where": "Layer \"Screen\" (4)"
+                }
+            ]
+        }
+    ]
+}

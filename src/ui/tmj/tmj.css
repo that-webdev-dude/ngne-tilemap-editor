@@ -1,0 +1,61 @@
+/*
+ * TE-061: Import Tiled Map (DESIGN §9), a large dialog on the Import Tileset dialog's layout
+ * (ui/import/import.css): the files on the left, the report on the right.
+ */
+.tmj-dialog__files {
+    max-height: 320px;
+}
+
+.tmj-dialog__missing {
+    color: var(--danger);
+}
+
+.tmj-dialog__report {
+    max-height: 440px;
+    overflow: auto;
+}
+
+.tmj-dialog__summary {
+    margin: 0;
+    padding-left: var(--space-16);
+    font-variant-numeric: tabular-nums;
+}
+
+.tmj-dialog__groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-8);
+}
+
+.tmj-dialog__group-title {
+    display: flex;
+    justify-content: space-between;
+    gap: var(--space-12);
+    margin: 0;
+    font: inherit;
+    font-weight: 600;
+}
+
+.tmj-dialog__count {
+    color: var(--text-muted);
+    font-weight: normal;
+    font-variant-numeric: tabular-nums;
+}
+
+.tmj-dialog__entries {
+    margin: 0;
+    padding: var(--space-4) var(--space-8);
+    list-style: none;
+    background: var(--bg-workspace);
+}
+
+.tmj-dialog__entries li {
+    display: flex;
+    flex-direction: column;
+    padding: var(--space-4) 0;
+}
+
+.tmj-dialog__where {
+    color: var(--text-muted);
+    overflow-wrap: anywhere;
+}

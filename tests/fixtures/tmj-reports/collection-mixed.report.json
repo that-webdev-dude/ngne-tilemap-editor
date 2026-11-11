@@ -1,0 +1,29 @@
+{
+    "fixture": "collection-mixed.tmj",
+    "files": [
+        {
+            "path": "tiles.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "images/tree-small.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/tree-tall.png",
+            "kind": "image"
+        },
+        {
+            "path": "images/tree-wide.png",
+            "kind": "image"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "refused": {
+        "code": "mixed-sizes",
+        "message": "The image collection \"trees\" has tiles of 16 × 16, 16 × 32, 32 × 32 px; only collections whose tiles are all one size can be imported."
+    }
+}

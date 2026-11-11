@@ -1,0 +1,54 @@
+{
+    "fixture": "dungeon.tmj",
+    "files": [
+        {
+            "path": "dungeon.tsj",
+            "kind": "tileset"
+        },
+        {
+            "path": "tiles.png",
+            "kind": "image"
+        }
+    ],
+    "summary": {
+        "name": "dungeon",
+        "exportName": "dungeon",
+        "width": 24,
+        "height": 16,
+        "tileWidth": 16,
+        "tileHeight": 16,
+        "layers": 4,
+        "tileLayers": 3,
+        "markerLayers": 1,
+        "imageLayers": 0,
+        "groups": 0,
+        "tilesets": [
+            {
+                "name": "dungeon",
+                "tiles": 32,
+                "reused": false
+            }
+        ],
+        "markers": 9,
+        "images": 0
+    },
+    "groups": [
+        {
+            "row": "collision-shapes",
+            "title": "Tile collision shapes",
+            "count": 2,
+            "entries": [
+                {
+                    "detail": "Point dropped",
+                    "count": 1,
+                    "where": "Tileset \"dungeon\" › Tile 21 › Object \"anchor\" (2)"
+                },
+                {
+                    "detail": "Polyline dropped",
+                    "count": 1,
+                    "where": "Tileset \"dungeon\" › Tile 21 › Object \"edge\" (3)"
+                }
+            ]
+        }
+    ]
+}
