@@ -187,7 +187,7 @@ function onEdge(value: number): boolean {
 
 function themeColour(name: string): number {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return parseInt(text.replace("#", ""), 16);
+    return Number.parseInt(text.replace("#", ""), 16);
 }
 
 /** What the reference blends, bottom to top: a layer at one texel per map pixel, or a chunk set. */

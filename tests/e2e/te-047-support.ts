@@ -94,11 +94,14 @@ export async function openEmpty(page: Page): Promise<void> {
     await expect(emptyState(page)).toBeVisible();
 }
 
+/** The first map's size New Project gives by default. */
+const NEW_MAP_SIZE = { width: 20, height: 15 } as const;
+
 /** Creates a project with New Project: its name and its first map's size. */
 export async function newProject(
     page: Page,
     name: string,
-    size: { width: number; height: number } = { width: 20, height: 15 },
+    size: { width: number; height: number } = NEW_MAP_SIZE,
 ): Promise<void> {
     await page.keyboard.press("Control+Alt+KeyN");
     const dialog = page.getByRole("dialog", { name: "New Project" });

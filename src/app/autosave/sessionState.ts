@@ -81,9 +81,12 @@ export function indexedDbSessionState(
                 for (const old of all.slice(SESSION_RECORDS_KEPT)) store.delete(old.projectId);
             }
             await new Promise<void>((resolve, reject) => {
+                // `error` is still null while a failed request's event reaches `onerror`.
+                const failed = () =>
+                    reject(transaction.error ?? new Error("IndexedDB transaction failed."));
                 transaction.oncomplete = () => resolve();
-                transaction.onerror = () => reject(transaction.error);
-                transaction.onabort = () => reject(transaction.error);
+                transaction.onerror = failed;
+                transaction.onabort = failed;
             });
         },
     };

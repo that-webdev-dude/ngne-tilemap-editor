@@ -902,7 +902,11 @@ export function mapData(map: TerrainMap): number[] {
 // --- Tileset images -------------------------------------------------------------------------
 
 function hexColor(hex: string): [number, number, number] {
-    return [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16)) as [number, number, number];
+    return [1, 3, 5].map((at) => Number.parseInt(hex.slice(at, at + 2), 16)) as [
+        number,
+        number,
+        number,
+    ];
 }
 
 /** Colour of the middle of a mixed tile, which no index paints. */

@@ -4,6 +4,7 @@ import {
     SESSION_WRITE_DELAY_MS,
     applySessionRecord,
     createSessionMemory,
+    indexedDbSessionState,
     sessionRecordOf,
 } from "../../src/app/autosave/sessionState";
 import type { SessionRecord, SessionStateStorage } from "../../src/app/autosave/sessionState";
@@ -200,5 +201,55 @@ describe("te-048 session state", () => {
                 },
             ],
         });
+    });
+});
+
+describe("te-048 session state in IndexedDB", () => {
+    /**
+     * A database whose write transaction fails with `error` null, as a failing request's error
+     * event reaches `transaction.onerror` before the transaction aborts and sets its error.
+     */
+    function failingFactory(): Pick<IDBFactory, "open"> {
+        const later = (run: () => void) => setTimeout(run, 0);
+        const succeeding = <T>(result: T) => {
+            const task = { result, onsuccess: null as (() => void) | null };
+            later(() => task.onsuccess?.());
+            return task;
+        };
+        const transaction = {
+            error: null,
+            oncomplete: null as (() => void) | null,
+            onerror: null as (() => void) | null,
+            onabort: null as (() => void) | null,
+            objectStore: () => ({
+                put: () => succeeding(undefined),
+                delete: () => succeeding(undefined),
+                getAll() {
+                    // Fails once `put` has attached its handlers.
+                    later(() => later(() => transaction.onerror?.()));
+                    return succeeding([]);
+                },
+            }),
+        };
+        const db = { transaction: () => transaction, close() {} };
+        return { open: () => succeeding(db) as unknown as IDBOpenDBRequest };
+    }
+
+    it("rejects a failed write with an Error, never null", async () => {
+        // The fake database answers on real timers; the file's fake ones would never run.
+        vi.useRealTimers();
+        const storage = indexedDbSessionState(failingFactory())!;
+        const record: SessionRecord = {
+            projectId: "p",
+            savedAt: 1,
+            tabs: [],
+            activeMapId: "",
+            maps: [],
+        };
+        const failure = await storage.put(record).then(
+            () => "resolved",
+            (error: unknown) => error,
+        );
+        expect(failure).toBeInstanceOf(Error);
     });
 });

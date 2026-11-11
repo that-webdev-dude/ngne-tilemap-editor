@@ -1,7 +1,7 @@
 import { ChevronDown, ChevronRight, Ellipsis, Plus } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { MouseEvent, PointerEvent } from "react";
+import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { useStore } from "zustand";
 import { usePreference } from "../../app/preferences/preferences";
 import { historySteps } from "../../app/state/historySteps";
@@ -26,7 +26,13 @@ import {
     useTerrainsPanel,
 } from "../../app/terrains/terrainsPanel";
 import type { TerrainSelection } from "../../app/terrains/terrainsPanel";
-import { gridLayout, gridPointAt, shownTile, tileOrigin } from "../../app/tilesets/panel/tileGrid";
+import {
+    gridLayout,
+    gridPointAt,
+    shownTile,
+    tileLabel,
+    tileOrigin,
+} from "../../app/tilesets/panel/tileGrid";
 import type { GridLayout } from "../../app/tilesets/panel/tileGrid";
 import { useTilesetPanel } from "../../app/tilesets/panel/tilesetPanel";
 import { formatHex, parseHex } from "../../core/color";
@@ -264,6 +270,9 @@ function IconGrid({ tileset, onPick }: { tileset: Tileset; onPick(tileId: number
     const checkerboard = usePreference("checkerboard");
     const colours = useGridColours();
     const layout = gridLayout(tileset, 1);
+    const count = tileset.tiles.length;
+    // The tile the arrow keys outline and Enter picks, as in Replace with…'s sheet.
+    const [focus, setFocus] = useState(0);
     // The whole grid at 1×; the popover scrolls past 256 × 192 (FORMAT limits it to 8192 px).
     useLayoutEffect(() => {
         const element = canvas.current;
@@ -280,6 +289,26 @@ function IconGrid({ tileset, onPick }: { tileset: Tileset; onPick(tileId: number
             zoom: 1,
         });
     });
+    const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+        const step: Record<string, number> = {
+            ArrowLeft: -1,
+            ArrowRight: 1,
+            ArrowUp: -layout.columns,
+            ArrowDown: layout.columns,
+        };
+        if (event.key in step) {
+            event.preventDefault();
+            setFocus((at) => Math.min(count - 1, Math.max(0, at + step[event.key]!)));
+        } else if ((event.key === "Enter" || event.key === " ") && count > 0) {
+            event.preventDefault();
+            onPick(tileset.tiles[focus]!.id);
+        }
+    };
+    const focused = tileset.tiles[focus];
+    const origin = tileOrigin(layout, {
+        column: focus % layout.columns,
+        row: Math.floor(focus / layout.columns),
+    });
     return (
         <div className="terrains-panel__icon-picker">
             <button
@@ -293,7 +322,16 @@ function IconGrid({ tileset, onPick }: { tileset: Tileset; onPick(tileId: number
             <div className="terrains-panel__icon-grid">
                 <div
                     ref={sizer}
+                    className="terrains-panel__icon-sheet"
                     style={{ width: layout.width, height: layout.height }}
+                    tabIndex={0}
+                    role="group"
+                    aria-label={
+                        focused
+                            ? `Tiles of ${tileset.name}; ${tileLabel(tileset, focused)}`
+                            : `Tiles of ${tileset.name}`
+                    }
+                    onKeyDown={onKeyDown}
                     data-icon-grid=""
                     onClick={(event) => {
                         const hit = sizer.current && tileAt(event, sizer.current, tileset, layout);
@@ -304,6 +342,17 @@ function IconGrid({ tileset, onPick }: { tileset: Tileset; onPick(tileId: number
                         ref={canvas}
                         style={{ width: layout.width, height: layout.height, display: "block" }}
                     />
+                    {focused ? (
+                        <span
+                            className="terrains-panel__icon-focus"
+                            style={{
+                                left: origin.x - 1,
+                                top: origin.y - 1,
+                                width: layout.tileWidth + 2,
+                                height: layout.tileHeight + 2,
+                            }}
+                        />
+                    ) : null}
                 </div>
             </div>
         </div>

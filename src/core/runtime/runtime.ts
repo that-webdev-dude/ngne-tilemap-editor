@@ -372,10 +372,11 @@ function isPlainFileName(name: string): boolean {
         const code = name.charCodeAt(index);
         if (code < 0x20 || (code >= 0x7f && code <= 0x9f)) return false;
     }
-    const base = name
-        .split(".")[0]!
-        .replace(/ +$/, "")
-        .replace(/[A-Z]/g, (c) => c.toLowerCase());
+    const first = name.split(".")[0]!;
+    // A loop, not `/ +$/`: that pattern backtracks over a run of spaces (quadratic time).
+    let end = first.length;
+    while (end > 0 && first.charCodeAt(end - 1) === 0x20) end -= 1;
+    const base = first.slice(0, end).replace(/[A-Z]/g, (c) => c.toLowerCase());
     return !DEVICE_NAME.test(base);
 }
 

@@ -48,7 +48,7 @@ export function defaultProperty(name: string, type: PropertyType): Property {
 
 const INTEGER_TEXT = /^[+-]?\d+$/;
 /** Decimal number text as Qt's `toDouble` takes it (no hexadecimal, no "Infinity"). */
-const NUMBER_TEXT = /^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/;
+const NUMBER_TEXT = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 const COLOUR_TEXT = /^#[0-9a-fA-F]{8}$/;
 const RGB_TEXT = /^#[0-9a-fA-F]{6}$/;
 

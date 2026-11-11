@@ -74,7 +74,7 @@ Paths are under `se/src/`; the tilemap editor keeps the same path unless the row
 `src/core/sprite/` holds the `se/src/core/` files in the import closure of
 `project/deserialize.ts`, `composite/compositeFrame.ts`, `animation/index.ts`,
 `export/pack.ts` and `export/validateAtlas.ts`, each at its `se/src/core/` path below
-`src/core/sprite/` and byte-identical: 60 files at the recorded commit (model, pixels, png,
+`src/core/sprite/` and byte-identical: 59 files at the recorded commit (model, pixels, png,
 project, composite, animation, export, history, cels, frames, tags). Their only external imports
 are `fflate` and `fast-png`. Only the tilemap editor's `core/` modules import from it
 (`.ngsprite` reading, frame compositing, tag expansion, packing, atlas validation, PNG and zip),

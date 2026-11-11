@@ -154,6 +154,23 @@
     overflow: auto;
 }
 
+/* The tile the arrow keys outline, shown while the grid has keyboard focus (as Replace with…). */
+.terrains-panel__icon-sheet {
+    position: relative;
+}
+
+.terrains-panel__icon-focus {
+    position: absolute;
+    display: none;
+    box-sizing: border-box;
+    border: 1px dashed var(--text);
+    pointer-events: none;
+}
+
+.terrains-panel__icon-sheet:focus-visible .terrains-panel__icon-focus {
+    display: block;
+}
+
 .terrains-panel__none,
 .terrains-panel__empty {
     margin: 0;

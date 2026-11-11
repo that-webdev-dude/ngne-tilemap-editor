@@ -287,3 +287,26 @@ test("the selection and the collapsed sets follow a moved set through undo and r
     await expect(name(1)).toHaveAttribute("aria-pressed", "true");
     await expect(toggle(1)).toHaveAttribute("aria-expanded", "false");
 });
+
+test("the icon tile is picked with the keyboard alone (DESIGN §8.6)", async ({ page }) => {
+    await open(page);
+    const trigger = terrainRow(page, 0, 1).locator("[data-terrain-icon]");
+    await trigger.focus();
+    await page.keyboard.press("Enter");
+    const none = page.locator("[data-icon-none]");
+    const grid = page.locator("[data-icon-grid]");
+    await expect(grid).toBeVisible();
+    // The grid is the tab stop after "None"; arrows move the outlined tile, Enter picks it.
+    await none.focus();
+    await page.keyboard.press("Tab");
+    await expect(grid).toBeFocused();
+    await expect(grid).toHaveAttribute("aria-label", /Terrain#0/);
+    await page.keyboard.press("ArrowRight");
+    await page.keyboard.press("ArrowDown");
+    await expect(grid).toHaveAttribute("aria-label", /Terrain#5/);
+    await page.keyboard.press("Enter");
+    await expect(grid).toBeHidden();
+    expect(
+        (await call<{ colors: { tile: number | null }[] }[]>(page, "sets"))[0]!.colors[0]!.tile,
+    ).toBe(5);
+});

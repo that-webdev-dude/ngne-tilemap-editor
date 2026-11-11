@@ -347,6 +347,20 @@ describe("validateTilemap: step 2, members", () => {
         }).not.toThrow();
     });
 
+    it("checks a long image name in linear time", () => {
+        // The device-name check trims the spaces at the end of the base name; a run of spaces
+        // before another character must not make that trim backtrack (quadratic: seconds).
+        const json = meadow();
+        const layer = { ...json.layers[1], type: "image", imageWidth: 8, imageHeight: 8 };
+        json.layers[1] = { ...layer, image: `${" ".repeat(200_000)}sky.png` };
+        json.layers[1].repeatX = false;
+        json.layers[1].repeatY = false;
+        delete json.layers[1].markers;
+        const start = performance.now();
+        validateTilemap(json, { grass: atlas });
+        expect(performance.now() - start).toBeLessThan(500);
+    });
+
     it("refuses a map without layers", () => {
         expectRejected((json) => (json.layers = []), "field", "layers");
     });

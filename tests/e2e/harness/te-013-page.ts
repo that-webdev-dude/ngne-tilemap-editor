@@ -78,7 +78,7 @@ export function frames(): number {
 
 function themeColour(name: string): number {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return parseInt(text.replace("#", ""), 16);
+    return Number.parseInt(text.replace("#", ""), 16);
 }
 
 /** A ratio of integers for `scale`, with the smallest denominator of 1, 2, 4 or 8. */

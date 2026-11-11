@@ -104,7 +104,7 @@ export function snapshot(): Snapshot {
 
 function themeColour(name: string): number {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return parseInt(text.replace("#", ""), 16);
+    return Number.parseInt(text.replace("#", ""), 16);
 }
 
 export interface Sample {

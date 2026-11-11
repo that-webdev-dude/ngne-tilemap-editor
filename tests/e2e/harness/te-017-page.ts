@@ -216,5 +216,5 @@ export function overlayInk(): number {
 /** A colour token of the page as 0xRRGGBB. */
 export function token(name: string): number {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return parseInt(text.replace("#", ""), 16);
+    return Number.parseInt(text.replace("#", ""), 16);
 }

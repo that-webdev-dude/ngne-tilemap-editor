@@ -113,7 +113,7 @@ function setView(centreX: number, centreY: number, scale: number): void {
 
 function themeColour(name: string): number {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    return parseInt(text.replace("#", ""), 16);
+    return Number.parseInt(text.replace("#", ""), 16);
 }
 
 export interface Comparison {

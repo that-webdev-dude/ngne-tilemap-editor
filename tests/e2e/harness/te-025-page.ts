@@ -147,7 +147,7 @@ export function canvasPixel(x: number, y: number): number[] {
 /** A colour token of the page as RGB. */
 export function token(name: string): number[] {
     const text = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    const value = parseInt(text.replace("#", ""), 16);
+    const value = Number.parseInt(text.replace("#", ""), 16);
     return [(value >> 16) & 255, (value >> 8) & 255, value & 255];
 }
 

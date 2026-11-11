@@ -133,6 +133,15 @@ describe("string", () => {
         ]);
     });
 
+    it("checks the longest text that is no number in linear time", () => {
+        // A string value holds up to 65,535 characters (FORMAT limits); a digit run that fails
+        // at its end must not make the number pattern backtrack (quadratic: seconds).
+        const texts = [`${"1".repeat(65_534)}x`, `${"1".repeat(65_533)}e+`];
+        const start = performance.now();
+        expect(texts.map((text) => to(p("string", text), "float"))).toEqual([0, 0]);
+        expect(performance.now() - start).toBeLessThan(250);
+    });
+
     it("converts its own colour spellings to color, lowercase", () => {
         const texts = ["#AABBCCDD", "#aabbcc", "#ABC", "red", "aabbccdd", "#aabbccdd "];
         expect(texts.map((text) => to(p("string", text), "color"))).toEqual([
