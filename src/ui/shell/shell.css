@@ -123,10 +123,19 @@
     left: calc(-1 * (var(--space-4) + var(--border-width)));
 }
 
+/*
+ * The dock's content lies above its splitter (z-index 5), whose 8 px hit area reaches 3 px past
+ * the border into the dock: there the full-width rows of the Maps list and the Layers tree take
+ * the presses, as the bottom panel's content does below. The splitter keeps its line and the
+ * 4 px left of the border. The scroller ends 4 px above the dock's bottom edge, where the bottom
+ * panel's splitter reaches up: no control of the dock lies under that splitter.
+ */
 .shell-dock__scroll {
+    position: relative;
+    z-index: 6;
     display: flex;
     flex-direction: column;
-    height: 100%;
+    height: calc(100% - var(--space-4));
     overflow-y: auto;
 }
 

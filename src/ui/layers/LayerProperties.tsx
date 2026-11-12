@@ -1,5 +1,5 @@
 import { Popover as RadixPopover } from "radix-ui";
-import { memo, useCallback, useId, useMemo } from "react";
+import { memo, useCallback, useId, useLayoutEffect, useMemo } from "react";
 import type { RefObject } from "react";
 import {
     editLayerExtra,
@@ -197,6 +197,15 @@ export const LayerPropertiesHost = memo(function LayerPropertiesHost({
         }),
         [tree, layerId],
     );
+    // Layer Properties… of the Layer menu opens the popover on the active layer's row, which
+    // the dock may have scrolled out of view: the row comes into view first, so the popover is
+    // placed beside it inside the window.
+    useLayoutEffect(() => {
+        if (layerId === null) return;
+        tree.current
+            ?.querySelector(`[data-layer-row="${layerId}"]`)
+            ?.scrollIntoView({ block: "nearest" });
+    }, [tree, layerId, opening]);
     const onOpenChange = useCallback((open: boolean) => {
         if (!open) finishProperties();
     }, []);

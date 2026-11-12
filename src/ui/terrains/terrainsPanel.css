@@ -107,30 +107,39 @@
     width: 72px;
 }
 
-/* A terrain's colour chip: 16 px on the checkerboard so its alpha shows. */
+/*
+ * A terrain's colour chip: 16 px on the checkerboard so its alpha shows, in a 20 px frame. The
+ * button is the 24 px pointer target of `se-design` §8 around the frame: a 2 px transparent
+ * border, the frame an inset ring inside it.
+ */
 .terrains-panel__chip {
     display: grid;
     flex: none;
-    width: 20px;
-    height: 20px;
-    padding: 1px;
-    border: var(--border-width) solid var(--border-input);
-    border-radius: var(--radius-control);
-    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 0 0 / 8px 8px;
+    width: 24px;
+    height: 24px;
+    padding: 2px;
+    border: 2px solid transparent;
+    border-radius: calc(var(--radius-control) + 2px);
+    background: repeating-conic-gradient(var(--check-a) 0 25%, var(--check-b) 0 50%) 2px 2px / 8px
+        8px padding-box;
+    box-shadow: inset 0 0 0 var(--border-width) var(--border-input);
 }
 
 .terrains-panel__chip > span {
     border-radius: 2px;
 }
 
+/* A 20 px frame in a 24 px pointer target, as the colour chip. */
 .terrains-panel__icon-button {
     display: grid;
     flex: none;
     place-items: center;
-    width: 20px;
-    height: 20px;
-    border: var(--border-width) solid var(--border);
-    border-radius: var(--radius-control);
+    width: 24px;
+    height: 24px;
+    border: 2px solid transparent;
+    border-radius: calc(var(--radius-control) + 2px);
+    background-clip: padding-box;
+    box-shadow: inset 0 0 0 var(--border-width) var(--border);
 }
 
 .terrains-panel__icon {

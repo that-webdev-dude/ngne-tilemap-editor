@@ -128,9 +128,10 @@
     min-width: 0;
 }
 
+/* A bool property: the 24 px pointer target of `se-design` §8. */
 .properties-panel__check {
-    width: 16px;
-    height: 16px;
+    width: 24px;
+    height: 24px;
     margin: 0;
     accent-color: var(--accent);
 }

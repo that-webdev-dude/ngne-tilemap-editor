@@ -48,13 +48,15 @@ export function StampPreview() {
     }, [stamp, map, session, revision]);
 
     const size = stamp ? `${stamp.width} × ${stamp.height}` : "none";
+    // The tooltip shows the control's name and the key of what a click does (`se-design` §8).
+    const name = `Stamp preview, ${size}: select ${stampTool.label}`;
     return (
-        <Tooltip label={`Stamp ${size}`} side="right">
+        <Tooltip label={name} shortcut={stampTool.shortcut} side="right">
             <button
                 type="button"
                 className="tool-rail__stamp"
                 data-stamp-preview=""
-                aria-label={`Stamp preview, ${size}: select ${stampTool.label}`}
+                aria-label={name}
                 disabled={!tools.offered(stampTool.id)}
                 onClick={() => void tools.select(stampTool.id)}
             >

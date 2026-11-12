@@ -1,7 +1,12 @@
 import { ChevronDown, ChevronRight, Ellipsis, Plus } from "lucide-react";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
-import type { KeyboardEvent as ReactKeyboardEvent, MouseEvent, PointerEvent } from "react";
+import type {
+    ComponentProps,
+    KeyboardEvent as ReactKeyboardEvent,
+    MouseEvent,
+    PointerEvent,
+} from "react";
 import { useStore } from "zustand";
 import { usePreference } from "../../app/preferences/preferences";
 import { historySteps } from "../../app/state/historySteps";
@@ -43,7 +48,7 @@ import { ColourPicker } from "../colour/ColourPicker";
 import { cssColour } from "../colour/pickerMath";
 import { contextMenuEntries } from "../commands/contextMenu";
 import { useCommands } from "../commands/useCommands";
-import { ContextMenu, Icon, IconButton, Popover, Select } from "../primitives";
+import { ContextMenu, Icon, IconButton, Popover, Select, Tooltip } from "../primitives";
 import type { ContextMenuEntry } from "../primitives";
 import { useTheme } from "../theme/theme";
 import { readColours } from "../tilesets/TilesetsPanel";
@@ -228,6 +233,18 @@ function tileAt(
     };
 }
 
+/**
+ * A popover's trigger that shows a picture, not text: named by `label`, which its tooltip shows
+ * (`se-design` §8). The popover's trigger props (ref, handlers, ARIA state) reach the button.
+ */
+function PictureButton({ label, ...rest }: { label: string } & ComponentProps<"button">) {
+    return (
+        <Tooltip label={label}>
+            <button type="button" aria-label={label} {...rest} />
+        </Tooltip>
+    );
+}
+
 /** The icon tile of a terrain: a popover with the tileset's grid at 1×, and None. */
 function IconPicker({ tileset, set, terrain }: { tileset: Tileset; set: number; terrain: number }) {
     const [open, setOpen] = useState(false);
@@ -240,14 +257,13 @@ function IconPicker({ tileset, set, terrain }: { tileset: Tileset; set: number; 
             onOpenChange={setOpen}
             className="terrains-panel__icon-popover"
             trigger={
-                <button
-                    type="button"
+                <PictureButton
                     className="terrains-panel__icon-button"
-                    aria-label={`Icon of ${name}: ${current?.tile ?? "none"}`}
+                    label={`Icon of ${name}: ${current?.tile ?? "none"}`}
                     data-terrain-icon=""
                 >
                     <TileIcon tileset={tileset} tileId={current?.tile ?? null} size={16} />
-                </button>
+                </PictureButton>
             }
         >
             {open ? (
@@ -387,14 +403,13 @@ function ColourChip({
             }}
             className="terrains-panel__colour-popover"
             trigger={
-                <button
-                    type="button"
+                <PictureButton
                     className="terrains-panel__chip"
-                    aria-label={`${name} colour: ${colour}`}
+                    label={`${name} colour: ${colour}`}
                     data-terrain-colour=""
                 >
                     <span style={{ background: cssColour(stored) }} />
-                </button>
+                </PictureButton>
             }
         >
             <ColourPicker value={draft ?? stored} onChange={setDraft} />

@@ -153,10 +153,6 @@
     align-items: center;
 }
 
-.layers-header__variants {
-    width: 16px;
-}
-
 /* The layer properties popover: labels in the first column, fields in the second. */
 .layer-properties__form {
     display: grid;

@@ -466,11 +466,7 @@ export function LayersHeader() {
             </IconButton>
             <DropdownMenu.Root modal={false}>
                 <DropdownMenu.Trigger asChild>
-                    <IconButton
-                        className="layers-header__variants"
-                        label="New layer of another kind"
-                        data-new-layer-menu=""
-                    >
+                    <IconButton label="New layer of another kind" data-new-layer-menu="">
                         <Icon icon={ChevronDown} />
                     </IconButton>
                 </DropdownMenu.Trigger>
