@@ -5,6 +5,7 @@ import type {} from "../../import-meta";
 import { sessionStore } from "../state/session";
 import { subscribeStrokeCells } from "../viewport/strokeCells";
 import { packInWorker } from "../viewport/packTileset";
+import { buildInWorker } from "./buildTilemap";
 import { PreviewSource } from "./previewSource";
 import { addPreviewDiagnostic, previewState, resolutionOf } from "./previewState";
 import { layerFilter, previewBackground, previewCamera, previewDisplay } from "./previewView";
@@ -42,8 +43,12 @@ export function mountPreview(stage: HTMLElement, host: HTMLElement): MountedPrev
     const preview = new PreviewGame(host, { onDiagnostic: addPreviewDiagnostic });
     const source = new PreviewSource({
         pack: packInWorker,
+        build: buildInWorker,
+        // After the frame of the change: the viewport draws it before a build takes any time.
+        defer: (start) => requestAnimationFrame(() => setTimeout(start, 0)),
         onContent: (content) => preview.setContent(content),
         onCells: () => preview.contentChanged(),
+        onPending: (pending) => preview.setPending(pending),
         onError: addPreviewDiagnostic,
     });
 

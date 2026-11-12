@@ -6,6 +6,7 @@ export type {
     PreviewContent,
     PreviewGameOptions,
     PreviewPageStats,
+    PreviewPending,
     PreviewProbe,
     PreviewTexture,
 } from "./previewGame";

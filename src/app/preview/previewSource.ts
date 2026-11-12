@@ -5,12 +5,14 @@ import type { Touched } from "../../core/history";
 import { findLayer } from "../../core/model";
 import type { PixelBuffer, Project, ProjectMap, Tileset } from "../../core/model";
 import type { PackedTileset } from "../../core/pack";
-import { invalidate, readTilemap } from "../../core/runtime/runtime";
+import { invalidate } from "../../core/runtime/runtime";
 import type { TileLayerData, Tilemap } from "../../core/runtime/runtime";
-import { tilemapFor } from "../../core/tilemap";
-import type { PreviewContent, PreviewTexture } from "../../engine/preview";
+import { cellsFromParts, tilemapFromParts, tilemapParts } from "../../core/tilemap";
+import type { TilemapParts } from "../../core/tilemap";
+import type { PreviewContent, PreviewPending, PreviewTexture } from "../../engine/preview";
 import type { PackFn } from "../../engine/viewport";
 import { slotsInMap } from "../viewport/mapTilesets";
+import type { BuildTilemapFn } from "./buildTilemap";
 
 // What the game preview draws (SPEC §12): one `Tilemap` of the current map, built by
 // `tilemapFor` and `readTilemap` as a game loads it, with its tilesets packed in memory by
@@ -23,6 +25,15 @@ import { slotsInMap } from "../viewport/mapTilesets";
 //   the `Tilemap` is built again;
 // - a tileset change: built again with the tileset packed again, under a new textures key, so
 //   the preview restarts its scene with the new pixels.
+//
+// A build is far longer than a frame for a large map, so no notification runs one (ENGINE §6):
+// `show` and `touched` ask for it and return. It starts later (`defer`), reads the project as
+// it is then, and makes the tilemap's parts off the main thread (`build`); the page makes the
+// `Tilemap` of the parts, or keeps the one it has when the parts differ from it in their cells
+// alone (a step that changes nothing of the tilemap, as a selection). One build runs at a time.
+// A result the project changed under is dropped and the tilemap is built once more, of the
+// newest project; cells written meanwhile are written into the result instead. Until the build
+// ends the preview draws no frame of the tilemap it replaces (`onPending`).
 
 /** The ID `drawTilemap` names a tileset's or an image's texture by (SPEC §11.2). */
 export function previewTextureId(project: Project, exportName: string): string {
@@ -32,11 +43,24 @@ export function previewTextureId(project: Project, exportName: string): string {
 export interface PreviewSourceOptions {
     /** Packs a tileset (`packTileset`, in the worker or here). */
     pack: PackFn;
+    /** Makes a tilemap's parts (`tilemapParts`, in the worker); by default here. */
+    build?: BuildTilemapFn;
+    /**
+     * Runs `start` later, outside the notification that asked for a build: the app starts a
+     * build after the frame of the change. By default in a task of its own.
+     */
+    defer?(start: () => void): void;
     /** A new content; null while there is nothing to draw. */
     onContent(content: PreviewContent | null): void;
     /** Cells of the current content's tilemap were written in place. */
     onCells(): void;
-    /** Why the map cannot be previewed (a pack or a read failed). */
+    /**
+     * The content given last is older than the project and is being made again: no frame may
+     * draw it until null is told. "hold" for the map it shows, "blank" for another map or
+     * project. A new content is given before null is told.
+     */
+    onPending?(pending: PreviewPending | null): void;
+    /** Why the map cannot be previewed (a pack or a build failed). */
     onError(message: string): void;
 }
 
@@ -48,6 +72,9 @@ interface Built {
     readonly mapId: string;
     readonly width: number;
     readonly height: number;
+    /** The parts it was made of: their text, and the packs their atlases came from. */
+    readonly text: string;
+    readonly packs: ReadonlyMap<string, PackedTileset>;
     readonly table: GidTable;
     /** The tile layers of the tilemap, by layer ID. */
     readonly tileLayers: ReadonlyMap<number, TileLayerData>;
@@ -63,6 +90,21 @@ interface PackEntry {
     value: PackedTileset | null;
     /** The pack failed: it is tried again when the tileset changes, not at every build. */
     failed: boolean;
+}
+
+/** A build in flight: what it read of the source when it started. */
+interface Flight {
+    /** `#asked` when it started: another value at its end means the project changed. */
+    readonly asked: number;
+    readonly generation: number;
+    readonly project: Project;
+    readonly map: ProjectMap;
+    /** The packs of the tilesets the map's cells use, by export name. */
+    readonly packs: ReadonlyMap<string, PackedTileset>;
+    /** Their atlases, as the parts are made with them. */
+    readonly atlases: Readonly<Record<string, unknown>>;
+    /** The cell steps of the map since it started: its result lacks them. */
+    readonly late: Touched[];
 }
 
 /**
@@ -85,25 +127,6 @@ function tileLayersOf(tilemap: Tilemap): Map<number, TileLayerData> {
 /** The GID bits of a cell value (FORMAT 1.2): the value without its flags. */
 const GID_MASK = 0x0fffffff;
 
-/** The frame durations of every animated tile of the tilesets `tilemap` lists, by GID. */
-function animatedGids(
-    tilemap: Tilemap,
-    byName: ReadonlyMap<string, Tileset>,
-): Map<number, number[]> {
-    const animated = new Map<number, number[]>();
-    for (const { name, firstGid } of tilemap.tilesets) {
-        for (const tile of byName.get(name)?.tiles ?? []) {
-            if (tile.animation.length > 1) {
-                animated.set(
-                    firstGid + tile.id,
-                    tile.animation.map((frame) => frame.ms),
-                );
-            }
-        }
-    }
-    return animated;
-}
-
 /**
  * The animations a tilemap shows (ENGINE §4, redraw on demand): those of the animated tiles its
  * visible tile layers place, each tile once, so a frame is asked for only when a tile that can
@@ -115,13 +138,10 @@ class PlacedAnimations {
     readonly #animated: ReadonlyMap<number, number[]>;
     readonly #placed = new Set<number>();
 
-    constructor(tilemap: Tilemap, byName: ReadonlyMap<string, Tileset>) {
-        this.#animated = animatedGids(tilemap, byName);
-        if (this.#animated.size === 0) return;
-        for (const layer of tilemap.layers) {
-            if (layer.type !== "tile" || !layer.visible) continue;
-            for (const value of layer.data) if (value !== 0) this.add(value);
-        }
+    /** Of a tilemap's parts: its animated tiles by GID, and those its visible layers place. */
+    constructor({ animated, placed }: TilemapParts) {
+        this.#animated = new Map(animated);
+        for (const gid of placed) this.add(gid);
     }
 
     /** Lists the animation of the tile `value` names when it has one not listed yet. */
@@ -136,6 +156,8 @@ class PlacedAnimations {
 
 export class PreviewSource {
     readonly #options: PreviewSourceOptions;
+    readonly #buildParts: BuildTilemapFn;
+    readonly #defer: (start: () => void) => void;
     #project: Project | null = null;
     #mapId: string | null = null;
     /** Counts projects: textures keys of another project never match. */
@@ -146,13 +168,26 @@ export class PreviewSource {
     /** Numbers image pixel buffers, which change identity when an image changes. */
     readonly #imageVersions = new WeakMap<PixelBuffer, number>();
     #imageVersion = 0;
+    /** The last build, while it is of the map shown; cells are written into its tilemap. */
     #built: Built | null = null;
-    /** A build waits for packs; it reads the project when they are done. */
-    #waiting = false;
+    /** What `onContent` was given last. */
+    #published: PreviewContent | null = null;
+    #pending: PreviewPending | null = null;
+    /** Counts the builds asked for. */
+    #asked = 0;
+    /** A build was asked for and its start is deferred. */
+    #scheduled = false;
+    /** A build is under way: it waits for packs, or for its parts (`#flight`). */
+    #busy = false;
+    #flight: Flight | null = null;
     #disposed = false;
 
     constructor(options: PreviewSourceOptions) {
         this.#options = options;
+        // Here: the parts are made on this thread, when the build starts.
+        this.#buildParts =
+            options.build ?? (async (project, map, atlases) => tilemapParts(project, map, atlases));
+        this.#defer = options.defer?.bind(options) ?? ((start) => void setTimeout(start, 0));
     }
 
     /** The content of the last build; null before one or while nothing can be drawn. */
@@ -170,13 +205,11 @@ export class PreviewSource {
             this.#generation += 1;
             this.#revisions.clear();
             this.#packs.clear();
-            this.#mapId = mapId;
-            this.#build();
+        } else if (mapId === this.#mapId) {
             return;
         }
-        if (mapId === this.#mapId) return;
         this.#mapId = mapId;
-        this.#build();
+        this.#ask();
     }
 
     /** A step of the project's history, or cells a stroke wrote (SPEC §3). */
@@ -188,15 +221,24 @@ export class PreviewSource {
             this.#packs.delete(id);
         }
         if (touched.structure || touched.tilesetIds.length > 0 || touched.mapId === null) {
-            this.#build();
+            this.#ask();
             return;
         }
         if (touched.mapId !== this.#mapId) return;
-        if (touched.cellRects.length > 0 && this.#writeCells(touched)) {
-            this.#options.onCells();
-            return;
+        if (touched.cellRects.length > 0) {
+            // A build that has read the project: the cells are written into its result.
+            if (this.#flight) {
+                this.#flight.late.push(touched);
+                return;
+            }
+            // A build that has not read the project yet reads these cells.
+            if (this.#scheduled || this.#busy) return;
+            if (this.#built && this.#writeCells(this.#built, touched)) {
+                this.#options.onCells();
+                return;
+            }
         }
-        this.#build();
+        this.#ask();
     }
 
     dispose(): void {
@@ -204,14 +246,13 @@ export class PreviewSource {
     }
 
     /**
-     * Writes the cells of `touched` into the tilemap's layers. False when they cannot be
-     * written in place (a layer the tilemap lacks, a tileset it does not list, a build waiting):
+     * Writes the cells of `touched` into the tilemap of `built`. False when they cannot be
+     * written in place (a layer the tilemap lacks, a tileset it does not list, another size):
      * the tilemap is built again instead.
      */
-    #writeCells(touched: Touched): boolean {
-        const built = this.#built;
+    #writeCells(built: Built, touched: Touched): boolean {
         const project = this.#project;
-        if (!built || !project || this.#waiting || built.mapId !== this.#mapId) return false;
+        if (!project || built.mapId !== this.#mapId) return false;
         const map = project.maps.find((each) => each.id === built.mapId);
         if (!map || map.width !== built.width || map.height !== built.height) return false;
         const ids = touched.layerIds.length > 0 ? touched.layerIds : [...built.tileLayers.keys()];
@@ -244,48 +285,134 @@ export class PreviewSource {
         return true;
     }
 
-    /** Builds the content of the current map, once the packs it needs are ready. */
-    #build(): void {
-        if (this.#disposed) return;
+    /** The map shown, when the project has it. */
+    #shown(): { project: Project; map: ProjectMap } | null {
         const project = this.#project;
         const map = project?.maps.find((each) => each.id === this.#mapId);
-        if (!project || !map) {
+        return project && map ? { project, map } : null;
+    }
+
+    /**
+     * Asks for a build of the map shown and does none of it: from now on what was built is
+     * older than the project. A build under way ends first; its result is dropped.
+     */
+    #ask(): void {
+        if (this.#disposed) return;
+        this.#asked += 1;
+        const shown = this.#shown();
+        if (!shown) {
             this.#publish(null);
             return;
         }
+        // Another project's or map's tilemap is not drawn while this one's is made.
+        const built = this.#built;
+        if (built && (built.generation !== this.#generation || built.mapId !== shown.map.id)) {
+            this.#built = null;
+        }
+        if (this.#published) this.#setPending(this.#built ? "hold" : "blank");
+        if (this.#scheduled || this.#busy) return;
+        this.#scheduled = true;
+        this.#defer(() => {
+            this.#scheduled = false;
+            if (!this.#disposed && !this.#busy) this.#start();
+        });
+    }
+
+    /** Starts the build of the map shown, as the project is now: its packs, then its parts. */
+    #start(): void {
+        this.#busy = false;
+        const shown = this.#shown();
+        if (!shown) {
+            this.#publish(null);
+            return;
+        }
+        const { project, map } = shown;
         // The tilesets the map's cells may use; the tilemap lists those inside the map.
         const slots = slotsInMap(map);
-        const used = project.tilesets.filter((tileset) => slots.has(tileset.slot));
-        const pending: Promise<PackedTileset>[] = [];
-        for (const tileset of used) {
+        const packs = new Map<string, PackedTileset>();
+        const waiting: Promise<PackedTileset>[] = [];
+        for (const tileset of project.tilesets) {
+            if (!slots.has(tileset.slot)) continue;
             const entry = this.#pack(tileset);
             if (entry.failed) {
                 // Reported when it failed; nothing is drawn until the tileset changes.
                 this.#publish(null);
                 return;
             }
-            if (!entry.value) pending.push(entry.promise);
+            if (entry.value) packs.set(tileset.exportName, entry.value);
+            else waiting.push(entry.promise);
         }
-        if (pending.length > 0) {
-            // Another project's or map's tilemap is not shown while this one's packs are made.
-            const built = this.#built;
-            if (built && (built.generation !== this.#generation || built.mapId !== map.id)) {
-                this.#publish(null);
-            }
-            if (this.#waiting) return;
-            this.#waiting = true;
-            void Promise.allSettled(pending).then(() => {
-                this.#waiting = false;
-                this.#build();
+        this.#busy = true;
+        if (waiting.length > 0) {
+            // It starts over once they are made: the project may change meanwhile.
+            void Promise.allSettled(waiting).then(() => {
+                if (!this.#disposed) this.#start();
             });
             return;
         }
+        const atlases: Record<string, unknown> = {};
+        for (const [name, packed] of packs) atlases[name] = packed.atlas;
+        const flight: Flight = {
+            asked: this.#asked,
+            generation: this.#generation,
+            project,
+            map,
+            packs,
+            atlases,
+            late: [],
+        };
+        this.#flight = flight;
+        let parts: Promise<TilemapParts>;
         try {
-            this.#finish(project, map);
+            parts = this.#buildParts(project, map, atlases);
         } catch (error) {
-            this.#options.onError(error instanceof Error ? error.message : String(error));
-            this.#publish(null);
+            parts = Promise.reject(error instanceof Error ? error : new Error(String(error)));
         }
+        parts.then(
+            (result) => this.#landed(flight, result, undefined),
+            (error: unknown) => this.#landed(flight, null, error),
+        );
+    }
+
+    /** A build's parts arrived, or it failed with `error`. */
+    #landed(flight: Flight, parts: TilemapParts | null, error: unknown): void {
+        if (this.#flight === flight) this.#flight = null;
+        if (this.#disposed) return;
+        // The project changed under it: the newest project is built instead.
+        if (flight.asked !== this.#asked) {
+            this.#start();
+            return;
+        }
+        let built: Built | null = null;
+        let failure = error;
+        if (parts) {
+            try {
+                built = this.#finish(flight, parts);
+            } catch (thrown) {
+                failure = thrown;
+            }
+        }
+        if (!built) {
+            // Cells written since it started may be what it failed on: it is tried with them.
+            if (flight.late.length > 0) {
+                this.#start();
+                return;
+            }
+            this.#options.onError(failure instanceof Error ? failure.message : String(failure));
+            this.#busy = false;
+            this.#publish(null);
+            return;
+        }
+        for (const touched of flight.late) {
+            if (!this.#writeCells(built, touched)) {
+                // The result cannot take the cells written since it started.
+                this.#start();
+                return;
+            }
+        }
+        this.#busy = false;
+        this.#built = built;
+        this.#publish(built.content);
     }
 
     /** The pack of `tileset` at its current revision, started when needed. */
@@ -316,38 +443,46 @@ export class PreviewSource {
         return entry;
     }
 
-    /** Makes the tilemap, its textures and its key from the packs (all ready). */
-    #finish(project: Project, map: ProjectMap): void {
-        const json = JSON.parse(tilemapFor(project, map)) as {
-            tilesets: { name: string }[];
-            layers: { type: string; image?: string }[];
-        };
+    /**
+     * Makes what a build's parts show: the tilemap, its textures and its key. The tilemap of the
+     * last build is kept, with the cells of the parts written into it, when the parts differ
+     * from its own in their cells alone; otherwise it is read from the parts.
+     */
+    #finish(flight: Flight, parts: TilemapParts): Built {
+        const { project, map, generation, packs, atlases } = flight;
+        const last = this.#built;
+        const kept =
+            last !== null &&
+            last.generation === generation &&
+            last.mapId === map.id &&
+            last.text === parts.text &&
+            last.packs.size === packs.size &&
+            [...packs].every(([name, packed]) => last.packs.get(name) === packed);
+        let tilemap: Tilemap;
+        if (kept) {
+            tilemap = last.content.tilemap;
+            cellsFromParts(parts, tilemap);
+        } else {
+            tilemap = tilemapFromParts(parts, atlases);
+        }
         const byName = new Map(project.tilesets.map((tileset) => [tileset.exportName, tileset]));
         const listed: Tileset[] = [];
-        const atlases: Record<string, unknown> = {};
         const textures: PreviewTexture[] = [];
-        const key: string[] = [`${this.#generation}`];
-        for (const { name } of json.tilesets) {
+        const key: string[] = [`${generation}`];
+        for (const { name } of tilemap.tilesets) {
             const tileset = byName.get(name);
-            const packed = tileset ? this.#packs.get(tileset.id)?.value : null;
+            const packed = packs.get(name);
             if (!tileset || !packed) {
-                // A tileset the scan above missed: pack it and build again.
-                if (tileset) {
-                    this.#pack(tileset);
-                    this.#build();
-                    return;
-                }
                 throw new Error(`The tilemap names a tileset ${name} the project lacks.`);
             }
             listed.push(tileset);
-            atlases[name] = packed.atlas;
             const id = previewTextureId(project, name);
             textures.push({ id, pixels: packed.image });
             key.push(`${id}#${this.#revisions.get(tileset.id) ?? 0}`);
         }
         const images = new Set<string>();
-        for (const layer of json.layers) {
-            if (layer.type !== "image" || layer.image === undefined) continue;
+        for (const layer of tilemap.layers) {
+            if (layer.type !== "image") continue;
             const name = layer.image.slice(0, -".png".length);
             if (images.has(name)) continue;
             images.add(name);
@@ -357,24 +492,24 @@ export class PreviewSource {
             textures.push({ id, pixels: evenImage(image.pixels) });
             key.push(`${id}#${this.#versionOf(image.pixels)}`);
         }
-        const tilemap = readTilemap(json, atlases);
-        const animations = new PlacedAnimations(tilemap, byName);
-        this.#built = {
+        const animations = new PlacedAnimations(parts);
+        return {
             content: {
                 tilemap,
                 texturesKey: key.join("\n"),
                 textures,
                 animations: animations.list,
             },
-            generation: this.#generation,
+            generation,
             mapId: map.id,
             width: map.width,
             height: map.height,
+            text: parts.text,
+            packs,
             table: assignFirstGids(listed),
             tileLayers: tileLayersOf(tilemap),
             animations,
         };
-        this.#options.onContent(this.#built.content);
     }
 
     #versionOf(pixels: PixelBuffer): number {
@@ -386,10 +521,20 @@ export class PreviewSource {
         return version;
     }
 
-    #publish(content: null): void {
-        const had = this.#built !== null;
-        this.#built = null;
-        if (had) this.#options.onContent(content);
+    /** Gives the preview its content (null: nothing can be drawn); no build is pending. */
+    #publish(content: PreviewContent | null): void {
+        if (content === null) this.#built = null;
+        if (content !== this.#published) {
+            this.#published = content;
+            this.#options.onContent(content);
+        }
+        this.#setPending(null);
+    }
+
+    #setPending(pending: PreviewPending | null): void {
+        if (pending === this.#pending) return;
+        this.#pending = pending;
+        this.#options.onPending?.(pending);
     }
 }
 

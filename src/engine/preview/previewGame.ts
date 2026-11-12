@@ -24,6 +24,8 @@ import { DemandScheduler, ticksDelay, untilNextAnimationFrame, TICK_MS } from ".
 //   scene with the new assets is prepared and pushed.
 // - A new `Tilemap` with the same textures is drawn by the mounted scene from its next frame;
 //   cells written into a tile layer's `data` show at the next frame after `wake`.
+// - While the app makes the content again (`setPending`), no frame shows the content it
+//   replaces: none is drawn at all ("hold"), or the background alone ("blank").
 // - Lifecycle steps (create, start, stop, scene restart, dispose) run one at a time, in order.
 // - Frames run on demand (`demandScheduler.ts`). The game stops while `setRunning(false)` (the
 //   window hidden) and is disposed with the preview (the dock section collapsed).
@@ -54,6 +56,12 @@ export interface PreviewContent {
 }
 
 export type LayerFilter = (layer: TilemapLayer, index: number) => boolean;
+
+/**
+ * How the preview waits for a content that is being made (SPEC §12): "hold" draws no frame, so
+ * the picture stays; "blank" draws the background alone, the map scene and its textures kept.
+ */
+export type PreviewPending = "hold" | "blank";
 
 export interface PreviewGameOptions {
     /** A diagnostic of the game or of `drawTilemap`, once per distinct message. */
@@ -179,6 +187,7 @@ export class PreviewGame {
     #running = false;
     #disposed = false;
     #content: PreviewContent | null = null;
+    #pending: PreviewPending | null = null;
     #camera = { x: 0, y: 0 };
     #background = 0;
     #layers: LayerFilter | null = null;
@@ -239,6 +248,17 @@ export class PreviewGame {
         const restart = content?.texturesKey !== this.#content?.texturesKey;
         this.#content = content;
         if (restart) this.#kick();
+        this.#wake();
+    }
+
+    /**
+     * The content is being made again and the one set is older than the project: until null is
+     * set, no frame draws it. Set the new content before ending it.
+     */
+    setPending(pending: PreviewPending | null): void {
+        if (pending === this.#pending) return;
+        this.#pending = pending;
+        this.#instance?.scheduler.hold(pending === "hold");
         this.#wake();
     }
 
@@ -435,6 +455,7 @@ export class PreviewGame {
         this.#style(canvas);
         let instance: Instance | null = null;
         const scheduler = new DemandScheduler(() => this.#due());
+        scheduler.hold(this.#pending === "hold");
         const game: Game = new BrowserGame<Record<string, never>, never>({
             canvas,
             width: size.width,
@@ -621,6 +642,8 @@ export class PreviewGame {
         mounted: MountedMap,
     ): void {
         try {
+            // The content is older than the project: nothing of it is drawn.
+            if (this.#pending === "blank") return;
             const content = this.#content;
             // The newest tilemap of the scene's textures; the scene's own while others wait.
             const tilemap =

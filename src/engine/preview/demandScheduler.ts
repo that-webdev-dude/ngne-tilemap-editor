@@ -4,6 +4,7 @@
 // This scheduler runs the frame it was asked for only when the image can differ: at the next
 // animation frame after `wake` (a cell, the camera, a choice of the panel changed), and when the
 // playing tile animations reach their next frame (`due`). A still preview submits no frame.
+// While it is held (`hold`: the content is being made again, SPEC §12) no frame runs at all.
 //
 // The game's fixed step ticks the time between two frames. `skip` stops that clock for the time
 // since the last frame, so time that passed while nothing was drawn (paused, or before a play)
@@ -38,7 +39,7 @@ const browserClock: FrameClock = {
 /**
  * A `FrameScheduler` that runs the frame the game asked for at the animation frame after
  * `due()` milliseconds, never while `due()` is Infinity, and at the next animation frame after
- * `wake()`.
+ * `wake()`; none of them while it is held.
  */
 export class DemandScheduler implements FrameSchedulerLike {
     readonly #due: () => number;
@@ -49,6 +50,7 @@ export class DemandScheduler implements FrameSchedulerLike {
     #timer: ReturnType<typeof setTimeout> | undefined;
     /** A change waits to be drawn. */
     #dirty = true;
+    #held = false;
     /** Real time less the time handed to the game. */
     #offset = 0;
     /** The time handed to the game for its last frame; null before one. */
@@ -82,6 +84,17 @@ export class DemandScheduler implements FrameSchedulerLike {
         if (this.#pending) this.#arm();
     }
 
+    /**
+     * While held no frame runs. A frame asked for, a `wake` and what is due are kept: released,
+     * the next frame is planned as if they came now.
+     */
+    hold(held: boolean): void {
+        if (held === this.#held) return;
+        this.#held = held;
+        if (held) this.#disarm();
+        else this.#arm();
+    }
+
     /** The game does not tick the time since its last frame: its clock stood still. */
     skip(now = this.#clock.now()): void {
         if (this.#last !== null) this.#offset = now - this.#last;
@@ -102,7 +115,7 @@ export class DemandScheduler implements FrameSchedulerLike {
 
     #arm(): void {
         this.#disarm();
-        if (!this.#pending) return;
+        if (!this.#pending || this.#held) return;
         const due = this.#dirty ? 0 : Math.max(this.#due(), 0);
         if (!Number.isFinite(due)) return;
         // The frame waits for the animation frame after the delay, so it lands on a vsync.

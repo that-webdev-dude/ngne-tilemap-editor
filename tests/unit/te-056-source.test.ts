@@ -194,6 +194,9 @@ describe("the preview's tilemap (SPEC §12)", () => {
         const map = mapOf(h.project);
         const far = map.layers.find((layer) => layer.name === "Far")!;
         h.history.execute(setLayerValuesCommand(h.project, map.id, [far.id], { opacity: 99 }));
+        // Nothing is built inside the step: the build is asked for and runs later.
+        expect(h.contents.at(-1)).toBe(before);
+        await settle();
         const after = h.contents.at(-1)!;
         expect(after).not.toBe(before);
         expect(after.tilemap.layers.find((layer) => layer.name === "Far")!.opacity).toBe(99);

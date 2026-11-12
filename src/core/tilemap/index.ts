@@ -36,3 +36,5 @@ export type {
     TilemapTileset,
 } from "../runtime/runtime";
 export { tilemapFor } from "./tilemapFor";
+export { cellsFromParts, tilemapFromParts, tilemapParts } from "./tilemapParts";
+export type { TilemapParts } from "./tilemapParts";
