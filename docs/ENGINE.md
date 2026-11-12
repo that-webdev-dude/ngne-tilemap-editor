@@ -152,6 +152,7 @@ tickets that build the feature.
 | Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | TE-015: 456 / 356 ms, longest build slice 4.0 / 3.9 ms; the live-tier frame drawn meanwhile 126 / 116 ms (§4) |
 | Initial overview build after a map opens (background) | no task > 16 ms | TE-015: 0.67 / 0.57 s total, longest task 33.9 / 53.2 ms, **over budget** (NGNE's first `updateTexture` readback; build slices ≤ 9.9 / 10.4 ms) |
 | Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | TE-031: fitted view 99.3 / 98.4 ms (max 106.3 / 107.8 ms); 100% view 25.8 / 25.7 ms |
+| GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | TE-068: pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 1 (p95 1 / 1); paint 2 / 2 (p95 1 / 2); last submit → GPU idle 3.8–16.7 ms |
 | Idle editor: frames submitted per second | 0 | — |
 | Cold load to interactive (production build, local) | ≤ 2 s | — |
 
@@ -166,6 +167,15 @@ return of the first frame submitted after it, 40 switches 1 s apart. At the fitt
 frame is a live-tier frame of all 524,289 cells (median draw 76 ms): the previous map's chunk tier
 is released on the switch and the new one is built in the background (§4). Raw data:
 `te-031-tab-switch-{fit,100}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
+TE-068 row: 2026-11-12, the same machine, power plan, panel and window, Chrome 157.0.8103.78.
+Frames in flight are counted right after each of the viewport's submits, that frame included,
+as the `onSubmittedWorkDone()` promises of its queue still pending; the preview's queue is
+counted apart. Scenarios: the TE-013 pan at the live-tier threshold (5 s), the same pan at
+overview in the chunk tier, and the TE-017 stroke. In the pan the main thread spends a median
+9.1 / 9.2 ms per frame callback, and the GPU is idle 6.5 / 3.8 ms after the last submit. Raw data:
+`te-068-frames-in-flight-{pan,overview,paint}-{intel-uhd,rtx-4060}.json` in
+[evidence/](evidence/). Owner, 2026-11-12: the pan's 4 is accepted for v1; the NGNE API of §7
+follows v1.
 
 ### Game runtime budget
 
@@ -220,3 +230,4 @@ reads this table; costs are filled in from spike and ticket measurements.
 | One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor |
 | BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview |
 | `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor |
+| `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle within 7 ms of the last one | editor |

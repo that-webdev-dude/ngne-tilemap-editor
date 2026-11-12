@@ -1,0 +1,38 @@
+{
+    "id": "te-068-frames-in-flight-pan-intel-uhd",
+    "ticket": "TE-068",
+    "measurement": "GPU frames in flight right after each submit, that frame included, during the TE-013 scripted pan at the live-tier threshold; Intel UHD, window 1920 × 1080, DPR 1",
+    "statistic": "max of 435 submitted frames",
+    "unit": "count",
+    "budgetMs": 2,
+    "resultMs": 4,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "p95": 3,
+        "median": 3,
+        "lastSubmitToIdleMs": 6.5,
+        "frames": 435,
+        "tiers": [
+            "live"
+        ],
+        "previewSubmits": 0,
+        "previewMaxInFlight": 0,
+        "canvas": [
+            1612,
+            784
+        ],
+        "sprites": 66640,
+        "durationMs": 5000,
+        "callbackMedianMs": 9.099999994039536
+    },
+    "benchmarkId": "te-068-frames-in-flight-pan",
+    "pass": false,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-12T11:18:52.452Z"
+}

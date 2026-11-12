@@ -1,0 +1,37 @@
+{
+    "id": "te-068-frames-in-flight-paint-rtx-4060",
+    "ticket": "TE-068",
+    "measurement": "GPU frames in flight right after each submit, that frame included, during the TE-017 stroke of the stamp brush; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "max of 379 submitted frames",
+    "unit": "count",
+    "budgetMs": 2,
+    "resultMs": 2,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "p95": 2,
+        "median": 1,
+        "lastSubmitToIdleMs": 12.900000005960464,
+        "frames": 379,
+        "tiers": [
+            "live"
+        ],
+        "previewSubmits": 202,
+        "previewMaxInFlight": 1,
+        "canvas": [
+            1612,
+            784
+        ],
+        "events": 201,
+        "eventToFrameMedianMs": 14.699999988079071
+    },
+    "benchmarkId": "te-068-frames-in-flight-paint",
+    "pass": true,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16
+    },
+    "date": "2026-11-12T11:19:49.451Z"
+}
