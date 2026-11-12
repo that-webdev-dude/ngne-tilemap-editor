@@ -4,12 +4,12 @@
     "measurement": "Terrain brush step on a complete 4-terrain corner set on the reference map at 100%, pointer event to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 190 drag moves of one stroke after 10 warm-up moves",
     "budgetMs": 33,
-    "resultMs": 14.399999976158142,
+    "resultMs": 16.200000002980232,
     "details": {
         "adapter": "nvidia lovelace",
-        "pressMs": 27.600000023841858,
-        "medianMs": 10.5,
-        "maxMs": 17.399999976158142,
+        "pressMs": 17.899999991059303,
+        "medianMs": 14.599999994039536,
+        "maxMs": 18.700000002980232,
         "tiers": [
             "live"
         ],
@@ -23,7 +23,14 @@
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-11-09T07:10:47.711Z"
+    "date": "2026-11-12T11:51:01.409Z"
 }

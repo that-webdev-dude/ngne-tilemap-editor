@@ -11,6 +11,13 @@ import { fileURLToPath } from "node:url";
 // hardware is then recorded beside the reference records without replacing them, for example
 // `PERF_ID=te-017-paint-cloud-swiftshader` (tests/perf/README.md). Without PERF_ID nothing
 // changes. A process records once under a PERF_ID: a second record would replace the first.
+//
+// PERF_SUFFIX names every record of a process: each is printed and written under
+// `<benchmark id>-<suffix>`, keeping the benchmark's id as `benchmarkId`, so a benchmark that
+// records several results is recorded once per GPU (`PERF_SUFFIX=intel-uhd`). PERF_ENV adds
+// a JSON object of facts about the machine to the record's environment (the browser, power plan
+// and refresh rate that `te-064-record-all.ts` reads). PERF_OUT writes the records to another
+// directory than docs/evidence.
 
 export interface PerfEntry {
     /** File name under docs/evidence without extension, for example `te-019-bucket-fill`. */
@@ -37,19 +44,32 @@ export interface PerfEntry {
     unit?: "ms" | "count";
 }
 
-/** What PERF_ID may be: a file name of lowercase letters, digits and single hyphens. */
+/** What PERF_ID and PERF_SUFFIX may be: a file name of lowercase letters, digits and single hyphens. */
 const PERF_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** The benchmark id last recorded under the current PERF_ID in this process. */
 let recordedUnderId: { perfId: string; benchmarkId: string } | null = null;
 
 /**
- * The entry as it is printed and written: under PERF_ID when that is set, with the
- * benchmark's own id as `benchmarkId`. Throws for a PERF_ID that is no plain file name, and
- * for a second record under the same PERF_ID in one process.
+ * The entry as it is printed and written: under PERF_ID when that is set, or with PERF_SUFFIX
+ * appended, with the benchmark's own id as `benchmarkId`. Throws for a PERF_ID or PERF_SUFFIX
+ * that is no plain file name, for both set at once, and for a second record under the same
+ * PERF_ID in one process.
  */
 export function namedEntry(entry: PerfEntry): PerfEntry & { benchmarkId?: string } {
     const perfId = process.env.PERF_ID ?? "";
+    const suffix = process.env.PERF_SUFFIX ?? "";
+    if (perfId !== "" && suffix !== "") {
+        throw new Error("PERF_ID and PERF_SUFFIX are both set; set one.");
+    }
+    if (suffix !== "") {
+        if (!PERF_ID_PATTERN.test(suffix)) {
+            throw new Error(
+                `PERF_SUFFIX "${suffix}" is not a plain file name (a-z, 0-9, hyphens).`,
+            );
+        }
+        return { ...entry, id: `${entry.id}-${suffix}`, benchmarkId: entry.id };
+    }
     if (perfId === "") return entry;
     if (!PERF_ID_PATTERN.test(perfId)) {
         throw new Error(`PERF_ID "${perfId}" is not a plain file name (a-z, 0-9, hyphens).`);
@@ -64,6 +84,17 @@ export function namedEntry(entry: PerfEntry): PerfEntry & { benchmarkId?: string
     return { ...entry, id: perfId, benchmarkId: entry.id };
 }
 
+/** The facts of PERF_ENV, a JSON object; throws for anything else. */
+export function extraEnvironment(): Record<string, unknown> {
+    const text = process.env.PERF_ENV ?? "";
+    if (text === "") return {};
+    const value: unknown = JSON.parse(text);
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+        throw new Error("PERF_ENV is not a JSON object.");
+    }
+    return value as Record<string, unknown>;
+}
+
 /** The console line of a record. */
 export function recordLine(entry: PerfEntry): string {
     const count = entry.unit === "count";
@@ -76,13 +107,14 @@ export function recordLine(entry: PerfEntry): string {
 }
 
 /**
- * Prints `entry`, and with PERF_RECORD=1 writes it to `<directory>/<id>.json` (docs/evidence by
- * default) with the environment and the date, and `pass` when it has a budget. With PERF_ID
- * the id is PERF_ID's (`namedEntry`).
+ * Prints `entry`, and with PERF_RECORD=1 writes it to `<directory>/<id>.json` (PERF_OUT, else
+ * docs/evidence) with the environment and the date, and `pass` when it has a budget. With
+ * PERF_ID or PERF_SUFFIX the id is `namedEntry`'s.
  */
 export function record(
     benchmarkEntry: PerfEntry,
-    directory = fileURLToPath(new URL("../../docs/evidence/", import.meta.url)),
+    directory = process.env.PERF_OUT ||
+        fileURLToPath(new URL("../../docs/evidence/", import.meta.url)),
 ): void {
     const entry = namedEntry(benchmarkEntry);
     console.log(recordLine(entry));
@@ -99,6 +131,7 @@ export function record(
             cpu: processors[0]?.model.trim() ?? "unknown",
             cores: processors.length,
             memoryGb: Math.round(totalmem() / 2 ** 30),
+            ...extraEnvironment(),
         },
         date: new Date().toISOString(),
     };

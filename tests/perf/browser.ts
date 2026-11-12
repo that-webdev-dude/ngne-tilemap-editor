@@ -63,7 +63,7 @@ export interface BrowserRun {
     close(): Promise<void>;
 }
 
-function freePort(): Promise<number> {
+export function freePort(): Promise<number> {
     return new Promise((resolve, reject) => {
         const server = createNetServer();
         server.once("error", reject);
@@ -82,7 +82,7 @@ function freePort(): Promise<number> {
  * The adapter Chrome gives `page`, as `vendor architecture`; throws when it is not the one
  * `PERF_GPU` names.
  */
-async function checkedAdapter(page: Page): Promise<string> {
+export async function checkedAdapter(page: Page): Promise<string> {
     if (!gpu) throw new Error("PERF_GPU is not set");
     const adapter = await page.evaluate(async () => {
         // The DOM library of the pinned TypeScript has no WebGPU types.
@@ -105,6 +105,26 @@ async function checkedAdapter(page: Page): Promise<string> {
     return adapter;
 }
 
+/**
+ * Installed Chrome, new headless, at device pixel ratio `ratio` on the adapter of `PERF_GPU`,
+ * with a fresh profile (an empty cache) and one page in a 1920 × 1080 window.
+ */
+export async function launchChrome(ratio: number): Promise<{ browser: Browser; page: Page }> {
+    if (!gpu) throw new Error("PERF_GPU is not set");
+    const browser = await chromium.launch({
+        channel: "chrome",
+        headless: true,
+        args: ["--force-color-profile=srgb", `--force-device-scale-factor=${ratio}`, ...gpu.args],
+    });
+    try {
+        const context = await browser.newContext({ viewport: WINDOW, deviceScaleFactor: ratio });
+        return { browser, page: await context.newPage() };
+    } catch (error) {
+        await browser.close();
+        throw error;
+    }
+}
+
 /** The dev server and Chrome at device pixel ratio `ratio` on the adapter of `PERF_GPU`. */
 async function launch(
     ratio: number,
@@ -117,17 +137,8 @@ async function launch(
     });
     await server.listen();
     try {
-        const browser = await chromium.launch({
-            channel: "chrome",
-            headless: true,
-            args: [
-                "--force-color-profile=srgb",
-                `--force-device-scale-factor=${ratio}`,
-                ...gpu.args,
-            ],
-        });
-        const context = await browser.newContext({ viewport: WINDOW, deviceScaleFactor: ratio });
-        return { server, browser, page: await context.newPage(), port };
+        const { browser, page } = await launchChrome(ratio);
+        return { server, browser, page, port };
     } catch (error) {
         await server.close();
         throw error;

@@ -138,54 +138,79 @@ filled, two tilesets, 12.5% of cells flipped or rotated, one parallax layer.
 
 ### Editor budgets
 
-"Measured" values are from the spikes (Intel UHD / RTX 4060); the others are checked by the
-tickets that build the feature.
+"Measured" values (Intel UHD / RTX 4060) are TE-064's measurement of the finished build on the
+reference hardware; each row's benchmark is under `tests/perf/` (the ticket that built the
+feature wrote it).
 
 | Metric | Budget | Measured |
 | --- | --- | --- |
-| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | 7.7–7.8 / 7.0–7.2 ms |
-| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | 0% / 0% |
-| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | TE-017: 31.3 / 27.8 ms (median 19.6 / 16.6 ms, max 42.3 / 42.6 ms) |
-| Paint at overview: painted cells visible | next frame | by design (live quads); frame submit p95 1.6 / 0.9 ms |
-| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | TE-015: 19.9 / 21.0 ms (16×16 stamp: 34.1 / 25.5 ms) |
-| Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | TE-015: 32 / 32 MB (T = 8, 128 chunks) |
-| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | TE-015: 456 / 356 ms, longest build slice 4.0 / 3.9 ms; the live-tier frame drawn meanwhile 126 / 116 ms (§4) |
-| Initial overview build after a map opens (background) | no task > 16 ms | TE-015: 0.67 / 0.57 s total, longest task 33.9 / 53.2 ms, **over budget** (NGNE's first `updateTexture` readback; build slices ≤ 9.9 / 10.4 ms) |
-| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | TE-031: fitted view 99.3 / 98.4 ms (max 106.3 / 107.8 ms); 100% view 25.8 / 25.7 ms |
-| GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | TE-068: pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 1 (p95 1 / 1); paint 2 / 2 (p95 1 / 2); last submit → GPU idle 3.8–16.7 ms |
-| Idle editor: frames submitted per second | 0 | — |
-| Cold load to interactive (production build, local) | ≤ 2 s | — |
+| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | DPR 1: 10.8 / 9.7 ms; DPR 1.25: 10.3 / 9.7 ms (median 9.2–9.3 / 8.9–9.0 ms), **over budget** on Intel UHD |
+| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | DPR 1: 0.2% / 0.2%; DPR 1.25: 0.2% / 0% (1 / 1 and 1 / 0 frames of 416–489) |
+| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | 18.5 / 19.7 ms (median 17.1 / 14.9 ms, max 19.5 / 26.2 ms) |
+| Paint at overview: painted cells visible | next frame | the frame after the command (live quads); command → that frame submitted p95 17.6 / 17.7 ms (16×16 stamp: 17.9 / 17.7 ms) |
+| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 39.5 / 42.1 ms (16×16 stamp: 46.3 / 40.9 ms) |
+| Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | 32 / 32 MB (T = 8, 128 chunks) |
+| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 502 / 528 ms, **over budget**; longest build slice 9.8 / 11.5 ms; the live-tier frame drawn meanwhile 114 / 127 ms (§4) |
+| Initial overview build after a map opens (background) | no task > 16 ms | 0.73 / 0.73 s total, longest task 84.3 / 85.7 ms, **over budget** (build slices ≤ 9.1 / 8.5 ms) |
+| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 173.0 / 193.6 ms (median 164.7 / 175.1 ms); 100% view 107.2 / 144.8 ms (median 100.8 / 108.2 ms); **over budget** |
+| GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 1 (p95 1 / 1); paint 2 / 2 (p95 1 / 2); last submit → GPU idle 3.3–16.4 ms |
+| Idle editor: frames submitted per second | 0 | 0 / 0 (live tier at 100% and chunk tier fitted; pointer outside the viewport and resting on the canvas) |
+| Cold load to interactive (production build, local) | ≤ 2 s | 244 / 2,516 ms (median 233 / 835 ms), **over budget** on RTX 4060 |
 
-TE-015 rows: 2026-10-31, Chrome 156.0.8078.80, i7-12650H, Balanced power plan with the Best
-performance power mode, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784). Raw data: `te-015-*-intel-uhd.json` and
-`te-015-*-rtx-4060.json` in [evidence/](evidence/).
-TE-017 row: 2026-11-02, the same machine, Chrome, power plan, panel and window. Raw data:
-`te-017-paint-intel-uhd.json` and `te-017-paint-rtx-4060.json` in [evidence/](evidence/).
-TE-031 row: 2026-11-06, the same machine, Chrome, power plan, panel and window. Two open tabs
-each hold the reference map; a switch is timed from the call that shows the other map to the
-return of the first frame submitted after it, 40 switches 1 s apart. At the fitted view the first
-frame is a live-tier frame of all 524,289 cells (median draw 76 ms): the previous map's chunk tier
-is released on the switch and the new one is built in the background (§4). Raw data:
-`te-031-tab-switch-{fit,100}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
-TE-068 row: 2026-11-12, the same machine, power plan, panel and window, Chrome 157.0.8103.78.
-Frames in flight are counted right after each of the viewport's submits, that frame included,
-as the `onSubmittedWorkDone()` promises of its queue still pending; the preview's queue is
-counted apart. Scenarios: the TE-013 pan at the live-tier threshold (5 s), the same pan at
-overview in the chunk tier, and the TE-017 stroke. In the pan the main thread spends a median
-9.1 / 9.2 ms per frame callback, and the GPU is idle 6.5 / 3.8 ms after the last submit. Raw data:
-`te-068-frames-in-flight-{pan,overview,paint}-{intel-uhd,rtx-4060}.json` in
-[evidence/](evidence/). Owner, 2026-11-12: the pan's 4 is accepted for v1; the NGNE API of §7
-follows v1.
+All rows: 2026-11-12, Chrome 157.0.8103.78, i7-12650H, Balanced power plan with the Best
+performance power mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless
+the row says otherwise; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
+and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
+`tests/perf/te-064-record-all.ts`.
+
+- Pan and dropped frames: `te-013-pan-{submit,dropped}-{dpr1,dpr125}`. The reference map at the
+  live-tier threshold (zoom 0.78, about 66,600 sprites), 5 s after 1 s of warm-up.
+- Paint: `te-017-paint`. A stroke of the stamp brush (1×1 stamp) on the layer under the parallax
+  layer at 100%: one press and 200 drag moves to a new cell each, sent as real input; the first
+  10 moves are warm-up.
+- Chunk tier (paint at overview, patch, memory, rebuild, initial build): `te-015-*`. The patch
+  and the frame after the command are timed from the command over 100 paints. The initial build
+  is timed from the map's first frame at 100% to the tier ready; its longest task is the longest
+  gap of a message loop, and the build's own slices are recorded beside it. The rebuild follows
+  an opacity change at overview, where the editor draws the change in the live tier until the
+  chunks are composited again (§4).
+- Tab switch: `te-031-tab-switch-{fit,100}`. Two open tabs each hold the reference map; a switch
+  is timed from the call that shows the other map to the return of the first frame submitted
+  after it, 40 switches 1 s apart after 4 warm-up switches. At the fitted view the first frame is
+  a live-tier frame of all 524,289 cells (median draw 70 / 75 ms): the previous map's chunk tier
+  is released on the switch and the new one is built in the background (§4). At 100% the median
+  draw is 5.7 / 6.0 ms of the switch's 100.8 / 108.2 ms.
+- Frames in flight: `te-068-frames-in-flight-{pan,overview,paint}`. Counted right after each of
+  the viewport's submits, that frame included, as the `onSubmittedWorkDone()` promises of its
+  queue still pending; the preview's queue is counted apart. Scenarios: the pan above (5 s), the
+  same pan at overview in the chunk tier, and the paint stroke above. In the pan the main thread
+  spends a median 8.9 / 9.4 ms per frame callback. Owner, 2026-11-12: the pan's 4 is accepted for
+  v1; the NGNE API of §7 follows v1.
+- Idle: `te-064-idle-{live,overview}`, the sprite editor's method (RULES 1). The reference map
+  at 100% in its middle and fitted (View › Fit Map); after the chunk tier has no work left and 2 s
+  more, two windows of 10 s with nothing done: the pointer outside the viewport, then resting on
+  the canvas after one move onto it. Every `GPUQueue.submit` of the page (viewport and preview) is
+  counted: 0 in each window, and 0 animation-frame callbacks of the app. A window counts only when
+  the page ran at least 20 animation frames per second (it ran 144), and a view change afterwards
+  must submit a frame.
+- Cold load: `te-064-cold-load`, the sprite editor's definition of "interactive" (RULES 1). The
+  production build (`vite build`) served by `vite preview` on the machine; each load in a new
+  Chrome with a fresh profile (no cache, no service worker). From the navigation's start, the
+  empty state's New Project button is clicked at every animation frame (at most every 50 ms) from
+  the first one that shows it; "interactive" is the first animation frame that shows the New
+  Project dialog. The maximum of 10 loads. The app commits at a median 157 / 143 ms and shows the
+  empty state at 210 / 816 ms (medians): on the RTX 4060 the WebGPU check before the shell takes most of the
+  load, and the first load of the run took 2,496 ms to the empty state (the others 765–1,370 ms).
 
 ### Game runtime budget
 
 | Config (stacked HUD scene, `pixelSnap` on, tile animations on, panning) | Budget: p95 `game.stats.renderMs` | Measured |
 | --- | --- | --- |
-| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | TE-055: 1.1 / 1.1 ms (median 0.9 / 0.8 ms, max 1.8 / 1.6 ms) |
-| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | TE-055: 10.3 / 10.4 ms (median 9.5 / 9.4 ms, max 16.3 / 14.3 ms) |
+| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | 1.0 / 1.0 ms (median 0.8 / 0.8 ms, max 1.5 / 1.5 ms) |
+| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | 10.2 / 10.5 ms (median 9.4 / 9.7 ms, max 14.3 / 15.7 ms) |
 
-TE-055 rows: 2026-11-10, the machine, power plan and window of §6, Chrome 157.0.8103.50, 144 Hz
-panel. The fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.0) imports the exported
+Both rows: TE-064, with the machine, power plan, panel and window of the editor budgets. The
+fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.0) imports the exported
 `ngne-tilemap.ts` of the reference project with 32 animated tiles per tileset and draws the
 reference map under a stacked HUD scene of 200 sprites, `pixelSnap` on, the camera panning
 48 × 27 px/s; 10 s after 2 s, on `requestAnimationFrame`. Sprites per frame 4,664 and 66,992,
@@ -221,7 +246,7 @@ reads this table; costs are filled in from spike and ticket measurements.
 | Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime |
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor |
-| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU: 33.9 / 53.2 ms (TE-015, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor |
+| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU (initial overview build, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor |

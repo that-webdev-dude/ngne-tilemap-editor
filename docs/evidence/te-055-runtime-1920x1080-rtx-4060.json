@@ -2,11 +2,11 @@
     "id": "te-055-runtime-1920x1080-rtx-4060",
     "ticket": "TE-055",
     "measurement": "Game runtime: the fixture game drawing the exported reference project (8 full layers, 2 tilesets, parallax, animated tiles) at 1920 × 1080 ×1 with a stacked HUD scene, pixelSnap on, panning; game.stats.renderMs; RTX 4060, window 1920 × 1080, DPR 1",
-    "statistic": "p95 of 1024 frames over 10 s after 2 s",
-    "resultMs": 10.399999976158142,
+    "statistic": "p95 of 1003 frames over 10 s after 2 s",
+    "resultMs": 10.5,
     "details": {
         "adapter": "nvidia lovelace",
-        "frames": 1024,
+        "frames": 1003,
         "canvas": [
             1920,
             1080
@@ -14,12 +14,12 @@
         "sprites": 66992,
         "drawCalls": 17,
         "renderMs": {
-            "median": 9.400000095367432,
-            "p95": 10.399999976158142,
-            "p99": 11,
-            "max": 14.299999952316284
+            "median": 9.700000002980232,
+            "p95": 10.5,
+            "p99": 11.100000008940697,
+            "max": 15.699999988079071
         },
-        "frameMsP95": 10.399999976158142
+        "frameMsP95": 10.5
     },
     "benchmarkId": "te-055-runtime-1920x1080",
     "environment": {
@@ -27,7 +27,14 @@
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-11-10T22:27:47.646Z"
+    "date": "2026-11-12T11:49:57.155Z"
 }

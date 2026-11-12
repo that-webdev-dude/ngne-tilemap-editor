@@ -1,5 +1,5 @@
 {
-    "id": "te-015-memory",
+    "id": "te-015-memory-rtx-4060",
     "ticket": "TE-015",
     "measurement": "Chunk-tier GPU memory of the reference map in MB; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "chunk textures × (32 T)² × 4 bytes",
@@ -14,16 +14,24 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 571.4000000059605,
-        "maxSliceMs": 10.400000005960464
+        "chunkBuildMs": 735.5,
+        "maxSliceMs": 8.5
     },
+    "benchmarkId": "te-015-memory",
     "pass": true,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-10-31T20:28:57.269Z"
+    "date": "2026-11-12T11:45:40.172Z"
 }

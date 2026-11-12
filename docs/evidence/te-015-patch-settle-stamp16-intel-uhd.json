@@ -1,23 +1,31 @@
 {
-    "id": "te-015-patch-settle-stamp16",
+    "id": "te-015-patch-settle-stamp16-intel-uhd",
     "ticket": "TE-015",
     "measurement": "Chunk patch settled after painting a 16 × 16 stamp at overview, command to patch settled; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "p95 of 100 paints",
     "budgetMs": 100,
-    "resultMs": 34.1000000089407,
+    "resultMs": 46.30000001192093,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 25.900000005960464,
-        "maxMs": 48.70000000298023,
-        "frameP95Ms": 15.400000005960464
+        "medianMs": 36.099999994039536,
+        "maxMs": 56.20000000298023,
+        "frameP95Ms": 17.899999991059303
     },
+    "benchmarkId": "te-015-patch-settle-stamp16",
     "pass": true,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-10-31T20:27:45.940Z"
+    "date": "2026-11-12T11:37:19.128Z"
 }

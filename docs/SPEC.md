@@ -1020,87 +1020,74 @@ until the user accepts the report.
 
 ## 14. Performance
 
-The budgets are ENGINE §6, unchanged; the ticket that builds a feature measures its row on
-reference hardware (RULES 8). Feature budgets ENGINE does not list, measured the same way on the
-reference map:
+The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes its row's
+benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
+Feature budgets ENGINE does not list, measured the same way on the reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket, TE-019: 41.3 / 43.1 ms (median 25.7 / 29.8 ms; flood alone 4.5 / 4.2 ms). Magic wand, TE-020: 20.0 / 18.9 ms (median 6.4 / 6.8 ms; flood alone 6.1 / 5.1 ms) |
-| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.6 / 13.0 ms (overlay redraws ≤ 9.8 / 9.7 ms) |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | TE-044: 15.7 / 14.4 ms (median 14.5 / 10.5 ms, max 17.1 / 17.4 ms) |
-| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | TE-047: 7.9 / 5.6 ms (median 5.0 / 5.4 ms); total 311.2 / 331.6 ms (median 308.2 / 305.5 ms) |
-| Open of the reference project to first frame | ≤ 3 s | TE-047: 258.9 / 274.8 ms (median 247.2 / 264.4 ms) |
-| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | TE-048: 8.3 / 13.5 ms (median 7.2 / 7.0 ms) |
-| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | TE-053: task max 7.1 / 5.6 ms (median 5.2 / 5.1 ms); total 75.6 / 70.9 ms (median 67.9 / 66.7 ms) |
-| Update tileset from source, 1,024 tiles | ≤ 1 s | TE-028: 205.9 / 175.0 ms (median 151.1 / 129.9 ms; to the history entry, median 85.4 / 84.0 ms) |
-| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | TE-037: 9.8 / 10.0 ms (overlay 0.2 / 0.2 ms), 0 / 0 frames; names shown at zoom 1.25: 4.1 / 4.3 ms, 0 / 0 frames |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 37.9 / 34.6 ms (median 24.8 / 27.6 ms; flood alone 4.4 / 4.9 ms). Magic wand: 22.8 / 14.9 ms (median 8.8 / 8.6 ms; flood alone 4.5 / 6.3 ms) |
+| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.5 / 10.6 ms (overlay redraws ≤ 9.7 / 10.7 ms) |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 18.5 / 16.2 ms (median 16.8 / 14.6 ms, max 20.2 / 18.7 ms) |
+| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 9.0 / 8.5 ms (median 6.5 / 7.6 ms); total 338.3 / 379.8 ms (median 324.8 / 353.5 ms) |
+| Open of the reference project to first frame | ≤ 3 s | 364.2 / 394.8 ms (median 349.9 / 385.6 ms) |
+| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 11.9 / 11.0 ms (median 4.0 / 7.2 ms) |
+| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | task max 6.5 / 8.0 ms (median 5.7 / 5.9 ms); total 73.1 / 75.3 ms (median 65.1 / 66.4 ms) |
+| Update tileset from source, 1,024 tiles | ≤ 1 s | 208.3 / 211.6 ms (median 173.4 / 182.7 ms; to the history entry, median 77.4 / 80.7 ms) |
+| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | 9.8 / 10.1 ms (overlay 0.2 / 0.2 ms), **over budget** on RTX 4060; 0 / 0 frames; names shown at zoom 1.25: 4.7 / 4.2 ms, 0 / 0 frames |
 
-TE-019 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. Raw data:
-`te-019-bucket-fill-intel-uhd.json` and `te-019-bucket-fill-rtx-4060.json` in
-[evidence/](evidence/); with the region already found by the hover preview the p95 is
-39.7 / 40.3 ms.
+All rows: TE-064, with the machine, Chrome, power plan, panel and window of ENGINE §6 (each
+record holds them). Raw data: `<benchmark id>-intel-uhd.json` and `<benchmark id>-rtx-4060.json`
+in [evidence/](evidence/), recorded by `tests/perf/te-064-record-all.ts`.
 
-TE-020 row: 2026-11-02, the machine, Chrome, power plan and window of ENGINE §6. The wand changes
-no cells, so its frame is the overlay's redraw showing the selection's ants. Raw data:
-`te-020-magic-wand-intel-uhd.json` and `te-020-magic-wand-rtx-4060.json` in [evidence/](evidence/).
+Bucket fill and magic wand rows (`te-019-bucket-fill`, `te-020-magic-wand`): the layer under the
+parallax layer made one tile everywhere, so each press at the map's middle fills or selects all
+256 × 256 cells; 35 presses after 5 warm-up presses. The wand changes no cells, so its frame is
+the overlay's redraw showing the selection's ants. With the region already found by the bucket's
+hover preview the p95 is 36.2 / 39.3 ms.
 
-Terrain brush row: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The
-reference map's first tileset given the 256 corner combinations of 4 terrains as one terrain set,
-the tile layer under the parallax layer filled with terrain 1; one stroke of terrain 2 at 100%,
-200 drag moves to a new cell each (each paints a new vertex and runs the filler with
-corrections), timed from the event to the first frame submitted after it; live tier. Raw data:
-`te-044-terrain-brush-intel-uhd.json` and `te-044-terrain-brush-rtx-4060.json` in
-[evidence/](evidence/).
+Terrain brush row (`te-044-terrain-brush`): the reference map's first tileset given the 256
+corner combinations of 4 terrains as one terrain set, the tile layer under the parallax layer
+filled with terrain 1; one stroke of terrain 2 at 100%, 200 drag moves to a new cell each (each
+paints a new vertex and runs the filler with corrections), timed from the event to the first
+frame submitted after it; live tier.
 
-Save and open rows: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The
-reference project (ENGINE §6's reference map with its two tilesets, a file of 1,419,753 bytes)
-saved and opened through the file workflows with the worker's writer and reader, to and from a
-file in memory. Save: the task max is the longest gap of a message loop from the call to the
-bytes written, as TE-015's; handing the project to the worker takes about 4 ms of it. Open: from
-the empty state, as at launch, from the call to the frame that draws the map with both tileset
-textures uploaded; its longest task is 102.8 / 104.7 ms (no budget). Raw data:
-`te-047-{save,open}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
+Save and open rows (`te-047-save`, `te-047-open`): the reference project (ENGINE §6's reference
+map with its two tilesets, a file of 1,419,753 bytes) saved and opened through the file workflows
+with the worker's writer and reader, to and from a file in memory; 10 runs after 2 warm-up runs.
+Save: the task max is the longest gap of a message loop from the call to the bytes written.
+Open: from the empty state, as at launch, from the call to the frame that draws the map with
+both tileset textures uploaded; its longest task is 131.3 / 143.3 ms (no budget).
 
-Autosave row: 2026-11-09, the machine, Chrome, power plan and window of ENGINE §6. The reference
-project opened afresh in the app, one cell edited and the first snapshot (every map entry and
-both tilesets' pixels) stored, then another cell edited and the next snapshot (that map's entry)
-stored; 5 runs of both. The task max is the longest gap of a message loop, as TE-015's, from
-300 ms before the 2 s delay ends to the snapshot stored. Taking the project is at most
-7.6 / 12.4 ms and a map thumbnail 7.0 / 12.3 ms, each a task of its own; the snapshot is stored
-95.7 / 106.9 ms after the delay ends at most. Raw data: `te-048-autosave-intel-uhd.json` and
-`te-048-autosave-rtx-4060.json` in [evidence/](evidence/).
+Autosave row (`te-048-autosave`): the reference project opened afresh in the app, one cell
+edited and the first snapshot (every map entry and both tilesets' pixels) stored, then another
+cell edited and the next snapshot (that map's entry) stored; 5 runs of both after 1 warm-up run.
+The task max is the longest gap of a message loop from 300 ms before the 2 s delay ends to the
+snapshot stored. Taking the project is at most 11.8 / 8.1 ms and a map thumbnail 3.9 / 3.5 ms,
+each a task of its own; the snapshot is stored 76.1 / 81.8 ms after the delay ends at most.
 
-Export row: 2026-11-10, the machine, power plan and window of ENGINE §6, Chrome 157.0.8103.50.
-The reference project (524,288 cells, 2 tilesets, 1 map; 7 files, 3,664,381 bytes) exported
-through the app's export pipeline and the worker into an empty folder in memory, 10 runs after
-2 warm-up runs, each with a new pipeline. The task max is the longest gap of a message loop from
-the call to the last file written, as TE-015's. A re-export into the same folder, every file
-unchanged, has a task max of 6.5 / 6.0 ms and a total of 77.0 / 78.9 ms. Raw data:
-`te-053-export-intel-uhd.json` and `te-053-export-rtx-4060.json` in [evidence/](evidence/).
+Export row (`te-053-export`): the reference project (524,288 cells, 2 tilesets, 1 map; 7 files)
+exported through the app's export pipeline and the worker into an empty folder in memory, 10 runs
+after 2 warm-up runs, each with a new pipeline. The task max is the longest gap of a message loop
+from the call to the last file written. A re-export into the same folder, every file unchanged,
+has a task max of 7.5 / 9.0 ms and a total of 72.8 / 81.1 ms.
 
-Update from source row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6. A
-tileset of 1,024 tiles of 16 px used by the reference map, updated at once from a grid PNG with
-64 tiles changed and 2 moved; timed from the call with the picked file (read and match in the
-worker, apply) to the first frame after the new texture is uploaded, the maximum of 10 updates.
-Raw data: `te-028-update-intel-uhd.json` and `te-028-update-rtx-4060.json` in
-[evidence/](evidence/).
+Update from source row (`te-028-update`): a tileset of 1,024 tiles of 16 px used by the reference
+map, updated at once from a grid PNG with 64 tiles changed and 2 moved; timed from the call with
+the picked file (read and match in the worker, apply) to the first frame after the new texture is
+uploaded, the maximum of 10 updates after 2 warm-up updates.
 
-Markers row: 2026-11-07, the machine, Chrome, power plan, panel and window of ENGINE §6. TE-013's
-pan of the reference map with a marker layer of 2,000 markers (rectangles, ellipses, points,
-polygons of 6 points, polylines of 4, all named) that stays in view through the pan; the overlay is
-redrawn in the same callback after the viewport's submit. The overlay copies each marker layer from
-a picture painted once per history step, zoom and colour, so its redraw takes 0.2 ms; the rest is
-the live tier's own frame (submit p95 9.6 / 9.9 ms). Raw data:
-`te-037-markers-pan-{threshold,names}-{intel-uhd,rtx-4060}.json` in [evidence/](evidence/).
+Markers row (`te-037-markers-pan-{threshold,names}`): ENGINE §6's pan of the reference map with a
+marker layer of 2,000 markers (rectangles, ellipses, points, polygons of 6 points, polylines of 4,
+all named) that stays in view through the pan; the overlay is redrawn in the same callback after
+the viewport's submit. The overlay copies each marker layer from a picture painted once per
+history step, zoom and colour, so its redraw takes 0.2 ms; the rest is the live tier's own frame
+(submit p95 9.7 / 10.0 ms).
 
-Stamp preview row: 2026-11-03, the machine, Chrome, power plan and window of ENGINE §6, the map's
-overview built first. The task max is the longest gap of a message loop, as TE-015's, so one
-gap can hold a task and the frame drawn after it. The paste is not in the row: its task holds
-the Paste command itself (17–19 ms alone; 26.1–29.7 ms with the preview). The row is measured
-again at later stages of the implementation, and with every row in TE-064. Raw data:
-`te-017-stamp-preview-intel-uhd.json` and `te-017-stamp-preview-rtx-4060.json` in
-[evidence/](evidence/).
+Stamp preview row (`te-017-stamp-preview`): the map's overview built first. The task max is the
+longest gap of a message loop, so one gap can hold a task and the frame drawn after it. The
+paste is not in the row: its task holds the Paste command itself (86.9–88.9 / 93.1–93.7 ms
+alone; 129.2–137.7 / 140.0–144.2 ms with the preview).
 
 ## 15. Quality
 

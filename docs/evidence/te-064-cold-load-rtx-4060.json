@@ -1,0 +1,72 @@
+{
+    "id": "te-064-cold-load-rtx-4060",
+    "ticket": "TE-064",
+    "measurement": "Cold load of the production build served locally (vite preview), navigation start to interactive (the first animation frame with the New Project dialog on screen, its button clicked at every frame from the first one that shows it); new Chrome with a fresh profile per load; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "max of 10 loads",
+    "budgetMs": 2000,
+    "resultMs": 2516.4000000059605,
+    "details": {
+        "adapter": "nvidia lovelace",
+        "medianMs": 835.4000000059605,
+        "interactiveMs": [
+            2516.4000000059605,
+            835.4000000059605,
+            855.2999999970198,
+            823.0999999940395,
+            812.7999999970198,
+            797.3999999910593,
+            1390.5,
+            840.9000000059605,
+            784.4000000059605,
+            805.6000000089407
+        ],
+        "shellMs": [
+            2496.2999999970198,
+            815.7000000029802,
+            835.5,
+            803.7000000029802,
+            792.4000000059605,
+            777.7999999970198,
+            1369.5999999940395,
+            821.2999999970198,
+            764.6000000089407,
+            785.2000000029802
+        ],
+        "clicks": [
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1
+        ],
+        "appReadyMedianMs": 143.20000000298023,
+        "firstContentfulPaintMedianMs": 904,
+        "domContentLoadedMedianMs": 135,
+        "loadEventMedianMs": 135.5,
+        "longTasksMax": 1,
+        "longestTaskMs": 59,
+        "transferBytes": 479951
+    },
+    "benchmarkId": "te-064-cold-load",
+    "pass": false,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
+    },
+    "date": "2026-11-12T12:13:23.835Z"
+}

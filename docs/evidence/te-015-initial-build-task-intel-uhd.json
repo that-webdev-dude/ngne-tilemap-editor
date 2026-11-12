@@ -1,10 +1,10 @@
 {
-    "id": "te-015-initial-build-task",
+    "id": "te-015-initial-build-task-intel-uhd",
     "ticket": "TE-015",
     "measurement": "Initial chunk build of the reference map after it opens, longest main-thread task; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "longest gap of a message loop from the first frame of the map at 100% to the tier ready",
     "budgetMs": 16,
-    "resultMs": 33.900000005960464,
+    "resultMs": 84.29999999701977,
     "details": {
         "adapter": "intel gen-12lp",
         "canvas": [
@@ -13,17 +13,25 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 666.6000000089407,
-        "maxSliceMs": 9.900000005960464,
-        "totalMs": 665.5999999940395
+        "chunkBuildMs": 734.1000000089407,
+        "maxSliceMs": 9.100000008940697,
+        "totalMs": 728.2000000029802
     },
+    "benchmarkId": "te-015-initial-build-task",
     "pass": false,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-10-31T20:27:40.477Z"
+    "date": "2026-11-12T11:37:11.320Z"
 }

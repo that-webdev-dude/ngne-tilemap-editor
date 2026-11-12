@@ -4,12 +4,12 @@
     "measurement": "Update from source of a 1024-tile tileset used by the reference map at 100%, applied at once (64 tiles changed, 2 moved), the call with the picked file to the first frame after the new texture is uploaded; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "max of 10 updates after 2 warm-up updates",
     "budgetMs": 1000,
-    "resultMs": 205.8999999910593,
+    "resultMs": 208.29999999701977,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 151.1000000089407,
-        "appliedMedianMs": 85.40000000596046,
-        "appliedMaxMs": 129.5
+        "medianMs": 173.3999999910593,
+        "appliedMedianMs": 77.40000000596046,
+        "appliedMaxMs": 101.09999999403954
     },
     "benchmarkId": "te-028-update",
     "pass": true,
@@ -18,7 +18,14 @@
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-11-03T22:29:22.037Z"
+    "date": "2026-11-12T11:44:42.283Z"
 }

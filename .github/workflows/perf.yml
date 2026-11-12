@@ -1,0 +1,43 @@
+name: Perf
+
+# The benchmarks of ENGINE §6 and SPEC §14 (tests/perf, TE-064) on software WebGPU, report-only
+# (RULES 8): the numbers are printed and kept as an artifact, never compared with a budget. It is
+# not part of the CI workflow, so its failure fails no required run. The numbers that count are
+# taken on reference hardware (tests/perf/te-064-record-all.ts).
+on:
+    push:
+    pull_request:
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+jobs:
+    swiftshader:
+        name: perf on SwiftShader (report-only)
+        runs-on: ubuntu-latest
+        timeout-minutes: 90
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci --ignore-scripts
+            # Software WebGPU as in the e2e jobs of ci.yml.
+            - name: Install software WebGPU presentation dependencies
+              run: sudo apt-get update && sudo apt-get install -y libvulkan1 mesa-vulkan-drivers xvfb xauth
+            - name: Benchmarks on SwiftShader
+              env:
+                  PERF_GPU: swiftshader
+                  PERF_RECORD: 1
+                  PERF_SUFFIX: ci-swiftshader
+                  PERF_OUT: perf-results
+              run: xvfb-run -a -s "-screen 0 4096x2304x24" npx vitest run --config vitest.perf.config.ts --silent=false
+            - name: Upload benchmark records
+              if: always()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: perf-results-swiftshader
+                  path: perf-results
+                  if-no-files-found: ignore

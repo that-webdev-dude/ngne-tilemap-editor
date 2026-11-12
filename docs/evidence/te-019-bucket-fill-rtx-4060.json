@@ -4,16 +4,16 @@
     "measurement": "Bucket fill of a 65536-cell region on the reference map at 100%, the region found after the press, press to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 35 presses after 5 warm-up presses",
     "budgetMs": 100,
-    "resultMs": 43.09999999997672,
+    "resultMs": 34.6000000089407,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 29.79999999998836,
-        "maxMs": 46.29999999998836,
-        "floodAloneMs": 4.2000000000116415,
-        "handledMedianMs": 18.5,
-        "hoverFoundP95Ms": 40.29999999998836,
-        "hoverFoundMedianMs": 24.79999999998836,
-        "hoverFoundHandledMedianMs": 11.700000000011642,
+        "medianMs": 27.599999994039536,
+        "maxMs": 46,
+        "floodAloneMs": 4.9000000059604645,
+        "handledMedianMs": 19.400000005960464,
+        "hoverFoundP95Ms": 39.29999999701977,
+        "hoverFoundMedianMs": 24.899999991059303,
+        "hoverFoundHandledMedianMs": 16.399999991059303,
         "tiers": [
             "live"
         ],
@@ -26,7 +26,14 @@
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-11-02T21:34:13.844Z"
+    "date": "2026-11-12T11:50:16.440Z"
 }

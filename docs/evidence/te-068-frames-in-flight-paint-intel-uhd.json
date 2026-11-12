@@ -2,7 +2,7 @@
     "id": "te-068-frames-in-flight-paint-intel-uhd",
     "ticket": "TE-068",
     "measurement": "GPU frames in flight right after each submit, that frame included, during the TE-017 stroke of the stamp brush; Intel UHD, window 1920 × 1080, DPR 1",
-    "statistic": "max of 381 submitted frames",
+    "statistic": "max of 379 submitted frames",
     "unit": "count",
     "budgetMs": 2,
     "resultMs": 2,
@@ -10,19 +10,19 @@
         "adapter": "intel gen-12lp",
         "p95": 1,
         "median": 1,
-        "lastSubmitToIdleMs": 16.700000002980232,
-        "frames": 381,
+        "lastSubmitToIdleMs": 16.400000005960464,
+        "frames": 379,
         "tiers": [
             "live"
         ],
-        "previewSubmits": 202,
+        "previewSubmits": 203,
         "previewMaxInFlight": 1,
         "canvas": [
             1612,
             784
         ],
         "events": 201,
-        "eventToFrameMedianMs": 17.5
+        "eventToFrameMedianMs": 17.100000008940697
     },
     "benchmarkId": "te-068-frames-in-flight-paint",
     "pass": true,
@@ -31,7 +31,14 @@
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
-        "memoryGb": 16
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
     },
-    "date": "2026-11-12T11:19:15.302Z"
+    "date": "2026-11-12T11:39:40.340Z"
 }

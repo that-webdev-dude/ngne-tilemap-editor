@@ -1,0 +1,33 @@
+{
+    "id": "te-013-pan-submit-dpr1-intel-uhd",
+    "ticket": "TE-013",
+    "measurement": "Pan at the live-tier threshold (66640 sprites), frame callback start to submit; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
+    "statistic": "p95 of 417 frames of a 5 s pan after 1 s warm-up",
+    "budgetMs": 10,
+    "resultMs": 10.799999997019768,
+    "details": {
+        "adapter": "intel gen-12lp",
+        "medianMs": 9.200000002980232,
+        "medianBuildMs": 6.4000000059604645,
+        "maxMs": 16.900000005960464,
+        "frames": 417,
+        "zoom": 0.7762928669222557
+    },
+    "benchmarkId": "te-013-pan-submit-dpr1",
+    "pass": false,
+    "environment": {
+        "node": "v24.15.0",
+        "platform": "win32 10.0.26200",
+        "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
+        "cores": 16,
+        "memoryGb": 16,
+        "chrome": "157.0.8103.78",
+        "powerPlan": "Balanced",
+        "powerMode": "Best performance",
+        "power": "AC",
+        "displays": [
+            "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
+        ]
+    },
+    "date": "2026-11-12T11:36:44.627Z"
+}
