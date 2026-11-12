@@ -20,7 +20,7 @@ import {
     usePropertiesPanel,
 } from "../../app/properties/propertiesPanel";
 import type { BuiltinField } from "../../app/properties/propertiesPanel";
-import { useSession } from "../../app/state/session";
+import { useShownSession } from "../../app/state/shownSession";
 import { tilesetPanelStore } from "../../app/tilesets/panel/tilesetPanel";
 import { formatHex, parseHex } from "../../core/color";
 import {
@@ -56,10 +56,13 @@ const FLOAT_DECIMALS = 9;
 
 const TYPE_OPTIONS = PROPERTY_TYPES.map((type) => ({ value: type, label: type }));
 
-/** What the panel shows and the project it is in, following every change. */
+/**
+ * What the panel shows and the project it is in, following every change; a switch to another
+ * map after its frame (`shownSession`).
+ */
 function useShown() {
-    const session = useSession((state) => state.session);
-    useSession((state) => state.revision);
+    const session = useShownSession((state) => state.session);
+    useShownSession((state) => state.revision);
     usePropertiesPanel((state) => state);
     useStore(tilesetPanelStore, (state) => state.selections);
     useStore(tilesetPanelStore, (state) => state.activeTilesetId);

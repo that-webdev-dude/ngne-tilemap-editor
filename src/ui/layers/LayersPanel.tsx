@@ -34,7 +34,7 @@ import {
 } from "../../app/layers/layersPanel";
 import { dropPlace, dropZone, layerRows } from "../../app/layers/layerTree";
 import type { DropZone, LayerRow } from "../../app/layers/layerTree";
-import { useSession } from "../../app/state/session";
+import { useShownSession } from "../../app/state/shownSession";
 import { activeLayerId } from "../../app/tools/toolSets";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import { runCommand } from "../commands/runCommand";
@@ -74,14 +74,17 @@ const TYPE_NAMES: Record<LayerRow["type"], string> = {
     group: "Group",
 };
 
-/** The rows and the active layer of the active map; renders again only when they change. */
+/**
+ * The rows and the active layer of the map shown (the active map, followed after the frame of a
+ * switch: `shownSession`); renders again only when they change.
+ */
 function useRows(): { mapId: string | null; rows: readonly LayerRow[]; activeId: number | null } {
     const collapsed = useLayersPanel((state) => state.collapsed);
     // The selector also reads the collapsed groups: a change of them renders the panel again
     // (`collapsed` above), and the render runs the selector again.
-    const key = useSession((state) => {
+    const key = useShownSession((state) => {
         const { session } = state;
-        const map = session.project.maps.find((each) => each.id === session.activeMapId);
+        const map = session.project.maps.find((each) => each.id === state.mapId);
         if (!map) return "null";
         return JSON.stringify({
             mapId: map.id,

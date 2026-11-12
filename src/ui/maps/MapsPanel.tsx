@@ -12,7 +12,7 @@ import {
     startMapRename,
     useMapsPanel,
 } from "../../app/maps/mapsPanel";
-import { useSession } from "../../app/state/session";
+import { useShownSession } from "../../app/state/shownSession";
 import { activateMap, useMapTabs } from "../../app/tabs/tabs";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import { contextMenuEntries } from "../commands/contextMenu";
@@ -41,12 +41,15 @@ interface Row {
 /** How far a press moves along the list before it is a drag, in CSS pixels. */
 const DRAG_THRESHOLD = 4;
 
-/** The rows and the active map; renders again only when one of them changes. */
+/**
+ * The rows and the active map as the section shows it (followed after the frame of a switch:
+ * `shownSession`); renders again only when one of them changes.
+ */
 function useRows(): { rows: readonly Row[]; activeId: string } {
-    const key = useSession((state) => {
-        const { project, activeMapId } = state.session;
+    const key = useShownSession((state) => {
+        const { project } = state.session;
         return JSON.stringify([
-            activeMapId,
+            state.mapId,
             project.maps.map((map) => [map.id, map.name, map.width, map.height]),
         ]);
     });
