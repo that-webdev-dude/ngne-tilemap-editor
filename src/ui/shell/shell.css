@@ -129,6 +129,12 @@
  * the presses, as the bottom panel's content does below. The splitter keeps its line and the
  * 4 px left of the border. The scroller ends 4 px above the dock's bottom edge, where the bottom
  * panel's splitter reaches up: no control of the dock lies under that splitter.
+ *
+ * The scrollbar's gutter is kept while the content fits. A press in the Layers or Maps panel
+ * moves the focus there, and the Properties panel turns from the tile to the layer or map,
+ * which can make the content overflow. A classic scrollbar appearing then would narrow the
+ * dock between press and release: the release would land on the next control, and the click
+ * would be lost.
  */
 .shell-dock__scroll {
     position: relative;
@@ -137,6 +143,7 @@
     flex-direction: column;
     height: calc(100% - var(--space-4));
     overflow-y: auto;
+    scrollbar-gutter: stable;
 }
 
 .shell-panel {

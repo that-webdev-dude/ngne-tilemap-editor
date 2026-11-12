@@ -58,9 +58,20 @@ test.beforeEach(async ({ page }) => {
     await pageCall(page, "openProject");
     await expect(section(page).locator("canvas")).toHaveCount(1);
     await settled(page);
-    // Animations still at their first frame, which the compositor draws.
+    // Animations still at their first frame, which the compositor draws. The seek wakes the
+    // paused preview for one frame; it is waited for, so no test counts it as its own.
     await page.getByRole("button", { name: "Pause preview" }).click();
-    await page.evaluate(() => window.__ngneTest!.preview!.seek(0));
+    await page.evaluate(
+        () =>
+            new Promise<void>((resolve) => {
+                const preview = window.__ngneTest!.preview!;
+                preview.onFrame = () => {
+                    preview.onFrame = null;
+                    resolve();
+                };
+                preview.seek(0);
+            }),
+    );
 });
 
 test("the readback equals the conformance reference at the chosen resolution and scale", async ({
@@ -121,6 +132,24 @@ test("a tileset update restarts the scene with the new pixels", async ({ page })
     expect(after.scenes).toBe(before.scenes + 1);
     expect(after.liveGames).toBe(1);
     expectMatch(await pageCall<FrameReport>(page, "compareNextFrame"), "after the update");
+    expect(
+        await page.evaluate(() => window.__ngneTest!.previewState!.getState().diagnostics),
+    ).toEqual([]);
+});
+
+test("tileset updates a few frames apart restart the scene in the same game", async ({ page }) => {
+    // Each restart waits until NGNE has let go of the popped scene's textures: a scene taking
+    // their IDs sooner fails to prepare, and the preview would make a new game.
+    const gamesCreated = () => page.evaluate(() => window.__ngneTest!.previewPage!.gamesCreated);
+    const created = await gamesCreated();
+    for (let n = 0; n < 4; n++) {
+        await pageCall(page, "updateEvenTileset");
+        await afterFrames(page, 2);
+    }
+    await settled(page);
+    expect(await gamesCreated()).toBe(created);
+    expect((await pageStats(page)).liveGames).toBe(1);
+    expectMatch(await pageCall<FrameReport>(page, "compareNextFrame"), "after the updates");
     expect(
         await page.evaluate(() => window.__ngneTest!.previewState!.getState().diagnostics),
     ).toEqual([]);

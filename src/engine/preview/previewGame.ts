@@ -1,5 +1,5 @@
 import { BrowserGame } from "@ngne/core";
-import type { Camera, Frame, ImageAsset, SceneDefinition } from "@ngne/core";
+import type { Assets, Camera, Frame, ImageAsset, SceneDefinition } from "@ngne/core";
 import type { PixelBuffer } from "../../core/model";
 import { drawTilemap } from "../../core/runtime/runtime";
 import type { DrawOptions, Tilemap, TilemapLayer } from "../../core/runtime/runtime";
@@ -157,6 +157,13 @@ function isOverloadNotice(value: unknown): boolean {
         value !== null &&
         (value as { type?: unknown }).type === "overload"
     );
+}
+
+/** The IDs of `ids` still in `assets`: loading, or loaded and leased. */
+function heldAssets(assets: Assets, ids: readonly string[]): string[] {
+    // The inspection lists at most 1,000 entries; the preview holds one per tileset.
+    const present = new Set(assets.inspect(1000).entries.map((entry) => entry.id));
+    return ids.filter((id) => present.has(id));
 }
 
 function messageOf(error: unknown): string {
@@ -403,9 +410,15 @@ export class PreviewGame {
             const popped = instance.popped;
             if (game.game.scenes.length > 1) return () => this.#nextFrame(instance);
             return async () => {
-                instance.popped = null;
-                // The popped scene released them; another scene may take their IDs now.
-                for (const id of popped) game.game.assets.evict(id);
+                // Another scene may take the popped scene's IDs once they are evicted. NGNE's
+                // scene and renderer leases on a texture can outlast the pop by a few frames
+                // (restarts close together), and a held ID is not evicted: it is tried again
+                // at the next frame, as a scene taking it sooner would fail to prepare.
+                const { assets } = game.game;
+                for (const id of popped) assets.evict(id);
+                const held = heldAssets(assets, popped);
+                instance.popped = held.length > 0 ? held : null;
+                if (held.length > 0) await this.#nextFrame(instance);
             };
         }
         if (!map && content) return () => this.#pushMap(instance, content);
