@@ -5,11 +5,11 @@
     "statistic": "count of frame intervals over the limit",
     "unit": "count",
     "budgetMs": 4,
-    "resultMs": 1,
+    "resultMs": 2,
     "details": {
         "adapter": "intel gen-12lp",
-        "intervals": 421,
-        "fraction": 0.0023752969121140144
+        "intervals": 439,
+        "fraction": 0.004555808656036446
     },
     "benchmarkId": "te-013-pan-dropped-dpr125",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:36:54.363Z"
+    "date": "2026-11-12T17:45:20.359Z"
 }

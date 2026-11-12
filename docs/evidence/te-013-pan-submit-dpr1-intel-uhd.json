@@ -2,19 +2,19 @@
     "id": "te-013-pan-submit-dpr1-intel-uhd",
     "ticket": "TE-013",
     "measurement": "Pan at the live-tier threshold (66640 sprites), frame callback start to submit; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
-    "statistic": "p95 of 417 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 450 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
-    "resultMs": 10.799999997019768,
+    "resultMs": 9.400000005960464,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 9.200000002980232,
-        "medianBuildMs": 6.4000000059604645,
-        "maxMs": 16.900000005960464,
-        "frames": 417,
+        "medianMs": 8.699999988079071,
+        "medianBuildMs": 6,
+        "maxMs": 14.899999991059303,
+        "frames": 450,
         "zoom": 0.7762928669222557
     },
     "benchmarkId": "te-013-pan-submit-dpr1",
-    "pass": false,
+    "pass": true,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
@@ -29,5 +29,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:36:44.627Z"
+    "date": "2026-11-12T17:45:11.052Z"
 }

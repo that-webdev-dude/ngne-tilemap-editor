@@ -4,12 +4,12 @@
     "measurement": "Update from source of a 1024-tile tileset used by the reference map at 100%, applied at once (64 tiles changed, 2 moved), the call with the picked file to the first frame after the new texture is uploaded; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "max of 10 updates after 2 warm-up updates",
     "budgetMs": 1000,
-    "resultMs": 211.59999999403954,
+    "resultMs": 209.1000000089407,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 182.69999998807907,
-        "appliedMedianMs": 80.70000000298023,
-        "appliedMaxMs": 96.5
+        "medianMs": 173.09999999403954,
+        "appliedMedianMs": 129.59999999403954,
+        "appliedMaxMs": 150.20000000298023
     },
     "benchmarkId": "te-028-update",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:53:39.336Z"
+    "date": "2026-11-12T18:01:24.451Z"
 }

@@ -7,9 +7,9 @@
     "resultMs": 18.5,
     "details": {
         "adapter": "intel gen-12lp",
-        "pressMs": 18.099999994039536,
-        "medianMs": 16.799999997019768,
-        "maxMs": 20.200000002980232,
+        "pressMs": 16.400000005960464,
+        "medianMs": 17,
+        "maxMs": 22.30000001192093,
         "tiers": [
             "live"
         ],
@@ -32,5 +32,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:42:07.407Z"
+    "date": "2026-11-12T17:50:21.670Z"
 }

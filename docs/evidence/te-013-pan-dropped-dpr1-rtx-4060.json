@@ -5,11 +5,11 @@
     "statistic": "count of frame intervals over the limit",
     "unit": "count",
     "budgetMs": 4,
-    "resultMs": 1,
+    "resultMs": 0,
     "details": {
         "adapter": "nvidia lovelace",
-        "intervals": 489,
-        "fraction": 0.002044989775051125
+        "intervals": 497,
+        "fraction": 0
     },
     "benchmarkId": "te-013-pan-dropped-dpr1",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:45:13.878Z"
+    "date": "2026-11-12T17:53:26.813Z"
 }

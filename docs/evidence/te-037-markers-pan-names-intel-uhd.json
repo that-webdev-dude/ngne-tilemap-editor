@@ -2,20 +2,20 @@
     "id": "te-037-markers-pan-names-intel-uhd",
     "ticket": "TE-037",
     "measurement": "Pan of the reference map (26312 sprites) with 2,000 markers in view, names shown: frame callback start to the overlay's redraw after the submit; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784, zoom 1.250",
-    "statistic": "p95 of 720 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 719 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
-    "resultMs": 4.700000002980232,
+    "resultMs": 4.699999988079071,
     "details": {
         "adapter": "intel gen-12lp",
         "medianMs": 4,
-        "maxMs": 11.700000002980232,
+        "maxMs": 6.200000002980232,
         "overlayP95Ms": 0.20000000298023224,
         "overlayMedianMs": 0.09999999403953552,
         "submitP95Ms": 4.5999999940395355,
-        "frames": 720,
+        "frames": 719,
         "droppedFrames": 0,
         "droppedBudget": 7,
-        "intervals": 719,
+        "intervals": 718,
         "rasterPaints": 0,
         "zoom": 1.25,
         "names": true
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:45:02.586Z"
+    "date": "2026-11-12T17:53:15.371Z"
 }

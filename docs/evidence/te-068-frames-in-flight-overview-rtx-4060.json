@@ -5,12 +5,12 @@
     "statistic": "max of 722 submitted frames",
     "unit": "count",
     "budgetMs": 2,
-    "resultMs": 1,
+    "resultMs": 2,
     "details": {
         "adapter": "nvidia lovelace",
         "p95": 1,
         "median": 1,
-        "lastSubmitToIdleMs": 4.399999991059303,
+        "lastSubmitToIdleMs": 3.5,
         "frames": 722,
         "tiers": [
             "chunk"
@@ -23,7 +23,7 @@
         ],
         "chunks": 128,
         "durationMs": 5000,
-        "callbackMedianMs": 0.29999999701976776
+        "callbackMedianMs": 0.20000000298023224
     },
     "benchmarkId": "te-068-frames-in-flight-overview",
     "pass": true,
@@ -41,5 +41,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:47:59.580Z"
+    "date": "2026-11-12T17:56:02.133Z"
 }

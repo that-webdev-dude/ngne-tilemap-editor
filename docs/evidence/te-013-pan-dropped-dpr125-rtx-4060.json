@@ -8,7 +8,7 @@
     "resultMs": 0,
     "details": {
         "adapter": "nvidia lovelace",
-        "intervals": 485,
+        "intervals": 493,
         "fraction": 0
     },
     "benchmarkId": "te-013-pan-dropped-dpr125",
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:45:23.344Z"
+    "date": "2026-11-12T17:53:36.278Z"
 }

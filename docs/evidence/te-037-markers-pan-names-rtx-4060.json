@@ -2,20 +2,20 @@
     "id": "te-037-markers-pan-names-rtx-4060",
     "ticket": "TE-037",
     "measurement": "Pan of the reference map (26312 sprites) with 2,000 markers in view, names shown: frame callback start to the overlay's redraw after the submit; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784, zoom 1.250",
-    "statistic": "p95 of 720 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 721 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
     "resultMs": 4.200000002980232,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 3.7999999970197678,
-        "maxMs": 6.299999997019768,
+        "medianMs": 3.8999999910593033,
+        "maxMs": 5.4000000059604645,
         "overlayP95Ms": 0.20000000298023224,
         "overlayMedianMs": 0.09999999403953552,
         "submitP95Ms": 4.100000008940697,
-        "frames": 720,
+        "frames": 721,
         "droppedFrames": 0,
         "droppedBudget": 7,
-        "intervals": 719,
+        "intervals": 720,
         "rasterPaints": 0,
         "zoom": 1.25,
         "names": true
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:54:00.165Z"
+    "date": "2026-11-12T18:01:45.033Z"
 }

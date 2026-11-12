@@ -4,13 +4,13 @@
     "measurement": "Magic wand of a 65536-cell region on the reference map at 100%, the region found after the press, press to the overlay frame showing the selection; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 35 presses after 5 warm-up presses",
     "budgetMs": 100,
-    "resultMs": 14.899999991059303,
+    "resultMs": 21.099999994039536,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 8.599999994039536,
-        "maxMs": 17.200000002980232,
-        "shapeAloneMs": 6.299999997019768,
-        "handledMedianMs": 7.199999988079071,
+        "medianMs": 14.099999994039536,
+        "maxMs": 21.200000002980232,
+        "shapeAloneMs": 4.699999988079071,
+        "handledMedianMs": 6.9000000059604645,
         "entries": 79,
         "layerId": 7
     },
@@ -30,5 +30,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:50:37.996Z"
+    "date": "2026-11-12T17:58:25.068Z"
 }

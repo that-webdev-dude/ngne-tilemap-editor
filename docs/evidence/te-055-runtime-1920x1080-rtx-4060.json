@@ -2,11 +2,11 @@
     "id": "te-055-runtime-1920x1080-rtx-4060",
     "ticket": "TE-055",
     "measurement": "Game runtime: the fixture game drawing the exported reference project (8 full layers, 2 tilesets, parallax, animated tiles) at 1920 × 1080 ×1 with a stacked HUD scene, pixelSnap on, panning; game.stats.renderMs; RTX 4060, window 1920 × 1080, DPR 1",
-    "statistic": "p95 of 1003 frames over 10 s after 2 s",
-    "resultMs": 10.5,
+    "statistic": "p95 of 993 frames over 10 s after 2 s",
+    "resultMs": 10.599999994039536,
     "details": {
         "adapter": "nvidia lovelace",
-        "frames": 1003,
+        "frames": 993,
         "canvas": [
             1920,
             1080
@@ -14,12 +14,12 @@
         "sprites": 66992,
         "drawCalls": 17,
         "renderMs": {
-            "median": 9.700000002980232,
-            "p95": 10.5,
-            "p99": 11.100000008940697,
-            "max": 15.699999988079071
+            "median": 9.799999997019768,
+            "p95": 10.599999994039536,
+            "p99": 11.099999994039536,
+            "max": 15
         },
-        "frameMsP95": 10.5
+        "frameMsP95": 10.599999994039536
     },
     "benchmarkId": "te-055-runtime-1920x1080",
     "environment": {
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:49:57.155Z"
+    "date": "2026-11-12T17:57:55.113Z"
 }

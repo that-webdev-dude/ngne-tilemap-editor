@@ -9,7 +9,7 @@
     "details": {
         "adapter": "intel gen-12lp",
         "outside": {
-            "seconds": 10.00160000000894,
+            "seconds": 10.00109999999404,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
@@ -17,7 +17,7 @@
             "tier": "chunk"
         },
         "resting": {
-            "seconds": 10.00460000000894,
+            "seconds": 10.00479999999702,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
@@ -44,5 +44,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T12:10:32.572Z"
+    "date": "2026-11-12T17:48:50.326Z"
 }

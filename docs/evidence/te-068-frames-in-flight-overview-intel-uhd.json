@@ -2,7 +2,7 @@
     "id": "te-068-frames-in-flight-overview-intel-uhd",
     "ticket": "TE-068",
     "measurement": "GPU frames in flight right after each submit, that frame included, during the same pan with the whole map in view; Intel UHD, window 1920 × 1080, DPR 1",
-    "statistic": "max of 722 submitted frames",
+    "statistic": "max of 720 submitted frames",
     "unit": "count",
     "budgetMs": 2,
     "resultMs": 2,
@@ -10,8 +10,8 @@
         "adapter": "intel gen-12lp",
         "p95": 1,
         "median": 1,
-        "lastSubmitToIdleMs": 3.7999999970197678,
-        "frames": 722,
+        "lastSubmitToIdleMs": 4.700000002980232,
+        "frames": 720,
         "tiers": [
             "chunk"
         ],
@@ -23,7 +23,7 @@
         ],
         "chunks": 128,
         "durationMs": 5000,
-        "callbackMedianMs": 0.29999999701976776
+        "callbackMedianMs": 0.30000001192092896
     },
     "benchmarkId": "te-068-frames-in-flight-overview",
     "pass": true,
@@ -41,5 +41,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:39:30.946Z"
+    "date": "2026-11-12T17:47:46.173Z"
 }

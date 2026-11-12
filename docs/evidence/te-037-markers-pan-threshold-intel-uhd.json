@@ -2,26 +2,26 @@
     "id": "te-037-markers-pan-threshold-intel-uhd",
     "ticket": "TE-037",
     "measurement": "Pan of the reference map (66640 sprites) with 2,000 markers in view: frame callback start to the overlay's redraw after the submit; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784, zoom 0.776",
-    "statistic": "p95 of 441 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 435 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
-    "resultMs": 9.800000011920929,
+    "resultMs": 10.599999994039536,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 8.899999991059303,
-        "maxMs": 17.099999994039536,
+        "medianMs": 8.900000005960464,
+        "maxMs": 17.700000002980232,
         "overlayP95Ms": 0.20000000298023224,
         "overlayMedianMs": 0.09999999403953552,
-        "submitP95Ms": 9.700000002980232,
-        "frames": 441,
-        "droppedFrames": 0,
+        "submitP95Ms": 10.5,
+        "frames": 435,
+        "droppedFrames": 3,
         "droppedBudget": 4,
-        "intervals": 440,
+        "intervals": 434,
         "rasterPaints": 0,
         "zoom": 0.7762928669222557,
         "names": false
     },
     "benchmarkId": "te-037-markers-pan-threshold",
-    "pass": true,
+    "pass": false,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:44:53.261Z"
+    "date": "2026-11-12T17:53:05.984Z"
 }

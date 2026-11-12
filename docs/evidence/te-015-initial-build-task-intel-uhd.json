@@ -4,7 +4,7 @@
     "measurement": "Initial chunk build of the reference map after it opens, longest main-thread task; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "longest gap of a message loop from the first frame of the map at 100% to the tier ready",
     "budgetMs": 16,
-    "resultMs": 84.29999999701977,
+    "resultMs": 29,
     "details": {
         "adapter": "intel gen-12lp",
         "canvas": [
@@ -13,9 +13,9 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 734.1000000089407,
-        "maxSliceMs": 9.100000008940697,
-        "totalMs": 728.2000000029802
+        "chunkBuildMs": 647.6999999880791,
+        "maxSliceMs": 8.200000002980232,
+        "totalMs": 644.0999999940395
     },
     "benchmarkId": "te-015-initial-build-task",
     "pass": false,
@@ -33,5 +33,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:37:11.320Z"
+    "date": "2026-11-12T17:45:36.242Z"
 }

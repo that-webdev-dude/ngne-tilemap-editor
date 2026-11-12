@@ -2,12 +2,12 @@
     "id": "te-055-runtime-480x270-intel-uhd",
     "ticket": "TE-055",
     "measurement": "Game runtime: the fixture game drawing the exported reference project (8 full layers, 2 tilesets, parallax, animated tiles) at 480 × 270 shown ×3 with a stacked HUD scene, pixelSnap on, panning; game.stats.renderMs; Intel UHD, window 1920 × 1080, DPR 1",
-    "statistic": "p95 of 1441 frames over 10 s after 2 s",
+    "statistic": "p95 of 1440 frames over 10 s after 2 s",
     "budgetMs": 8,
     "resultMs": 1,
     "details": {
         "adapter": "intel gen-12lp",
-        "frames": 1441,
+        "frames": 1440,
         "canvas": [
             480,
             270
@@ -18,9 +18,9 @@
             "median": 0.7999999970197678,
             "p95": 1,
             "p99": 1.2000000029802322,
-            "max": 1.5
+            "max": 1.4000000059604645
         },
-        "frameMsP95": 1
+        "frameMsP95": 1.0999999940395355
     },
     "benchmarkId": "te-055-runtime-480x270",
     "pass": true,
@@ -38,5 +38,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T11:40:51.240Z"
+    "date": "2026-11-12T17:49:16.811Z"
 }
