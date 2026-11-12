@@ -159,7 +159,7 @@ test("the layer filter draws the active layer and the visible layers under it", 
     expectMatch(await pageCall<FrameReport>(page, "compareNextFrame"), "all visible again");
 });
 
-test("animation advances only while playing", async ({ page }) => {
+test("animation advances only while playing @alone", async ({ page }) => {
     // Paused: the clock stands still and no frame is submitted.
     const paused = await page.evaluate(() => window.__ngneTest!.preview!.elapsedMs);
     const framesPaused = (await pageStats(page)).frames;
@@ -180,7 +180,9 @@ test("animation advances only while playing", async ({ page }) => {
     expect(await page.evaluate(() => window.__ngneTest!.preview!.elapsedMs)).toBe(stopped);
 });
 
-test("collapsing the section or hiding the window stops frame submission", async ({ page }) => {
+test("collapsing the section or hiding the window stops frame submission @alone", async ({
+    page,
+}) => {
     await page.getByRole("button", { name: "Play preview" }).click();
     // Running: the animated tile keeps frames coming.
     const running = (await pageStats(page)).frames;

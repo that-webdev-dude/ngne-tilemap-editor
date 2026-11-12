@@ -202,7 +202,9 @@ test.describe("on the layers map", () => {
         expect(after.frame!.y).toBeGreaterThan(before.frame!.y);
     });
 
-    test("an edit shows within 500 ms of settling, and redraws are throttled", async ({ page }) => {
+    test("an edit shows within 500 ms of settling, and redraws are throttled @alone", async ({
+        page,
+    }) => {
         const edit = await pageCall<EditReport>(page, "editAndTime", 2, 1, 3);
         expectImage(edit, "after the edit");
         expect(edit.redraws).toBe(1);
