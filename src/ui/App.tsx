@@ -6,7 +6,6 @@ import { useEditorKeymap } from "./commands/useEditorKeymap";
 import { FileWorkflows } from "./file/FileWorkflows";
 import { useTilesetDrop } from "./import/useTilesetDrop";
 import { useWindowHeight, useWindowWidth } from "./platform/useWindowSize";
-import { useWebGpuSupport } from "./platform/webgpu";
 import { AppShell } from "./shell/AppShell";
 import { isWindowTooSmall } from "./shell/layout";
 import { WebGpuRequired } from "./shell/notices/WebGpuRequired";
@@ -14,6 +13,7 @@ import { WindowTooSmall } from "./shell/notices/WindowTooSmall";
 import { AppSurfaces } from "./surfaces/AppSurfaces";
 import { toast } from "./toast/toast";
 import { UiRoot } from "./UiRoot";
+import { useWebGpuCheck } from "./startup/webGpuCheck";
 
 // Development route: left out of the production bundle.
 const Gallery = import.meta.env.DEV
@@ -29,7 +29,8 @@ function isGalleryPath(pathname: string): boolean {
 
 /** The editor behind its two gates: WebGPU available, window at least 1280×720. */
 function Editor() {
-    const gpu = useWebGpuSupport();
+    // Time-limited: an adapter request that never settles ends on the WebGPU-required notice.
+    const gpu = useWebGpuCheck();
     const width = useWindowWidth();
     const height = useWindowHeight();
     const tooSmall = isWindowTooSmall(width, height);

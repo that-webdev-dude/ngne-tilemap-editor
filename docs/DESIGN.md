@@ -375,7 +375,7 @@ a redraw starts shows with the next: at most 500 ms plus that redraw's time.
 | Tileset Properties | Dialog | Name, export name, class, tile offset X/Y, source (read-only: kind, file, tile size, margin, spacing) |
 | Import Tiled Map | Large dialog | Files: folder or files picked, the map (a select when they hold several), required files with status (found, missing) and Add files…; then the report: summary, groups per BRIEF §7 row with counts and locations; Cancel / Import |
 | Export | Large dialog | Left: destination folder, project export name, Export on save; right: file list with sizes grouped (tilemaps, tilesets, images, runtime), tileset atlas thumbnails, errors in `--danger`; Close / Export |
-| Preferences, Shortcut sheet, Recovery, WebGPU required | As `se-design` §7 | Preferences fields per §3.3 |
+| Preferences, Shortcut sheet, Recovery, WebGPU required | As `se-design` §7 | Preferences fields per §3.3. WebGPU required also shows when the adapter request does not settle: each request has 5 s, a pending one is retried once (an earlier request that answers late still counts), and after the retry the notice shows reason "no adapter" with the detail "WebGPU adapter request timed out". Until then the window stays blank, as in the sprite editor |
 
 Only actions undo cannot reverse confirm: discarding an unsaved project, discarding a recovery
 snapshot, replacing files in an export folder. Delete Map, Delete Layer and Update Tileset rely

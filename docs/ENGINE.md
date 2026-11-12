@@ -219,3 +219,4 @@ reads this table; costs are filled in from spike and ticket measurements.
 | No tilemap or atlas schema; no tileset discovery | Editor-owned `ngne-tilemap` and `ngne-sprite-atlas` formats | editor, runtime |
 | One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor |
 | BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview |
+| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor |
