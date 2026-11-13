@@ -522,7 +522,7 @@ class Resolution {
         while (pool.length > 0) {
             const k = pool.length === 1 ? 0 : random() % pool.length;
             const candidate = pool[k];
-            pool[k] = pool[pool.length - 1];
+            pool[k] = pool.at(-1)!;
             pool.length--;
             if (!this.#lookAhead || !this.#strands(slot, candidate)) return candidate;
         }

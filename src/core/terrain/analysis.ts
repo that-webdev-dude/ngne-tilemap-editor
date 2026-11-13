@@ -59,55 +59,76 @@ function combinationKey(wangId: ArrayLike<number>, at: number, indexes: readonly
     return key;
 }
 
-/** Tiled's `recalculateColorDistances`: direct transitions, then relaxation until stable. */
-function colorDistances(
-    colorCount: number,
-    wangIds: Uint8Array,
-    count: number,
-): { distances: Int32Array; maximumDistance: number } {
+/** Marks every terrain of `group` (but "no terrain") 1 away from every terrain of `group`. */
+function linkGroup(distances: Int32Array, n: number, group: ReadonlySet<number>): void {
+    for (const i of group) {
+        if (i === 0) continue;
+        for (const j of group) distances[i * n + j] = 1;
+    }
+}
+
+/**
+ * The direct distances: colours sharing a tile's corners, or a tile's edges, are 1 apart, and
+ * each terrain is 0 from itself. Corners and edges are not connected, which keeps corner and
+ * edge sets from reaching "no terrain". −1 where there is no direct transition.
+ */
+function directDistances(colorCount: number, wangIds: Uint8Array, count: number): Int32Array {
     const n = colorCount + 1;
     const distances = new Int32Array(n * n).fill(-1);
     const corners = new Set<number>();
     const edges = new Set<number>();
-    // Colours sharing a tile's corners, or a tile's edges, are 1 apart. Corners and edges are
-    // not connected, which keeps corner and edge sets from reaching "no terrain".
     for (let t = 0; t < count; t++) {
         corners.clear();
         edges.clear();
         for (let index = 0; index < WANG_INDEXES; index++) {
             (isCorner(index) ? corners : edges).add(wangIds[t * 8 + index]!);
         }
-        for (const group of [corners, edges]) {
-            for (const i of group) {
-                if (i === 0) continue;
-                for (const j of group) distances[i * n + j] = 1;
-            }
-        }
+        linkGroup(distances, n, corners);
+        linkGroup(distances, n, edges);
     }
     for (let i = 1; i <= colorCount; i++) distances[i * n + i] = 0;
+    return distances;
+}
 
+/**
+ * Shortens the distance between terrains `i` and `j` through each terrain `t` in turn (both
+ * directions). Returns the longest distance it set, 0 when it set none.
+ */
+function relaxPair(distances: Int32Array, colorCount: number, i: number, j: number): number {
+    const n = colorCount + 1;
+    let longest = 0;
+    for (let t = 0; t <= colorCount; t++) {
+        const d0 = distances[i * n + t]!;
+        const d1 = distances[j * n + t]!;
+        if (d0 === -1 || d1 === -1) continue;
+        const through = d0 + d1;
+        const d = distances[i * n + j]!;
+        if (d !== -1 && through >= d) continue;
+        distances[i * n + j] = through;
+        distances[j * n + i] = through;
+        longest = Math.max(longest, through);
+    }
+    return longest;
+}
+
+/** Tiled's `recalculateColorDistances`: direct transitions, then relaxation until stable. */
+function colorDistances(
+    colorCount: number,
+    wangIds: Uint8Array,
+    count: number,
+): { distances: Int32Array; maximumDistance: number } {
+    const distances = directDistances(colorCount, wangIds, count);
     let maximumDistance = 1;
-    let newConnections: boolean;
+    let longest: number;
     do {
-        newConnections = false;
+        longest = 0;
         for (let i = 1; i <= colorCount; i++) {
             for (let j = 1; j <= colorCount; j++) {
-                if (i === j) continue;
-                for (let t = 0; t <= colorCount; t++) {
-                    const d0 = distances[i * n + t]!;
-                    const d1 = distances[j * n + t]!;
-                    if (d0 === -1 || d1 === -1) continue;
-                    const d = distances[i * n + j]!;
-                    if (d === -1 || d0 + d1 < d) {
-                        distances[i * n + j] = d0 + d1;
-                        distances[j * n + i] = d0 + d1;
-                        maximumDistance = Math.max(maximumDistance, d0 + d1);
-                        newConnections = true;
-                    }
-                }
+                if (i !== j) longest = Math.max(longest, relaxPair(distances, colorCount, i, j));
             }
         }
-    } while (newConnections);
+        maximumDistance = Math.max(maximumDistance, longest);
+    } while (longest > 0);
     return { distances, maximumDistance };
 }
 
@@ -265,7 +286,7 @@ const cache = new WeakMap<TerrainSet, { key: unknown[]; analysis: TerrainAnalysi
 export function terrainAnalysis(set: TerrainSet, slot: number): TerrainAnalysis {
     const key = [set.type, set.colors, set.colors.length, set.tiles, set.tiles.length, slot];
     const cached = cache.get(set);
-    if (cached && cached.key.every((part, index) => part === key[index])) return cached.analysis;
+    if (cached?.key.every((part, index) => part === key[index])) return cached.analysis;
     const analysis = analyzeTerrainSet(set, slot);
     cache.set(set, { key, analysis });
     return analysis;

@@ -26,13 +26,16 @@ export const ORIENTATION = {
 export const ROTATE_RIGHT_MASK: readonly Orientation[] = [5, 4, 1, 0, 7, 6, 3, 2];
 export const ROTATE_LEFT_MASK: readonly Orientation[] = [3, 2, 7, 6, 1, 0, 5, 4];
 
-/** `p · q`: apply `q`, then `p`. `| 0` keeps entries integers without `-0`. */
+/** An entry as an integer, `-0` as `0`. */
+const entry = (value: number): number => Math.trunc(value) || 0;
+
+/** `p · q`: apply `q`, then `p`. Entries stay integers without `-0`. */
 export function multiply(p: Matrix2, q: Matrix2): Matrix2 {
     return [
-        (p[0] * q[0] + p[1] * q[2]) | 0,
-        (p[0] * q[1] + p[1] * q[3]) | 0,
-        (p[2] * q[0] + p[3] * q[2]) | 0,
-        (p[2] * q[1] + p[3] * q[3]) | 0,
+        entry(p[0] * q[0] + p[1] * q[2]),
+        entry(p[0] * q[1] + p[1] * q[3]),
+        entry(p[2] * q[0] + p[3] * q[2]),
+        entry(p[2] * q[1] + p[3] * q[3]),
     ];
 }
 

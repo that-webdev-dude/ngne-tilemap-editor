@@ -128,7 +128,7 @@ export function regionBounds(region: Region): CellRect | null {
         right = Math.max(right, span.end);
     }
     const top = region[0]!.y;
-    const bottom = region[region.length - 1]!.y + 1;
+    const bottom = region.at(-1)!.y + 1;
     return { x: left, y: top, width: right - left, height: bottom - top };
 }
 
@@ -151,7 +151,7 @@ export function regionContains(region: Region, x: number, y: number): boolean {
         else high = mid;
     }
     const span = region[low];
-    return span !== undefined && span.y === y && span.start <= x && x < span.end;
+    return span?.y === y && span.start <= x && x < span.end;
 }
 
 /** The part of `region` inside `rect`. */
@@ -186,16 +186,11 @@ export function regionCells(region: Region): PixelPoint[] {
  */
 export function regionOf(cells: readonly PixelPoint[]): Region {
     const sorted = [...cells].sort((a, b) => a.y - b.y || a.x - b.x);
-    const spans: RowSpan[] = [];
-    let open: { y: number; start: number; end: number } | null = null;
+    const spans: { y: number; start: number; end: number }[] = [];
     for (const { x, y } of sorted) {
-        if (open && open.y === y && x <= open.end) {
-            open.end = Math.max(open.end, x + 1);
-            continue;
-        }
-        if (open) spans.push(open);
-        open = { y, start: x, end: x + 1 };
+        const last = spans.at(-1);
+        if (last?.y === y && x <= last.end) last.end = Math.max(last.end, x + 1);
+        else spans.push({ y, start: x, end: x + 1 });
     }
-    if (open) spans.push(open);
     return spans;
 }

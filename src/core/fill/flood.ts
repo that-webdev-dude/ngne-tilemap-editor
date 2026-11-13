@@ -53,6 +53,73 @@ function allowedGrid(bounds: CellRect | Region): FillGrid | null {
     return { box, state };
 }
 
+/** One fill over a grid: matches cells as it reads them and collects the filled runs. */
+class Scanline {
+    readonly #read: CellReader;
+    readonly #accepts: (value: number) => boolean;
+    readonly #box: CellRect;
+    readonly #state: Uint8Array;
+    readonly #seeds: number[] = [];
+    readonly spans: RowSpan[] = [];
+
+    constructor(read: CellReader, accepts: (value: number) => boolean, grid: FillGrid) {
+        this.#read = read;
+        this.#accepts = accepts;
+        this.#box = grid.box;
+        this.#state = grid.state;
+    }
+
+    /** Whether the cell at `column`, `row` of the grid matches and is not filled yet. */
+    #open(column: number, row: number): boolean {
+        const { x, y, width } = this.#box;
+        const index = row * width + column;
+        if (this.#state[index] === UNREAD) {
+            this.#state[index] = this.#accepts(this.#read(x + column, y + row))
+                ? MATCHING
+                : BLOCKED;
+        }
+        return this.#state[index] === MATCHING;
+    }
+
+    /** Pushes one seed for each run of matching cells of `row` between `left` and `right`. */
+    #seedRow(row: number, left: number, right: number): void {
+        let inRun = false;
+        for (let column = left; column <= right; column++) {
+            const matching = this.#open(column, row);
+            if (matching && !inRun) this.#seeds.push(row * this.#box.width + column);
+            inRun = matching;
+        }
+    }
+
+    /** Fills the run through the seed at grid index `seed` and seeds the rows beside it. */
+    #fillRun(seed: number): void {
+        const { width, height } = this.#box;
+        const row = Math.floor(seed / width);
+        let left = seed - row * width;
+        let right = left;
+        while (left > 0 && this.#open(left - 1, row)) left--;
+        while (right < width - 1 && this.#open(right + 1, row)) right++;
+        this.#state.fill(FILLED, row * width + left, row * width + right + 1);
+        this.spans.push({
+            y: this.#box.y + row,
+            start: this.#box.x + left,
+            end: this.#box.x + right + 1,
+        });
+        if (row > 0) this.#seedRow(row - 1, left, right);
+        if (row < height - 1) this.#seedRow(row + 1, left, right);
+    }
+
+    /** Fills from the cell at `column`, `row` until no seed is left. */
+    run(column: number, row: number): void {
+        if (this.#open(column, row)) this.#seeds.push(row * this.#box.width + column);
+        let seed = this.#seeds.pop();
+        while (seed !== undefined) {
+            if (this.#state[seed] === MATCHING) this.#fillRun(seed);
+            seed = this.#seeds.pop();
+        }
+    }
+}
+
 /**
  * The region of the cells 4-connected to `origin` through allowed, matching cells, origin
  * included. The allowed cells are those of `bounds`, a rectangle or a region. A cell matches
@@ -68,49 +135,12 @@ export function floodRegion(
     const grid = allowedGrid(bounds);
     if (!grid) return [];
     const { box, state } = grid;
-    const ox = origin.x - box.x;
-    const oy = origin.y - box.y;
-    if (ox < 0 || oy < 0 || ox >= box.width || oy >= box.height) return [];
-    if (state[oy * box.width + ox] !== UNREAD) return [];
+    const column = origin.x - box.x;
+    const row = origin.y - box.y;
+    const inBox = column >= 0 && row >= 0 && column < box.width && row < box.height;
+    if (!inBox || state[row * box.width + column] !== UNREAD) return [];
 
-    const accepts = matches ?? equalTo(read(origin.x, origin.y));
-
-    /** Whether the cell at grid index `index` (column `column`, row `row`) matches and is unfilled. */
-    const open = (index: number, column: number, row: number): boolean => {
-        if (state[index] === UNREAD) {
-            state[index] = accepts(read(box.x + column, box.y + row)) ? MATCHING : BLOCKED;
-        }
-        return state[index] === MATCHING;
-    };
-
-    const seeds: number[] = [];
-    /** Pushes one seed for each run of matching cells of `row` between `left` and `right`. */
-    const seedRow = (row: number, left: number, right: number): void => {
-        const base = row * box.width;
-        let inRun = false;
-        for (let column = left; column <= right; column++) {
-            const matching = open(base + column, column, row);
-            if (matching && !inRun) seeds.push(base + column);
-            inRun = matching;
-        }
-    };
-
-    const spans: RowSpan[] = [];
-    if (open(oy * box.width + ox, ox, oy)) seeds.push(oy * box.width + ox);
-    while (seeds.length > 0) {
-        const seed = seeds.pop()!;
-        if (state[seed] !== MATCHING) continue;
-        const row = Math.floor(seed / box.width);
-        const base = row * box.width;
-        let left = seed - base;
-        let right = left;
-        while (left > 0 && open(base + left - 1, left - 1, row)) left--;
-        while (right < box.width - 1 && open(base + right + 1, right + 1, row)) right++;
-        state.fill(FILLED, base + left, base + right + 1);
-        spans.push({ y: box.y + row, start: box.x + left, end: box.x + right + 1 });
-        if (row > 0) seedRow(row - 1, left, right);
-        if (row < box.height - 1) seedRow(row + 1, left, right);
-    }
-    spans.sort((a, b) => a.y - b.y || a.start - b.start);
-    return spans;
+    const scanline = new Scanline(read, matches ?? equalTo(read(origin.x, origin.y)), grid);
+    scanline.run(column, row);
+    return scanline.spans.sort((a, b) => a.y - b.y || a.start - b.start);
 }
