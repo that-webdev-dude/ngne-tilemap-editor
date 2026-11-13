@@ -9,7 +9,8 @@ rows.
 | Path | `se/` path | Kind | Commit | SHA-256 | Change |
 | ---- | ---------- | ---- | ------ | ------- | ------ |
 | `.gitattributes` | `.gitattributes` | verbatim | `ea5c91d` | `23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651` | |
-| `.github/workflows/ci.yml` | `.github/workflows/ci.yml` | adapt | `ea5c91d` | | `check` and E2E jobs only (4 shards + `alone`); E2E needs `check`; `--pass-with-no-tests`. Golden path, README commands and links are later tickets' |
+| `.github/workflows/ci.yml` | `.github/workflows/ci.yml` | adapt | `ea5c91d` | | `npm ci --ignore-scripts`; E2E needs `check`; `--pass-with-no-tests`; a `runtime-compat` job; golden path `te-063-golden-path.spec.ts`; README commands `npm ci --ignore-scripts`, `npm run build`, `npm test` |
+| `.github/workflows/deploy.yml` | `.github/workflows/deploy.yml` | adapt | `ea5c91d` | | Base `/ngne-tilemap-editor/` (SUITE §7); `npm ci --ignore-scripts`; comment names the owner's actions |
 | `.gitignore` | `.gitignore` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `.npmrc` | `.npmrc` | verbatim | `ea5c91d` | `be85cc462e740587626bbcbb1c3ed1c40b26e62ec072e8cbd2768f23915c28e6` | |
 | `.prettierignore` | `.prettierignore` | adapt | `ea5c91d` | | Workflow-file references removed |
@@ -17,8 +18,9 @@ rows.
 | `LICENSE` | `LICENSE` | verbatim | `ea5c91d` | `4d21bde6e4b9d15aafd5e507b3222205aa1ed73c3546650c524a3bf75685305a` | |
 | `eslint.config.js` | `eslint.config.js` | adapt | `ea5c91d` | | `src/core/sprite` imports only itself, `fflate` and `fast-png`; only `src/core` imports `src/core/sprite` (DESIGN §3.1) |
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); favicon `icons/icon-192.png` (TE-066) |
-| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `0.0.0`, description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
+| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `1.0.0` (TE-067), description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
+| `scripts/check-links.mjs` | `scripts/check-links.mjs` | adapt | `ea5c91d` | | Leaves out the vendored engine packages of the runtime compile matrix (`tests/runtime-compat/*/vendor/`) |
 | `scripts/icons.ts` | `scripts/icons.ts` | adapt | `ea5c91d` | | The mark is a 2 × 2 tile grid (its lines, the top-left tile painted) instead of "N" (SUITE §1); the drift test is `te-066-pwa.test.ts` |
 | `src/app/autosave/autosave.ts` | `src/app/autosave/autosave.ts` | adapt | `ea5c91d` | | One project per window: one tracker over the session store's history; snapshots of `project.json`, changed maps' entries and changed tileset and image pixels, taken by the page and written by the worker (`backend.ts`); changes learned from `touched` (a project-wide step that changes cells, layers, tilesets or structure rewrites every map); no float, composites or reference sources; map thumbnails of the first 4 maps, one per task after the capture; a mark when a snapshot is stored |
 | `src/app/autosave/dialogs.ts` | `src/app/autosave/dialogs.ts` | adapt | `ea5c91d` | | Entries list a project's map count and map thumbnails; Recover and Discard resolve an outcome (`opened`, `gone`, `failed`) |
@@ -350,6 +352,8 @@ rows.
 | `tests/unit/te-048-autosave.test.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | One project of maps, tilesets and images; the store spy counts entry and pixel puts; the snapshot round trip through `serialize`; recovery into the window |
 | `tests/unit/te-048-support.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | `MemorySnapshots` of that test with entries and pixels instead of images and sources; cell and tileset edits as commands |
 | `tests/unit/te-066-pwa.test.ts` | `tests/unit/se-072-pwa.test.ts` | adapt | `ea5c91d` | | Manifest fields, colours, icons and favicon checked; cache prefix and the sprite editor's caches kept; the tile-grid mark; launch cases for one project per window |
+| `tests/unit/te-067-guide.test.ts` | `tests/unit/se-073-guide.test.ts` | adapt | `ea5c91d` | | The guide's example is compiled against `@ngne/core` 0.3.0 and a generated runtime instead of compared with a fixture |
+| `tests/unit/te-067-links.test.ts` | `tests/unit/se-073-links.test.ts` | adapt | `ea5c91d` | | Ticket name; fixture `git add` with `core.autocrlf=false`; a case for the vendored engine packages |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); the `NGNE_CORE_DIR` engine alias; manifest names of SUITE §1, exported as `manifest` for the unit test; file handler `.ngtilemap` (`application/x-ngtilemap`); base path from the deploy build |

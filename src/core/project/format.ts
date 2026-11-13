@@ -1,6 +1,8 @@
 // Names, version and limits of the `.ngtilemap` project file, version 1 (FORMAT §2). A value
 // changed here is a change of the format: it needs a new version and a migration (§2.10).
 
+import { GENERATOR } from "../generator";
+
 export {
     MAX_ANIMATION_FRAMES,
     MAX_ANIMATION_FRAMES_PER_TILESET,
@@ -41,8 +43,8 @@ export const PROJECT_FORMAT = "ngne-tilemap-project";
 /** The version written, and the newest one read. */
 export const PROJECT_VERSION = 1;
 
-/** `generator` of `manifest.json`: name and version of this writer (FORMAT §2.3). */
-export const PROJECT_GENERATOR = "ngne-tilemap-editor 1.0.0";
+/** `generator` of `manifest.json`: name and version of this writer (FORMAT §2.3, SUITE §1). */
+export const PROJECT_GENERATOR = GENERATOR;
 
 export const MANIFEST_ENTRY = "manifest.json";
 export const PROJECT_ENTRY = "project.json";

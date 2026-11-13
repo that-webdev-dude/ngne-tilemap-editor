@@ -238,23 +238,25 @@ Balanced power plan on AC, 144 Hz panel.
 ## 7. Engine gaps
 
 Open gaps in 0.3.0 that the editor or the generated runtime works around. The NGNE owner
-reads this table; costs are filled in from spike and ticket measurements.
+reads this table. Costs are the reference-hardware measurements of §6 and SPEC §14 (TE-064 and
+TE-068; Intel UHD / RTX 4060) and the spikes of 2026-10-30; "not measured" marks a gap whose
+workaround no benchmark isolates.
 
-| Gap | Workaround | Where |
-| --- | --- | --- |
-| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor |
-| Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime |
-| No camera zoom | Scale quad positions and sizes; runtime takes a render-scale option | editor, runtime |
-| Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime |
-| Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime |
-| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor |
-| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU (initial overview build, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor |
-| Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime |
-| No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor |
-| No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor |
-| Assets checked by object identity; no reference following; unlisted texture throws in render | Runtime caches one definition per ID, namespaces IDs, exposes `assetsFor(tilemap)`, skips unlisted tilesets | runtime |
-| No tilemap or atlas schema; no tileset discovery | Editor-owned `ngne-tilemap` and `ngne-sprite-atlas` formats | editor, runtime |
-| One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor |
-| BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview |
-| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor |
-| `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle within 7 ms of the last one | editor |
+| Gap | Workaround | Where | Cost (measured) |
+| --- | --- | --- | --- |
+| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 9.4 / 9.4 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 491 / 424 ms rebuild after a layer change, a 0.64 / 0.66 s initial build |
+| Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime | Not measured ungrouped. Grouped, the reference map draws in 17 draw calls (4,664 and 66,992 sprites; runtime p95 1.0 / 1.0 ms and 9.9 / 10.6 ms) |
+| No camera zoom | Scale quad positions and sizes; runtime takes a render-scale option | editor, runtime | Not measured: the scaling is part of the quad emission above |
+| Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; repeat quads not measured |
+| Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime | None in time; features left out (tint, blend modes) |
+| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 37.2 / 36.4 ms p95 after a paint (47.0 / 41.1 ms for a 16 × 16 stamp); the composite is part of the 491 / 424 ms rebuild |
+| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU (initial overview build, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 29.0 / 35.3 ms against 16 ms (the build's own slices ≤ 8.2 / 8.5 ms) |
+| Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime | Not measured: one extra transparent column or row per odd tile in the atlas |
+| No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 10.6 / 10.0 ms p95 (budget 10 ms, accepted for v1) |
+| No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor | None in time; `once` animations loop |
+| Assets checked by object identity; no reference following; unlisted texture throws in render | Runtime caches one definition per ID, namespaces IDs, exposes `assetsFor(tilemap)`, skips unlisted tilesets | runtime | Not measured |
+| No tilemap or atlas schema; no tileset discovery | Editor-owned `ngne-tilemap` and `ngne-sprite-atlas` formats | editor, runtime | None in time; the formats and the runtime are the editor's to maintain |
+| One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor | Not measured |
+| BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview | Not measured |
+| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor | Not measured: no request hung in the measurements. The check is part of the cold load (250 / 1,434 ms, §6), most of it on the RTX 4060; a hung request shows the notice after up to 10 s (two 5 s limits) |
+| `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle 3.1–16.4 ms after the last submit (§6) | editor | Up to 4 / 4 frames in flight in the pan (p95 3 / 3) against a budget of 2, accepted for v1; overview pan and paint 2 / 2 |

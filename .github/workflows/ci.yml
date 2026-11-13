@@ -110,3 +110,31 @@ jobs:
                   name: e2e-results-golden-path
                   path: test-results
                   if-no-files-found: ignore
+
+    # TE-067: the commands of README.md's install block, run verbatim one after the other on a
+    # clean runner (SUITE §7). The block must hold exactly these three lines.
+    readme-commands:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - name: Execute README commands verbatim
+              shell: bash
+              run: |
+                  commands=$(sed -n '/<!-- readme-commands:start -->/,/<!-- readme-commands:end -->/p' README.md | sed '/^<!--/d; /^```/d; /^[[:space:]]*$/d')
+                  test "$commands" = $'npm ci --ignore-scripts\nnpm run build\nnpm test'
+                  while IFS= read -r command; do
+                      bash -e -c "$command"
+                  done <<< "$commands"
+
+    # TE-067: every relative link and anchor of the tracked Markdown files resolves (offline).
+    links:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - run: node scripts/check-links.mjs

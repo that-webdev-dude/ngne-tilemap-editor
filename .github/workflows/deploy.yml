@@ -1,0 +1,45 @@
+name: Deploy to GitHub Pages
+
+# TE-067 (adapted from the sprite editor's deploy.yml): the production build at the Pages base
+# path (SUITE §7), on a pushed `v*` tag or Run workflow. The owner tags and deploys; branch
+# pushes do not deploy.
+on:
+    workflow_dispatch:
+    push:
+        tags: ["v*"]
+
+permissions:
+    contents: read
+
+concurrency:
+    group: pages
+    cancel-in-progress: false
+
+jobs:
+    build:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+                  cache: npm
+            - run: npm ci --ignore-scripts
+            - run: npx vite build --base=/ngne-tilemap-editor/
+            - uses: actions/upload-pages-artifact@v3
+              with:
+                  path: dist
+
+    deploy:
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            pages: write
+            id-token: write
+        environment:
+            name: github-pages
+            url: ${{ steps.deployment.outputs.page_url }}
+        steps:
+            - name: Deploy Pages artifact
+              id: deployment
+              uses: actions/deploy-pages@v5

@@ -2,4 +2,4 @@
 // (a test compares them). Written as `generator` into the project file and every exported JSON
 // file, and named in the header of the generated runtime.
 
-export const GENERATOR = "ngne-tilemap-editor 0.0.0";
+export const GENERATOR = "ngne-tilemap-editor 1.0.0";
