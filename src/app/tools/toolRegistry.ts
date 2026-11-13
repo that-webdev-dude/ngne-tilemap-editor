@@ -25,6 +25,8 @@ export const toolRegistry: ToolRegistry = createToolRegistry();
 const modules = import.meta.glob<ToolModule>("../../**/*.tools.{ts,tsx}", { eager: true });
 
 /** The discovered tool modules, by their path from this file. */
-export const toolModulePaths: readonly string[] = Object.keys(modules).sort();
+export const toolModulePaths: readonly string[] = Object.keys(modules).sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0,
+);
 
 registerToolModules(toolRegistry, modules);

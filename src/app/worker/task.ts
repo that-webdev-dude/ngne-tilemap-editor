@@ -46,7 +46,7 @@ export function buffersOf(...views: ArrayBufferView[]): Transferable[] {
 /** The tasks of the modules by name. Throws when two tasks share a name. */
 export function collectTasks(modules: Record<string, TaskModule>): ReadonlyMap<string, WorkerTask> {
     const table = new Map<string, WorkerTask>();
-    for (const path of Object.keys(modules).sort()) {
+    for (const path of Object.keys(modules).sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))) {
         for (const task of modules[path]?.tasks ?? []) {
             if (table.has(task.name)) {
                 throw new Error(`Worker task "${task.name}" is defined twice (${path}).`);

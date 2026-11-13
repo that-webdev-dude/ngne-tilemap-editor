@@ -36,14 +36,11 @@ const rows: Row[] = readFileSync(`${ROOT}docs/PROVENANCE.md`, "utf8")
 /** Whether the row's source exists at its commit with the recorded SHA-256. */
 function recorded(row: Row): boolean {
     try {
-        const blob = execFileSync(
-            "git",
-            ["-C", se, "cat-file", "blob", `${row.commit}:${row.source}`],
-            {
-                stdio: ["ignore", "pipe", "ignore"],
-                maxBuffer: 64 << 20,
-            },
-        );
+        const blob = execFileSync("git", ["cat-file", "blob", `${row.commit}:${row.source}`], {
+            cwd: se,
+            stdio: ["ignore", "pipe", "ignore"],
+            maxBuffer: 64 << 20,
+        });
         return createHash("sha256").update(blob).digest("hex") === row.sha256;
     } catch {
         return false;
@@ -54,7 +51,9 @@ function recorded(row: Row): boolean {
 const changed = new Map<string, string>();
 for (const commit of new Set(rows.map((row) => row.commit))) {
     const sources = rows.filter((row) => row.commit === commit).map((row) => row.source);
-    const out = execFileSync("git", ["-C", se, "diff", "--name-status", commit, "--", ...sources]);
+    const out = execFileSync("git", ["diff", "--name-status", commit, "--", ...sources], {
+        cwd: se,
+    });
     for (const line of out.toString("utf8").split("\n").filter(Boolean)) {
         const [status, path] = line.split("\t");
         changed.set(`${commit}:${path}`, status === "D" ? "deleted" : "changed");
@@ -67,6 +66,6 @@ for (const row of rows) {
     if (state) drifted += 1;
     console.log(`${state ?? "unchanged"}  ${row.source}  (${row.commit}) -> ${row.path}`);
 }
-const head = execFileSync("git", ["-C", se, "rev-parse", "--short", "HEAD"]).toString().trim();
+const head = execFileSync("git", ["rev-parse", "--short", "HEAD"], { cwd: se }).toString().trim();
 console.log(`${rows.length} verbatim rows, ${drifted} changed or wrong in ${se} at ${head}`);
 process.exitCode = drifted > 0 ? 1 : 0;

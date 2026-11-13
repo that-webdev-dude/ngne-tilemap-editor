@@ -75,7 +75,7 @@ function stringify(value: Json, depth: number, wrap: number): string {
         const map = value as JsonObject;
         let out = depth !== 0 ? `\n${indent}{\n` : "{";
         Object.keys(map)
-            .sort()
+            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
             .forEach((key, i) => {
                 if (i !== 0) out += ",\n";
                 out += `${indent} "${escape(key)}":${stringify(map[key]!, depth + 1, wrap)}`;
@@ -2259,7 +2259,7 @@ export function listFiles(folder: string): string[] {
         }
     };
     walk(folder);
-    return out.sort();
+    return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 }
 
 function write(): void {

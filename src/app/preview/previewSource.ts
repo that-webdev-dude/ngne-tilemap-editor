@@ -362,12 +362,8 @@ export class PreviewSource {
             late: [],
         };
         this.#flight = flight;
-        let parts: Promise<TilemapParts>;
-        try {
-            parts = this.#buildParts(project, map, atlases);
-        } catch (error) {
-            parts = Promise.reject(error instanceof Error ? error : new Error(String(error)));
-        }
+        // A build that throws as it starts fails as one that rejects.
+        const parts = (async () => this.#buildParts(project, map, atlases))();
         parts.then(
             (result) => this.#landed(flight, result, undefined),
             (error: unknown) => this.#landed(flight, null, error),

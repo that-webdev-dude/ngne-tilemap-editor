@@ -389,7 +389,9 @@ export function registeredSurfaceKinds(page: Page): Promise<string[]> {
         const { SURFACE_IDS } = (await load(
             "/src/app/surfaces/surfaces.ts",
         )) as typeof SurfacesModule;
-        return [...registeredDialogs.keys(), ...SURFACE_IDS].sort();
+        return [...registeredDialogs.keys(), ...SURFACE_IDS].sort((a, b) =>
+            a < b ? -1 : a > b ? 1 : 0,
+        );
     });
 }
 

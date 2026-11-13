@@ -39,7 +39,9 @@ export const appCommands: CommandRegistry = withProjectGate(createCommandRegistr
 const modules = import.meta.glob<CommandModule>("../../**/*.commands.{ts,tsx}", { eager: true });
 
 /** The discovered command modules, by their path from this file. */
-export const commandModulePaths: readonly string[] = Object.keys(modules).sort();
+export const commandModulePaths: readonly string[] = Object.keys(modules).sort((a, b) =>
+    a < b ? -1 : a > b ? 1 : 0,
+);
 
 registerCommandModules(appCommands, modules);
 

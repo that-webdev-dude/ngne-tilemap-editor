@@ -58,8 +58,11 @@ const POWER_MODES: Record<string, string> = {
     "ded574b5-45a0-4f42-8737-46345c09c238": "Best performance",
 };
 
+/** Windows PowerShell at its fixed place under the Windows directory, not looked up in PATH. */
+const POWERSHELL = `${process.env.SystemRoot ?? "C:\\Windows"}\\System32\\WindowsPowerShell\\v1.0\\powershell.exe`;
+
 function powershell(command: string): string {
-    const result = spawnSync("powershell.exe", ["-NoProfile", "-Command", command], {
+    const result = spawnSync(POWERSHELL, ["-NoProfile", "-Command", command], {
         encoding: "utf8",
     });
     return result.status === 0 ? result.stdout.trim() : "";

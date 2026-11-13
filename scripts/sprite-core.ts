@@ -31,7 +31,7 @@ const TARGET = `${ROOT}src/core/sprite/`;
 const se = resolve(ROOT, process.argv[2] ?? "../ngne-sprite-editor");
 
 function git(...args: string[]): Buffer {
-    return execFileSync("git", ["-C", se, ...args], { maxBuffer: 64 << 20 });
+    return execFileSync("git", args, { cwd: se, maxBuffer: 64 << 20 });
 }
 
 const known = new Set(
@@ -78,7 +78,7 @@ while (pending.length > 0) {
 }
 
 rmSync(TARGET, { recursive: true, force: true });
-const paths = [...files.keys()].sort();
+const paths = [...files.keys()].sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
 for (const path of paths) {
     const out = TARGET + path.slice(CORE.length);
     mkdirSync(dirname(out), { recursive: true });

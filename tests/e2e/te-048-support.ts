@@ -69,7 +69,9 @@ export function autosaveContents(page: Page): Promise<AutosaveContents> {
                 })),
             }));
             const names = (keys: IDBValidKey[]) =>
-                keys.map((key) => (key as string[]).join("/")).sort();
+                keys
+                    .map((key) => (key as string[]).join("/"))
+                    .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
             return { snapshots, entries: names(entries), pixels: names(pixels) };
         } finally {
             db.close();
