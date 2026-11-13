@@ -751,17 +751,18 @@ const INDENT = "    ";
 function escape(text: string): string {
     let out = "";
     for (let i = 0; i < text.length; i++) {
+        // One UTF-16 unit: a lone surrogate's code point is the unit itself.
         const char = text[i]!;
-        const code = text.charCodeAt(i);
-        if (char === "\b") out += "\\b";
-        else if (char === "\f") out += "\\f";
-        else if (char === "\n") out += "\\n";
-        else if (char === "\r") out += "\\r";
-        else if (char === "\t") out += "\\t";
-        else if (char === '"') out += '\\"';
-        else if (char === "\\") out += "\\\\";
-        else if (char === "/") out += "\\/";
-        else if (code > 127) out += `\\u${code.toString(16).padStart(4, "0")}`;
+        const code = char.codePointAt(0)!;
+        if (char === "\b") out += String.raw`\b`;
+        else if (char === "\f") out += String.raw`\f`;
+        else if (char === "\n") out += String.raw`\n`;
+        else if (char === "\r") out += String.raw`\r`;
+        else if (char === "\t") out += String.raw`\t`;
+        else if (char === '"') out += String.raw`\"`;
+        else if (char === "\\") out += String.raw`\\`;
+        else if (char === "/") out += String.raw`\/`;
+        else if (code > 127) out += String.raw`\u${code.toString(16).padStart(4, "0")}`;
         else out += char;
     }
     return out;
@@ -786,7 +787,8 @@ function stringify(value: Json, depth: number, wrap: number): string {
         const map = value as { readonly [key: string]: Json };
         let out = depth !== 0 ? `\n${indent}{\n` : "{";
         Object.keys(map)
-            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+            // By UTF-16 code unit, as `QVariantMap` orders its keys.
+            .sort((a, b) => Number(a > b) - Number(a < b))
             .forEach((key, i) => {
                 if (i !== 0) out += ",\n";
                 out += `${indent} "${escape(key)}":${stringify(map[key]!, depth + 1, wrap)}`;
@@ -915,22 +917,29 @@ function hexColor(hex: string): [number, number, number] {
 /** Colour of the middle of a mixed tile, which no index paints. */
 const MIDDLE: [number, number, number] = [0x3a, 0x3a, 0x3a];
 
+/** The corner a pixel of a corner tile shows: the tile's quadrants. */
+function cornerPixelIndex(px: number, py: number): number {
+    const half = TILE_SIZE / 2;
+    if (py < half) return px < half ? 7 : 1;
+    return px < half ? 5 : 3;
+}
+
+/** The edge a pixel of an edge tile shows: the four triangles between the diagonals. */
+function edgePixelIndex(px: number, py: number): number {
+    const half = TILE_SIZE / 2;
+    const dx = px + 0.5 - half;
+    const dy = py + 0.5 - half;
+    if (Math.abs(dy) >= Math.abs(dx)) return dy < 0 ? 0 : 4;
+    return dx < 0 ? 6 : 2;
+}
+
 /**
  * The index a pixel of a tile shows: corner tiles in quadrants, edge tiles in the four
  * triangles between the diagonals, mixed tiles in a 3 × 3 grid (null in the middle).
  */
 function pixelIndex(type: TerrainFixtureType, px: number, py: number): number | null {
-    const half = TILE_SIZE / 2;
-    if (type === "corner") {
-        if (py < half) return px < half ? 7 : 1;
-        return px < half ? 5 : 3;
-    }
-    if (type === "edge") {
-        const dx = px + 0.5 - half;
-        const dy = py + 0.5 - half;
-        if (Math.abs(dy) >= Math.abs(dx)) return dy < 0 ? 0 : 4;
-        return dx < 0 ? 6 : 2;
-    }
+    if (type === "corner") return cornerPixelIndex(px, py);
+    if (type === "edge") return edgePixelIndex(px, py);
     const third = TILE_SIZE / 3;
     const gx = Math.floor(px / third);
     const gy = Math.floor(py / third);

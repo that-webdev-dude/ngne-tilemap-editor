@@ -32,7 +32,7 @@ rows.
 | `src/app/commandPalette/fuzzy.ts` | `src/app/commandPalette/fuzzy.ts` | verbatim | `ea5c91d` | `da142574be46c0eba4988a74649e3e1778b9dd0cf98c4df3a29e231c822e50b1` | |
 | `src/app/commandPalette/paletteModel.ts` | `src/app/commandPalette/paletteModel.ts` | verbatim | `ea5c91d` | `176c165b0cbd1f323ee156432ce67ee68a0298b13bc318d96ea796285fa9578a` | |
 | `src/app/commandPalette/recentCommands.ts` | `src/app/commandPalette/recentCommands.ts` | adapt | `ea5c91d` | | Storage key `ngne-tilemap-editor.recent-commands` (SUITE §7) |
-| `src/app/commands/appCommands.ts` | `src/app/commands/appCommands.ts` | adapt | `ea5c91d` | | Refreshes on the session store and the key-context store; no editor store |
+| `src/app/commands/appCommands.ts` | `src/app/commands/appCommands.ts` | adapt | `ea5c91d` | | Refreshes on the session store and the key-context store; no editor store; `commandModulePaths` sorted by code unit with a compare function |
 | `src/app/commands/chord.ts` | `src/app/commands/chord.ts` | verbatim | `ea5c91d` | `a4af3b93d1fc355074f329aac1ca3fdcc65a54ce5cbbdf0074a75fc5212d1d66` | |
 | `src/app/commands/invoke.ts` | `src/app/commands/invoke.ts` | adapt | `ea5c91d` | | No playback state to stop |
 | `src/app/commands/menuModel.ts` | `src/app/commands/menuModel.ts` | verbatim | `ea5c91d` | `32c9403fdf2f5467c1c78af7e0750cdcd579ebb4fbf3bf0084c7022aff10e6a7` | |
@@ -237,7 +237,7 @@ rows.
 | `src/ui/import/PixelCanvas.tsx` | `src/ui/import/PixelCanvas.tsx` | adapt | `ea5c91d` | | `PixelBuffer` from `core/codec`, which re-exports the `core/sprite` type (only `core/` imports `core/sprite`, DESIGN §3.1) |
 | `src/ui/import/SourcePane.tsx` | `src/ui/import/SourcePane.tsx` | adapt | `ea5c91d` | | Grid overlay of the tileset import: the tiles of the form's tile size, margin and spacing as `core/tileset` cuts them (Tiled's grid, SPEC §6.1); no crop rectangle or pointer drawing; `PixelRect` local |
 | `src/ui/import/import.css` | `src/ui/import/import.css` | adapt | `ea5c91d` | | The source pane's rules without the crop; the Import Tileset layout (source left, form right), atlas lists, text fields, warnings; no result pane or drop chooser |
-| `src/ui/licences/LicencesDialog.tsx` | `src/ui/licences/LicencesDialog.tsx` | verbatim | `4987001` | `5a7e4d802675e3621dfe2a2af5827aa1fb1322104d670b456da7419c62d5a172` | |
+| `src/ui/licences/LicencesDialog.tsx` | `src/ui/licences/LicencesDialog.tsx` | adapt | `4987001` | | Props read-only; the scrolling `pre` sits in a `<section aria-label>` instead of carrying `role="region"` |
 | `src/ui/licences/licences.css` | `src/ui/licences/licences.css` | verbatim | `4987001` | `8da5a650c2cdead3d879399fd2a3d2715816a65101133a3d1b8fc3772e3ae415` | |
 | `src/ui/licences/licences.dialog.tsx` | `src/ui/licences/licences.dialog.tsx` | verbatim | `4987001` | `85424bab62efa6091c3232f6f07a5389f9e205776317652e0ae7c3ab5ed0ba2f` | |
 | `src/ui/menubar/MenubarItems.tsx` | `src/ui/menubar/MenubarItems.tsx` | verbatim | `ea5c91d` | `2cd89ca6bc084dd4f26cfb91572643d87bf22167383aa1d4f8505df5bd1c9363` | |

@@ -331,12 +331,28 @@ export function removeTerrainCommand(
             ...each,
             colors: each.colors.filter((_, k) => k !== terrain - 1),
             tiles: mapTiles(each.tiles, (wangId) =>
-                wangId.map((color) =>
-                    color === terrain ? 0 : color > terrain ? color - 1 : color,
-                ),
+                wangId.map((color) => withoutTerrain(color, terrain)),
             ),
         }));
     });
+}
+
+/** A terrain index once terrain `removed` is gone: 0 for it, one less for those after it. */
+function withoutTerrain(color: number, removed: number): number {
+    if (color === removed) return 0;
+    return color > removed ? color - 1 : color;
+}
+
+/** A terrain index with terrains `a` and `b` swapped. */
+function swapped(color: number, a: number, b: number): number {
+    if (color === a) return b;
+    return color === b ? a : color;
+}
+
+/** The undo label of setting `key` of a terrain. */
+function terrainFieldLabel(key: keyof TerrainFields): string {
+    if (key === "name") return TERRAIN_LABELS.renameTerrain;
+    return key === "color" ? TERRAIN_LABELS.colour : TERRAIN_LABELS.icon;
 }
 
 /** Moves terrain `terrain` of set `setIndex` one place up (−1) or down (+1), with its indexes. */
@@ -354,8 +370,7 @@ export function moveTerrainCommand(
         if (other < 1 || other > set.colors.length) {
             throw new TerrainEditError("move", "The terrain is at the end of the list.");
         }
-        const swap = (color: number) =>
-            color === terrain ? other : color === other ? terrain : color;
+        const swap = (color: number) => swapped(color, terrain, other);
         return withSet(sets, setIndex, (each) => {
             const colors = [...each.colors];
             colors[terrain - 1] = each.colors[other - 1]!;
@@ -396,13 +411,7 @@ export function setTerrainFieldCommand<Key extends keyof TerrainFields>(
     const current = setAt(tilesetOf(project, tilesetId), setIndex);
     checkTerrain(current, terrain, false);
     if (current.colors[terrain - 1]![key] === value) return null;
-    const label =
-        key === "name"
-            ? TERRAIN_LABELS.renameTerrain
-            : key === "color"
-              ? TERRAIN_LABELS.colour
-              : TERRAIN_LABELS.icon;
-    return terrainSetsCommand(label, tilesetId, (sets, tileset) => {
+    return terrainSetsCommand(terrainFieldLabel(key), tilesetId, (sets, tileset) => {
         const set = setAt(tileset, setIndex);
         checkTerrain(set, terrain, false);
         if (key === "name") checkName(value as string);
@@ -435,15 +444,10 @@ function assigned(
     target: TerrainTarget,
     terrain: number,
 ) {
-    return wangId.map((color, index) =>
-        target === "tile"
-            ? typeUsesIndex(type, index)
-                ? terrain
-                : 0
-            : index === target
-              ? terrain
-              : color,
-    );
+    return wangId.map((color, index) => {
+        if (target === "tile") return typeUsesIndex(type, index) ? terrain : 0;
+        return index === target ? terrain : color;
+    });
 }
 
 /**

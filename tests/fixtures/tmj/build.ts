@@ -32,17 +32,18 @@ type JsonObject = { readonly [key: string]: Json };
 function escape(text: string): string {
     let out = "";
     for (let i = 0; i < text.length; i++) {
+        // One UTF-16 unit: a lone surrogate's code point is the unit itself.
         const char = text[i]!;
-        const code = text.charCodeAt(i);
-        if (char === "\b") out += "\\b";
-        else if (char === "\f") out += "\\f";
-        else if (char === "\n") out += "\\n";
-        else if (char === "\r") out += "\\r";
-        else if (char === "\t") out += "\\t";
-        else if (char === '"') out += '\\"';
-        else if (char === "\\") out += "\\\\";
-        else if (char === "/") out += "\\/";
-        else if (code > 127) out += `\\u${code.toString(16).padStart(4, "0")}`;
+        const code = char.codePointAt(0)!;
+        if (char === "\b") out += String.raw`\b`;
+        else if (char === "\f") out += String.raw`\f`;
+        else if (char === "\n") out += String.raw`\n`;
+        else if (char === "\r") out += String.raw`\r`;
+        else if (char === "\t") out += String.raw`\t`;
+        else if (char === '"') out += String.raw`\"`;
+        else if (char === "\\") out += String.raw`\\`;
+        else if (char === "/") out += String.raw`\/`;
+        else if (code > 127) out += String.raw`\u${code.toString(16).padStart(4, "0")}`;
         else out += char;
     }
     return out;
@@ -58,6 +59,11 @@ function numberText(value: number): string {
 }
 
 const INDENT = "    ";
+
+/** Orders strings by UTF-16 code unit, as `QVariantMap` keys and the default sort do. */
+function byCodeUnit(a: string, b: string): number {
+    return Number(a > b) - Number(a < b);
+}
 
 /**
  * Tiled's `JsonWriter::stringify` with auto-formatting on: 4-space indent, map keys in
@@ -78,7 +84,7 @@ function stringify(value: Json, depth: number, wrap: number): string {
         const map = value as JsonObject;
         let out = depth !== 0 ? `\n${indent}{\n` : "{";
         Object.keys(map)
-            .sort((a, b) => (a < b ? -1 : a > b ? 1 : 0))
+            .sort(byCodeUnit)
             .forEach((key, i) => {
                 if (i !== 0) out += ",\n";
                 out += `${indent} "${escape(key)}":${stringify(map[key]!, depth + 1, wrap)}`;
@@ -471,21 +477,27 @@ function base64(bytes: Uint8Array): string {
     return Buffer.from(bytes).toString("base64");
 }
 
+/** `raw` compressed as `encoding` says; as it is for plain base64. */
+function compressed(raw: Uint8Array, encoding: Encoding): Uint8Array {
+    switch (encoding) {
+        case "zlib":
+            return zlibSync(raw);
+        case "gzip":
+            // mtime 0 leaves the header's time field zero, so the bytes never change.
+            return gzipSync(raw, { mtime: 0 });
+        case "zstd":
+            return zstdRawFrame(raw);
+        default:
+            return raw;
+    }
+}
+
 /** The `data` value of a layer or chunk, and the layer keys its encoding adds. */
 function encodeData(gids: readonly number[], encoding: Encoding): { data: Json; keys: JsonObject } {
     if (encoding === "csv") return { data: [...gids], keys: {} };
     const raw = gidBytes(gids);
-    const packed =
-        encoding === "zlib"
-            ? zlibSync(raw)
-            : encoding === "gzip"
-              ? // mtime 0 leaves the header's time field zero, so the bytes never change.
-                gzipSync(raw, { mtime: 0 })
-              : encoding === "zstd"
-                ? zstdRawFrame(raw)
-                : raw;
     return {
-        data: base64(packed),
+        data: base64(compressed(raw, encoding)),
         keys: { compression: encoding === "base64" ? "" : encoding, encoding: "base64" },
     };
 }
@@ -776,7 +788,10 @@ function isometricMap(): string {
         for (let x = 0; x < 8; x++) {
             const edge = x === 0 || y === 0 || x === 7 || y === 7;
             const pond = x >= 3 && x <= 4 && y >= 3 && y <= 4;
-            gids.push(1 + (edge ? 3 : pond ? 2 : (x + y) % 2));
+            let tile = (x + y) % 2;
+            if (edge) tile = 3;
+            else if (pond) tile = 2;
+            gids.push(1 + tile);
         }
     }
     return mapFile({
@@ -1302,7 +1317,15 @@ function projectFile(): string {
     // Tiled writes the project with `QJsonDocument::Indented`, which re-saves it whenever the
     // project opens: like `JSON.stringify` at 4 spaces, except that an empty array spans two
     // lines, its `]` at the key's indent. Writing the same layout keeps a re-save from changing it.
-    return JSON.stringify(project, null, 4).replace(/^( *)(.*)\[\](,?)$/gm, "$1$2[\n$1]$3") + "\n";
+    const lines = JSON.stringify(project, null, 4)
+        .split("\n")
+        .map((line) => {
+            const comma = line.endsWith(",") ? "," : "";
+            if (!line.endsWith(`[]${comma}`)) return line;
+            const indent = " ".repeat(line.length - line.trimStart().length);
+            return `${line.slice(0, line.length - 2 - comma.length)}[\n${indent}]${comma}`;
+        });
+    return lines.join("\n") + "\n";
 }
 
 // --- Fixture: tint and blend mode ---------------------------------------------------------------
@@ -1477,7 +1500,7 @@ function tileRenderSizeMap(): string {
 function hash(...values: number[]): number {
     let h = 0x9e3779b9;
     for (const value of values) {
-        h = Math.imul(h ^ (value | 0), 0x85ebca6b);
+        h = Math.imul(h ^ value, 0x85ebca6b);
         h ^= h >>> 13;
         h = Math.imul(h, 0xc2b2ae35);
         h ^= h >>> 16;
@@ -1499,25 +1522,31 @@ function groundTop(x: number): number {
 /** A pit three columns wide every 97 columns, away from both ends. */
 const isPit = (x: number) => x > 20 && x < SCROLLER_W - 20 && x % 97 >= 40 && x % 97 <= 42;
 
+/** The ground layer's GID at `(x, y)`, where the ground of column x starts at row `top`. */
+function scrollerGround(x: number, y: number, top: number): number {
+    if (isPit(x)) return y >= 37 ? gid(T.water) : 0;
+    if (y === top) return gid(T.grass);
+    if (y > top + 4) return gid(T.stone);
+    return y > top ? gid(T.dirt) : 0;
+}
+
+/** The decor layer's GID at `(x, y)`: platforms, coins above them and bushes on the ground. */
+function scrollerDecor(x: number, y: number, top: number): number {
+    const platform = x % 61 >= 30 && x % 61 <= 33 && x > 20 && x < SCROLLER_W - 20;
+    if (platform && y === groundTop(x - (x % 61) + 30) - 5) return gid(T.wood);
+    if (platform && y === groundTop(x - (x % 61) + 30) - 6) return gid(T.coin);
+    if (!isPit(x) && y === top - 1 && hash(2, x) % 100 < 12) return gid(T.bush);
+    return 0;
+}
+
 function sideScrollerMap(): string {
     const ground: number[] = [];
     const decor: number[] = [];
     for (let y = 0; y < SCROLLER_H; y++) {
         for (let x = 0; x < SCROLLER_W; x++) {
             const top = groundTop(x);
-            let g = 0;
-            if (isPit(x)) g = y >= 37 ? gid(T.water) : 0;
-            else if (y === top) g = gid(T.grass);
-            else if (y > top + 4) g = gid(T.stone);
-            else if (y > top) g = gid(T.dirt);
-            ground.push(g);
-
-            let d = 0;
-            const platform = x % 61 >= 30 && x % 61 <= 33 && x > 20 && x < SCROLLER_W - 20;
-            if (platform && y === groundTop(x - (x % 61) + 30) - 5) d = gid(T.wood);
-            else if (platform && y === groundTop(x - (x % 61) + 30) - 6) d = gid(T.coin);
-            else if (!isPit(x) && y === top - 1 && hash(2, x) % 100 < 12) d = gid(T.bush);
-            decor.push(d);
+            ground.push(scrollerGround(x, y, top));
+            decor.push(scrollerDecor(x, y, top));
         }
     }
     const spawns: JsonObject[] = [
@@ -1600,6 +1629,17 @@ const TOWNS = [
     ["Saltmarsh", 180, 210],
 ] as const;
 
+/** The ground tile of elevation `e`. */
+function elevationTile(e: number): number {
+    if (e < 70) return T["deep-water"];
+    if (e < 100) return T.water;
+    if (e < 110) return T.sand;
+    if (e < 160) return T.grass;
+    if (e < 190) return T.forest;
+    if (e < 215) return T.mountain;
+    return T.snow;
+}
+
 function overworldMap(): string {
     const ground: number[] = [];
     const roads: number[] = [];
@@ -1609,21 +1649,7 @@ function overworldMap(): string {
     for (let y = 0; y < WORLD; y++) {
         for (let x = 0; x < WORLD; x++) {
             const e = elevation(x, y);
-            const tile =
-                e < 70
-                    ? T["deep-water"]
-                    : e < 100
-                      ? T.water
-                      : e < 110
-                        ? T.sand
-                        : e < 160
-                          ? T.grass
-                          : e < 190
-                            ? T.forest
-                            : e < 215
-                              ? T.mountain
-                              : T.snow;
-            ground.push(gid(tile));
+            ground.push(gid(elevationTile(e)));
             roads.push(isRoad(x, y) && e >= 100 ? gid(T.road) : 0);
             clouds.push(valueNoise(x, y, 16, 12) > 190 ? gid(T.cloud) : 0);
         }
@@ -1739,7 +1765,7 @@ const DUNGEON_ROWS = [
     "#..P....#.......#......#",
     "#.......#..P.P..#......#",
     "####D####.......####D###",
-    "#......./......\\.......#",
+    String.raw`#......./......\.......#`,
     "#......................#",
     "#..C...................#",
     "#.......####D####......#",
@@ -1753,7 +1779,7 @@ const DUNGEON_ROWS = [
 function dungeonMap(): string {
     const rows = DUNGEON_ROWS;
     const floor = cells(
-        rows.map((row) => row.replace(/[^#]/g, ".").replace(/#/g, " ")),
+        rows.map((row) => row.replace(/[^#]/g, ".").replaceAll("#", " ")),
         { ".": gid(T.floor) },
     );
     const walls = cells(
@@ -2177,8 +2203,8 @@ function readme(): string {
         lines.push("", `### \`${entry.file}\``, "");
         if (entry.brief.length) lines.push(`- BRIEF §7: ${entry.brief.join("; ")}`);
         lines.push(`- SPEC §13: ${entry.spec.join("; ")}`);
-        lines.push(`- Uses: ${entry.uses.map((use) => `\`${use}\``).join(", ")}`);
-        lines.push(`- In Tiled: ${entry.look}`);
+        const uses = entry.uses.map((use) => `\`${use}\``).join(", ");
+        lines.push(`- Uses: ${uses}`, `- In Tiled: ${entry.look}`);
     }
     return lines.join("\n") + "\n";
 }
@@ -2262,7 +2288,7 @@ export function listFiles(folder: string): string[] {
         }
     };
     walk(folder);
-    return out.sort((a, b) => (a < b ? -1 : a > b ? 1 : 0));
+    return out.sort(byCodeUnit);
 }
 
 function write(): void {

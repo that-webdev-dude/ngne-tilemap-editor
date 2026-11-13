@@ -8,7 +8,7 @@ import "./licences.css";
  * large dialog whose body scrolls. When the file could not be read, the dialog says so and
  * links its address.
  */
-export function LicencesDialog({ request }: { request: LicencesRequest }) {
+export function LicencesDialog({ request }: Readonly<{ request: LicencesRequest }>) {
     return (
         <Dialog
             open
@@ -32,15 +32,13 @@ export function LicencesDialog({ request }: { request: LicencesRequest }) {
                     .
                 </p>
             ) : (
-                // Focusable, so the keyboard can scroll the text.
-                <pre
-                    className="licences__text"
-                    tabIndex={0}
-                    role="region"
-                    aria-label="Licence text"
-                >
-                    {request.text}
-                </pre>
+                <section aria-label="Licence text">
+                    {/* Focusable, so the keyboard can scroll the text (WCAG 2.1.1; axe's
+                        scrollable-region-focusable): it holds nothing else to focus. */}
+                    <pre className="licences__text" tabIndex={0}>
+                        {request.text}
+                    </pre>
+                </section>
             )}
         </Dialog>
     );
