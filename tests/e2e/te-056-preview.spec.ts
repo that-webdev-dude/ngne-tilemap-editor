@@ -137,6 +137,24 @@ test("a tileset update restarts the scene with the new pixels", async ({ page })
     ).toEqual([]);
 });
 
+test("the preview is not settled while the content a project asks for is being made", async ({
+    page,
+}) => {
+    // The tests wait for `settled` before counting scenes: it must not be true while the scene
+    // of the project before is still mounted, as one more scene is about to start.
+    const now = await page.evaluate(async (module) => {
+        const harness = (await import(module)) as { openProject(): unknown };
+        const generation = () => window.__ngneTest!.preview!.mountedKey?.split("\n")[0];
+        const before = generation();
+        harness.openProject();
+        const preview = window.__ngneTest!.preview!;
+        return { settled: preview.settled, sameScene: generation() === before };
+    }, PAGE_MODULE);
+    expect(now).toEqual({ settled: false, sameScene: true });
+    await settled(page);
+    expect(await page.evaluate(() => window.__ngneTest!.preview!.mountedKey)).not.toBeNull();
+});
+
 test("tileset updates a few frames apart restart the scene in the same game", async ({ page }) => {
     // Each restart waits until NGNE has let go of the popped scene's textures: a scene taking
     // their IDs sooner fails to prepare, and the preview would make a new game.

@@ -87,7 +87,10 @@ export interface PreviewProbe {
     readonly canvasSize: { width: number; height: number } | null;
     /** The canvas's CSS size. */
     readonly displaySize: { width: number; height: number };
-    /** True while nothing is under way: the game runs the content's textures, or is stopped. */
+    /**
+     * True while nothing is under way: no new content is being made (`setPending`), and the
+     * game runs the content's textures, or is stopped.
+     */
     readonly settled: boolean;
     /** The textures key of the mounted map scene; null while none is mounted. */
     readonly mountedKey: string | null;
@@ -700,7 +703,8 @@ export class PreviewGame {
                 displaySize: read(() => ({ ...this.#display })),
                 settled: read(() => {
                     const instance = this.#instance;
-                    if (this.#working) return false;
+                    // A new content is being made: the one set is about to be replaced.
+                    if (this.#working || this.#pending !== null) return false;
                     if (!instance) return !this.#resolution || !this.#running;
                     if (instance.running !== this.#running) return false;
                     if (!instance.running) return true;
