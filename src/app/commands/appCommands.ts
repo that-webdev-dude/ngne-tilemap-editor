@@ -13,7 +13,7 @@ import type { CommandModule, CommandSpec } from "./types";
  * whatever its own `enabled` says: it acts on a project.
  */
 const WITHOUT_PROJECT =
-    /^(file\.(newProject|open|openRecent\..+|clearRecent|importTiledMap)|edit\.(commandPalette|shortcuts|preferences)|focus\.(nextRegion|previousRegion)|view\.bottomPanel)$/;
+    /^(file\.(newProject|open|openRecent\..+|clearRecent|importTiledMap)|edit\.(commandPalette|shortcuts|preferences)|focus\.(nextRegion|previousRegion)|view\.bottomPanel|app\.licences)$/;
 
 /** `registry`, whose commands outside `WITHOUT_PROJECT` are enabled only with a project open. */
 function withProjectGate(registry: CommandRegistry): CommandRegistry {

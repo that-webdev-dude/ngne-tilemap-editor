@@ -222,6 +222,7 @@ test("every menu holds the items of DESIGN §5, each a registry entry", async ({
         "Hide Bottom Panel",
         "Focus Next Region",
         "Focus Previous Region",
+        "Open Source Licences…",
     ]);
 
     // And the other way round: every registry entry with a menu is shown, once.

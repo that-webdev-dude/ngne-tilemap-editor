@@ -42,6 +42,7 @@ describe("te-047 empty state", () => {
             .map((command) => command.id)
             .sort();
         expect(enabled).toEqual([
+            "app.licences",
             "edit.commandPalette",
             "edit.preferences",
             "edit.shortcuts",

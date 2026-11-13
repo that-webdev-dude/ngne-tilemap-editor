@@ -1,8 +1,18 @@
 import { readFileSync, readdirSync } from "node:fs";
-import { resolve } from "node:path";
+import { join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import type { AliasOptions, PluginOption } from "vite";
+import type { AliasOptions, Plugin, PluginOption } from "vite";
+import {
+    LICENCES_FILE,
+    LicenceError,
+    buildLicencesFile,
+    buildPackageDirs,
+    packageDirsOf,
+    runtimePackageDirs,
+    strayPackages,
+} from "./scripts/licences.ts";
 
 /**
  * `@ngne/core` from another install, when `NGNE_CORE_DIR` names one: the weekly runtime-latest
@@ -40,7 +50,7 @@ const { VitePWA } = (await import(PWA_PLUGIN)) as {
 function tokenColour(name: string): string {
     const css = readFileSync(new URL("src/ui/styles/tokens.css", import.meta.url), "utf8");
     const root = /:root\s*\{([^}]*)\}/.exec(css)?.[1] ?? "";
-    const value = new RegExp(`${name}:\\s*(#[0-9a-f]{6})\\s*;`).exec(root)?.[1];
+    const value = new RegExp(String.raw`${name}:\s*(#[0-9a-f]{6})\s*;`).exec(root)?.[1];
     if (!value) throw new Error(`vite.config: no colour token ${name}`);
     return value;
 }
@@ -54,7 +64,8 @@ const colours = {
 
 /** The icons scripts/icons.ts draws: public/icons/{icon,maskable}-<size>.png. */
 const icons = readdirSync(new URL("public/icons/", import.meta.url))
-    .sort()
+    // By code unit, as the default sort: the order does not depend on the machine's locale.
+    .sort((a, b) => Number(a > b) - Number(a < b))
     .flatMap((file) => {
         const match = /^(icon|maskable)-(\d+)\.png$/.exec(file);
         if (!match) return [];
@@ -95,12 +106,100 @@ export const manifest = {
     launch_handler: { client_mode: ["focus-existing", "auto"] },
 };
 
+const ROOT = fileURLToPath(new URL(".", import.meta.url));
+const TITLE = "NGNE Tilemap Editor";
+
+/** The ids of the modules the build's chunks render, the web workers' included. */
+const bundledModules = new Set<string>();
+
+/** An output of a build, as far as `noteModules` reads it. */
+type BundleOutput =
+    { type: "chunk"; modules: Record<string, { renderedLength: number }> } | { type: "asset" };
+
+/** Notes the modules of every chunk of `bundle` that renders code. */
+function noteModules(bundle: Record<string, BundleOutput>): void {
+    for (const output of Object.values(bundle)) {
+        if (output.type !== "chunk") continue;
+        for (const [id, module] of Object.entries(output.modules)) {
+            if (module.renderedLength > 0) bundledModules.add(id);
+        }
+    }
+}
+
+/** Notes the modules of a web worker's build; the workers are built before the app's chunks. */
+function collectModules(): Plugin {
+    return {
+        name: "ngne-licences-collect",
+        apply: "build",
+        generateBundle: (_options, bundle) => noteModules(bundle),
+    };
+}
+
+/** `dirs` and the bundler's packages (`BUILD_PACKAGES`, scripts/licences.ts), in order of name. */
+function withBuildPackages(dirs: readonly string[]): string[] {
+    return packageDirsOf([...dirs, ...buildPackageDirs(ROOT)].map((dir) => `${dir}/package.json`));
+}
+
+/**
+ * The open-source licences file (scripts/licences.ts): `licences.txt` beside `index.html`,
+ * with the licence of every package whose code the build bundled, each of them a runtime
+ * dependency of package-lock.json, and of the bundler. The development server answers the same
+ * address with the runtime dependencies' licences and the bundler's. A package without an
+ * allowed licence fails the build.
+ */
+function licencesFile(): Plugin {
+    const runtime = () =>
+        runtimePackageDirs(readFileSync(join(ROOT, "package-lock.json"), "utf8"), ROOT);
+    return {
+        name: "ngne-licences",
+        configureServer(server) {
+            server.middlewares.use((request, response, next) => {
+                const path = (request.url ?? "").split("?")[0];
+                if (path !== `${server.config.base}${LICENCES_FILE}`) return next();
+                try {
+                    const text = buildLicencesFile(ROOT, withBuildPackages(runtime()), TITLE);
+                    response.setHeader("Content-Type", "text/plain; charset=utf-8");
+                    response.end(text);
+                } catch (error) {
+                    next(error);
+                }
+            });
+        },
+        generateBundle: {
+            order: "post",
+            handler(_options, bundle) {
+                noteModules(bundle);
+                const bundled = packageDirsOf(bundledModules);
+                const strays = strayPackages(bundled, runtime());
+                if (strays.length > 0) {
+                    this.error(
+                        "The build bundles code of packages that are not runtime dependencies " +
+                            `in package-lock.json: ${strays.join(", ")}.`,
+                    );
+                }
+                try {
+                    this.emitFile({
+                        type: "asset",
+                        fileName: LICENCES_FILE,
+                        source: buildLicencesFile(ROOT, withBuildPackages(bundled), TITLE),
+                    });
+                } catch (error) {
+                    if (error instanceof LicenceError) this.error(error.message);
+                    throw error;
+                }
+            },
+        },
+    };
+}
+
 // Ports apart from the sprite editor's 5173/4173, so the two apps' service workers stay apart
 // when both run locally (SUITE §5). The GitHub Pages base path is passed by the deploy build
 // (`--base`, SUITE §7).
 export default defineConfig(({ command }) => ({
     plugins: [
         react(),
+        // The open-source licences of what the build ships (licences.txt).
+        licencesFile(),
         // The colour of the browser's chrome around the page, as the installed window's.
         {
             name: "ngne-theme-color",
@@ -125,8 +224,9 @@ export default defineConfig(({ command }) => ({
             // The icons are among the files the patterns find.
             includeManifestIcons: false,
             injectManifest: {
-                // The whole build: the shell, every chunk, the web workers, the icons.
-                globPatterns: ["**/*.{html,js,css,png,webmanifest}"],
+                // The whole build: the shell, every chunk, the web workers, the icons and the
+                // licences file.
+                globPatterns: ["**/*.{html,js,css,png,webmanifest,txt}"],
                 // The main chunk holds NGNE and React; a build with the development test hooks
                 // (tests/e2e/te-066-support.ts) is several times larger.
                 maximumFileSizeToCacheInBytes: 32 * 1024 * 1024,
@@ -141,5 +241,7 @@ export default defineConfig(({ command }) => ({
     },
     server: { port: 5183, strictPort: true },
     preview: { port: 4183, strictPort: true },
+    // The web workers' builds note their modules for the licences file.
+    worker: { plugins: () => [collectModules()] },
     build: { target: "es2022" },
 }));

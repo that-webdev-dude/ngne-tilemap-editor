@@ -55,7 +55,7 @@ export const NEW_TERRAIN_SET_NAME = "Unnamed Set";
 
 /**
  * Tiled's `defaultWangColors` (`src/libtiled/wangset.cpp`), opaque, as `#rrggbbaa`.
- * From libtiled (BSD 2-clause licence): see public/THIRD-PARTY-NOTICES.txt.
+ * From libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
  */
 export const DEFAULT_TERRAIN_COLOURS: readonly string[] = [
     "#ff0000ff",

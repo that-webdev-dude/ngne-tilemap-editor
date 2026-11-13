@@ -214,7 +214,7 @@ Order and items. Keys are §10. Every item is a registered command; disabled ite
 | Layer | New Tile Layer, New Marker Layer, New Image Layer…, New Group · Group Layers, Ungroup · Duplicate Layer, Delete Layer, Rename Layer · Layer Properties… · Move Layer Up, Move Layer Down, Select Layer Above, Select Layer Below · Show/Hide Other Layers, Lock/Unlock Other Layers |
 | Tileset | Tileset Properties…, Update Tileset from Source…, Delete Tileset · Edit Collision…, Edit Animation… (selected tile) · Previous Tileset, Next Tileset · Flip Stamp Horizontally, Flip Stamp Vertically, Rotate Stamp Right, Rotate Stamp Left |
 | Select | Select All, Select None, Invert Selection |
-| View | Zoom In, Zoom Out, Fit, 100% · Hide Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region |
+| View | Zoom In, Zoom Out, Fit, 100% · Hide Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region · Open Source Licences… |
 
 ## 6. Tool rail
 
@@ -375,6 +375,7 @@ a redraw starts shows with the next: at most 500 ms plus that redraw's time.
 | Tileset Properties | Dialog | Name, export name, class, tile offset X/Y, source (read-only: kind, file, tile size, margin, spacing) |
 | Import Tiled Map | Large dialog | Files: folder or files picked, the map (a select when they hold several), required files with status (found, missing) and Add files…; then the report: summary, groups per BRIEF §7 row with counts and locations; Cancel / Import |
 | Export | Large dialog | Left: destination folder, project export name, Export on save; right: file list with sizes grouped (tilemaps, tilesets, images, runtime), tileset atlas thumbnails, errors in `--danger`; Close / Export |
+| Open Source Licences | Large dialog | View → Open Source Licences…, the last item of the View menu. The text of `licences.txt` ([SUITE.md](SUITE.md) §7) in a monospaced block that keeps its line breaks and scrolls; Close. When the file cannot be read, a line saying so with a link to its address. A dialog, not a tab: a tab the page opens holds the editor's heap (as in the sprite editor) |
 | Preferences, Shortcut sheet, Recovery, WebGPU required | As `se-design` §7 | Preferences fields per §3.3. WebGPU required also shows when the adapter request does not settle: each request has 5 s, a pending one is retried once (an earlier request that answers late still counts), and after the retry the notice shows reason "no adapter" with the detail "WebGPU adapter request timed out". Until then the window stays blank, as in the sprite editor |
 
 Only actions undo cannot reverse confirm: discarding an unsaved project, discarding a recovery

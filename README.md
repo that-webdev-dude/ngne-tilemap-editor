@@ -96,13 +96,15 @@ branch pushes do not deploy. The owner tags and deploys.
 
 ## Licence
 
-Licensed under [MIT](LICENSE). The notices of the parts derived from libtiled (BSD 2-clause),
-Alois Zingl's Bresenham code (MIT), Aseprite's document library (MIT), pixman (MIT) and Tiled's
-qjsonparser, and the licences of the npm packages in the build, are in
-[public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt), which the build copies into
-`dist/` beside the app. After an npm package is added or updated,
-`node scripts/third-party-notices.ts` rewrites its npm section; a unit test fails while that
-section is out of date.
+Licensed under [MIT](LICENSE). Code derived from libtiled (BSD 2-clause), Alois Zingl's
+Bresenham algorithms (MIT), Aseprite's document library (MIT), pixman (MIT) and Tiled's
+qjsonparser is listed with its notices in [third-party notices](THIRD_PARTY_NOTICES.md). The
+build writes `licences.txt` beside `index.html`: this project's licence, those notices, the
+licence of every npm package the build bundles and the licence of rolldown, the bundler. The
+app shows it in a dialog (View → Open Source Licences…), offline too. The build fails when a
+bundled package is not a runtime dependency, has no licence text or has a licence other than
+MIT, ISC, 0BSD, BSD-2-Clause, BSD-3-Clause or Apache-2.0. This project is not affiliated with
+or endorsed by Tiled or Thorbjørn Lindeijer, nor by Aseprite or Igara Studio S.A.
 
 The `ngne-tilemap.ts` that an export writes is under
 [MIT-0](https://spdx.org/licenses/MIT-0.html) (`SPDX-License-Identifier: MIT-0` in its header):
@@ -136,7 +138,7 @@ it:
 
 Parts of those earlier versions derived from libtiled (BSD 2-clause) and Zingl's Bresenham
 code (MIT) remain under their own licences, with
-their notices in [public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt).
+their notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 The current `line.ts`, `filler.ts`, `brush.ts`, `pick.ts` (with `candidates.ts`) and
 `shapeArea` were rewritten from this project's specification, its tests and Tiled's user

@@ -83,6 +83,10 @@ owner's actions.
   and update toast.
 - README, user guide, changelog, documentation link check, README commands job and the GitHub
   Pages workflow.
+- The build ships `licences.txt`: this project's licence, the third-party notices and the
+  licence of every bundled npm package and of the bundler. View → Open Source Licences… shows
+  it in a dialog, offline too.
+- The third-party notices moved to `THIRD_PARTY_NOTICES.md`.
 
 ### Known limitations
 

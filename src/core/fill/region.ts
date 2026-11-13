@@ -31,7 +31,8 @@ export function rectRegion(rect: CellRect): Region {
  * Calls `plot` for every pixel of the ellipse inscribed in the box from `(x0, y0)` to
  * `(x1, y1)` (inclusive, `x0 <= x1`, `y0 <= y1`), after Alois Zingl's `plotEllipseRect`,
  * github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. It walks the four quadrants at once
- * from the middle rows outwards, then finishes the tips of a very narrow ellipse.
+ * from the middle rows outwards, then finishes the tips of a very narrow ellipse. Ported from
+ * Alois Zingl's MIT-licensed `plotEllipseRect`; its notice is in THIRD_PARTY_NOTICES.md.
  */
 function plotEllipseInBox(
     x0: number,

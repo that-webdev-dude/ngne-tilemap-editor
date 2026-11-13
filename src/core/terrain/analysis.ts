@@ -6,7 +6,7 @@ import { ORIENTATION_SOURCES, WANG_INDEXES, isCorner, typeUsesIndex } from "./wa
 // v1.12.2) without probabilities and transformations (Later): the candidate list (base tiles
 // only), the colour-distance matrix by fixed-point relaxation, the maximum distance,
 // completeness and the missing combinations of corner and edge sets.
-// Derived from libtiled (BSD 2-clause licence): see public/THIRD-PARTY-NOTICES.txt.
+// Derived from libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
 
 /** What the filler and the Terrains panel read of a terrain set. */
 export interface TerrainAnalysis {

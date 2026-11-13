@@ -212,7 +212,7 @@ describe("flood fill properties", () => {
  * The reference ellipse: the pixels of `plotEllipseRect(x0, y0, x1, y1)` from Alois Zingl's
  * "Bresenham" (github.com/zingl/Bresenham, `bresenham.js`, MIT licence, (c) 2020 zingl), with
  * each row filled between its leftmost and rightmost pixel, for checking the row-span version
- * against.
+ * against. Its notice is in THIRD_PARTY_NOTICES.md.
  */
 function referenceEllipse(rect: CellRect): Set<string> {
     const rows = new Map<number, [number, number]>();

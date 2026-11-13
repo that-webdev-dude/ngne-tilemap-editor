@@ -10,7 +10,7 @@ GPL-2.0-or-later (the JSON converters `varianttomapconverter.cpp` and
 `maptovariantconverter.cpp`, `tiled.cpp`, `templatemanager.cpp`): check each file's header. The
 editor's code derived from libtiled, and the test fixtures' JSON writer (after Tiled's bundled
 qjsonparser), are listed with their notices in
-[public/THIRD-PARTY-NOTICES.txt](../../public/THIRD-PARTY-NOTICES.txt); apart from them, the
+[THIRD_PARTY_NOTICES.md](../../THIRD_PARTY_NOTICES.md); apart from them, the
 editor's code is not translated from Tiled's code. The line, terrain filler, terrain brush and
 its pick, and the shape fill's rectangle were rewritten from the spec, the tests and Tiled's
 user manual; no code in them was translated from Tiled's source or from their earlier versions,

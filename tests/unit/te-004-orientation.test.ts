@@ -18,7 +18,10 @@ import type { Matrix2, Orientation } from "../../src/core/cells";
 
 const ALL = [0, 1, 2, 3, 4, 5, 6, 7] as const satisfies readonly Orientation[];
 
-/** Tiled's tables, `src/libtiled/tilelayer.cpp` at tag `v1.12.2`, copied independently. */
+/**
+ * Tiled's tables, `src/libtiled/tilelayer.cpp` at tag `v1.12.2`, copied independently. From
+ * libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
+ */
 const TILED_ROTATE_RIGHT = [5, 4, 1, 0, 7, 6, 3, 2];
 const TILED_ROTATE_LEFT = [3, 2, 7, 6, 1, 0, 5, 4];
 

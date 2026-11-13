@@ -5,6 +5,9 @@ import type { PixelPoint } from "./line";
 // `plotEllipse`, github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. Points come in the
 // order that algorithm plots them, four mirrored points per step and then the tips of a flat
 // ellipse, repeats included. Pure, integer arithmetic only.
+//
+// Ported from Alois Zingl's MIT-licensed `plotEllipse`; its notice is in
+// THIRD_PARTY_NOTICES.md.
 
 /**
  * The outline cells of the ellipse around `centre` with radii `radiusX` and `radiusY`, in

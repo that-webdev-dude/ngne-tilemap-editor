@@ -149,13 +149,13 @@ Config files:
 | File | Action |
 | --- | --- |
 | `tsconfig.json` | Copy (ES2022, Bundler resolution, `types: []`, `strict`, `skipLibCheck: false`, `verbatimModuleSyntax`) |
-| `tsconfig.node.json` | Adapt: drop `src/gifenc.d.ts` |
+| `tsconfig.node.json` | Adapt: drop `src/gifenc.d.ts`; `allowImportingTsExtensions` (`vite.config.ts` imports `scripts/licences.ts`) |
 | `eslint.config.js` | Copy (DOM globals barred from `src/core`, `@ngne/core` only in `src/engine`) |
 | `.prettierrc.json`, `.prettierignore` | Copy (tab width 4, print width 100; `docs` not formatted) |
 | `.npmrc`, `.gitignore`, `.gitattributes` | Copy |
 | `vitest.config.ts`, `vitest.perf.config.ts` | Copy |
 | `playwright.config.ts` | Copy (installed Chrome, free port per checkout, SwiftShader flags under CI, one worker per CI job) |
-| `vite.config.ts` | Adapt: names, base path, file handler, ports |
+| `vite.config.ts` | Adapt: names, base path, file handler, ports; the licences file (`licences.txt`, with rolldown) |
 
 ## 6. Architecture and code reuse
 
@@ -195,6 +195,7 @@ changes in the sprite editor to verbatim files since the recorded commit.
 | Pickers | Open: `application/zip` with `.ngtilemap`. Import Tileset: `.png`, `.ngsprite` (`application/zip`), `.atlas.json` |
 | Hosting | GitHub Pages, `that-webdev-dude/ngne-tilemap-editor`, built with `vite build --base=/ngne-tilemap-editor/`; `deploy.yml` on a `v*` tag or manual dispatch |
 | CI (`ci.yml`, push and PR, Node 24) | `check`; E2E in 4 shards plus an `alone` project, headed Chrome under xvfb with SwiftShader WebGPU; golden path ×10; README commands; link check. Budgets report-only |
+| Licences | `licences.txt` beside `index.html` (`scripts/licences.ts`, `vite.config.ts`): `LICENSE`, `THIRD_PARTY_NOTICES.md` and the licence files of every bundled npm package and of rolldown, the bundler. Allowed: MIT, ISC, 0BSD, BSD-2-Clause, BSD-3-Clause, Apache-2.0. The build fails on a bundled package that is not a runtime dependency in `package-lock.json`, has no licence text (a reviewed fallback may sit in `scripts/licence-texts/`) or has another licence. Precached by the service worker; View → Open Source Licences… (no key, also in the command palette, with or without a project) shows it in a dialog |
 | Release notes | `CHANGELOG.md`: `## <version> – <date>`, sections per milestone, then Known limitations |
 | File formats | Frozen at 1.0.0; any change needs a new version and a migration |
 | Ownership | The owner pushes, merges, tags and deploys |

@@ -22,6 +22,8 @@ rows.
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
 | `scripts/check-links.mjs` | `scripts/check-links.mjs` | adapt | `ea5c91d` | | Leaves out the vendored engine packages of the runtime compile matrix (`tests/runtime-compat/*/vendor/`); reads the tracked paths from the git index file (versions 2–4) instead of running `git ls-files`; HTML tags and links in headings, closing hashes, code fences, reference definitions and link labels read by linear scans instead of backtracking regular expressions, with the same results; `check` and `destination` split into helpers |
 | `scripts/icons.ts` | `scripts/icons.ts` | adapt | `ea5c91d` | | The mark is a 2 × 2 tile grid (its lines, the top-left tile painted) instead of "N" (SUITE §1); the drift test is `te-066-pwa.test.ts` |
+| `scripts/licence-texts/react-remove-scroll-bar.txt` | `scripts/licence-texts/react-remove-scroll-bar.txt` | verbatim | `4987001` | `09efcc711d2dedb09857bc6b7e4330f1d67e2f3541cd121018c64995f40fccfd` | |
+| `scripts/licences.ts` | `scripts/licences.ts` | adapt | `4987001` | | Lists rolldown, the bundler, by `BUILD_PACKAGES` (`buildPackageDirs`), outside the stray check and the runtime dependencies; licence files include `THIRD-PARTY-LICENSE` |
 | `src/app/autosave/autosave.ts` | `src/app/autosave/autosave.ts` | adapt | `ea5c91d` | | One project per window: one tracker over the session store's history; snapshots of `project.json`, changed maps' entries and changed tileset and image pixels, taken by the page and written by the worker (`backend.ts`); changes learned from `touched` (a project-wide step that changes cells, layers, tilesets or structure rewrites every map); no float, composites or reference sources; map thumbnails of the first 4 maps, one per task after the capture; a mark when a snapshot is stored |
 | `src/app/autosave/dialogs.ts` | `src/app/autosave/dialogs.ts` | adapt | `ea5c91d` | | Entries list a project's map count and map thumbnails; Recover and Discard resolve an outcome (`opened`, `gone`, `failed`) |
 | `src/app/autosave/install.ts` | `src/app/autosave/install.ts` | adapt | `ea5c91d` | | The worker backend, this editor's session store, the file workflows' saves and `run`; also starts the session state (`sessionState.ts`) |
@@ -55,6 +57,8 @@ rows.
 | `src/app/keymap/regions.commands.ts` | `src/app/keymap/regions.commands.ts` | verbatim | `ea5c91d` | `4abaeb31767f3ac6e0b9b9027df5edd9b13a44aba035a6e2cece364711b27e93` | |
 | `src/app/keymap/regions.ts` | `src/app/keymap/regions.ts` | verbatim | `ea5c91d` | `6d180e5dc433fd882b16133ef66d834ac11e25c23fe4c5f628a9d46221df19fb` | |
 | `src/app/keymap/resolve.ts` | `src/app/keymap/resolve.ts` | adapt | `ea5c91d` | | `KeyEnvironment.inPanel` and `markers` instead of `inTimeline` and `floating`; `applicableContexts` lists the contexts of DESIGN §10.1 |
+| `src/app/licences/licences.commands.ts` | `src/app/licences/licences.commands.ts` | adapt | `4987001` | | Comment cites DESIGN §5 instead of DESIGN §2 |
+| `src/app/licences/openLicences.ts` | `src/app/licences/openLicences.ts` | verbatim | `4987001` | `839ec3996b5d98d847d3f7e93644b6bdbaf496da52e52ba35042cd39fd5c6e5e` | |
 | `src/app/notices/notices.ts` | `src/app/notices/notices.ts` | verbatim | `ea5c91d` | `360f48063c7912a9d9b649438c806c362af2c361d679155bb703aaf9f9a65cfb` | |
 | `src/app/overlay/draw.ts` | `src/app/overlay/draw.ts` | adapt | `ea5c91d` |  | `fillRects` only (the cell grid needs no clip); `DeviceRect` from `gridLines.ts` |
 | `src/app/overlay/grid.commands.ts` | `src/app/overlay/grid.commands.ts` | adapt | `ea5c91d` |  | `view.grid` toggles the `grid` view preference (SPEC §3) and takes Ctrl+G (DESIGN §10.3); no pixel grid, no document settings |
@@ -233,6 +237,9 @@ rows.
 | `src/ui/import/PixelCanvas.tsx` | `src/ui/import/PixelCanvas.tsx` | adapt | `ea5c91d` | | `PixelBuffer` from `core/codec`, which re-exports the `core/sprite` type (only `core/` imports `core/sprite`, DESIGN §3.1) |
 | `src/ui/import/SourcePane.tsx` | `src/ui/import/SourcePane.tsx` | adapt | `ea5c91d` | | Grid overlay of the tileset import: the tiles of the form's tile size, margin and spacing as `core/tileset` cuts them (Tiled's grid, SPEC §6.1); no crop rectangle or pointer drawing; `PixelRect` local |
 | `src/ui/import/import.css` | `src/ui/import/import.css` | adapt | `ea5c91d` | | The source pane's rules without the crop; the Import Tileset layout (source left, form right), atlas lists, text fields, warnings; no result pane or drop chooser |
+| `src/ui/licences/LicencesDialog.tsx` | `src/ui/licences/LicencesDialog.tsx` | verbatim | `4987001` | `5a7e4d802675e3621dfe2a2af5827aa1fb1322104d670b456da7419c62d5a172` | |
+| `src/ui/licences/licences.css` | `src/ui/licences/licences.css` | verbatim | `4987001` | `8da5a650c2cdead3d879399fd2a3d2715816a65101133a3d1b8fc3772e3ae415` | |
+| `src/ui/licences/licences.dialog.tsx` | `src/ui/licences/licences.dialog.tsx` | verbatim | `4987001` | `85424bab62efa6091c3232f6f07a5389f9e205776317652e0ae7c3ab5ed0ba2f` | |
 | `src/ui/menubar/MenubarItems.tsx` | `src/ui/menubar/MenubarItems.tsx` | verbatim | `ea5c91d` | `2cd89ca6bc084dd4f26cfb91572643d87bf22167383aa1d4f8505df5bd1c9363` | |
 | `src/ui/menubar/menubar.css` | `src/ui/menubar/menubar.css` | verbatim | `ea5c91d` | `402568c9b9500b5442d2ca215b0deeb78efba6671f8e46f135fd6974e6e970e6` | |
 | `src/ui/platform/useWindowSize.ts` | `src/ui/platform/useWindowSize.ts` | verbatim | `ea5c91d` | `0d968743a68821e6aeac5cc7a2e3cef3943505b7be6b682134d7254833630f63` | |
@@ -308,6 +315,7 @@ rows.
 | `src/ui/tools/contextBarRegistry.ts` | `src/ui/tools/contextBarRegistry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/tools/toolRail.css` | `src/ui/tools/toolRail.css` | adapt | `ea5c91d` |  | The stamp preview button (`.tool-rail__stamp`) |
 | `src/ui/tools/useToolState.ts` | `src/ui/tools/useToolState.ts` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/activeTool.ts` keeps `toolState` and `ToolState`, bound to this editor's active-tool store (per layer kind) |
+| `tests/e2e/cleanup-licences.spec.ts` | `tests/e2e/licences.spec.ts` | adapt | `4987001` | | This repo's helpers (`openEditor`, `openMenu`, `menuItem`); opened with no project open; this editor's title and libtiled notice |
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
 | `tests/e2e/harness/te-003-boundary.html` | `tests/e2e/harness/se-006-boundary.html` | adapt | `ea5c91d` | | Ticket name |
@@ -338,6 +346,8 @@ rows.
 | `tests/e2e/te-066-support.ts` | `tests/e2e/se-072-support.ts` | adapt | `ea5c91d` | | Production builds only (no test-hook build, base path or document summary); builds one after another; `openBuilt`, `cacheNames`, `workerState` |
 | `tests/perf/README.md` | `tests/perf/README.md` | adapt | `ea5c91d` | | Running rules only; records under `docs/evidence/`; budgets live in ENGINE §6 and SPEC §14; `PERF_SUFFIX`, `PERF_ENV`, `PERF_OUT`, the reference-row runner and the Perf workflow (TE-064) |
 | `tests/perf/record.ts` | `tests/perf/record.ts` | adapt | `ea5c91d` | | Records under `docs/evidence/` (or `PERF_OUT`); references to this repo's docs and ids; `PERF_SUFFIX` and `PERF_ENV` (TE-064) |
+| `tests/unit/cleanup-licences-command.test.ts` | `tests/unit/licences-command.test.ts` | adapt | `4987001` | | Enabled with a project open and with none (TE-047) |
+| `tests/unit/cleanup-licences-generator.test.ts` | `tests/unit/licences-generator.test.ts` | adapt | `4987001` | | `THIRD-PARTY-LICENSE` read; `buildPackageDirs`; the repository checks assert this repo's runtime dependencies, notices (libtiled, Zingl, Aseprite, pixman, qjsonparser), rolldown with both licence files, react-remove-scroll-bar from `scripts/licence-texts`, every listed licence allowed |
 | `tests/unit/te-001-dependencies.test.ts` | `tests/unit/se-001-dependencies.test.ts` | adapt | `ea5c91d` | | Compares with the SUITE §5 tables and the lockfile |
 | `tests/unit/te-001-layers.test.ts` | `tests/unit/se-001-lint-boundaries.test.ts` | adapt | `ea5c91d` | | RULES 4 cases; the same code passes in `src/engine` |
 | `tests/unit/te-002-fixtures/golden-v1.ngsprite.d/` | `tests/unit/se-040-fixtures/golden-v1.ngsprite` | verbatim | `ea5c91d` | `9e1e15076393d05f99322dfdd866133d191fe6e0cca3cdefd0b710b55ee05044` | Stored unpacked; `tests/support/ngsprite.ts` packs it into these bytes |
@@ -355,7 +365,7 @@ rows.
 | `tests/unit/te-067-guide.test.ts` | `tests/unit/se-073-guide.test.ts` | adapt | `ea5c91d` | | The guide's example is compiled against `@ngne/core` 0.3.0 and a generated runtime instead of compared with a fixture |
 | `tests/unit/te-067-links.test.ts` | `tests/unit/se-073-links.test.ts` | adapt | `ea5c91d` | | Ticket name; fixture `git add` with `core.autocrlf=false`; a case for the vendored engine packages |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
-| `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped |
-| `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); the `NGNE_CORE_DIR` engine alias; manifest names of SUITE §1, exported as `manifest` for the unit test; file handler `.ngtilemap` (`application/x-ngtilemap`); base path from the deploy build |
+| `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped; `allowImportingTsExtensions` as at `4987001` |
+| `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); the `NGNE_CORE_DIR` engine alias; manifest names of SUITE §1, exported as `manifest` for the unit test; file handler `.ngtilemap` (`application/x-ngtilemap`); base path from the deploy build; the licences file, the worker module collector, `txt` precached, the code-unit icon sort and `String.raw` in `tokenColour` as at `4987001`, with rolldown listed (`BUILD_PACKAGES`) and no `gifenc` alias |
 | `vitest.config.ts` | `vitest.config.ts` | verbatim | `ea5c91d` | `4a41581bc1a038dec83a21477c0a1288d693602ee3001af4327f3d08bad5fea4` | |
 | `vitest.perf.config.ts` | `vitest.perf.config.ts` | verbatim | `ea5c91d` | `09675eb8bb88964f2e553c15966b99ced61c8910e3363731e977aa05d1955c9c` | |

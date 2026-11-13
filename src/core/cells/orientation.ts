@@ -21,7 +21,7 @@ export const ORIENTATION = {
 
 /**
  * Tiled's rotate tables (`src/libtiled/tilelayer.cpp`, tag `v1.12.2`), indexed by orientation.
- * From libtiled (BSD 2-clause licence): see public/THIRD-PARTY-NOTICES.txt.
+ * From libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
  */
 export const ROTATE_RIGHT_MASK: readonly Orientation[] = [5, 4, 1, 0, 7, 6, 3, 2];
 export const ROTATE_LEFT_MASK: readonly Orientation[] = [3, 2, 7, 6, 1, 0, 5, 4];

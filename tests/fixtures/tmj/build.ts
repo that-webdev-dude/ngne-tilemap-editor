@@ -27,7 +27,7 @@ type JsonObject = { readonly [key: string]: Json };
 
 /**
  * Tiled's `escape` (`src/plugins/json/qjsonparser/json.cpp`), one UTF-16 unit at a time. That
- * file's licence allows use without limitation: see public/THIRD-PARTY-NOTICES.txt.
+ * file's licence allows use without limitation; its notice is in THIRD_PARTY_NOTICES.md.
  */
 function escape(text: string): string {
     let out = "";
