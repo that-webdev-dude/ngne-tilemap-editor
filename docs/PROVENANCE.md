@@ -10,7 +10,7 @@ rows.
 | ---- | ---------- | ---- | ------ | ------- | ------ |
 | `.gitattributes` | `.gitattributes` | verbatim | `ea5c91d` | `23302dd90b8bb74b44d365fafef8df20f809b61cb347023951ecf60a88a29651` | |
 | `.github/workflows/ci.yml` | `.github/workflows/ci.yml` | adapt | `ea5c91d` | | `npm ci --ignore-scripts`; E2E needs `check`; `--pass-with-no-tests`; a `runtime-compat` job; golden path `te-063-golden-path.spec.ts`; README commands `npm ci --ignore-scripts`, `npm run build`, `npm test` |
-| `.github/workflows/deploy.yml` | `.github/workflows/deploy.yml` | adapt | `ea5c91d` | | Base `/ngne-tilemap-editor/` (SUITE §7); `npm ci --ignore-scripts`; comment names the owner's actions |
+| `.github/workflows/deploy.yml` | `.github/workflows/deploy.yml` | adapt | `ea5c91d` | | Base `/ngne-tilemap-editor/` (SUITE §7); `npm ci --ignore-scripts`; built by `npm run build`, the pinned vite, instead of `npx vite build`; comment names the owner's actions |
 | `.gitignore` | `.gitignore` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `.npmrc` | `.npmrc` | verbatim | `ea5c91d` | `be85cc462e740587626bbcbb1c3ed1c40b26e62ec072e8cbd2768f23915c28e6` | |
 | `.prettierignore` | `.prettierignore` | adapt | `ea5c91d` | | Workflow-file references removed |

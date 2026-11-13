@@ -25,7 +25,9 @@ jobs:
                   node-version: 24
                   cache: npm
             - run: npm ci --ignore-scripts
-            - run: npx vite build --base=/ngne-tilemap-editor/
+            # The pinned vite of package.json (`npm run build` is `vite build`), never one npx
+            # would fetch.
+            - run: npm run build -- --base=/ngne-tilemap-editor/
             - uses: actions/upload-pages-artifact@v3
               with:
                   path: dist
