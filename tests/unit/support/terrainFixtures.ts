@@ -744,7 +744,10 @@ type Json = number | string | boolean | readonly Json[] | { readonly [key: strin
 
 const INDENT = "    ";
 
-/** Tiled's `escape` (`src/plugins/json/qjsonparser/json.cpp`), one UTF-16 unit at a time. */
+/**
+ * Tiled's `escape` (`src/plugins/json/qjsonparser/json.cpp`), one UTF-16 unit at a time. That
+ * file's licence allows use without limitation: see public/THIRD-PARTY-NOTICES.txt.
+ */
 function escape(text: string): string {
     let out = "";
     for (let i = 0; i < text.length; i++) {

@@ -1,19 +1,17 @@
 import type { CellRect } from "../cells";
-import { regionBounds, regionOf } from "../fill";
+import { forEachRegionCell, regionOf } from "../fill";
 import type { Region } from "../fill";
 import type { PixelPoint } from "../raster/line";
 import { effectiveTypeForColor, transitionPenalty, wangIdOfCell } from "./analysis";
 import type { TerrainAnalysis } from "./analysis";
+import { anyCandidate, candidateTable, forEachCandidate, keepWith } from "./candidates";
+import type { CandidateTable } from "./candidates";
 import type { Random } from "./random";
 import {
     AROUND,
-    BOTTOM,
     BOTTOM_LEFT,
     BOTTOM_RIGHT,
     INDEX_MASK,
-    LEFT,
-    RIGHT,
-    TOP,
     TOP_LEFT,
     TOP_RIGHT,
     WANG_INDEXES,
@@ -25,19 +23,37 @@ import {
 } from "./wangId";
 import type { WangIndex } from "./wangId";
 
-// The terrain filler (SPEC §5.2), shared by the terrain brush (§5.3) and terrain fill mode
-// (§5.4). Painting leaves a constraint on each touched cell: a wished terrain per index, some
-// of them hard, starting from the terrain ID the cell holds. `apply` then walks the painted
-// region rectangle by rectangle and gives each cell the candidate with the lowest transition
-// penalty that meets its hard indexes; each resolved cell hardens the indexes its neighbours
-// share with it. Fill tools first seed the region's border from the cells around it; the
-// brush instead re-resolves, within the region grown by the set's maximum distance, the
-// neighbours its change no longer fits (corrections). Ties are broken by the seeded generator,
-// and without corrections an incomplete set looks one step ahead so no neighbour is left
-// without a tile.
+// The terrain filler (SPEC §5.2, used by the brush of §5.3 and the fill mode of §5.4).
 //
-// State lives in a table of slots keyed by cell, with typed arrays per slot, so one brush step
-// costs in proportion to the cells it touches, never to the map.
+// Painting records constraints on the cells it touches, the painted region: each cell holds a
+// wish per index (`INDEX_MASK` for none) and a set of hard indexes. A cell touched by painting
+// first wishes the terrains its tile has now; the painted index becomes hard. A cell given by a
+// region (the fill tools) starts without wishes and, at `apply`, takes as hard the indexes it
+// shares with the set's tiles just outside the region (border seeding).
+//
+// `apply` resolves the painted cells in row-major order. A candidate (each tile of the set, then
+// the empty cell when erasing, which has no terrain at any index; found through the bit sets of
+// `candidates.ts`, so a cell costs the candidates that fit it) must match every hard index; each
+// wished index adds the transition distance from the wish to the candidate's terrain. A wish no
+// transition reaches discards the candidate when corrections are on and otherwise costs more
+// than any reachable one. With corrections off and a set that is not complete, a candidate is
+// also dropped when it would leave a neighbour not resolved yet (any of the eight, painted or
+// not) with no tile of the set matching its hard indexes; the empty cell is no way out there,
+// and a neighbour that would then wish no terrain at all eight indexes is not checked (one step
+// of look-ahead). The lowest penalty wins; equal candidates are told apart by the generator,
+// which is only asked when there is a choice. A resolved cell makes the indexes it shares with every neighbour not resolved yet
+// hard for that neighbour.
+//
+// With corrections (the brush), cells outside the painted region within the bounds (the painted
+// region's bounding box grown by the set's maximum distance, clipped to the map) collect those
+// hard indexes too. Each time a cell is resolved, a side neighbour of that kind whose tile
+// disagrees with any of its hard indexes is queued; a diagonal neighbour is not queued for the
+// corner it shares. The queue runs in batches, each the cells queued during the one before, the
+// first those queued by the painted region. A queued cell already resolved is skipped; otherwise
+// its hard indexes are the accumulated ones, its other indexes wish the terrains of its tile, and
+// there is no look-ahead. A queued cell without a candidate stays unchanged and may be resolved
+// by a later batch. Nothing outside the bounds is written, so a step costs the cells it touches,
+// not the map. Cells still without a candidate at the end are reported as invalid.
 
 /** The tile layer before the change: the value of cell `(x, y)`, 0 when it is empty. */
 export type TerrainBack = (x: number, y: number) => number;
@@ -76,575 +92,118 @@ export interface TerrainFillResult {
     readonly bounds: CellRect | null;
 }
 
-/** Slot flags. */
-const HAS_CONSTRAINT = 1;
-const IN_REGION = 2;
-const RESOLVED = 4;
-const SETTLED = 8;
-const INVALID = 16;
-const DONE = RESOLVED | SETTLED;
+/** The constraints on one cell. */
+interface Constraint {
+    readonly x: number;
+    readonly y: number;
+    /** The wished terrain per index; `INDEX_MASK` for no wish. */
+    readonly desired: Uint8Array;
+    /** Bit `i` set: index `i` must be `desired[i]`. */
+    hard: number;
+}
 
-/** Cell coordinates stay below this in absolute value, so a cell's key is a safe integer. */
-const COORDINATE_LIMIT = 2 ** 25;
-const KEY_SPAN = 2 * COORDINATE_LIMIT;
+/** A pair of indexes two neighbours share: this cell's and the neighbour's. */
+type SharedPair = readonly [mine: number, theirs: number];
 
-/** A constraint with no wish at all. Never written. */
-const NO_WISH: Uint8Array = new Uint8Array(WANG_INDEXES).fill(INDEX_MASK);
-/** The terrain ID of the empty cell. Never written. */
-const NO_TERRAIN: Uint8Array = new Uint8Array(WANG_INDEXES);
-
-/** Per direction, the indexes of the neighbour there that it shares with the cell. */
-const SHARED: readonly (readonly WangIndex[])[] = AROUND.map((_, direction) => {
+/**
+ * Per direction (the index of the neighbour, as `AROUND`), the indexes a cell shares with that
+ * neighbour: a side neighbour shares the edge and the two corners at its ends, a diagonal
+ * neighbour one corner.
+ */
+const SHARED: readonly (readonly SharedPair[])[] = AROUND.map((_, direction) => {
     const facing = oppositeIndex(direction);
-    return isCorner(direction) ? [facing] : [facing, nextIndex(facing), previousIndex(facing)];
+    if (isCorner(direction)) return [[direction, facing]];
+    return [
+        [direction, facing],
+        [previousIndex(direction), nextIndex(facing)],
+        [nextIndex(direction), previousIndex(facing)],
+    ];
 });
 
-/** The indexes of each side of a rectangle that border seeding fills. */
-const TOP_SIDE: readonly WangIndex[] = [TOP_LEFT, TOP, TOP_RIGHT];
-const RIGHT_SIDE: readonly WangIndex[] = [TOP_RIGHT, RIGHT, BOTTOM_RIGHT];
-const BOTTOM_SIDE: readonly WangIndex[] = [BOTTOM_RIGHT, BOTTOM, BOTTOM_LEFT];
-const LEFT_SIDE: readonly WangIndex[] = [BOTTOM_LEFT, LEFT, TOP_LEFT];
+/** Cost of a wish no transition reaches, when it does not discard the candidate. */
+const UNREACHABLE = 1 << 20;
 
-const bit = (mask: number, index: number): boolean => ((mask >> index) & 1) === 1;
-
-/** The key of cell `(x, y)`; `RangeError` for a coordinate that is not a small integer. */
-function cellKey(x: number, y: number): number {
-    for (const value of [x, y]) {
-        if (!Number.isInteger(value) || Math.abs(value) >= COORDINATE_LIMIT) {
-            throw new RangeError(`Cell coordinates must be integers below 2^25, got ${x}, ${y}.`);
-        }
-    }
-    return (y + COORDINATE_LIMIT) * KEY_SPAN + (x + COORDINATE_LIMIT);
+/** An unresolved neighbour the look-ahead checks, from the cell being resolved. */
+interface LookAhead {
+    /** The indexes the two share: the cell's, the neighbour's. */
+    readonly pairs: readonly SharedPair[];
+    /** The tiles that fit the neighbour's hard indexes it does not share with the cell. */
+    readonly base: Uint32Array;
+    /** The neighbour wishes no terrain at every index it does not share with the cell. */
+    readonly zeroRest: boolean;
 }
 
-/**
- * Writes the terrain ID `source[at..]` resolved at a cell into the constraint `wish[to..]` of
- * its neighbour in `direction`: every index they share takes the terrain at the same place and
- * becomes hard. Returns the neighbour's new hard mask.
- */
-function propagate(
-    source: Uint8Array,
-    at: number,
-    direction: number,
-    wish: Uint8Array,
-    to: number,
-    hard: number,
-): number {
-    const facing = oppositeIndex(direction);
-    wish[to + facing] = source[at + direction];
-    let mask = hard | (1 << facing);
-    if (!isCorner(direction)) {
-        const after = nextIndex(facing);
-        const before = previousIndex(facing);
-        wish[to + after] = source[at + previousIndex(direction)];
-        wish[to + before] = source[at + nextIndex(direction)];
-        mask |= (1 << after) | (1 << before);
-    }
-    return mask;
+/** A resolution choice: a candidate and its penalty. */
+interface Scored {
+    readonly candidate: number;
+    readonly penalty: number;
 }
-
-/** A row of `region` starting at span `start`: one past its last span. */
-function rowEnd(region: Region, start: number): number {
-    let end = start;
-    while (end < region.length && region[end].y === region[start].y) end++;
-    return end;
-}
-
-/** Whether the rows starting at spans `a` and `b`, `length` spans each, have the same spans. */
-function sameSpans(region: Region, a: number, b: number, length: number): boolean {
-    for (let k = 0; k < length; k++) {
-        const first = region[a + k];
-        const second = region[b + k];
-        if (first.start !== second.start || first.end !== second.end) return false;
-    }
-    return true;
-}
-
-/**
- * The region as rectangles in band order: runs of consecutive rows with the same spans, top to
- * bottom, each giving one rectangle per span from left to right.
- */
-function bandRects(region: Region): CellRect[] {
-    const rects: CellRect[] = [];
-    let start = 0;
-    while (start < region.length) {
-        const end = rowEnd(region, start);
-        const length = end - start;
-        let height = 1;
-        let next = end;
-        while (
-            next < region.length &&
-            region[next].y === region[start].y + height &&
-            rowEnd(region, next) - next === length &&
-            sameSpans(region, start, next, length)
-        ) {
-            height++;
-            next += length;
-        }
-        for (let k = start; k < end; k++) {
-            const span = region[k];
-            rects.push({ x: span.start, y: span.y, width: span.end - span.start, height });
-        }
-        start = next;
-    }
-    return rects;
-}
-
-/** Calls `visit` for every cell of `rects`, rectangle by rectangle, row by row. */
-function forEachRectCell(rects: readonly CellRect[], visit: (x: number, y: number) => void): void {
-    for (const rect of rects) {
-        for (let y = rect.y; y < rect.y + rect.height; y++) {
-            for (let x = rect.x; x < rect.x + rect.width; x++) visit(x, y);
-        }
-    }
-}
-
-/** Cells the filler has seen, each in a slot with its flags and constraint. */
-class CellTable {
-    readonly #slots = new Map<number, number>();
-    #count = 0;
-    #xs = new Int32Array(64);
-    #ys = new Int32Array(64);
-    #flags = new Uint8Array(64);
-    #hard = new Uint8Array(64);
-    #wish = new Uint8Array(64 * WANG_INDEXES);
-
-    get count(): number {
-        return this.#count;
-    }
-    get xs(): Int32Array {
-        return this.#xs;
-    }
-    get ys(): Int32Array {
-        return this.#ys;
-    }
-    get flags(): Uint8Array {
-        return this.#flags;
-    }
-    get hard(): Uint8Array {
-        return this.#hard;
-    }
-    /** Wishes, 8 per slot. Replaced when the table grows: read it again after `ensure`. */
-    get wish(): Uint8Array {
-        return this.#wish;
-    }
-
-    /** The slot of `(x, y)`, or −1. */
-    find(x: number, y: number): number {
-        return this.#slots.get(cellKey(x, y)) ?? -1;
-    }
-
-    /** The slot of `(x, y)`, made (no flags, no constraint) when it has none. */
-    ensure(x: number, y: number): number {
-        const key = cellKey(x, y);
-        const found = this.#slots.get(key);
-        if (found !== undefined) return found;
-        if (this.#count === this.#xs.length) this.#grow();
-        const slot = this.#count++;
-        this.#xs[slot] = x;
-        this.#ys[slot] = y;
-        this.#flags[slot] = 0;
-        this.#hard[slot] = 0;
-        this.#slots.set(key, slot);
-        return slot;
-    }
-
-    /** Gives `slot` an empty constraint (no wish, nothing hard) when it has none. */
-    constrain(slot: number): void {
-        if (this.#flags[slot] & HAS_CONSTRAINT) return;
-        this.#wish.fill(INDEX_MASK, slot * WANG_INDEXES, (slot + 1) * WANG_INDEXES);
-        this.#hard[slot] = 0;
-        this.#flags[slot] |= HAS_CONSTRAINT;
-    }
-
-    clear(): void {
-        this.#slots.clear();
-        this.#count = 0;
-    }
-
-    #grow(): void {
-        const size = this.#xs.length * 2;
-        const grown = <T extends Int32Array | Uint8Array>(from: T, to: T): T => {
-            to.set(from);
-            return to;
-        };
-        this.#xs = grown(this.#xs, new Int32Array(size));
-        this.#ys = grown(this.#ys, new Int32Array(size));
-        this.#flags = grown(this.#flags, new Uint8Array(size));
-        this.#hard = grown(this.#hard, new Uint8Array(size));
-        this.#wish = grown(this.#wish, new Uint8Array(size * WANG_INDEXES));
-    }
-}
-
-/** The options of a filler with their defaults applied. */
-interface FillSettings {
-    readonly analysis: TerrainAnalysis;
-    readonly back: TerrainBack;
-    readonly width: number;
-    readonly height: number;
-    readonly random: Random;
-    readonly corrections: boolean;
-    readonly erasing: boolean;
-}
-
-/** One `apply`: seeding, resolving and corrections over the filler's table. */
-class Resolution {
-    readonly #table: CellTable;
-    readonly #settings: FillSettings;
-    readonly #bounds: CellRect;
-    /** Candidate tiles; candidate number `#tiles` is the empty cell. */
-    readonly #tiles: number;
-    /** The indexes the set's type uses, one bit each. */
-    readonly #usedMask: number;
-    readonly #lookAhead: boolean;
-    readonly #cells: TerrainCell[] = [];
-    readonly #failed: number[] = [];
-    readonly #pool: number[] = [];
-    readonly #terrain = new Uint8Array(WANG_INDEXES);
-    readonly #copy = new Uint8Array(WANG_INDEXES);
-    #queue: number[] = [];
-
-    constructor(table: CellTable, settings: FillSettings, bounds: CellRect) {
-        this.#table = table;
-        this.#settings = settings;
-        this.#bounds = bounds;
-        const { analysis } = settings;
-        this.#tiles = analysis.candidateValues.length;
-        let used = 0;
-        for (let index = 0; index < WANG_INDEXES; index++) {
-            if (typeUsesIndex(analysis.type, index)) used |= 1 << index;
-        }
-        this.#usedMask = used;
-        this.#lookAhead = !settings.corrections && !analysis.fillerComplete;
-    }
-
-    /** Fills the unhardened indexes of each rectangle's border from the cells around it. */
-    seedBorders(rects: readonly CellRect[]): void {
-        for (const rect of rects) {
-            const top = rect.y;
-            const bottom = rect.y + rect.height - 1;
-            const left = rect.x;
-            const right = rect.x + rect.width - 1;
-            for (let x = left; x <= right; x++) {
-                this.#seedCell(x, top, TOP_SIDE);
-                this.#seedCell(x, bottom, BOTTOM_SIDE);
-            }
-            for (let y = top; y <= bottom; y++) {
-                this.#seedCell(left, y, LEFT_SIDE);
-                this.#seedCell(right, y, RIGHT_SIDE);
-            }
-        }
-    }
-
-    /** Resolves the rectangles in order, then the corrections they queue, batch by batch. */
-    run(rects: readonly CellRect[]): TerrainFillResult {
-        forEachRectCell(rects, (x, y) => this.#resolve(this.#table.ensure(x, y)));
-        while (this.#queue.length > 0) {
-            const batch = this.#queue;
-            this.#queue = [];
-            for (const slot of batch) this.#resolve(slot);
-        }
-        const table = this.#table;
-        const invalid: PixelPoint[] = [];
-        for (const slot of this.#failed) {
-            if (table.flags[slot] & RESOLVED) continue;
-            invalid.push({ x: table.xs[slot], y: table.ys[slot] });
-        }
-        return { cells: this.#cells, invalid: regionOf(invalid), bounds: this.#bounds };
-    }
-
-    #seedCell(x: number, y: number, side: readonly WangIndex[]): void {
-        const table = this.#table;
-        const slot = table.ensure(x, y);
-        table.constrain(slot);
-        const hard = table.hard[slot];
-        const at = slot * WANG_INDEXES;
-        for (const index of side) {
-            if (bit(hard, index)) continue;
-            const terrain = this.#surrounding(x, y, index);
-            if (terrain !== INDEX_MASK) table.wish[at + index] = terrain;
-        }
-    }
-
-    /** What the cells around `(x, y)` want at its `index`; `INDEX_MASK` for nothing. */
-    #surrounding(x: number, y: number, index: WangIndex): number {
-        let terrain = this.#neighbourTerrain(x, y, index, oppositeIndex(index));
-        if (!isCorner(index)) return terrain;
-        // The same vertex seen from the side neighbours, when the diagonal one says nothing.
-        const sides: readonly [number, number][] = [
-            [previousIndex(index), (index + 2) % WANG_INDEXES],
-            [nextIndex(index), (index + 6) % WANG_INDEXES],
-        ];
-        for (const [direction, at] of sides) {
-            if (terrain !== INDEX_MASK && terrain !== 0) break;
-            const other = this.#neighbourTerrain(x, y, direction, at);
-            if (other !== INDEX_MASK) terrain = other;
-        }
-        return terrain;
-    }
-
-    /**
-     * The terrain at `index` of the neighbour of `(x, y)` in `direction`; `INDEX_MASK` when that
-     * neighbour is empty (outside the map included) or in the painted region.
-     */
-    #neighbourTerrain(x: number, y: number, direction: number, index: number): number {
-        const [dx, dy] = AROUND[direction];
-        const nx = x + dx;
-        const ny = y + dy;
-        const { analysis, back, width, height } = this.#settings;
-        if (nx < 0 || ny < 0 || nx >= width || ny >= height) return INDEX_MASK;
-        const value = back(nx, ny);
-        if (value === 0) return INDEX_MASK;
-        const slot = this.#table.find(nx, ny);
-        if (slot >= 0 && this.#table.flags[slot] & IN_REGION) return INDEX_MASK;
-        wangIdOfCell(analysis, value, this.#terrain);
-        return this.#terrain[index];
-    }
-
-    #resolve(slot: number): void {
-        const table = this.#table;
-        if (table.flags[slot] & DONE) return;
-        const choice = this.#choose(slot);
-        if (choice < 0) {
-            table.flags[slot] |= INVALID;
-            this.#failed.push(slot);
-            return;
-        }
-        table.flags[slot] |= RESOLVED;
-        const { analysis } = this.#settings;
-        const x = table.xs[slot];
-        const y = table.ys[slot];
-        const tile = choice < this.#tiles;
-        this.#cells.push({ x, y, value: tile ? analysis.candidateValues[choice] : 0 });
-        const source = tile ? analysis.candidateWangIds : NO_TERRAIN;
-        const at = tile ? choice * WANG_INDEXES : 0;
-        for (let direction = 0; direction < WANG_INDEXES; direction++) {
-            const [dx, dy] = AROUND[direction];
-            this.#spread(x + dx, y + dy, direction, source, at);
-        }
-    }
-
-    /** Hardens what neighbour `(x, y)` in `direction` shares with a resolved cell. */
-    #spread(x: number, y: number, direction: number, source: Uint8Array, at: number): void {
-        const table = this.#table;
-        let slot = table.find(x, y);
-        if (slot >= 0 && table.flags[slot] & DONE) return;
-        if (slot < 0) slot = table.ensure(x, y);
-        table.constrain(slot);
-        table.hard[slot] = propagate(
-            source,
-            at,
-            direction,
-            table.wish,
-            slot * WANG_INDEXES,
-            table.hard[slot],
-        );
-        if (this.#settings.corrections && !isCorner(direction)) this.#correct(slot, x, y);
-    }
-
-    /**
-     * Queues a cell outside the painted region but inside the bounds whose tile no longer meets
-     * its hard indexes; its other indexes then wish for what the tile has.
-     */
-    #correct(slot: number, x: number, y: number): void {
-        const table = this.#table;
-        const bounds = this.#bounds;
-        if (x < bounds.x || y < bounds.y) return;
-        if (x >= bounds.x + bounds.width || y >= bounds.y + bounds.height) return;
-        if (table.flags[slot] & IN_REGION) return;
-        const { analysis, back } = this.#settings;
-        const terrain = this.#terrain;
-        wangIdOfCell(analysis, back(x, y), terrain);
-        const wish = table.wish;
-        const at = slot * WANG_INDEXES;
-        const hard = table.hard[slot];
-        let fits = true;
-        for (let index = 0; index < WANG_INDEXES && fits; index++) {
-            fits = !bit(hard, index) || wish[at + index] === terrain[index];
-        }
-        if (fits) return;
-        this.#queue.push(slot);
-        for (let index = 0; index < WANG_INDEXES; index++) {
-            if (!bit(hard, index)) wish[at + index] = terrain[index];
-        }
-    }
-
-    /** The candidate chosen for `slot` (`#tiles` = the empty cell); −1 for none. */
-    #choose(slot: number): number {
-        const table = this.#table;
-        const constrained = (table.flags[slot] & HAS_CONSTRAINT) !== 0;
-        const wish = constrained ? table.wish : NO_WISH;
-        const at = constrained ? slot * WANG_INDEXES : 0;
-        const hard = constrained ? table.hard[slot] : 0;
-        const pool = this.#pool;
-        pool.length = 0;
-        let lowest = Infinity;
-        const count = this.#settings.erasing ? this.#tiles + 1 : this.#tiles;
-        for (let candidate = 0; candidate < count; candidate++) {
-            const penalty = this.#penalty(wish, at, hard, candidate);
-            if (penalty < 0 || penalty > lowest) continue;
-            if (penalty < lowest) {
-                lowest = penalty;
-                pool.length = 0;
-            }
-            pool.push(candidate);
-        }
-        return this.#pick(slot);
-    }
-
-    /** The transition penalty of `candidate` against a constraint; −1 when it is excluded. */
-    #penalty(wish: Uint8Array, at: number, hard: number, candidate: number): number {
-        const { analysis, corrections } = this.#settings;
-        const tile = candidate < this.#tiles;
-        const ids = tile ? analysis.candidateWangIds : NO_TERRAIN;
-        const from = tile ? candidate * WANG_INDEXES : 0;
-        let sum = 0;
-        for (let index = 0; index < WANG_INDEXES; index++) {
-            const wanted = wish[at + index];
-            const terrain = ids[from + index];
-            if (wanted === terrain) continue;
-            if (bit(hard, index)) return -1;
-            if (wanted === INDEX_MASK) continue;
-            let cost = transitionPenalty(analysis, wanted, terrain);
-            if (cost < 0) {
-                if (corrections) return -1;
-                cost = analysis.maximumDistance + 1;
-            }
-            sum += cost;
-        }
-        return sum;
-    }
-
-    /** Draws from the pool until a candidate passes the look-ahead; −1 when none does. */
-    #pick(slot: number): number {
-        const pool = this.#pool;
-        const { random } = this.#settings;
-        while (pool.length > 0) {
-            const k = pool.length === 1 ? 0 : random() % pool.length;
-            const candidate = pool[k];
-            pool[k] = pool.at(-1)!;
-            pool.length--;
-            if (!this.#lookAhead || !this.#strands(slot, candidate)) return candidate;
-        }
-        return -1;
-    }
-
-    /** Whether resolving `slot` to `candidate` would leave some neighbour without any tile. */
-    #strands(slot: number, candidate: number): boolean {
-        const table = this.#table;
-        const { analysis } = this.#settings;
-        const tile = candidate < this.#tiles;
-        const source = tile ? analysis.candidateWangIds : NO_TERRAIN;
-        const at = tile ? candidate * WANG_INDEXES : 0;
-        const x = table.xs[slot];
-        const y = table.ys[slot];
-        const copy = this.#copy;
-        for (let direction = 0; direction < WANG_INDEXES; direction++) {
-            const [dx, dy] = AROUND[direction];
-            const own = this.#copyConstraint(x + dx, y + dy);
-            if (own < 0) continue;
-            const hard = propagate(source, at, direction, copy, 0, own);
-            if (copy.every((terrain) => terrain === 0)) continue;
-            if (!this.#anyTileFits(copy, hard & this.#usedMask)) return true;
-        }
-        return false;
-    }
-
-    /**
-     * Copies the constraint of `(x, y)` (no wish when it has none) into `#copy` and returns its
-     * hard mask; −1, copying nothing, when the cell is resolved or settled.
-     */
-    #copyConstraint(x: number, y: number): number {
-        const table = this.#table;
-        const slot = table.find(x, y);
-        const flags = slot >= 0 ? table.flags[slot] : 0;
-        if (flags & DONE) return -1;
-        if (!(flags & HAS_CONSTRAINT)) {
-            this.#copy.set(NO_WISH);
-            return 0;
-        }
-        const from = slot * WANG_INDEXES;
-        for (let index = 0; index < WANG_INDEXES; index++) {
-            this.#copy[index] = table.wish[from + index];
-        }
-        return table.hard[slot];
-    }
-
-    /** Whether some candidate tile has `wish` at every index of `mask`. */
-    #anyTileFits(wish: Uint8Array, mask: number): boolean {
-        const ids = this.#settings.analysis.candidateWangIds;
-        for (let candidate = 0; candidate < this.#tiles; candidate++) {
-            const from = candidate * WANG_INDEXES;
-            let fits = true;
-            for (let index = 0; index < WANG_INDEXES && fits; index++) {
-                fits = !bit(mask, index) || ids[from + index] === wish[index];
-            }
-            if (fits) return true;
-        }
-        return false;
-    }
-}
-
-/** A non-negative integer. */
-const isSize = (value: number): boolean => Number.isInteger(value) && value >= 0;
 
 /**
  * The terrain filler of SPEC §5.2: paint indexes, corners, edges or whole tiles (or give it a
  * region), then `apply` to resolve the painted cells to tiles of the set.
+ * Throws `RangeError` when the map size is not two non-negative integers.
  */
 export class TerrainFiller {
-    readonly #settings: FillSettings;
-    readonly #table = new CellTable();
-    /** A terrain ID read from the map. */
-    readonly #terrain = new Uint8Array(WANG_INDEXES);
-    readonly #rotated = new Uint8Array(WANG_INDEXES);
+    private readonly context: ResolutionContext;
+    /** The painted region and its constraints, by `y × width + x`. */
+    private painted = new Map<number, Constraint>();
+    /** A region was given: seed its border at `apply`. */
+    private seedBorder = false;
 
     constructor(options: TerrainFillerOptions) {
         const { width, height } = options;
-        if (!isSize(width) || !isSize(height)) {
+        if (
+            !Number.isSafeInteger(width) ||
+            !Number.isSafeInteger(height) ||
+            width < 0 ||
+            height < 0
+        ) {
             throw new RangeError(
-                `Map size must be non-negative integers, got ${width} × ${height}.`,
+                `A terrain filler needs a map size of two non-negative integers, got ${width} × ${height}.`,
             );
         }
-        this.#settings = {
-            analysis: options.analysis,
+        const { analysis } = options;
+        this.context = {
+            analysis,
             back: options.back,
             width,
             height,
             random: options.random,
             corrections: options.corrections ?? false,
-            erasing: options.erasing ?? true,
+            table: candidateTable(analysis, options.erasing ?? true),
+            shared: SHARED.map((pairs) =>
+                pairs.filter(([mine]) => typeUsesIndex(analysis.type, mine)),
+            ),
         };
     }
 
     /** Paints `color` at `index` of cell `(x, y)`. */
     setWangIndex(x: number, y: number, index: WangIndex, color: number): void {
-        this.#checkIndex(index);
-        this.#checkColor(color);
-        cellKey(x, y);
-        this.#paint(x, y, index, color);
+        this.checkCell(x, y);
+        this.checkIndex(index);
+        this.checkColor(color);
+        this.paint(x, y, index, color);
     }
 
     /** Paints `color` at the grid vertex `(x, y)`, the top-left corner of cell `(x, y)`. */
     setCorner(x: number, y: number, color: number): void {
-        this.#checkColor(color);
-        cellKey(x - 1, y - 1);
-        cellKey(x, y);
-        this.#paint(x, y - 1, BOTTOM_LEFT, color);
-        this.#paint(x, y, TOP_LEFT, color);
-        this.#paint(x - 1, y, TOP_RIGHT, color);
-        this.#paint(x - 1, y - 1, BOTTOM_RIGHT, color);
+        this.checkCell(x, y);
+        this.checkColor(color);
+        this.paint(x, y, TOP_LEFT, color);
+        this.paint(x - 1, y, TOP_RIGHT, color);
+        this.paint(x - 1, y - 1, BOTTOM_RIGHT, color);
+        this.paint(x, y - 1, BOTTOM_LEFT, color);
     }
 
     /** Paints `color` at `index` of cell `(x, y)` and at the facing index of its neighbour. */
     setEdge(x: number, y: number, index: WangIndex, color: number): void {
-        this.#checkIndex(index);
-        this.#checkColor(color);
-        const [dx, dy] = AROUND[index];
-        cellKey(x, y);
-        cellKey(x + dx, y + dy);
-        this.#paint(x, y, index, color);
-        this.#paint(x + dx, y + dy, oppositeIndex(index), color);
+        this.checkCell(x, y);
+        this.checkIndex(index);
+        this.checkColor(color);
+        const [dx, dy] = AROUND[index]!;
+        this.paint(x, y, index, color);
+        this.paint(x + dx, y + dy, oppositeIndex(index), color);
     }
 
     /**
@@ -652,17 +211,16 @@ export class TerrainFiller {
      * of that type each neighbour shares with the cell.
      */
     setFullTile(x: number, y: number, color: number): void {
-        this.#checkColor(color);
-        cellKey(x - 1, y - 1);
-        cellKey(x + 1, y + 1);
-        const type = effectiveTypeForColor(this.#settings.analysis, color);
+        this.checkCell(x, y);
+        this.checkColor(color);
+        const type = effectiveTypeForColor(this.context.analysis, color);
         for (let index = 0; index < WANG_INDEXES; index++) {
-            if (typeUsesIndex(type, index)) this.#paint(x, y, index, color);
+            if (typeUsesIndex(type, index)) this.paint(x, y, index, color);
         }
         for (let direction = 0; direction < WANG_INDEXES; direction++) {
-            const [dx, dy] = AROUND[direction];
-            for (const index of SHARED[direction]) {
-                if (typeUsesIndex(type, index)) this.#paint(x + dx, y + dy, index, color);
+            const [dx, dy] = AROUND[direction]!;
+            for (const [mine, theirs] of SHARED[direction]!) {
+                if (typeUsesIndex(type, mine)) this.paint(x + dx, y + dy, theirs, color);
             }
         }
     }
@@ -672,133 +230,450 @@ export class TerrainFiller {
      * cell `(width − x − 1, height − y − 1)`.
      */
     mirror(): void {
-        const { width, height } = this.#settings;
-        const table = this.#table;
-        const rotated = this.#rotated;
-        forEachRectCell(bandRects(this.#paintedRegion()), (x, y) => {
-            const source = table.find(x, y);
-            let hard = 0;
-            if (table.flags[source] & HAS_CONSTRAINT) {
-                const at = source * WANG_INDEXES;
-                for (let index = 0; index < WANG_INDEXES; index++) {
-                    rotated[oppositeIndex(index)] = table.wish[at + index];
-                }
-                const own = table.hard[source];
-                hard = ((own << 4) | (own >> 4)) & 0xff;
-            }
-            const target = this.#touch(width - x - 1, height - y - 1);
-            const at = target * WANG_INDEXES;
+        const copies: [x: number, y: number, index: number, color: number][] = [];
+        for (const cell of this.painted.values()) {
             for (let index = 0; index < WANG_INDEXES; index++) {
-                if (bit(hard, index)) table.wish[at + index] = rotated[index];
+                if (cell.hard & (1 << index)) {
+                    copies.push([cell.x, cell.y, index, cell.desired[index]!]);
+                }
             }
-            table.hard[target] |= hard;
-        });
+        }
+        for (const [x, y, index, color] of copies) {
+            this.paint(
+                this.context.width - x - 1,
+                this.context.height - y - 1,
+                oppositeIndex(index),
+                color,
+            );
+        }
     }
 
     /** The painted region becomes exactly `region`; constraints already made are kept. */
     setRegion(region: Region): void {
-        for (const span of region) {
-            cellKey(span.start, span.y);
-            cellKey(Math.max(span.start, span.end - 1), span.y);
-        }
-        const table = this.#table;
-        for (let slot = 0; slot < table.count; slot++) table.flags[slot] &= ~IN_REGION;
-        for (const span of region) {
-            for (let x = span.start; x < span.end; x++) {
-                table.flags[table.ensure(x, span.y)] |= IN_REGION;
-            }
-        }
+        const next = new Map<number, Constraint>();
+        forEachRegionCell(region, (x, y) => {
+            if (!this.inside(x, y)) return;
+            const key = this.key(x, y);
+            next.set(key, this.painted.get(key) ?? this.unconstrained(x, y));
+        });
+        this.painted = next;
+        this.seedBorder = true;
     }
 
     /** Resolves the painted region and empties the filler. */
     apply(): TerrainFillResult {
-        try {
-            return this.#resolve();
-        } finally {
-            this.#table.clear();
-        }
+        const painted = this.painted;
+        const seedBorder = this.seedBorder;
+        this.painted = new Map();
+        this.seedBorder = false;
+        if (painted.size === 0) return { cells: [], invalid: [], bounds: null };
+        return new Resolution(this.context, painted, seedBorder).run();
     }
 
-    #resolve(): TerrainFillResult {
-        const region = this.#settleOutside();
-        if (region.length === 0) return { cells: [], invalid: [], bounds: null };
-        const settings = this.#settings;
-        const rects = bandRects(region);
-        const box = regionBounds(region)!;
-        const distance = settings.analysis.maximumDistance;
-        const left = Math.max(0, box.x - distance);
-        const top = Math.max(0, box.y - distance);
-        const right = Math.min(settings.width, box.x + box.width + distance);
-        const bottom = Math.min(settings.height, box.y + box.height + distance);
-        const bounds = { x: left, y: top, width: right - left, height: bottom - top };
-        const resolution = new Resolution(this.#table, settings, bounds);
-        if (!settings.corrections) resolution.seedBorders(rects);
-        return resolution.run(rects);
+    private key(x: number, y: number): number {
+        return y * this.context.width + x;
     }
 
-    /** Takes painted cells outside the map out of the region, as settled; the rest. */
-    #settleOutside(): Region {
-        const { width, height } = this.#settings;
-        const table = this.#table;
-        const inside: PixelPoint[] = [];
-        for (let slot = 0; slot < table.count; slot++) {
-            if (!(table.flags[slot] & IN_REGION)) continue;
-            const x = table.xs[slot];
-            const y = table.ys[slot];
-            if (x >= 0 && y >= 0 && x < width && y < height) {
-                inside.push({ x, y });
-            } else {
-                table.flags[slot] = (table.flags[slot] & ~IN_REGION) | SETTLED;
+    private inside(x: number, y: number): boolean {
+        return x >= 0 && y >= 0 && x < this.context.width && y < this.context.height;
+    }
+
+    /** A constraint with no wish at any index. */
+    private unconstrained(x: number, y: number): Constraint {
+        return { x, y, desired: new Uint8Array(WANG_INDEXES).fill(INDEX_MASK), hard: 0 };
+    }
+
+    /** Hard `color` at `index` of cell `(x, y)`; a cell outside the map is not painted. */
+    private paint(x: number, y: number, index: number, color: number): void {
+        if (!this.inside(x, y)) return;
+        const key = this.key(x, y);
+        let cell = this.painted.get(key);
+        if (!cell) {
+            // A newly touched cell wishes what it has now, at the indexes the set uses.
+            const desired = new Uint8Array(WANG_INDEXES);
+            wangIdOfCell(this.context.analysis, this.context.back(x, y), desired);
+            for (let i = 0; i < WANG_INDEXES; i++) {
+                if (!typeUsesIndex(this.context.analysis.type, i)) desired[i] = INDEX_MASK;
             }
+            cell = { x, y, desired, hard: 0 };
+            this.painted.set(key, cell);
         }
-        return regionOf(inside);
+        cell.desired[index] = color;
+        cell.hard |= 1 << index;
     }
 
-    /** The cells of the painted region. */
-    #paintedRegion(): Region {
-        const table = this.#table;
-        const cells: PixelPoint[] = [];
-        for (let slot = 0; slot < table.count; slot++) {
-            if (table.flags[slot] & IN_REGION) cells.push({ x: table.xs[slot], y: table.ys[slot] });
+    private checkCell(x: number, y: number): void {
+        if (!Number.isSafeInteger(x) || !Number.isSafeInteger(y)) {
+            throw new RangeError(`A terrain cell needs whole coordinates, got (${x}, ${y}).`);
         }
-        return regionOf(cells);
     }
 
-    /**
-     * Touches `(x, y)`: the first time, its constraint wishes for the terrain ID it holds
-     * (empty outside the map), nothing hard. It is in the painted region from then on.
-     */
-    #touch(x: number, y: number): number {
-        const table = this.#table;
-        const slot = table.ensure(x, y);
-        if (!(table.flags[slot] & HAS_CONSTRAINT)) {
-            const { analysis, back, width, height } = this.#settings;
-            const inside = x >= 0 && y >= 0 && x < width && y < height;
-            wangIdOfCell(analysis, inside ? back(x, y) : 0, this.#terrain);
-            table.wish.set(this.#terrain, slot * WANG_INDEXES);
-            table.hard[slot] = 0;
-            table.flags[slot] |= HAS_CONSTRAINT;
-        }
-        table.flags[slot] |= IN_REGION;
-        return slot;
-    }
-
-    #paint(x: number, y: number, index: number, color: number): void {
-        const slot = this.#touch(x, y);
-        this.#table.wish[slot * WANG_INDEXES + index] = color;
-        this.#table.hard[slot] |= 1 << index;
-    }
-
-    #checkIndex(index: number): void {
+    private checkIndex(index: number): void {
         if (!Number.isInteger(index) || index < 0 || index >= WANG_INDEXES) {
             throw new RangeError(`A terrain index must be 0..7, got ${index}.`);
         }
     }
 
-    #checkColor(color: number): void {
-        const count = this.#settings.analysis.colorCount;
-        if (!Number.isInteger(color) || color < 0 || color > count) {
-            throw new RangeError(`A terrain must be an integer in 0..${count}, got ${color}.`);
+    private checkColor(color: number): void {
+        if (!Number.isInteger(color) || color < 0 || color > this.context.analysis.colorCount) {
+            throw new RangeError(
+                `A terrain must be 0..${this.context.analysis.colorCount} in this set, got ${color}.`,
+            );
         }
+    }
+}
+
+/** What a resolution reads of its filler. */
+interface ResolutionContext {
+    readonly analysis: TerrainAnalysis;
+    readonly back: TerrainBack;
+    readonly width: number;
+    readonly height: number;
+    readonly random: Random;
+    readonly corrections: boolean;
+    readonly table: CandidateTable;
+    readonly shared: readonly (readonly SharedPair[])[];
+}
+
+/** One `apply`: resolves a painted region, then corrects around it. */
+class Resolution {
+    private readonly context: ResolutionContext;
+    /** Painted cells, row-major. */
+    private readonly region: Constraint[];
+    /** Painted cells not resolved yet, by key. */
+    private readonly unresolved: Map<number, Constraint>;
+    /** Keys of every painted cell, resolved or not. */
+    private readonly regionKeys: ReadonlySet<number>;
+    private readonly seedBorder: boolean;
+    private readonly lookAhead: boolean;
+    private readonly bounds: CellRect;
+    /** Resolved cells: the candidate each took, by key. */
+    private readonly resolved = new Map<number, number>();
+    private readonly cells: TerrainCell[] = [];
+    /** Painted cells left without a candidate. */
+    private readonly invalidRegion: PixelPoint[] = [];
+    /** Correction cells that found no candidate and are still unresolved, by key. */
+    private readonly invalidOutside = new Map<number, PixelPoint>();
+    /**
+     * Cells outside the painted region in the bounds: the indexes they share with resolved
+     * cells, accumulated as hard indexes.
+     */
+    private readonly outside = new Map<number, Constraint>();
+    /** The batch of corrections being filled: cells queued since the batch before began. */
+    private queue: PixelPoint[] = [];
+    /** Scratch WangId of a back cell. */
+    private readonly scratch = new Uint8Array(WANG_INDEXES);
+    /** Scratch candidate set of the look-ahead. */
+    private readonly lookAheadSet: Uint32Array;
+    /** Bit `i` set: the set's type uses index `i`. */
+    private readonly typeMask: number = 0;
+
+    constructor(context: ResolutionContext, painted: Map<number, Constraint>, seedBorder: boolean) {
+        this.context = context;
+        this.region = [...painted.values()].sort((a, b) => a.y - b.y || a.x - b.x);
+        this.unresolved = new Map(painted);
+        this.regionKeys = new Set(painted.keys());
+        this.seedBorder = seedBorder;
+        this.lookAhead = !context.corrections && !context.analysis.fillerComplete;
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (typeUsesIndex(context.analysis.type, index)) this.typeMask |= 1 << index;
+        }
+        this.lookAheadSet = new Uint32Array(context.table.words);
+        this.bounds = this.boundsOf(this.region);
+    }
+
+    run(): TerrainFillResult {
+        if (this.seedBorder) for (const cell of this.region) this.seed(cell);
+        for (const cell of this.region) {
+            this.unresolved.delete(this.key(cell.x, cell.y));
+            const candidate = this.choose(cell, this.lookAhead);
+            if (candidate < 0) this.invalidRegion.push(cell);
+            else this.place(cell.x, cell.y, candidate);
+        }
+        // Batches: the cells queued by the region, then those each batch queued, until none.
+        while (this.queue.length > 0) {
+            const batch = this.queue;
+            this.queue = [];
+            for (const cell of batch) this.correct(cell);
+        }
+        const invalid = [...this.invalidRegion, ...this.invalidOutside.values()];
+        return { cells: this.cells, invalid: regionOf(invalid), bounds: this.bounds };
+    }
+
+    private key(x: number, y: number): number {
+        return y * this.context.width + x;
+    }
+
+    private inside(x: number, y: number): boolean {
+        return x >= 0 && y >= 0 && x < this.context.width && y < this.context.height;
+    }
+
+    private inBounds(x: number, y: number): boolean {
+        const { bounds } = this;
+        return (
+            x >= bounds.x &&
+            y >= bounds.y &&
+            x < bounds.x + bounds.width &&
+            y < bounds.y + bounds.height
+        );
+    }
+
+    /** The region's bounding box grown by the maximum distance, clipped to the map. */
+    private boundsOf(region: readonly Constraint[]): CellRect {
+        let left = Infinity;
+        let top = Infinity;
+        let right = -Infinity;
+        let bottom = -Infinity;
+        for (const { x, y } of region) {
+            left = Math.min(left, x);
+            top = Math.min(top, y);
+            right = Math.max(right, x + 1);
+            bottom = Math.max(bottom, y + 1);
+        }
+        const grow = this.context.analysis.maximumDistance;
+        left = Math.max(0, left - grow);
+        top = Math.max(0, top - grow);
+        right = Math.min(this.context.width, right + grow);
+        bottom = Math.min(this.context.height, bottom + grow);
+        return { x: left, y: top, width: right - left, height: bottom - top };
+    }
+
+    /** The WangId cell `(x, y)` has before the change, into the scratch array. */
+    private backWangId(x: number, y: number): Uint8Array {
+        wangIdOfCell(this.context.analysis, this.context.back(x, y), this.scratch);
+        return this.scratch;
+    }
+
+    /**
+     * Border seeding: the indexes `cell` shares with neighbours outside the region become hard,
+     * with the neighbour's terrains. A neighbour that is not a tile of the set (empty, another
+     * tileset) gives nothing to match. Indexes already hard are kept.
+     */
+    private seed(cell: Constraint): void {
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const [dx, dy] = AROUND[direction]!;
+            const nx = cell.x + dx;
+            const ny = cell.y + dy;
+            if (!this.inside(nx, ny) || this.regionKeys.has(this.key(nx, ny))) continue;
+            const around = this.backWangId(nx, ny);
+            if (around.every((color) => color === 0)) continue;
+            for (const [mine, theirs] of this.context.shared[direction]!) {
+                if (cell.hard & (1 << mine)) continue;
+                cell.desired[mine] = around[theirs]!;
+                cell.hard |= 1 << mine;
+            }
+        }
+    }
+
+    /** The candidates with the terrain of every index of `hard` in `desired`, as a new set. */
+    private fitting(desired: Uint8Array, hard: number): Uint32Array {
+        const { table } = this.context;
+        const set = table.all.slice();
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (hard & (1 << index)) keepWith(table, set, index, desired[index]!);
+        }
+        return set;
+    }
+
+    /**
+     * The penalty of candidate `c` for the wishes of `cell`: the transition distance of each
+     * wished index that is not hard. −1 when a wish is unreachable and corrections are on.
+     */
+    private penalty(c: number, cell: Constraint): number {
+        const { analysis, table, corrections } = this.context;
+        const at = c * WANG_INDEXES;
+        let total = 0;
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            const wish = cell.desired[index]!;
+            if (wish === INDEX_MASK || cell.hard & (1 << index)) continue;
+            const distance = transitionPenalty(analysis, wish, table.wangIds[at + index]!);
+            if (distance >= 0) total += distance;
+            else if (corrections) return -1;
+            else total += UNREACHABLE;
+        }
+        return total;
+    }
+
+    /**
+     * What the look-ahead checks around `cell`: each neighbour not resolved yet (painted or not)
+     * that shares an index with it, with the tiles of the set that fit its hard indexes other than
+     * the ones it shares with `cell` (those will come from the candidate). The empty cell is no
+     * way out. `zeroRest` tells whether the neighbour wishes no terrain at every index it does
+     * not share with `cell`: its hard index there, else its wish, else the terrain of its tile.
+     */
+    private lookAheadOf(cell: Constraint): LookAhead[] {
+        const { table } = this.context;
+        const out: LookAhead[] = [];
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const pairs = this.context.shared[direction]!;
+            if (pairs.length === 0) continue;
+            const [dx, dy] = AROUND[direction]!;
+            const nx = cell.x + dx;
+            const ny = cell.y + dy;
+            if (!this.inside(nx, ny)) continue;
+            const key = this.key(nx, ny);
+            if (this.resolved.has(key)) continue;
+            let neighbour = this.unresolved.get(key);
+            if (!neighbour) {
+                // A painted cell already found invalid keeps its tile: nothing to resolve.
+                if (this.regionKeys.has(key)) continue;
+                neighbour = this.outside.get(key) ?? {
+                    x: nx,
+                    y: ny,
+                    desired: new Uint8Array(WANG_INDEXES).fill(INDEX_MASK),
+                    hard: 0,
+                };
+            }
+            let overwritten = 0;
+            for (const [, theirs] of pairs) overwritten |= 1 << theirs;
+            const hard = neighbour.hard & ~overwritten & this.typeMask;
+            const base = this.fitting(neighbour.desired, hard);
+            if (table.empty >= 0) {
+                const word = table.empty >>> 5;
+                base[word] = base[word]! & ~(1 << (table.empty & 31));
+            }
+            const current = this.backWangId(nx, ny);
+            let zeroRest = true;
+            for (let index = 0; index < WANG_INDEXES && zeroRest; index++) {
+                if (overwritten & (1 << index)) continue;
+                const wish = neighbour.desired[index]!;
+                const known = neighbour.hard & (1 << index) || wish !== INDEX_MASK;
+                zeroRest = (known ? wish : current[index]!) === 0;
+            }
+            out.push({ pairs, base, zeroRest });
+        }
+        return out;
+    }
+
+    /**
+     * Whether each look-ahead neighbour still has a tile of the set once `c` is placed: one that
+     * fits its own hard indexes and has `c`'s terrains at the indexes they share. A neighbour that
+     * would then wish no terrain at all eight indexes is not checked.
+     */
+    private leavesNeighboursSolvable(c: number, neighbours: readonly LookAhead[]): boolean {
+        const { table } = this.context;
+        const at = c * WANG_INDEXES;
+        const set = this.lookAheadSet;
+        for (const { pairs, base, zeroRest } of neighbours) {
+            if (zeroRest && pairs.every(([mine]) => table.wangIds[at + mine] === 0)) continue;
+            set.set(base);
+            for (const [mine, theirs] of pairs) {
+                keepWith(table, set, theirs, table.wangIds[at + mine]!);
+            }
+            if (!anyCandidate(set)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * The candidate for `cell`, −1 when there is none: the lowest penalty among those that fit
+     * (and, with `lookAhead`, leave the neighbours not resolved yet a tile); a tie is broken by the
+     * generator.
+     */
+    private choose(cell: Constraint, lookAhead: boolean): number {
+        const fit = this.fitting(cell.desired, cell.hard);
+        const scored: Scored[] = [];
+        forEachCandidate(fit, (c) => {
+            const penalty = this.penalty(c, cell);
+            if (penalty >= 0) scored.push({ candidate: c, penalty });
+        });
+        if (scored.length === 0) return -1;
+        // Stable: equal penalties keep the candidates' order.
+        scored.sort((a, b) => a.penalty - b.penalty);
+        const neighbours = lookAhead ? this.lookAheadOf(cell) : [];
+        const ties: number[] = [];
+        let start = 0;
+        // The cheapest group with a candidate the look-ahead keeps.
+        while (start < scored.length && ties.length === 0) {
+            const penalty = scored[start]!.penalty;
+            let end = start;
+            while (end < scored.length && scored[end]!.penalty === penalty) end++;
+            for (let i = start; i < end; i++) {
+                const { candidate } = scored[i]!;
+                if (this.leavesNeighboursSolvable(candidate, neighbours)) ties.push(candidate);
+            }
+            start = end;
+        }
+        if (ties.length === 0) return -1;
+        if (ties.length === 1) return ties[0]!;
+        return ties[this.context.random() % ties.length]!;
+    }
+
+    /**
+     * Writes candidate `c` at `(x, y)`. The indexes it shares with each neighbour not resolved
+     * yet become hard for that neighbour: a painted cell to be resolved, or a cell in the bounds
+     * outside the region. With corrections, a side neighbour of the latter
+     * kind whose tile disagrees with any of its hard indexes is queued for the next batch;
+     * a diagonal neighbour takes the shared corner but is not queued for it.
+     */
+    private place(x: number, y: number, c: number): void {
+        const { table, corrections, shared } = this.context;
+        const key = this.key(x, y);
+        this.resolved.set(key, c);
+        this.invalidOutside.delete(key);
+        this.cells.push({ x, y, value: table.values[c]! });
+        const at = c * WANG_INDEXES;
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const pairs = shared[direction]!;
+            if (pairs.length === 0) continue;
+            const [dx, dy] = AROUND[direction]!;
+            const nx = x + dx;
+            const ny = y + dy;
+            if (!this.inside(nx, ny)) continue;
+            const neighbourKey = this.key(nx, ny);
+            if (this.resolved.has(neighbourKey)) continue;
+            let neighbour = this.unresolved.get(neighbourKey);
+            if (!neighbour) {
+                if (this.regionKeys.has(neighbourKey) || !this.inBounds(nx, ny)) continue;
+                neighbour = this.outsideConstraint(nx, ny, neighbourKey);
+            }
+            for (const [mine, theirs] of pairs) {
+                neighbour.desired[theirs] = table.wangIds[at + mine]!;
+                neighbour.hard |= 1 << theirs;
+            }
+            if (!corrections || isCorner(direction) || this.unresolved.has(neighbourKey)) continue;
+            if (this.disagrees(neighbour)) this.queue.push({ x: nx, y: ny });
+        }
+    }
+
+    /** The accumulated hard indexes of cell `(x, y)` outside the region, made on first use. */
+    private outsideConstraint(x: number, y: number, key: number): Constraint {
+        let cell = this.outside.get(key);
+        if (!cell) {
+            cell = { x, y, desired: new Uint8Array(WANG_INDEXES).fill(INDEX_MASK), hard: 0 };
+            this.outside.set(key, cell);
+        }
+        return cell;
+    }
+
+    /** Whether the tile of `cell` now differs from any of its hard indexes. */
+    private disagrees(cell: Constraint): boolean {
+        const current = this.backWangId(cell.x, cell.y);
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (cell.hard & (1 << index) && current[index] !== cell.desired[index]) return true;
+        }
+        return false;
+    }
+
+    /**
+     * Corrects cell `(x, y)` outside the region, unless it is resolved already: the indexes it
+     * shares with resolved cells are hard, the others wish the terrains of its tile. Without a
+     * candidate it is invalid for now and stays unchanged; a later batch may still resolve it.
+     */
+    private correct({ x, y }: PixelPoint): void {
+        const key = this.key(x, y);
+        if (this.resolved.has(key)) return;
+        const { analysis } = this.context;
+        const accumulated = this.outsideConstraint(x, y, key);
+        const desired = new Uint8Array(WANG_INDEXES);
+        wangIdOfCell(analysis, this.context.back(x, y), desired);
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (accumulated.hard & (1 << index)) desired[index] = accumulated.desired[index]!;
+            else if (!typeUsesIndex(analysis.type, index)) desired[index] = INDEX_MASK;
+        }
+        const cell: Constraint = { x, y, desired, hard: accumulated.hard };
+        const candidate = this.choose(cell, false);
+        if (candidate < 0) this.invalidOutside.set(key, { x, y });
+        else this.place(x, y, candidate);
     }
 }

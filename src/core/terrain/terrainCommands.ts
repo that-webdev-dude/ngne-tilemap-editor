@@ -53,7 +53,10 @@ export const TERRAIN_LABELS = {
 /** The name of a new terrain set (Tiled's "Unnamed Set"). */
 export const NEW_TERRAIN_SET_NAME = "Unnamed Set";
 
-/** Tiled's `defaultWangColors` (`wangset.cpp`), opaque, as `#rrggbbaa`. */
+/**
+ * Tiled's `defaultWangColors` (`src/libtiled/wangset.cpp`), opaque, as `#rrggbbaa`.
+ * From libtiled (BSD 2-clause licence): see public/THIRD-PARTY-NOTICES.txt.
+ */
 export const DEFAULT_TERRAIN_COLOURS: readonly string[] = [
     "#ff0000ff",
     "#00ff00ff",

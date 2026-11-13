@@ -165,8 +165,10 @@ server reloads only what changed. Export never deletes files.
 ## Use `ngne-tilemap.ts` in a game
 
 Export into a folder of the game's source, for example `src/maps/`, and commit the folder. Never
-edit `ngne-tilemap.ts`: each export overwrites it. It imports nothing and compiles against
-`ngne` 0.1.0 and `@ngne/core` 0.2.x and 0.3.0. It gives the game:
+edit `ngne-tilemap.ts`: each export overwrites it. Its header puts it under MIT-0
+(`SPDX-License-Identifier: MIT-0`), so a game that ships it needs no licence notice for it. It
+imports nothing and compiles against `ngne` 0.1.0 and `@ngne/core` 0.2.x and 0.3.0. It gives the
+game:
 
 - `loadTilemap(name)`: loads a map by export name; `readTilemap(json, atlases)` reads one the
   game holds. An invalid tilemap or atlas throws a `TilemapError`, with a `code` and a `path`;

@@ -24,7 +24,7 @@ export const TOP_LEFT = 7;
 /** A WangId index, 0..7 clockwise from the top. */
 export type WangIndex = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
-/** Offsets of the neighbour at each index (Tiled's `aroundTilePoints`). */
+/** Offsets of the neighbour at each index: the 8 surrounding cells clockwise from the one above. */
 export const AROUND: readonly (readonly [number, number])[] = [
     [0, -1],
     [1, -1],

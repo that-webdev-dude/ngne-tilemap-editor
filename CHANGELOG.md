@@ -63,8 +63,8 @@ owner's actions.
 ### M7 — Export, runtime and preview
 
 - Export folder: repacked atlases, `ngne-tilemap` v1 tilemaps, images and the generated
-  import-free runtime `ngne-tilemap.ts`; Export dialog, Export Again and Export on Save; unchanged
-  files are not rewritten.
+  import-free runtime `ngne-tilemap.ts` (MIT-0); Export dialog, Export Again and Export on Save;
+  unchanged files are not rewritten.
 - Runtime data functions and `drawTilemap`, compiled against `ngne` 0.1.0 and `@ngne/core` 0.2.2
   and 0.3.0, with an engine-contract check and a weekly check of the newest engine.
 - Export conformance: a fixture game draws every orientation as the editor's compositor does.

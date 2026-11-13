@@ -12,38 +12,32 @@ import {
 } from "./wangId";
 import type { WangIndex } from "./wangId";
 
-// The index under the pointer within one cell (SPEC §5.3, used by the Terrains panel of §5.1
-// too). Corner sets take the nearest corner, the halfway line counting as right and bottom.
-// Edge sets cut the cell along both diagonals into four triangles, one per edge. Mixed sets
-// cut it into a 3 × 3 grid: the sides are edges, the corners corners, the middle nothing.
+// The index under the pointer within one cell (SPEC §5.3; the Terrains panel of §5.1 picks the
+// index it assigns the same way). Corner sets take the nearest corner: the cell's quadrant.
+// Edge sets take the side whose triangle between the cell's two diagonals holds the point.
+// Mixed sets split the cell into a 3 × 3 grid: the corner squares are corners, the side squares
+// edges, and the middle square paints nothing.
 
-/** The grid column or row (0..2) of a fraction of the cell, in a 3 × 3 split. */
-function gridPosition(t: number): number {
-    return Math.min(2, Math.max(0, Math.floor(3 * t)));
-}
-
-/** The corner nearest to `(fx, fy)`; exactly halfway counts as right and as bottom. */
-function cornerAt(fx: number, fy: number): WangIndex {
-    const left = fx < 0.5;
-    if (fy < 0.5) return left ? TOP_LEFT : TOP_RIGHT;
-    return left ? BOTTOM_LEFT : BOTTOM_RIGHT;
-}
-
-/** The edge whose triangle, between the cell's two diagonals, holds `(fx, fy)`. */
-function edgeAt(fx: number, fy: number): WangIndex {
-    const u = fx - 0.5;
-    const v = fy - 0.5;
-    const belowAnti = u > -v;
-    if (u < v) return belowAnti ? BOTTOM : LEFT;
-    return belowAnti ? RIGHT : TOP;
-}
+/** The grid column or row of a fraction: thirds of the cell, its far edge in the last one. */
+const third = (f: number): number => Math.min(2, Math.max(0, Math.floor(f * 3)));
 
 /**
  * The index painted at fraction `(fx, fy)` of a cell (0 at its left or top edge, 1 at its right
  * or bottom edge) in a set of `type`; null for the middle of a mixed set's cell.
  */
 export function brushIndexAt(type: TerrainSetType, fx: number, fy: number): WangIndex | null {
-    if (type === "corner") return cornerAt(fx, fy);
-    if (type === "edge") return edgeAt(fx, fy);
-    return indexByGrid(gridPosition(fx), gridPosition(fy));
+    if (type === "corner") {
+        const right = fx >= 0.5;
+        if (fy >= 0.5) return right ? BOTTOM_RIGHT : BOTTOM_LEFT;
+        return right ? TOP_RIGHT : TOP_LEFT;
+    }
+    if (type === "edge") {
+        // Measured from the centre: the axis the point is further along names the side; a point
+        // on a diagonal goes to the top or bottom edge.
+        const dx = fx - 0.5;
+        const dy = fy - 0.5;
+        if (Math.abs(dy) >= Math.abs(dx)) return dy < 0 ? TOP : BOTTOM;
+        return dx < 0 ? LEFT : RIGHT;
+    }
+    return indexByGrid(third(fx), third(fy));
 }

@@ -152,7 +152,8 @@ export overwrites it.
   asset map, the game's `imageAsset`; [SPEC.md](SPEC.md) §11.4), which is checked against every
   new NGNE release.
 - Header comment names the generator version and the newest format version it reads; it
-  reads every older `ngne-tilemap` version.
+  reads every older `ngne-tilemap` version. A second header line,
+  `SPDX-License-Identifier: MIT-0`, puts the file under MIT-0, so games carry no notice for it.
 - **Assets:** one definition object per asset ID, cached at module level; IDs namespaced
   `ngne-tilemap:<export>/<tileset>`; `assetsFor(tilemap)` returns the flat list a scene puts in
   `SceneDefinition.assets`.

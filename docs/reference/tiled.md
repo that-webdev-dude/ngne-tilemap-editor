@@ -4,10 +4,19 @@ Tiled 1.12.2 (latest stable, 2026-05-27), its behaviour studied from its source 
 2026-10-30. Behaviour reference the spec and tickets cite; what v1 includes is decided in
 [BRIEF.md](../BRIEF.md) §4, not here.
 
-This file describes what Tiled does. The editor's code is its own, written from this
-description and the spec, not translated from Tiled's code: Tiled's editor (`src/tiled`) is
-GPL-2.0-or-later, libtiled (`src/libtiled`) BSD 2-clause, and code derived from libtiled is
-listed in [public/THIRD-PARTY-NOTICES.txt](../../public/THIRD-PARTY-NOTICES.txt).
+This file describes what Tiled does; it holds no Tiled code. Tiled's editor (`src/tiled`) is
+GPL-2.0-or-later. Most of libtiled (`src/libtiled`) is BSD 2-clause, but some of its files are
+GPL-2.0-or-later (the JSON converters `varianttomapconverter.cpp` and
+`maptovariantconverter.cpp`, `tiled.cpp`, `templatemanager.cpp`): check each file's header. The
+editor's code derived from libtiled, and the test fixtures' JSON writer (after Tiled's bundled
+qjsonparser), are listed with their notices in
+[public/THIRD-PARTY-NOTICES.txt](../../public/THIRD-PARTY-NOTICES.txt); apart from them, the
+editor's code is not translated from Tiled's code. The line, terrain filler, terrain brush and
+its pick, and the shape fill's rectangle were rewritten from the spec, the tests and Tiled's
+user manual; no code in them was translated from Tiled's source or from their earlier versions,
+whose public interfaces they keep. Earlier versions of
+some files followed Tiled's editor source; the [README](../../README.md#licence) lists them and
+their licence.
 
 Read against `mapeditor/tiled` `master` (raw.githubusercontent.com), not the `v1.12.2` tag,
 and https://doc.mapeditor.org/en/stable/ (docs reflect 1.12). Recheck any detail a ticket

@@ -18,16 +18,16 @@ import { FILL_MODE_OPTION, fillModeOf, paintPlan } from "./fillPlan";
 import type { FillPlan } from "./fillPlan";
 import { terrainFillPlan } from "./terrainFill";
 
-// The shape fill (SPEC §4.3), Tiled's `ShapeFillTool` (`src/tiled/shapefilltool.cpp`, checked
-// at v1.12.2) in its Tile and Terrain fill modes (Terrain: `terrainFill.ts`), as two variants of one rail slot (DESIGN §6): Rectangle
+// The shape fill (SPEC §4.3), behaving as Tiled's shape fill tool, in its Tile and Terrain fill
+// modes (Terrain: `terrainFill.ts`), as two variants of one rail slot (DESIGN §6): Rectangle
 // (U, the slot planned in `planned.tools.ts`) and Ellipse (Shift+U); U pressed again switches
 // between them, as does the context bar's Rectangle / Ellipse choice. The overlay preview is
 // `fillPreview.overlay.ts`.
 //
-//   press, drag: the shape from the pressed cell to the pointer's (`QRect::span`), previewed
+//   press, drag: the shape from the pressed cell to the pointer's, previewed
 //   Shift: a square or a circle, the shorter side's length both ways
 //   Alt: centred on the pressed cell
-//   release: fills the rectangle, or the ellipse inscribed in it (Tiled's `ellipseRegion`),
+//   release: fills the rectangle, or the ellipse inscribed in it (`ellipseRegion`),
 //     with the stamp tiled from the shape's top-left (`TileFill`), or in Terrain mode with the
 //     tiles of the brush's terrain set that match the cells around it (`wangFill`), one
 //     history entry
@@ -69,8 +69,8 @@ export function subscribeShapeFill(listener: () => void): () => void {
 }
 
 /**
- * The rectangle of a drag from `start` to `end` with `modifiers` (Tiled's
- * `updateFillOverlay`): Shift makes it square with the shorter side, Alt centres it on `start`.
+ * The rectangle of a drag from `start` to `end` with `modifiers`: Shift makes it square with
+ * the shorter side, Alt centres it on `start`.
  */
 export function shapeArea(
     start: PixelPoint,
@@ -80,12 +80,19 @@ export function shapeArea(
     let dx = end.x - start.x;
     let dy = end.y - start.y;
     if (modifiers.shift) {
+        // The shorter side both ways, each still growing towards the pointer.
         const side = Math.min(Math.abs(dx), Math.abs(dy));
         dx = Math.sign(dx) * side;
         dy = Math.sign(dy) * side;
     }
-    const from = modifiers.alt ? { x: start.x - dx, y: start.y - dy } : start;
-    return spanRect(from, { x: start.x + dx, y: start.y + dy });
+    if (modifiers.alt) {
+        // The pressed cell is the middle: the shape reaches as far the other way.
+        return spanRect(
+            { x: start.x - Math.abs(dx), y: start.y - Math.abs(dy) },
+            { x: start.x + Math.abs(dx), y: start.y + Math.abs(dy) },
+        );
+    }
+    return spanRect(start, { x: start.x + dx, y: start.y + dy });
 }
 
 /**

@@ -96,15 +96,51 @@ branch pushes do not deploy. The owner tags and deploys.
 
 ## Licence
 
-Licensed under [MIT](LICENSE). Parts derived from libtiled (BSD 2-clause) and from Alois
-Zingl's Bresenham code (MIT) are listed with their notices in
-[public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt), which the build also serves.
+Licensed under [MIT](LICENSE). The notices of the parts derived from libtiled (BSD 2-clause),
+Alois Zingl's Bresenham code (MIT), Aseprite's document library (MIT), pixman (MIT) and Tiled's
+qjsonparser, and the licences of the npm packages in the build, are in
+[public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt), which the build copies into
+`dist/` beside the app. After an npm package is added or updated,
+`node scripts/third-party-notices.ts` rewrites its npm section; a unit test fails while that
+section is out of date.
 
-Earlier history: in commits before the one that added this paragraph, the files
-`src/core/terrain/filler.ts`, `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`,
-`src/core/raster/line.ts`, `src/core/raster/ellipse.ts`, `src/core/fill/flood.ts`,
-`src/core/fill/region.ts` (`ellipseRegion`), the reference ellipse in
-`tests/unit/te-019-fill.test.ts` and `tests/e2e/te-017-tiled-golden.py` followed the source of
-Tiled's editor (GPL-2.0-or-later); in those commits they are available under
-GPL-2.0-or-later, not MIT. Their current versions were written independently from behaviour
-specifications.
+The `ngne-tilemap.ts` that an export writes is under
+[MIT-0](https://spdx.org/licenses/MIT-0.html) (`SPDX-License-Identifier: MIT-0` in its header):
+a game that ships it needs no licence notice for it.
+
+### Earlier versions of some files
+
+Before their current versions, the files listed below followed the source of Tiled's editor
+(<https://github.com/mapeditor/tiled>), which is GPL-2.0-or-later. Every earlier version of
+them in this repository's history is available under GPL-2.0-or-later
+([LICENSES/GPL-2.0-or-later.txt](LICENSES/GPL-2.0-or-later.txt)), not MIT;
+`git log --follow -- <file>` lists them.
+
+Each Tiled file below, with the copyright lines of its header, and the files here that followed
+it:
+
+- `src/tiled/wangfiller.cpp` (2017 Benjamin Trotter; 2020–2023 Thorbjørn Lindeijer; 2023
+  a-morphous): `src/core/terrain/filler.ts`.
+- `src/tiled/wangbrush.cpp` (2017 Benjamin Trotter; 2020 Thorbjørn Lindeijer):
+  `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`.
+- `src/tiled/geometry.cpp` (2010–2011 Stefan Beller; 2017 Benjamin Trotter; 2020 Zingl Alois;
+  2017–2023 Thorbjørn Lindeijer): `src/core/raster/line.ts`, `src/core/raster/ellipse.ts`,
+  `ellipseRegion` in `src/core/fill/region.ts`, the reference ellipse in
+  `tests/unit/te-019-fill.test.ts` and `tests/e2e/te-017-tiled-golden.py` (since removed).
+- `src/tiled/tilepainter.cpp` (2009–2011 Thorbjørn Lindeijer; 2009 Jeff Bland):
+  `src/core/fill/flood.ts`.
+- `src/tiled/shapefilltool.cpp` (2017 Benjamin Trotter): `shapeArea` in
+  `src/app/tools/fill/shapeFill.tools.ts`.
+- `src/tiled/stampbrush.cpp` (2009–2010 Thorbjørn Lindeijer; 2010 Stefan Beller):
+  `tests/e2e/te-017-tiled-golden.py`.
+
+Parts of those earlier versions derived from libtiled (BSD 2-clause) and Zingl's Bresenham
+code (MIT) remain under their own licences, with
+their notices in [public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt).
+
+The current `line.ts`, `filler.ts`, `brush.ts`, `pick.ts` (with `candidates.ts`) and
+`shapeArea` were rewritten from this project's specification, its tests and Tiled's user
+manual. They reproduce Tiled's behaviour; no code in them was translated from Tiled's source or
+from the earlier versions, whose public interfaces they keep. The
+current `ellipse.ts`, `ellipseRegion` and the reference ellipse in `te-019-fill.test.ts` follow
+Zingl's Bresenham code (MIT), and the current `flood.ts` is an independent design.
