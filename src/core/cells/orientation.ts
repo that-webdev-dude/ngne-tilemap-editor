@@ -19,7 +19,10 @@ export const ORIENTATION = {
     antiDiagonal: 0b111,
 } as const satisfies Record<string, Orientation>;
 
-/** Tiled's rotate tables (`src/libtiled/tilelayer.cpp`, tag `v1.12.2`), indexed by orientation. */
+/**
+ * Tiled's rotate tables (`src/libtiled/tilelayer.cpp`, tag `v1.12.2`), indexed by orientation.
+ * From libtiled (BSD 2-clause licence): see public/THIRD-PARTY-NOTICES.txt.
+ */
 export const ROTATE_RIGHT_MASK: readonly Orientation[] = [5, 4, 1, 0, 7, 6, 3, 2];
 export const ROTATE_LEFT_MASK: readonly Orientation[] = [3, 2, 7, 6, 1, 0, 5, 4];
 

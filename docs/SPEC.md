@@ -298,7 +298,7 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 
 ### 5.2 Terrain filler
 
-`core/terrain` ports Tiled's `WangFiller` and `WangSet` analysis
+`core/terrain` reproduces the behaviour of Tiled's `WangFiller` and `WangSet` analysis
 ([reference/tiled.md](reference/tiled.md) §4):
 
 - Per set, computed when it changes: the candidate list (base tiles only; no generated
@@ -324,7 +324,7 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
     each traced by hand against `wangfiller.cpp` when written and committed as TMJ.
   - Once, at the terrain ticket: the owner paints the scripted strokes in Tiled 1.12.2 on the
     fixture maps and confirms the goldens cell for cell (manual check card); a mismatch is a
-    port bug.
+    bug in the editor.
 
 ### 5.3 Terrain brush
 

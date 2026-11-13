@@ -49,7 +49,7 @@ owner's actions.
 
 ### M5 — Terrain
 
-- Corner, edge and mixed terrain sets ported from Tiled's terrain filler, checked against Tiled
+- Corner, edge and mixed terrain sets reproducing Tiled's terrain filler, checked against Tiled
   1.12.2 goldens.
 - Terrains panel, terrain brush with full-tile mode, lines and symmetry, and terrain fill mode for
   the bucket and shape fill.

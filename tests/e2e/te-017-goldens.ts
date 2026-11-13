@@ -1,10 +1,9 @@
 // Golden cells of the stamp brush's Shift line and Ctrl+Shift ellipse (TE-017, SPEC §4.3): what
-// Tiled v1.12.2 paints for the same points, worked by `te-017-tiled-golden.py`, a line-by-line
-// transliteration of Tiled's `pointsOnLine` and `pointsOnEllipse` (src/tiled/geometry.cpp),
-// `StampBrush::drawPreviewLayer` (src/tiled/stampbrush.cpp) and `TileLayer::merge`
-// (src/libtiled/tilelayer.cpp) that shares no code with the editor. Each cell is "x,y:tile", row
-// by row, on the 40 × 30 test map; the stamp is painted once at the first point, as the free click
-// that makes it the last painted point.
+// Tiled v1.12.2 paints for the same points (a Bresenham line or Zingl's ellipse of anchor
+// points, each stamp left out when it would overlap one placed before it, empty stamp cells
+// leaving the map as it is), fixed data computed independently of the editor's code. Each cell
+// is "x,y:tile", row by row, on the 40 × 30 test map; the stamp is painted once at the first
+// point, as the free click that makes it the last painted point.
 
 export const GOLDEN: Record<string, readonly string[]> = {
     "line-1x1": [

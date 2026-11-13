@@ -1,8 +1,13 @@
 # Tiled — reference for the NGNE Tilemap Editor
 
-Tiled 1.12.2 (latest stable, 2026-05-27), reverse-engineered from source on 2026-10-30.
-Behaviour reference the spec and tickets cite; what v1 includes is decided in
+Tiled 1.12.2 (latest stable, 2026-05-27), its behaviour studied from its source and manual on
+2026-10-30. Behaviour reference the spec and tickets cite; what v1 includes is decided in
 [BRIEF.md](../BRIEF.md) §4, not here.
+
+This file describes what Tiled does. The editor's code is its own, written from this
+description and the spec, not translated from Tiled's code: Tiled's editor (`src/tiled`) is
+GPL-2.0-or-later, libtiled (`src/libtiled`) BSD 2-clause, and code derived from libtiled is
+listed in [public/THIRD-PARTY-NOTICES.txt](../../public/THIRD-PARTY-NOTICES.txt).
 
 Read against `mapeditor/tiled` `master` (raw.githubusercontent.com), not the `v1.12.2` tag,
 and https://doc.mapeditor.org/en/stable/ (docs reflect 1.12). Recheck any detail a ticket
@@ -313,7 +318,7 @@ Reproduction notes:
 - Use seeded RNG if deterministic output/tests are needed (Tiled uses random picks).
 - `isComplete()` counts only WangIds without a 0 at any of the 8 indexes after the type mask
   (`recalculateCells`, `hasWildCards`), so a corner or edge set is never complete to the filler
-  and its look-ahead always runs with corrections off. The port reproduces this; the
+  and its look-ahead always runs with corrections off. The editor reproduces this; the
   completeness of SPEC §5.1 and §5.2 counts the type's own indexes.
 - Fill tools call only `setRegion`: their cells start with no wish (`desired` all `INDEX_MASK`,
   no mask) apart from border seeding. Region rectangles are resolved in `QRegion` order (bands
@@ -322,7 +327,7 @@ Reproduction notes:
   `setColor`): in a mixed set a terrain used only at corners paints corners, one used only at
   edges paints edges; full-tile mode follows that mode.
 - A correction cell found invalid can be resolved by a later batch; Tiled keeps it in
-  `mInvalidRegion`. The port reports only the cells left unchanged (SPEC §5.2).
+  `mInvalidRegion`. The editor reports only the cells left unchanged (SPEC §5.2).
 
 ---
 
@@ -399,12 +404,12 @@ file, object (int id), class (value = object of members), list (1.12; value = ar
 
 | Tiled feature | Tilemap editor |
 | --- | --- |
-| Rotate permutation table (§2 TileLayer) | Port exactly: rotations must match Tiled's |
-| `WangFiller` (§4) | Port: colour distances, greedy row-major resolve, 1-step look-ahead, corrections pass; seeded RNG in tests |
+| Rotate permutation table (§2 TileLayer) | The same tables: rotations must match Tiled's |
+| `WangFiller` (§4) | Same behaviour: colour distances, greedy row-major resolve, 1-step look-ahead, corrections pass; seeded RNG in tests |
 | Chunked cell storage (§2 TileLayer) | Use for tile layers: keeps infinite maps additive and maps onto the viewport's chunk tier |
 | Scanline flood fill (§3) | One implementation for bucket fill, magic wand and select same tile |
 | Bucket Fill (§3) | Fills at the press, not at the release; dragging collects no further cells (1.12's drag is not reproduced) |
-| Shape Fill `ellipseRegion` (§3) | Port exactly: the ellipse fill's cells must match Tiled's |
+| Shape Fill `ellipseRegion` (§3) | Same cells: the ellipse fill's cells must match Tiled's (Zingl's `plotEllipseRect`) |
 | Tile collision editor (§3 docks) | A small rectangle/ellipse/polygon editor, reused for marker layers. A click of its rectangle or ellipse tool without a drag makes nothing; Tiled's `CreateObjectTool` (v1.12.2) commits a shape of size 0, which has no area to collide with |
 | Object tools (§3) | Only the rectangle, point, ellipse, polygon and polyline tools, as marker tools |
 | TMJ/TSJ (§5) | Import only; handling per feature in [BRIEF.md](../BRIEF.md) §7 |

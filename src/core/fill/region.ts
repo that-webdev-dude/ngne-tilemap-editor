@@ -28,80 +28,93 @@ export function rectRegion(rect: CellRect): Region {
 }
 
 /**
- * The region of the ellipse inscribed in `rect` (SPEC §4.3): Tiled's `ellipseRegion`
- * (`src/tiled/geometry.cpp`, checked at v1.12.2), Zingl's Bresenham ellipse ("A Rasterizing
- * Algorithm for Drawing Curves", `plotEllipseRect`) with each row filled between its two edge
- * cells. With `clip`, only its part inside `clip`; an empty rectangle gives an empty region.
- * The ellipse touches all four sides of `rect`, so `rect` is its bounding box. Tiled's own
- * arithmetic, in doubles, so its rounding is Tiled's too.
+ * Calls `plot` for every pixel of the ellipse inscribed in the box from `(x0, y0)` to
+ * `(x1, y1)` (inclusive, `x0 <= x1`, `y0 <= y1`), after Alois Zingl's `plotEllipseRect`,
+ * github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. It walks the four quadrants at once
+ * from the middle rows outwards, then finishes the tips of a very narrow ellipse.
+ */
+function plotEllipseInBox(
+    x0: number,
+    y0: number,
+    x1: number,
+    y1: number,
+    plot: (x: number, y: number) => void,
+): void {
+    const a = x1 - x0;
+    const b = y1 - y0;
+    const odd = b % 2;
+    let dx = 4 * (1 - a) * b * b;
+    let dy = 4 * (odd + 1) * a * a;
+    let err = dx + dy + odd * a * a;
+    const stepY = 8 * a * a;
+    const stepX = 8 * b * b;
+    let left = x0;
+    let right = x1;
+    // The lower half moves down from the middle, the upper half up.
+    let down = y0 + Math.floor((b + 1) / 2);
+    let up = down - odd;
+    do {
+        plot(right, down);
+        plot(left, down);
+        plot(left, up);
+        plot(right, up);
+        const e2 = 2 * err;
+        if (e2 <= dy) {
+            down++;
+            up--;
+            dy += stepY;
+            err += dy;
+        }
+        if (e2 >= dx || 2 * err > dy) {
+            left++;
+            right--;
+            dx += stepX;
+            err += dx;
+        }
+    } while (left <= right);
+    while (down - up <= b) {
+        plot(left - 1, down);
+        plot(right + 1, down);
+        down++;
+        plot(left - 1, up);
+        plot(right + 1, up);
+        up--;
+    }
+}
+
+/**
+ * The region of the ellipse inscribed in `rect` (it touches all four sides): each row from its
+ * leftmost to its rightmost outline cell. With `clip`, only the part inside `clip`; rows it
+ * leaves out cost no per-cell work. Empty for an empty rectangle.
  */
 export function ellipseRegion(rect: CellRect, clip?: CellRect): Region {
     if (rect.width <= 0 || rect.height <= 0) return [];
-    const firstRow = clip ? Math.max(rect.y, clip.y) : rect.y;
-    const lastRow = clip
+    const top = clip ? Math.max(rect.y, clip.y) : rect.y;
+    const bottom = clip
         ? Math.min(rect.y + rect.height, clip.y + clip.height)
         : rect.y + rect.height;
-    if (firstRow >= lastRow) return [];
-    // The first cell of each row: a row's run is symmetric about the middle of `rect`.
-    const firsts = new Float64Array(lastRow - firstRow).fill(Infinity);
-    const addRow = (from: number, y: number) => {
-        const row = y - firstRow;
-        if (row >= 0 && row < firsts.length && from < firsts[row]!) firsts[row] = from;
-    };
+    if (top >= bottom) return [];
+    const clipLeft = clip ? clip.x : -Infinity;
+    const clipRight = clip ? clip.x + clip.width : Infinity;
 
-    // Tiled's code, its names and steps kept; `addRect(x0, y, x1, y)` becomes `addRow(x0, y)`
-    // and `err += dy += a` two steps.
-    let x0 = rect.x;
-    let x1 = rect.x + rect.width - 1;
-    let y0 = rect.y;
-    let a = rect.width - 1;
-    const b = rect.height - 1;
-    let b1 = b & 1; // diameter
-    let dx = 4 * (1 - a) * b * b; // error increment
-    let dy = 4 * (b1 + 1) * a * a;
-    let err = dx + dy + b1 * a * a; // error of 1. step
-    y0 += Math.floor((b + 1) / 2); // starting pixel
-    let y1 = y0 - b1;
-    a = 8 * a * a;
-    b1 = 8 * b * b;
-    do {
-        addRow(x0, y0); // bottom half
-        addRow(x0, y1); // top half
-        const e2 = 2 * err;
-        // y step
-        if (e2 <= dy) {
-            y0++;
-            y1--;
-            dy += a;
-            err += dy;
-        }
-        // x step
-        if (e2 >= dx || 2 * err > dy) {
-            x0++;
-            x1--;
-            dx += b1;
-            err += dx;
-        }
-    } while (x0 <= x1);
-    // Too early a stop for flat ellipses with a = 1: finish the tip.
-    while (y0 - y1 <= b) {
-        addRow(x0 - 1, y0);
-        addRow(x0 - 1, y1);
-        y0++;
-        y1--;
-    }
+    // The leftmost and rightmost outline cell of each kept row.
+    const rows = bottom - top;
+    const lefts = new Float64Array(rows).fill(Infinity);
+    const rights = new Float64Array(rows).fill(-Infinity);
+    const plot = (x: number, y: number): void => {
+        if (y < top || y >= bottom) return;
+        const row = y - top;
+        if (x < lefts[row]!) lefts[row] = x;
+        if (x > rights[row]!) rights[row] = x;
+    };
+    plotEllipseInBox(rect.x, rect.y, rect.x + rect.width - 1, rect.y + rect.height - 1, plot);
 
     const spans: RowSpan[] = [];
-    firsts.forEach((first, row) => {
-        if (first === Infinity) return;
-        let start = first;
-        let end = 2 * rect.x + rect.width - first;
-        if (clip) {
-            start = Math.max(start, clip.x);
-            end = Math.min(end, clip.x + clip.width);
-        }
-        if (start < end) spans.push({ y: firstRow + row, start, end });
-    });
+    for (let row = 0; row < rows; row++) {
+        const start = Math.max(lefts[row]!, clipLeft);
+        const end = Math.min(rights[row]! + 1, clipRight);
+        if (start < end) spans.push({ y: top + row, start, end });
+    }
     return spans;
 }
 

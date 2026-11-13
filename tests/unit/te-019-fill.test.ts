@@ -17,11 +17,11 @@ import {
 } from "../../src/core/fill";
 import type { Region } from "../../src/core/fill";
 
-// TE-019: `core/fill` (SPEC §4.3). The flood fill of the bucket and the magic wand, Tiled's
-// queue-based scanline fill (`tilepainter.cpp`), 4-connected over cells equal by tile and
-// flags, bounded by the map or a region; the rectangle and ellipse regions of the shape fill
-// (Tiled's `ellipseRegion` of the ellipse inscribed in the rectangle); and the stamp
-// tiled over a region from its bounding box top-left (Tiled's `TileFill`). Regions are
+// TE-019: `core/fill` (SPEC §4.3). The flood fill of the bucket and the magic wand, 4-connected
+// over cells equal by tile and flags, bounded by the map or a region; the rectangle and ellipse
+// regions of the shape fill (the ellipse inscribed in the rectangle, as Tiled's shape fill
+// draws it); and the stamp tiled over a region from its bounding box top-left (Tiled's
+// `TileFill`). Regions are
 // compared with golden pictures: `#` a cell of the region, `.` not.
 
 /** The region of a picture whose top-left cell is `(x, y)`. */
@@ -209,15 +209,17 @@ describe("flood fill properties", () => {
 });
 
 /**
- * Tiled's `ellipseRegion(x0, y0, x1, y1)` (`geometry.cpp`, v1.12.2) written out as it is there,
- * a union of the rectangles it adds, for checking the row-span version against.
+ * The reference ellipse: the pixels of `plotEllipseRect(x0, y0, x1, y1)` from Alois Zingl's
+ * "Bresenham" (github.com/zingl/Bresenham, `bresenham.js`, MIT licence, (c) 2020 zingl), with
+ * each row filled between its leftmost and rightmost pixel, for checking the row-span version
+ * against.
  */
-function tiledEllipse(rect: CellRect): Set<string> {
-    const cells = new Set<string>();
-    const addRect = (left: number, top: number, right: number, bottom: number) => {
-        for (let y = top; y <= bottom; y++) {
-            for (let x = left; x <= right; x++) cells.add(`${x},${y}`);
-        }
+function referenceEllipse(rect: CellRect): Set<string> {
+    const rows = new Map<number, [number, number]>();
+    const setPixel = (x: number, y: number) => {
+        const row = rows.get(y);
+        if (row) rows.set(y, [Math.min(row[0], x), Math.max(row[1], x)]);
+        else rows.set(y, [x, x]);
     };
     let x0 = rect.x;
     let x1 = rect.x + rect.width - 1;
@@ -229,30 +231,38 @@ function tiledEllipse(rect: CellRect): Set<string> {
     let dx = 4 * (1.0 - a) * b * b;
     let dy = 4 * (b1 + 1) * a * a;
     let err = dx + dy + b1 * a * a;
-    y0 += Math.floor((b + 1) / 2);
+    y0 += (b + 1) >> 1;
     y1 = y0 - b1;
     a = 8 * a * a;
     b1 = 8 * b * b;
     do {
-        addRect(x0, y0, x1, y0);
-        addRect(x0, y1, x1, y1);
+        setPixel(x1, y0);
+        setPixel(x0, y0);
+        setPixel(x0, y1);
+        setPixel(x1, y1);
         const e2 = 2 * err;
         if (e2 <= dy) {
             y0++;
             y1--;
-            err += dy += a;
+            dy += a;
+            err += dy;
         }
         if (e2 >= dx || 2 * err > dy) {
             x0++;
             x1--;
-            err += dx += b1;
+            dx += b1;
+            err += dx;
         }
     } while (x0 <= x1);
     while (y0 - y1 <= b) {
-        addRect(x0 - 1, y0, x1 + 1, y0);
-        addRect(x0 - 1, y1, x1 + 1, y1);
-        y0++;
-        y1--;
+        setPixel(x0 - 1, y0);
+        setPixel(x1 + 1, y0++);
+        setPixel(x0 - 1, y1);
+        setPixel(x1 + 1, y1--);
+    }
+    const cells = new Set<string>();
+    for (const [y, [left, right]] of rows) {
+        for (let x = left; x <= right; x++) cells.add(`${x},${y}`);
     }
     return cells;
 }
@@ -282,15 +292,15 @@ describe("ellipse region", () => {
         }
     });
 
-    it("matches Tiled's code cell for cell up to 40 × 40, and touches every side", () => {
+    it("matches Zingl's plotEllipseRect cell for cell up to 40 × 40, and touches every side", () => {
         const wrong: string[] = [];
         for (let width = 1; width <= 40; width++) {
             for (let height = 1; height <= 40; height++) {
                 const rect = { x: -5, y: 7, width, height };
                 const region = ellipseRegion(rect);
-                const tiled = tiledEllipse(rect);
+                const reference = referenceEllipse(rect);
                 const ours = regionCells(region).map(({ x, y }) => `${x},${y}`);
-                if (ours.length !== tiled.size || ours.some((cell) => !tiled.has(cell))) {
+                if (ours.length !== reference.size || ours.some((cell) => !reference.has(cell))) {
                     wrong.push(`${width}×${height}`);
                 }
                 if (JSON.stringify(regionBounds(region)) !== JSON.stringify(rect)) {

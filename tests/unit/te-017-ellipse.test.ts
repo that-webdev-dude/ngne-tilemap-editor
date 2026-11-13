@@ -2,10 +2,10 @@ import { describe, expect, it } from "vitest";
 import { pointsOnEllipse } from "../../src/core/raster/ellipse";
 import { separatePlacements, stampAnchor, stampOrigin } from "../../src/app/tools/stamp/placement";
 
-// TE-017: Tiled's `pointsOnEllipse` (src/tiled/geometry.cpp at v1.12.2) and the stamp placement
-// of `StampBrush::drawPreviewLayer`. The expected points are those of
-// `tests/e2e/te-017-tiled-golden.py`, a line-by-line transliteration of Tiled's C++ that shares
-// no code with the editor: points in Tiled's order, repeats included.
+// TE-017: the ellipse outline of the stamp brush's Ctrl+Shift+click (Zingl's `plotEllipse`, as
+// Tiled v1.12.2 draws it) and the stamp placement along a line or an ellipse. The expected
+// points are fixed data computed independently of the editor's code: points in the order the
+// four quadrants are drawn, repeats included.
 
 const points = (cx: number, cy: number, a: number, b: number) =>
     pointsOnEllipse({ x: cx, y: cy }, a, b).map((p) => [p.x, p.y]);

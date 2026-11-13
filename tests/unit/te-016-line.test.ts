@@ -1,10 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { pointsOnLine } from "../../src/core/raster/line";
 
-// TE-016: `pointsOnLine` gives the cells of Tiled's `pointsOnLine` (src/tiled/geometry.cpp at
-// v1.12.2). The expected cells below are worked by hand through Tiled's code: swap the axes of
-// a steep line, swap the ends of a reversed one, step x with `error = deltax / 2` and step y
-// when the error drops below zero, then reverse the result of a reversed line.
+// TE-016: `pointsOnLine` gives the cells Tiled v1.12.2 joins a drag with: the classic Bresenham
+// line. The expected cells below are worked by hand from that algorithm: walk the major axis
+// from the end with the smaller coordinate, start the error at half the major length, step the
+// minor axis when the error drops below zero, and reverse the result of a reversed line.
 
 type Cells = [number, number][];
 

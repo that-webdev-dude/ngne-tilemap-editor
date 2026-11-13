@@ -1,49 +1,46 @@
 import type { PixelPoint } from "./line";
 
-// Ellipses of cells (SPEC §4.3, the stamp brush's Ctrl+Shift+click): Tiled's `pointsOnEllipse`
-// (`src/tiled/geometry.cpp`, checked at v1.12.2), Zingl's Bresenham ellipse ("Bresenham Curve
-// Rasterizing Algorithms"). The outline around a centre with two radii, the four quadrants
-// emitted together, points repeated where quadrants meet, as Tiled's are. Integer arithmetic
-// only; the products stay far below 2^53 for any radius a map can hold.
-
-function assertWhole(...values: number[]): void {
-    if (!values.every(Number.isSafeInteger)) {
-        throw new RangeError(`Ellipse values must be whole numbers, got ${values.join(", ")}.`);
-    }
-}
+// Ellipse outlines of cells (SPEC §4.3): the ellipse mode of the stamp brush. The outline of
+// the axis-aligned ellipse around a centre cell with whole radii, after Alois Zingl's
+// `plotEllipse`, github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. Points come in the
+// order that algorithm plots them, four mirrored points per step and then the tips of a flat
+// ellipse, repeats included. Pure, integer arithmetic only.
 
 /**
- * The cells of the ellipse around `centre` with radii `radiusX` and `radiusY` (0 or more), in
- * Tiled's order: for each step of the second quadrant from left to top, its point in the
- * first, second, third and fourth quadrant; then the tips of a flat ellipse. Points may repeat.
- * Throws `RangeError` when a value is not a whole number or a radius is negative.
+ * The outline cells of the ellipse around `centre` with radii `radiusX` and `radiusY`, in
+ * plotting order with repeats. Throws `RangeError` for a value that is not a safe integer or a
+ * negative radius.
  */
 export function pointsOnEllipse(
     centre: PixelPoint,
     radiusX: number,
     radiusY: number,
 ): PixelPoint[] {
-    const { x: xm, y: ym } = centre;
-    assertWhole(xm, ym, radiusX, radiusY);
-    if (radiusX < 0 || radiusY < 0) {
-        throw new RangeError(`Ellipse radii must not be negative, got ${radiusX}, ${radiusY}.`);
+    const values = [centre.x, centre.y, radiusX, radiusY];
+    if (!values.every((value) => Number.isSafeInteger(value)) || radiusX < 0 || radiusY < 0) {
+        throw new RangeError(
+            `pointsOnEllipse needs a whole centre and whole radii of at least 0, got (${centre.x}, ${centre.y}) with radii ${radiusX}, ${radiusY}`,
+        );
     }
+    const { x: cx, y: cy } = centre;
     const a = radiusX;
     const b = radiusY;
     const points: PixelPoint[] = [];
-    // II. quadrant from bottom left to top right.
-    let x = -a;
+
+    // Walk one quadrant from (-a, 0) to (0, b), mirroring each step into the other three.
+    let x = 0 - a; // not -a: a radius of 0 must not give a negative zero
     let y = 0;
-    let e2 = b;
-    let dx = (1 + 2 * x) * e2 * e2;
+    let dx = (1 + 2 * x) * b * b;
     let dy = x * x;
     let err = dx + dy;
     do {
-        points.push({ x: xm - x, y: ym + y });
-        points.push({ x: xm + x, y: ym + y });
-        points.push({ x: xm + x, y: ym - y });
-        points.push({ x: xm - x, y: ym - y });
-        e2 = 2 * err;
+        points.push(
+            { x: cx - x, y: cy + y },
+            { x: cx + x, y: cy + y },
+            { x: cx + x, y: cy - y },
+            { x: cx - x, y: cy - y },
+        );
+        const e2 = 2 * err;
         if (e2 >= dx) {
             x++;
             dx += 2 * b * b;
@@ -55,10 +52,11 @@ export function pointsOnEllipse(
             err += dy;
         }
     } while (x <= 0);
-    // Too early a stop for flat ellipses with a = 1: finish the tip.
-    while (y++ < b) {
-        points.push({ x: xm, y: ym + y });
-        points.push({ x: xm, y: ym - y });
+
+    // A very flat ellipse (radius x of 0 or 1) leaves the loop early: finish its tips.
+    while (y < b) {
+        y++;
+        points.push({ x: cx, y: cy + y }, { x: cx, y: cy - y });
     }
     return points;
 }

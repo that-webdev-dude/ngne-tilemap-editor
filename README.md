@@ -94,4 +94,17 @@ The GitHub Pages workflow (`.github/workflows/deploy.yml`) builds with
 `vite build --base=/ngne-tilemap-editor/` and deploys on a pushed `v*` tag or a manual run;
 branch pushes do not deploy. The owner tags and deploys.
 
-Licensed under [MIT](LICENSE).
+## Licence
+
+Licensed under [MIT](LICENSE). Parts derived from libtiled (BSD 2-clause) and from Alois
+Zingl's Bresenham code (MIT) are listed with their notices in
+[public/THIRD-PARTY-NOTICES.txt](public/THIRD-PARTY-NOTICES.txt), which the build also serves.
+
+Earlier history: in commits before the one that added this paragraph, the files
+`src/core/terrain/filler.ts`, `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`,
+`src/core/raster/line.ts`, `src/core/raster/ellipse.ts`, `src/core/fill/flood.ts`,
+`src/core/fill/region.ts` (`ellipseRegion`), the reference ellipse in
+`tests/unit/te-019-fill.test.ts` and `tests/e2e/te-017-tiled-golden.py` followed the source of
+Tiled's editor (GPL-2.0-or-later); in those commits they are available under
+GPL-2.0-or-later, not MIT. Their current versions were written independently from behaviour
+specifications.

@@ -1,14 +1,19 @@
 import type { CellRect } from "../cells";
-import { regionOf } from "../fill";
+import { regionBounds, regionOf } from "../fill";
 import type { Region } from "../fill";
+import type { PixelPoint } from "../raster/line";
 import { effectiveTypeForColor, transitionPenalty, wangIdOfCell } from "./analysis";
 import type { TerrainAnalysis } from "./analysis";
 import type { Random } from "./random";
 import {
     AROUND,
+    BOTTOM,
     BOTTOM_LEFT,
     BOTTOM_RIGHT,
     INDEX_MASK,
+    LEFT,
+    RIGHT,
+    TOP,
     TOP_LEFT,
     TOP_RIGHT,
     WANG_INDEXES,
@@ -20,628 +25,780 @@ import {
 } from "./wangId";
 import type { WangIndex } from "./wangId";
 
-// The terrain filler (SPEC §5.2): Tiled's `WangFiller` (`src/tiled/wangfiller.cpp`, tag v1.12.2)
-// for orthogonal fixed maps, every candidate weighing 1 (probabilities are Later) and ties
-// broken by a seeded generator. Painting constraints are kept per touched cell (`desired`,
-// `mask`); `apply` resolves the region row by row, pushes each placed tile's terrains into its
-// neighbours' constraints, looks one step ahead when corrections are off and the set is not
-// complete, and with corrections on re-resolves the edge neighbours outside the region that no
-// longer match. Nothing is written: the result is a cell patch for a stroke transaction.
+// The terrain filler (SPEC §5.2), shared by the terrain brush (§5.3) and terrain fill mode
+// (§5.4). Painting leaves a constraint on each touched cell: a wished terrain per index, some
+// of them hard, starting from the terrain ID the cell holds. `apply` then walks the painted
+// region rectangle by rectangle and gives each cell the candidate with the lowest transition
+// penalty that meets its hard indexes; each resolved cell hardens the indexes its neighbours
+// share with it. Fill tools first seed the region's border from the cells around it; the
+// brush instead re-resolves, within the region grown by the set's maximum distance, the
+// neighbours its change no longer fits (corrections). Ties are broken by the seeded generator,
+// and without corrections an incomplete set looks one step ahead so no neighbour is left
+// without a tile.
+//
+// State lives in a table of slots keyed by cell, with typed arrays per slot, so one brush step
+// costs in proportion to the cells it touches, never to the map.
 
-/** The value of a cell of the layer the filler matches against, 0 when empty. */
+/** The tile layer before the change: the value of cell `(x, y)`, 0 when it is empty. */
 export type TerrainBack = (x: number, y: number) => number;
 
+/** What a filler works on. */
 export interface TerrainFillerOptions {
     analysis: TerrainAnalysis;
     /** The tile layer as it is before the change. */
     back: TerrainBack;
-    /** The map's size in cells: nothing outside it is read as a tile or changed. */
+    /** Map width in cells. */
     width: number;
+    /** Map height in cells. */
     height: number;
-    /** Breaks ties between candidates of equal penalty. */
+    /** Breaks ties between equal candidates. */
     random: Random;
-    /** On for the terrain brush, off for fill tools (Tiled's `setCorrectionsEnabled`). */
+    /** Re-resolve neighbours the change no longer fits (the brush); default false. */
     corrections?: boolean;
-    /** Whether an empty cell is a candidate (Tiled's `setErasingEnabled`, on by default). */
+    /** The empty cell is a candidate; default true. */
     erasing?: boolean;
 }
 
-/** One cell the filler resolved. */
+/** A resolved cell and its new value. */
 export interface TerrainCell {
     readonly x: number;
     readonly y: number;
     readonly value: number;
 }
 
-/** What `apply` returns. */
+/** What `apply` resolved. */
 export interface TerrainFillResult {
-    /** Every resolved cell with its new value, in the order resolved: the cell patch. */
+    /** Resolved cells, in the order they were resolved. */
     readonly cells: readonly TerrainCell[];
-    /** Cells that could not be resolved; they are not in `cells`, so they stay unchanged. */
+    /** Cells that could not be resolved; they stay as they are. */
     readonly invalid: Region;
-    /** The region grown by the maximum distance, clipped to the map; null for no region. */
+    /** The painted region grown by the maximum distance, clipped to the map; null when empty. */
     readonly bounds: CellRect | null;
 }
 
-/** Coordinates are offset by `KEY_BIAS` into `[0, KEY_SPAN)` to form one numeric key. */
-const KEY_BIAS = 2 ** 25;
-const KEY_SPAN = 2 ** 26;
+/** Slot flags. */
+const HAS_CONSTRAINT = 1;
+const IN_REGION = 2;
+const RESOLVED = 4;
+const SETTLED = 8;
+const INVALID = 16;
+const DONE = RESOLVED | SETTLED;
 
+/** Cell coordinates stay below this in absolute value, so a cell's key is a safe integer. */
+const COORDINATE_LIMIT = 2 ** 25;
+const KEY_SPAN = 2 * COORDINATE_LIMIT;
+
+/** A constraint with no wish at all. Never written. */
+const NO_WISH: Uint8Array = new Uint8Array(WANG_INDEXES).fill(INDEX_MASK);
+/** The terrain ID of the empty cell. Never written. */
+const NO_TERRAIN: Uint8Array = new Uint8Array(WANG_INDEXES);
+
+/** Per direction, the indexes of the neighbour there that it shares with the cell. */
+const SHARED: readonly (readonly WangIndex[])[] = AROUND.map((_, direction) => {
+    const facing = oppositeIndex(direction);
+    return isCorner(direction) ? [facing] : [facing, nextIndex(facing), previousIndex(facing)];
+});
+
+/** The indexes of each side of a rectangle that border seeding fills. */
+const TOP_SIDE: readonly WangIndex[] = [TOP_LEFT, TOP, TOP_RIGHT];
+const RIGHT_SIDE: readonly WangIndex[] = [TOP_RIGHT, RIGHT, BOTTOM_RIGHT];
+const BOTTOM_SIDE: readonly WangIndex[] = [BOTTOM_RIGHT, BOTTOM, BOTTOM_LEFT];
+const LEFT_SIDE: readonly WangIndex[] = [BOTTOM_LEFT, LEFT, TOP_LEFT];
+
+const bit = (mask: number, index: number): boolean => ((mask >> index) & 1) === 1;
+
+/** The key of cell `(x, y)`; `RangeError` for a coordinate that is not a small integer. */
 function cellKey(x: number, y: number): number {
-    if (
-        !Number.isInteger(x) ||
-        !Number.isInteger(y) ||
-        Math.abs(x) >= KEY_BIAS ||
-        Math.abs(y) >= KEY_BIAS
-    ) {
-        throw new RangeError(`Terrain cell must be integers within ±2^25, got ${x}, ${y}.`);
-    }
-    return (y + KEY_BIAS) * KEY_SPAN + (x + KEY_BIAS);
-}
-
-const keyX = (key: number) => (key % KEY_SPAN) - KEY_BIAS;
-const keyY = (key: number) => Math.floor(key / KEY_SPAN) - KEY_BIAS;
-
-/** Indexes of each side of a cell (Tiled's `MaskTopSide` and so on). */
-const TOP_SIDE: readonly number[] = [7, 0, 1];
-const RIGHT_SIDE: readonly number[] = [1, 2, 3];
-const BOTTOM_SIDE: readonly number[] = [3, 4, 5];
-const LEFT_SIDE: readonly number[] = [5, 6, 7];
-
-const NO_WISH = new Uint8Array(WANG_INDEXES).fill(INDEX_MASK);
-const NO_MASK = new Uint8Array(WANG_INDEXES);
-const EMPTY_WANG_ID = new Uint8Array(WANG_INDEXES);
-
-/** Tiled's `Grid<CellInfo>`: per cell a desired WangId and a mask, by default "no wish". */
-class ConstraintGrid {
-    readonly #index = new Map<number, number>();
-    desired = new Uint8Array(64 * WANG_INDEXES);
-    mask = new Uint8Array(64 * WANG_INDEXES);
-
-    /** The entry of `key`, or −1 when it has none (its info is the default). */
-    get(key: number): number {
-        return this.#index.get(key) ?? -1;
-    }
-
-    /** The entry of `key`, created with the default info when absent. */
-    add(key: number): number {
-        const found = this.#index.get(key);
-        if (found !== undefined) return found;
-        const entry = this.#index.size;
-        if ((entry + 1) * WANG_INDEXES > this.desired.length) {
-            const desired = new Uint8Array(this.desired.length * 2);
-            desired.set(this.desired);
-            const mask = new Uint8Array(this.mask.length * 2);
-            mask.set(this.mask);
-            this.desired = desired;
-            this.mask = mask;
+    for (const value of [x, y]) {
+        if (!Number.isInteger(value) || Math.abs(value) >= COORDINATE_LIMIT) {
+            throw new RangeError(`Cell coordinates must be integers below 2^25, got ${x}, ${y}.`);
         }
-        this.desired.fill(INDEX_MASK, entry * 8, entry * 8 + 8);
-        this.mask.fill(0, entry * 8, entry * 8 + 8);
-        this.#index.set(key, entry);
-        return entry;
     }
-
-    /** Whether the entry still has the default info (Tiled's `info == CellInfo()`). */
-    isDefault(entry: number): boolean {
-        for (let i = entry * 8; i < entry * 8 + 8; i++) {
-            if (this.desired[i] !== INDEX_MASK || this.mask[i] !== 0) return false;
-        }
-        return true;
-    }
+    return (y + COORDINATE_LIMIT) * KEY_SPAN + (x + COORDINATE_LIMIT);
 }
 
 /**
- * Tiled's `updateAdjacent`: the cell at `adjacentIndex` of a placed tile with `wangId` takes
- * the placed tile's terrains at the indexes they share, as hard constraints.
+ * Writes the terrain ID `source[at..]` resolved at a cell into the constraint `wish[to..]` of
+ * its neighbour in `direction`: every index they share takes the terrain at the same place and
+ * becomes hard. Returns the neighbour's new hard mask.
  */
-function updateAdjacent(
-    desired: Uint8Array,
-    mask: Uint8Array,
+function propagate(
+    source: Uint8Array,
     at: number,
-    wangId: Uint8Array,
-    wangAt: number,
-    adjacentIndex: number,
-): void {
-    const index = oppositeIndex(adjacentIndex);
-    desired[at + index] = wangId[wangAt + adjacentIndex]!;
-    mask[at + index] = INDEX_MASK;
-    if (!isCorner(index)) {
-        const cornerA = nextIndex(index);
-        const cornerB = previousIndex(index);
-        desired[at + cornerA] = wangId[wangAt + previousIndex(adjacentIndex)]!;
-        mask[at + cornerA] = INDEX_MASK;
-        desired[at + cornerB] = wangId[wangAt + nextIndex(adjacentIndex)]!;
-        mask[at + cornerB] = INDEX_MASK;
+    direction: number,
+    wish: Uint8Array,
+    to: number,
+    hard: number,
+): number {
+    const facing = oppositeIndex(direction);
+    wish[to + facing] = source[at + direction];
+    let mask = hard | (1 << facing);
+    if (!isCorner(direction)) {
+        const after = nextIndex(facing);
+        const before = previousIndex(facing);
+        wish[to + after] = source[at + previousIndex(direction)];
+        wish[to + before] = source[at + nextIndex(direction)];
+        mask |= (1 << after) | (1 << before);
     }
+    return mask;
 }
 
-/** A rectangle of a banded region, inclusive like Qt's `QRect` `left..right`, `top..bottom`. */
-interface BandRect {
-    left: number;
-    right: number;
-    top: number;
-    bottom: number;
+/** A row of `region` starting at span `start`: one past its last span. */
+function rowEnd(region: Region, start: number): number {
+    let end = start;
+    while (end < region.length && region[end].y === region[start].y) end++;
+    return end;
+}
+
+/** Whether the rows starting at spans `a` and `b`, `length` spans each, have the same spans. */
+function sameSpans(region: Region, a: number, b: number, length: number): boolean {
+    for (let k = 0; k < length; k++) {
+        const first = region[a + k];
+        const second = region[b + k];
+        if (first.start !== second.start || first.end !== second.end) return false;
+    }
+    return true;
 }
 
 /**
- * The rectangles of `region` in `QRegion`'s order: rows with the same spans that follow one
- * another form one band, bands top to bottom, rectangles of a band left to right. Tiled
- * resolves a rectangle's cells row by row before the next rectangle.
+ * The region as rectangles in band order: runs of consecutive rows with the same spans, top to
+ * bottom, each giving one rectangle per span from left to right.
  */
-function bandRects(region: Region): BandRect[] {
-    const rows: { y: number; spans: Region }[] = [];
-    for (let i = 0; i < region.length;) {
-        const y = region[i]!.y;
-        let end = i;
-        while (end < region.length && region[end]!.y === y) end++;
-        rows.push({ y, spans: region.slice(i, end) });
-        i = end;
-    }
-    const sameSpans = (a: Region, b: Region) =>
-        a.length === b.length &&
-        a.every((span, i) => span.start === b[i]!.start && span.end === b[i]!.end);
-    const rects: BandRect[] = [];
-    for (let r = 0; r < rows.length;) {
-        let last = r;
+function bandRects(region: Region): CellRect[] {
+    const rects: CellRect[] = [];
+    let start = 0;
+    while (start < region.length) {
+        const end = rowEnd(region, start);
+        const length = end - start;
+        let height = 1;
+        let next = end;
         while (
-            last + 1 < rows.length &&
-            rows[last + 1]!.y === rows[last]!.y + 1 &&
-            sameSpans(rows[last + 1]!.spans, rows[r]!.spans)
+            next < region.length &&
+            region[next].y === region[start].y + height &&
+            rowEnd(region, next) - next === length &&
+            sameSpans(region, start, next, length)
         ) {
-            last++;
+            height++;
+            next += length;
         }
-        for (const span of rows[r]!.spans) {
-            rects.push({
-                left: span.start,
-                right: span.end - 1,
-                top: rows[r]!.y,
-                bottom: rows[last]!.y,
-            });
+        for (let k = start; k < end; k++) {
+            const span = region[k];
+            rects.push({ x: span.start, y: span.y, width: span.end - span.start, height });
         }
-        r = last + 1;
+        start = next;
     }
     return rects;
 }
 
-/**
- * Tiled's `wangIdFromSurrounding`: a WangId from the WangIds of the 8 cells around one
- * (`INDEX_MASK` at every index of an empty or in-region neighbour). Edges come from the edge
- * neighbours; a corner from the diagonal neighbour, else from the side neighbours next to it.
- */
-function wangIdFromSurrounding(around: readonly Uint8Array[]): Uint8Array {
-    const id = new Uint8Array(WANG_INDEXES).fill(INDEX_MASK);
-    for (const i of [0, 2, 4, 6]) id[i] = around[i]![oppositeIndex(i)]!;
-    for (const i of [TOP_RIGHT, BOTTOM_RIGHT, BOTTOM_LEFT, TOP_LEFT]) {
-        let color = around[i]![oppositeIndex(i)]!;
-        if (color === INDEX_MASK || color === 0) {
-            const left = around[previousIndex(i)]![(i + 2) % 8]!;
-            if (left !== INDEX_MASK) color = left;
+/** Calls `visit` for every cell of `rects`, rectangle by rectangle, row by row. */
+function forEachRectCell(rects: readonly CellRect[], visit: (x: number, y: number) => void): void {
+    for (const rect of rects) {
+        for (let y = rect.y; y < rect.y + rect.height; y++) {
+            for (let x = rect.x; x < rect.x + rect.width; x++) visit(x, y);
         }
-        if (color === INDEX_MASK || color === 0) {
-            const right = around[nextIndex(i)]![(i + 6) % 8]!;
-            if (right !== INDEX_MASK) color = right;
-        }
-        id[i] = color;
     }
-    return id;
 }
 
-/**
- * One terrain change: painting constraints are added with `setCorner`, `setEdge`, `setFullTile`
- * or `setWangIndex` (the brush) or `setRegion` (fill tools), then `apply` resolves them. After
- * `apply` the filler is empty again, like Tiled's.
- */
-export class TerrainFiller {
-    readonly #analysis: TerrainAnalysis;
-    readonly #back: TerrainBack;
-    readonly #width: number;
-    readonly #height: number;
-    readonly #random: Random;
-    readonly #corrections: boolean;
-    readonly #erasing: boolean;
-    /** Indexes the set's type uses (Tiled's `typeMask()`). */
-    readonly #typeMask: boolean[];
-    #grid = new ConstraintGrid();
-    #region = new Set<number>();
+/** Cells the filler has seen, each in a slot with its flags and constraint. */
+class CellTable {
+    readonly #slots = new Map<number, number>();
+    #count = 0;
+    #xs = new Int32Array(64);
+    #ys = new Int32Array(64);
+    #flags = new Uint8Array(64);
+    #hard = new Uint8Array(64);
+    #wish = new Uint8Array(64 * WANG_INDEXES);
 
-    constructor(options: TerrainFillerOptions) {
-        const { width, height } = options;
-        if (!Number.isInteger(width) || !Number.isInteger(height) || width < 0 || height < 0) {
-            throw new RangeError(`Map size must be non-negative integers, got ${width}x${height}.`);
-        }
-        this.#analysis = options.analysis;
-        this.#back = options.back;
-        this.#width = width;
-        this.#height = height;
-        this.#random = options.random;
-        this.#corrections = options.corrections ?? false;
-        this.#erasing = options.erasing ?? true;
-        this.#typeMask = Array.from({ length: WANG_INDEXES }, (_, index) =>
-            typeUsesIndex(options.analysis.type, index),
-        );
+    get count(): number {
+        return this.#count;
+    }
+    get xs(): Int32Array {
+        return this.#xs;
+    }
+    get ys(): Int32Array {
+        return this.#ys;
+    }
+    get flags(): Uint8Array {
+        return this.#flags;
+    }
+    get hard(): Uint8Array {
+        return this.#hard;
+    }
+    /** Wishes, 8 per slot. Replaced when the table grows: read it again after `ensure`. */
+    get wish(): Uint8Array {
+        return this.#wish;
     }
 
-    #inMap(x: number, y: number): boolean {
-        return x >= 0 && y >= 0 && x < this.#width && y < this.#height;
+    /** The slot of `(x, y)`, or −1. */
+    find(x: number, y: number): number {
+        return this.#slots.get(cellKey(x, y)) ?? -1;
     }
 
-    /** The cell of the back layer, empty outside the map. */
-    #backAt(x: number, y: number): number {
-        return this.#inMap(x, y) ? this.#back(x, y) : 0;
-    }
-
-    #assertColor(color: number): void {
-        if (!Number.isInteger(color) || color < 0 || color > this.#analysis.colorCount) {
-            throw new RangeError(
-                `Terrain must be an integer 0..${this.#analysis.colorCount}, got ${color}.`,
-            );
-        }
-    }
-
-    /**
-     * Tiled's `changePosition`: the first time a cell is touched, its desired WangId becomes the
-     * WangId of its current tile and it joins the region. Returns its grid entry.
-     */
-    changePosition(x: number, y: number): number {
+    /** The slot of `(x, y)`, made (no flags, no constraint) when it has none. */
+    ensure(x: number, y: number): number {
         const key = cellKey(x, y);
-        const entry = this.#grid.add(key);
-        if (this.#grid.isDefault(entry)) {
-            wangIdOfCell(
-                this.#analysis,
-                this.#backAt(x, y),
-                this.#grid.desired.subarray(entry * 8, entry * 8 + 8),
-            );
-            this.#region.add(key);
-        }
-        return entry;
+        const found = this.#slots.get(key);
+        if (found !== undefined) return found;
+        if (this.#count === this.#xs.length) this.#grow();
+        const slot = this.#count++;
+        this.#xs[slot] = x;
+        this.#ys[slot] = y;
+        this.#flags[slot] = 0;
+        this.#hard[slot] = 0;
+        this.#slots.set(key, slot);
+        return slot;
     }
 
-    /** Paints `color` at `index` of cell `(x, y)` as a hard constraint. */
-    setWangIndex(x: number, y: number, index: WangIndex, color: number): void {
-        if (!Number.isInteger(index) || index < 0 || index > 7) {
-            throw new RangeError(`WangId index must be 0..7, got ${index}.`);
-        }
-        this.#assertColor(color);
-        const entry = this.changePosition(x, y);
-        this.#grid.desired[entry * 8 + index] = color;
-        this.#grid.mask[entry * 8 + index] = INDEX_MASK;
+    /** Gives `slot` an empty constraint (no wish, nothing hard) when it has none. */
+    constrain(slot: number): void {
+        if (this.#flags[slot] & HAS_CONSTRAINT) return;
+        this.#wish.fill(INDEX_MASK, slot * WANG_INDEXES, (slot + 1) * WANG_INDEXES);
+        this.#hard[slot] = 0;
+        this.#flags[slot] |= HAS_CONSTRAINT;
     }
 
-    /** Paints `color` at the grid vertex `(x, y)`: the top-left corner of cell `(x, y)`. */
-    setCorner(x: number, y: number, color: number): void {
-        this.setWangIndex(x, y - 1, BOTTOM_LEFT, color);
-        this.setWangIndex(x, y, TOP_LEFT, color);
-        this.setWangIndex(x - 1, y, TOP_RIGHT, color);
-        this.setWangIndex(x - 1, y - 1, BOTTOM_RIGHT, color);
+    clear(): void {
+        this.#slots.clear();
+        this.#count = 0;
     }
 
-    /** Paints `color` at `index` of cell `(x, y)` and the opposite index of the cell beyond it. */
-    setEdge(x: number, y: number, index: WangIndex, color: number): void {
-        this.setWangIndex(x, y, index, color);
-        const [dx, dy] = AROUND[index]!;
-        this.setWangIndex(x + dx, y + dy, oppositeIndex(index), color);
+    #grow(): void {
+        const size = this.#xs.length * 2;
+        const grown = <T extends Int32Array | Uint8Array>(from: T, to: T): T => {
+            to.set(from);
+            return to;
+        };
+        this.#xs = grown(this.#xs, new Int32Array(size));
+        this.#ys = grown(this.#ys, new Int32Array(size));
+        this.#flags = grown(this.#flags, new Uint8Array(size));
+        this.#hard = grown(this.#hard, new Uint8Array(size));
+        this.#wish = grown(this.#wish, new Uint8Array(size * WANG_INDEXES));
     }
+}
 
-    /**
-     * Full tile mode (Tiled's `WangBrush::updateBrushAt` in tile mode): every index of cell
-     * `(x, y)` that the terrain's effective type uses (corners, edges or both, Tiled's
-     * `effectiveTypeForColor`), and the indexes its neighbours share with it.
-     */
-    setFullTile(x: number, y: number, color: number): void {
-        this.#assertColor(color);
-        const type = effectiveTypeForColor(this.#analysis, color);
-        const center = this.changePosition(x, y);
+/** The options of a filler with their defaults applied. */
+interface FillSettings {
+    readonly analysis: TerrainAnalysis;
+    readonly back: TerrainBack;
+    readonly width: number;
+    readonly height: number;
+    readonly random: Random;
+    readonly corrections: boolean;
+    readonly erasing: boolean;
+}
+
+/** One `apply`: seeding, resolving and corrections over the filler's table. */
+class Resolution {
+    readonly #table: CellTable;
+    readonly #settings: FillSettings;
+    readonly #bounds: CellRect;
+    /** Candidate tiles; candidate number `#tiles` is the empty cell. */
+    readonly #tiles: number;
+    /** The indexes the set's type uses, one bit each. */
+    readonly #usedMask: number;
+    readonly #lookAhead: boolean;
+    readonly #cells: TerrainCell[] = [];
+    readonly #failed: number[] = [];
+    readonly #pool: number[] = [];
+    readonly #terrain = new Uint8Array(WANG_INDEXES);
+    readonly #copy = new Uint8Array(WANG_INDEXES);
+    #queue: number[] = [];
+
+    constructor(table: CellTable, settings: FillSettings, bounds: CellRect) {
+        this.#table = table;
+        this.#settings = settings;
+        this.#bounds = bounds;
+        const { analysis } = settings;
+        this.#tiles = analysis.candidateValues.length;
+        let used = 0;
         for (let index = 0; index < WANG_INDEXES; index++) {
-            if (!typeUsesIndex(type, index)) continue;
-            this.#grid.desired[center * 8 + index] = color;
-            this.#grid.mask[center * 8 + index] = INDEX_MASK;
+            if (typeUsesIndex(analysis.type, index)) used |= 1 << index;
         }
-        for (let i = 0; i < WANG_INDEXES; i++) {
-            const corner = isCorner(i);
-            if (type === "edge" && corner) continue;
-            const [dx, dy] = AROUND[i]!;
-            const entry = this.changePosition(x + dx, y + dy);
-            const { desired, mask } = this.#grid;
-            if (corner || type !== "corner") {
-                desired[entry * 8 + oppositeIndex(i)] = color;
-                mask[entry * 8 + oppositeIndex(i)] = INDEX_MASK;
+        this.#usedMask = used;
+        this.#lookAhead = !settings.corrections && !analysis.fillerComplete;
+    }
+
+    /** Fills the unhardened indexes of each rectangle's border from the cells around it. */
+    seedBorders(rects: readonly CellRect[]): void {
+        for (const rect of rects) {
+            const top = rect.y;
+            const bottom = rect.y + rect.height - 1;
+            const left = rect.x;
+            const right = rect.x + rect.width - 1;
+            for (let x = left; x <= right; x++) {
+                this.#seedCell(x, top, TOP_SIDE);
+                this.#seedCell(x, bottom, BOTTOM_SIDE);
             }
-            if (!corner && type !== "edge") {
-                for (const index of [(i + 3) % 8, (i + 5) % 8]) {
-                    desired[entry * 8 + index] = color;
-                    mask[entry * 8 + index] = INDEX_MASK;
-                }
+            for (let y = top; y <= bottom; y++) {
+                this.#seedCell(left, y, LEFT_SIDE);
+                this.#seedCell(right, y, RIGHT_SIDE);
             }
         }
+    }
+
+    /** Resolves the rectangles in order, then the corrections they queue, batch by batch. */
+    run(rects: readonly CellRect[]): TerrainFillResult {
+        forEachRectCell(rects, (x, y) => this.#resolve(this.#table.ensure(x, y)));
+        while (this.#queue.length > 0) {
+            const batch = this.#queue;
+            this.#queue = [];
+            for (const slot of batch) this.#resolve(slot);
+        }
+        const table = this.#table;
+        const invalid: PixelPoint[] = [];
+        for (const slot of this.#failed) {
+            if (table.flags[slot] & RESOLVED) continue;
+            invalid.push({ x: table.xs[slot], y: table.ys[slot] });
+        }
+        return { cells: this.#cells, invalid: regionOf(invalid), bounds: this.#bounds };
+    }
+
+    #seedCell(x: number, y: number, side: readonly WangIndex[]): void {
+        const table = this.#table;
+        const slot = table.ensure(x, y);
+        table.constrain(slot);
+        const hard = table.hard[slot];
+        const at = slot * WANG_INDEXES;
+        for (const index of side) {
+            if (bit(hard, index)) continue;
+            const terrain = this.#surrounding(x, y, index);
+            if (terrain !== INDEX_MASK) table.wish[at + index] = terrain;
+        }
+    }
+
+    /** What the cells around `(x, y)` want at its `index`; `INDEX_MASK` for nothing. */
+    #surrounding(x: number, y: number, index: WangIndex): number {
+        let terrain = this.#neighbourTerrain(x, y, index, oppositeIndex(index));
+        if (!isCorner(index)) return terrain;
+        // The same vertex seen from the side neighbours, when the diagonal one says nothing.
+        const sides: readonly [number, number][] = [
+            [previousIndex(index), (index + 2) % WANG_INDEXES],
+            [nextIndex(index), (index + 6) % WANG_INDEXES],
+        ];
+        for (const [direction, at] of sides) {
+            if (terrain !== INDEX_MASK && terrain !== 0) break;
+            const other = this.#neighbourTerrain(x, y, direction, at);
+            if (other !== INDEX_MASK) terrain = other;
+        }
+        return terrain;
     }
 
     /**
-     * The terrain brush's rotational symmetry (Tiled's `WangBrush::updateBrush`, tag v1.12.2):
-     * every cell `(x, y)` of the region passes its wishes, turned by 180°, to the cell
-     * `(width − x − 1, height − y − 1)`, where they replace the wishes at the indexes they
-     * constrain. Cells are taken in `QRegion` order from the region as it was before the call;
-     * a cell that is both a source and an earlier target passes on what it holds by then.
+     * The terrain at `index` of the neighbour of `(x, y)` in `direction`; `INDEX_MASK` when that
+     * neighbour is empty (outside the map included) or in the painted region.
      */
-    mirror(): void {
-        const sources = bandRects(
-            regionOf([...this.#region].map((key) => ({ x: keyX(key), y: keyY(key) }))),
+    #neighbourTerrain(x: number, y: number, direction: number, index: number): number {
+        const [dx, dy] = AROUND[direction];
+        const nx = x + dx;
+        const ny = y + dy;
+        const { analysis, back, width, height } = this.#settings;
+        if (nx < 0 || ny < 0 || nx >= width || ny >= height) return INDEX_MASK;
+        const value = back(nx, ny);
+        if (value === 0) return INDEX_MASK;
+        const slot = this.#table.find(nx, ny);
+        if (slot >= 0 && this.#table.flags[slot] & IN_REGION) return INDEX_MASK;
+        wangIdOfCell(analysis, value, this.#terrain);
+        return this.#terrain[index];
+    }
+
+    #resolve(slot: number): void {
+        const table = this.#table;
+        if (table.flags[slot] & DONE) return;
+        const choice = this.#choose(slot);
+        if (choice < 0) {
+            table.flags[slot] |= INVALID;
+            this.#failed.push(slot);
+            return;
+        }
+        table.flags[slot] |= RESOLVED;
+        const { analysis } = this.#settings;
+        const x = table.xs[slot];
+        const y = table.ys[slot];
+        const tile = choice < this.#tiles;
+        this.#cells.push({ x, y, value: tile ? analysis.candidateValues[choice] : 0 });
+        const source = tile ? analysis.candidateWangIds : NO_TERRAIN;
+        const at = tile ? choice * WANG_INDEXES : 0;
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const [dx, dy] = AROUND[direction];
+            this.#spread(x + dx, y + dy, direction, source, at);
+        }
+    }
+
+    /** Hardens what neighbour `(x, y)` in `direction` shares with a resolved cell. */
+    #spread(x: number, y: number, direction: number, source: Uint8Array, at: number): void {
+        const table = this.#table;
+        let slot = table.find(x, y);
+        if (slot >= 0 && table.flags[slot] & DONE) return;
+        if (slot < 0) slot = table.ensure(x, y);
+        table.constrain(slot);
+        table.hard[slot] = propagate(
+            source,
+            at,
+            direction,
+            table.wish,
+            slot * WANG_INDEXES,
+            table.hard[slot],
         );
-        const desired = new Uint8Array(WANG_INDEXES);
-        const mask = new Uint8Array(WANG_INDEXES);
-        for (const rect of sources) {
-            for (let y = rect.top; y <= rect.bottom; y++) {
-                for (let x = rect.left; x <= rect.right; x++) {
-                    const source = this.#grid.get(cellKey(x, y));
-                    // The arrays may grow when the target is added: copy the source first.
-                    for (let i = 0; i < WANG_INDEXES; i++) {
-                        const turned = (i + 4) % WANG_INDEXES;
-                        desired[turned] =
-                            source < 0 ? INDEX_MASK : this.#grid.desired[source * 8 + i]!;
-                        mask[turned] = source < 0 ? 0 : this.#grid.mask[source * 8 + i]!;
-                    }
-                    const target = this.changePosition(this.#width - x - 1, this.#height - y - 1);
-                    for (let i = 0; i < WANG_INDEXES; i++) {
-                        if (!mask[i]) continue;
-                        this.#grid.desired[target * 8 + i] = desired[i]!;
-                        this.#grid.mask[target * 8 + i] = INDEX_MASK;
-                    }
-                }
-            }
+        if (this.#settings.corrections && !isCorner(direction)) this.#correct(slot, x, y);
+    }
+
+    /**
+     * Queues a cell outside the painted region but inside the bounds whose tile no longer meets
+     * its hard indexes; its other indexes then wish for what the tile has.
+     */
+    #correct(slot: number, x: number, y: number): void {
+        const table = this.#table;
+        const bounds = this.#bounds;
+        if (x < bounds.x || y < bounds.y) return;
+        if (x >= bounds.x + bounds.width || y >= bounds.y + bounds.height) return;
+        if (table.flags[slot] & IN_REGION) return;
+        const { analysis, back } = this.#settings;
+        const terrain = this.#terrain;
+        wangIdOfCell(analysis, back(x, y), terrain);
+        const wish = table.wish;
+        const at = slot * WANG_INDEXES;
+        const hard = table.hard[slot];
+        let fits = true;
+        for (let index = 0; index < WANG_INDEXES && fits; index++) {
+            fits = !bit(hard, index) || wish[at + index] === terrain[index];
+        }
+        if (fits) return;
+        this.#queue.push(slot);
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (!bit(hard, index)) wish[at + index] = terrain[index];
         }
     }
 
-    /** Fill tools: the region to fill, replacing the region (Tiled's `setRegion`). */
-    setRegion(region: Region): void {
-        this.#region = new Set();
-        for (const span of region) {
-            for (let x = span.start; x < span.end; x++) this.#region.add(cellKey(x, span.y));
-        }
-    }
-
-    /** Tiled's `wangIdFromSurroundings`: from the back layer's cells outside the region. */
-    #wangIdFromSurroundings(x: number, y: number): Uint8Array {
-        const around = AROUND.map(([dx, dy]) => {
-            const px = x + dx;
-            const py = y + dy;
-            const value = this.#backAt(px, py);
-            if (value === 0 || this.#region.has(cellKey(px, py))) return NO_WISH;
-            const wangId = new Uint8Array(WANG_INDEXES);
-            wangIdOfCell(this.#analysis, value, wangId);
-            return wangId;
-        });
-        return wangIdFromSurrounding(around);
-    }
-
-    /** Tiled's `wangIdIsUsed`: whether a candidate matches `desired` where `mask` and the type say. */
-    #wangIdIsUsed(desired: Uint8Array, mask: Uint8Array): boolean {
-        const wangIds = this.#analysis.candidateWangIds;
-        const typeMask = this.#typeMask;
-        outer: for (let at = 0; at < wangIds.length; at += WANG_INDEXES) {
-            for (let i = 0; i < WANG_INDEXES; i++) {
-                if (mask[i] && typeMask[i] && wangIds[at + i] !== desired[i]) continue outer;
+    /** The candidate chosen for `slot` (`#tiles` = the empty cell); −1 for none. */
+    #choose(slot: number): number {
+        const table = this.#table;
+        const constrained = (table.flags[slot] & HAS_CONSTRAINT) !== 0;
+        const wish = constrained ? table.wish : NO_WISH;
+        const at = constrained ? slot * WANG_INDEXES : 0;
+        const hard = constrained ? table.hard[slot] : 0;
+        const pool = this.#pool;
+        pool.length = 0;
+        let lowest = Infinity;
+        const count = this.#settings.erasing ? this.#tiles + 1 : this.#tiles;
+        for (let candidate = 0; candidate < count; candidate++) {
+            const penalty = this.#penalty(wish, at, hard, candidate);
+            if (penalty < 0 || penalty > lowest) continue;
+            if (penalty < lowest) {
+                lowest = penalty;
+                pool.length = 0;
             }
-            return true;
+            pool.push(candidate);
+        }
+        return this.#pick(slot);
+    }
+
+    /** The transition penalty of `candidate` against a constraint; −1 when it is excluded. */
+    #penalty(wish: Uint8Array, at: number, hard: number, candidate: number): number {
+        const { analysis, corrections } = this.#settings;
+        const tile = candidate < this.#tiles;
+        const ids = tile ? analysis.candidateWangIds : NO_TERRAIN;
+        const from = tile ? candidate * WANG_INDEXES : 0;
+        let sum = 0;
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            const wanted = wish[at + index];
+            const terrain = ids[from + index];
+            if (wanted === terrain) continue;
+            if (bit(hard, index)) return -1;
+            if (wanted === INDEX_MASK) continue;
+            let cost = transitionPenalty(analysis, wanted, terrain);
+            if (cost < 0) {
+                if (corrections) return -1;
+                cost = analysis.maximumDistance + 1;
+            }
+            sum += cost;
+        }
+        return sum;
+    }
+
+    /** Draws from the pool until a candidate passes the look-ahead; −1 when none does. */
+    #pick(slot: number): number {
+        const pool = this.#pool;
+        const { random } = this.#settings;
+        while (pool.length > 0) {
+            const k = pool.length === 1 ? 0 : random() % pool.length;
+            const candidate = pool[k];
+            pool[k] = pool[pool.length - 1];
+            pool.length--;
+            if (!this.#lookAhead || !this.#strands(slot, candidate)) return candidate;
+        }
+        return -1;
+    }
+
+    /** Whether resolving `slot` to `candidate` would leave some neighbour without any tile. */
+    #strands(slot: number, candidate: number): boolean {
+        const table = this.#table;
+        const { analysis } = this.#settings;
+        const tile = candidate < this.#tiles;
+        const source = tile ? analysis.candidateWangIds : NO_TERRAIN;
+        const at = tile ? candidate * WANG_INDEXES : 0;
+        const x = table.xs[slot];
+        const y = table.ys[slot];
+        const copy = this.#copy;
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const [dx, dy] = AROUND[direction];
+            const own = this.#copyConstraint(x + dx, y + dy);
+            if (own < 0) continue;
+            const hard = propagate(source, at, direction, copy, 0, own);
+            if (copy.every((terrain) => terrain === 0)) continue;
+            if (!this.#anyTileFits(copy, hard & this.#usedMask)) return true;
         }
         return false;
     }
 
-    /** Resolves the region and returns the cell patch; the filler is empty afterwards. */
+    /**
+     * Copies the constraint of `(x, y)` (no wish when it has none) into `#copy` and returns its
+     * hard mask; −1, copying nothing, when the cell is resolved or settled.
+     */
+    #copyConstraint(x: number, y: number): number {
+        const table = this.#table;
+        const slot = table.find(x, y);
+        const flags = slot >= 0 ? table.flags[slot] : 0;
+        if (flags & DONE) return -1;
+        if (!(flags & HAS_CONSTRAINT)) {
+            this.#copy.set(NO_WISH);
+            return 0;
+        }
+        const from = slot * WANG_INDEXES;
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            this.#copy[index] = table.wish[from + index];
+        }
+        return table.hard[slot];
+    }
+
+    /** Whether some candidate tile has `wish` at every index of `mask`. */
+    #anyTileFits(wish: Uint8Array, mask: number): boolean {
+        const ids = this.#settings.analysis.candidateWangIds;
+        for (let candidate = 0; candidate < this.#tiles; candidate++) {
+            const from = candidate * WANG_INDEXES;
+            let fits = true;
+            for (let index = 0; index < WANG_INDEXES && fits; index++) {
+                fits = !bit(mask, index) || ids[from + index] === wish[index];
+            }
+            if (fits) return true;
+        }
+        return false;
+    }
+}
+
+/** A non-negative integer. */
+const isSize = (value: number): boolean => Number.isInteger(value) && value >= 0;
+
+/**
+ * The terrain filler of SPEC §5.2: paint indexes, corners, edges or whole tiles (or give it a
+ * region), then `apply` to resolve the painted cells to tiles of the set.
+ */
+export class TerrainFiller {
+    readonly #settings: FillSettings;
+    readonly #table = new CellTable();
+    /** A terrain ID read from the map. */
+    readonly #terrain = new Uint8Array(WANG_INDEXES);
+    readonly #rotated = new Uint8Array(WANG_INDEXES);
+
+    constructor(options: TerrainFillerOptions) {
+        const { width, height } = options;
+        if (!isSize(width) || !isSize(height)) {
+            throw new RangeError(
+                `Map size must be non-negative integers, got ${width} × ${height}.`,
+            );
+        }
+        this.#settings = {
+            analysis: options.analysis,
+            back: options.back,
+            width,
+            height,
+            random: options.random,
+            corrections: options.corrections ?? false,
+            erasing: options.erasing ?? true,
+        };
+    }
+
+    /** Paints `color` at `index` of cell `(x, y)`. */
+    setWangIndex(x: number, y: number, index: WangIndex, color: number): void {
+        this.#checkIndex(index);
+        this.#checkColor(color);
+        cellKey(x, y);
+        this.#paint(x, y, index, color);
+    }
+
+    /** Paints `color` at the grid vertex `(x, y)`, the top-left corner of cell `(x, y)`. */
+    setCorner(x: number, y: number, color: number): void {
+        this.#checkColor(color);
+        cellKey(x - 1, y - 1);
+        cellKey(x, y);
+        this.#paint(x, y - 1, BOTTOM_LEFT, color);
+        this.#paint(x, y, TOP_LEFT, color);
+        this.#paint(x - 1, y, TOP_RIGHT, color);
+        this.#paint(x - 1, y - 1, BOTTOM_RIGHT, color);
+    }
+
+    /** Paints `color` at `index` of cell `(x, y)` and at the facing index of its neighbour. */
+    setEdge(x: number, y: number, index: WangIndex, color: number): void {
+        this.#checkIndex(index);
+        this.#checkColor(color);
+        const [dx, dy] = AROUND[index];
+        cellKey(x, y);
+        cellKey(x + dx, y + dy);
+        this.#paint(x, y, index, color);
+        this.#paint(x + dx, y + dy, oppositeIndex(index), color);
+    }
+
+    /**
+     * Paints `color` at every index of cell `(x, y)` its effective type uses, and at the indexes
+     * of that type each neighbour shares with the cell.
+     */
+    setFullTile(x: number, y: number, color: number): void {
+        this.#checkColor(color);
+        cellKey(x - 1, y - 1);
+        cellKey(x + 1, y + 1);
+        const type = effectiveTypeForColor(this.#settings.analysis, color);
+        for (let index = 0; index < WANG_INDEXES; index++) {
+            if (typeUsesIndex(type, index)) this.#paint(x, y, index, color);
+        }
+        for (let direction = 0; direction < WANG_INDEXES; direction++) {
+            const [dx, dy] = AROUND[direction];
+            for (const index of SHARED[direction]) {
+                if (typeUsesIndex(type, index)) this.#paint(x + dx, y + dy, index, color);
+            }
+        }
+    }
+
+    /**
+     * Rotational symmetry: copies the hard indexes of every painted cell, turned by 180°, to the
+     * cell `(width − x − 1, height − y − 1)`.
+     */
+    mirror(): void {
+        const { width, height } = this.#settings;
+        const table = this.#table;
+        const rotated = this.#rotated;
+        forEachRectCell(bandRects(this.#paintedRegion()), (x, y) => {
+            const source = table.find(x, y);
+            let hard = 0;
+            if (table.flags[source] & HAS_CONSTRAINT) {
+                const at = source * WANG_INDEXES;
+                for (let index = 0; index < WANG_INDEXES; index++) {
+                    rotated[oppositeIndex(index)] = table.wish[at + index];
+                }
+                const own = table.hard[source];
+                hard = ((own << 4) | (own >> 4)) & 0xff;
+            }
+            const target = this.#touch(width - x - 1, height - y - 1);
+            const at = target * WANG_INDEXES;
+            for (let index = 0; index < WANG_INDEXES; index++) {
+                if (bit(hard, index)) table.wish[at + index] = rotated[index];
+            }
+            table.hard[target] |= hard;
+        });
+    }
+
+    /** The painted region becomes exactly `region`; constraints already made are kept. */
+    setRegion(region: Region): void {
+        for (const span of region) {
+            cellKey(span.start, span.y);
+            cellKey(Math.max(span.start, span.end - 1), span.y);
+        }
+        const table = this.#table;
+        for (let slot = 0; slot < table.count; slot++) table.flags[slot] &= ~IN_REGION;
+        for (const span of region) {
+            for (let x = span.start; x < span.end; x++) {
+                table.flags[table.ensure(x, span.y)] |= IN_REGION;
+            }
+        }
+    }
+
+    /** Resolves the painted region and empties the filler. */
     apply(): TerrainFillResult {
-        const analysis = this.#analysis;
-        const grid = this.#grid;
-        const region = this.#region;
-        const resolved = new Map<number, number>();
-        /** Region cells outside the map: never changed, and to Tiled already placed. */
-        const outside = new Set<number>();
-        const cells: TerrainCell[] = [];
-        const invalid = new Set<number>();
-
-        for (const key of region) {
-            if (!this.#inMap(keyX(key), keyY(key))) outside.add(key);
+        try {
+            return this.#resolve();
+        } finally {
+            this.#table.clear();
         }
-        for (const key of outside) region.delete(key);
+    }
 
-        const reset = () => {
-            this.#grid = new ConstraintGrid();
-            this.#region = new Set();
-        };
-        if (region.size === 0) {
-            reset();
-            return { cells, invalid: [], bounds: null };
-        }
+    #resolve(): TerrainFillResult {
+        const region = this.#settleOutside();
+        if (region.length === 0) return { cells: [], invalid: [], bounds: null };
+        const settings = this.#settings;
+        const rects = bandRects(region);
+        const box = regionBounds(region)!;
+        const distance = settings.analysis.maximumDistance;
+        const left = Math.max(0, box.x - distance);
+        const top = Math.max(0, box.y - distance);
+        const right = Math.min(settings.width, box.x + box.width + distance);
+        const bottom = Math.min(settings.height, box.y + box.height + distance);
+        const bounds = { x: left, y: top, width: right - left, height: bottom - top };
+        const resolution = new Resolution(this.#table, settings, bounds);
+        if (!settings.corrections) resolution.seedBorders(rects);
+        return resolution.run(rects);
+    }
 
-        const rects = bandRects(
-            regionOf([...region].map((key) => ({ x: keyX(key), y: keyY(key) }))),
-        );
-
-        if (!this.#corrections) {
-            // Border seeding: the region's border prefers to connect with the cells outside.
-            const seed = (x: number, y: number, side: readonly number[]) => {
-                const surroundings = this.#wangIdFromSurroundings(x, y);
-                const entry = grid.add(cellKey(x, y));
-                for (const index of side) {
-                    if (grid.mask[entry * 8 + index] || surroundings[index] === INDEX_MASK)
-                        continue;
-                    grid.desired[entry * 8 + index] = surroundings[index]!;
-                }
-            };
-            for (const rect of rects) {
-                for (let x = rect.left; x <= rect.right; x++) {
-                    seed(x, rect.top, TOP_SIDE);
-                    seed(x, rect.bottom, BOTTOM_SIDE);
-                }
-                for (let y = rect.top; y <= rect.bottom; y++) {
-                    seed(rect.left, y, LEFT_SIDE);
-                    seed(rect.right, y, RIGHT_SIDE);
-                }
+    /** Takes painted cells outside the map out of the region, as settled; the rest. */
+    #settleOutside(): Region {
+        const { width, height } = this.#settings;
+        const table = this.#table;
+        const inside: PixelPoint[] = [];
+        for (let slot = 0; slot < table.count; slot++) {
+            if (!(table.flags[slot] & IN_REGION)) continue;
+            const x = table.xs[slot];
+            const y = table.ys[slot];
+            if (x >= 0 && y >= 0 && x < width && y < height) {
+                inside.push({ x, y });
+            } else {
+                table.flags[slot] = (table.flags[slot] & ~IN_REGION) | SETTLED;
             }
         }
+        return regionOf(inside);
+    }
 
-        let left = Infinity;
-        let top = Infinity;
-        let right = -Infinity;
-        let bottom = -Infinity;
-        for (const rect of rects) {
-            left = Math.min(left, rect.left);
-            top = Math.min(top, rect.top);
-            right = Math.max(right, rect.right);
-            bottom = Math.max(bottom, rect.bottom);
+    /** The cells of the painted region. */
+    #paintedRegion(): Region {
+        const table = this.#table;
+        const cells: PixelPoint[] = [];
+        for (let slot = 0; slot < table.count; slot++) {
+            if (table.flags[slot] & IN_REGION) cells.push({ x: table.xs[slot], y: table.ys[slot] });
         }
-        const margin = analysis.maximumDistance;
-        const boundsLeft = Math.max(0, left - margin);
-        const boundsTop = Math.max(0, top - margin);
-        const boundsRight = Math.min(this.#width - 1, right + margin);
-        const boundsBottom = Math.min(this.#height - 1, bottom + margin);
-        const inBounds = (x: number, y: number) =>
-            x >= boundsLeft && x <= boundsRight && y >= boundsTop && y <= boundsBottom;
+        return regionOf(cells);
+    }
 
-        const checked = (key: number) => resolved.has(key) || outside.has(key);
-        const candidates = analysis.candidateWangIds;
-        const maximumPenalty = analysis.maximumDistance + 1;
-        const lookAhead = !this.#corrections && !analysis.fillerComplete;
-        const matches: number[] = [];
-        const nextDesired = new Uint8Array(WANG_INDEXES);
-        const nextMask = new Uint8Array(WANG_INDEXES);
-        const current = new Uint8Array(WANG_INDEXES);
-
-        /** Tiled's `findBestMatch`: a candidate index, −1 for the empty cell, null for none. */
-        const findBestMatch = (x: number, y: number): number | null => {
-            const entry = grid.get(cellKey(x, y));
-            const desired = entry < 0 ? NO_WISH : grid.desired.subarray(entry * 8, entry * 8 + 8);
-            const mask = entry < 0 ? NO_MASK : grid.mask.subarray(entry * 8, entry * 8 + 8);
-            matches.length = 0;
-            let lowest = Infinity;
-            const consider = (wangIds: Uint8Array, at: number, id: number) => {
-                for (let i = 0; i < WANG_INDEXES; i++) {
-                    if (mask[i] && wangIds[at + i] !== desired[i]) return;
-                }
-                let total = 0;
-                for (let i = 0; i < WANG_INDEXES; i++) {
-                    const wanted = desired[i]!;
-                    if (wanted === INDEX_MASK) continue;
-                    const color = wangIds[at + i]!;
-                    if (wanted === color) continue;
-                    let penalty = transitionPenalty(analysis, wanted, color);
-                    if (penalty < 0) {
-                        // No path to the wanted terrain: with corrections, not a candidate.
-                        if (this.#corrections) return;
-                        penalty = maximumPenalty;
-                    }
-                    total += penalty;
-                }
-                if (total <= lowest) {
-                    if (total < lowest) {
-                        matches.length = 0;
-                        lowest = total;
-                    }
-                    matches.push(id);
-                }
-            };
-            for (let t = 0; t * WANG_INDEXES < candidates.length; t++)
-                consider(candidates, t * 8, t);
-            if (this.#erasing) consider(EMPTY_WANG_ID, 0, -1);
-
-            while (matches.length > 0) {
-                const pick = matches.length === 1 ? 0 : this.#random() % matches.length;
-                const id = matches[pick]!;
-                matches[pick] = matches[matches.length - 1]!;
-                matches.pop();
-                if (lookAhead) {
-                    // Reject a pick that would leave a neighbour with no possible tile.
-                    const wangIds = id < 0 ? EMPTY_WANG_ID : candidates;
-                    const at = id < 0 ? 0 : id * 8;
-                    let discard = false;
-                    for (let i = 0; i < WANG_INDEXES && !discard; i++) {
-                        const [dx, dy] = AROUND[i]!;
-                        const key = cellKey(x + dx, y + dy);
-                        if (checked(key)) continue;
-                        const near = grid.get(key);
-                        if (near < 0) {
-                            nextDesired.set(NO_WISH);
-                            nextMask.set(NO_MASK);
-                        } else {
-                            nextDesired.set(grid.desired.subarray(near * 8, near * 8 + 8));
-                            nextMask.set(grid.mask.subarray(near * 8, near * 8 + 8));
-                        }
-                        updateAdjacent(nextDesired, nextMask, 0, wangIds, at, i);
-                        discard =
-                            nextDesired.some((color) => color !== 0) &&
-                            !this.#wangIdIsUsed(nextDesired, nextMask);
-                    }
-                    if (discard) continue;
-                }
-                return id;
-            }
-            return null;
-        };
-
-        const corrections: number[] = [];
-        const resolve = (x: number, y: number) => {
-            const key = cellKey(x, y);
-            if (checked(key)) return;
-            const id = findBestMatch(x, y);
-            if (id === null) {
-                invalid.add(key);
-                return;
-            }
-            const value = id < 0 ? 0 : analysis.candidateValues[id]!;
-            resolved.set(key, value);
-            cells.push({ x, y, value });
-            const wangIds = id < 0 ? EMPTY_WANG_ID : candidates;
-            const at = id < 0 ? 0 : id * 8;
-            for (let i = 0; i < WANG_INDEXES; i++) {
-                const [dx, dy] = AROUND[i]!;
-                const px = x + dx;
-                const py = y + dy;
-                const near = cellKey(px, py);
-                if (checked(near)) continue;
-                const entry = grid.add(near);
-                const { desired, mask } = grid;
-                updateAdjacent(desired, mask, entry * 8, wangIds, at, i);
-                // An edge neighbour outside the region may no longer match: correct it.
-                if (isCorner(i) || !this.#corrections || !inBounds(px, py) || region.has(near)) {
-                    continue;
-                }
-                wangIdOfCell(analysis, this.#backAt(px, py), current);
-                let mismatch = false;
-                for (let k = 0; k < WANG_INDEXES; k++) {
-                    if (mask[entry * 8 + k] && current[k] !== desired[entry * 8 + k])
-                        mismatch = true;
-                }
-                if (!mismatch) continue;
-                corrections.push(px, py);
-                for (let k = 0; k < WANG_INDEXES; k++) {
-                    if (!mask[entry * 8 + k]) desired[entry * 8 + k] = current[k]!;
-                }
-            }
-        };
-
-        for (const rect of rects) {
-            for (let y = rect.top; y <= rect.bottom; y++) {
-                for (let x = rect.left; x <= rect.right; x++) resolve(x, y);
-            }
+    /**
+     * Touches `(x, y)`: the first time, its constraint wishes for the terrain ID it holds
+     * (empty outside the map), nothing hard. It is in the painted region from then on.
+     */
+    #touch(x: number, y: number): number {
+        const table = this.#table;
+        const slot = table.ensure(x, y);
+        if (!(table.flags[slot] & HAS_CONSTRAINT)) {
+            const { analysis, back, width, height } = this.#settings;
+            const inside = x >= 0 && y >= 0 && x < width && y < height;
+            wangIdOfCell(analysis, inside ? back(x, y) : 0, this.#terrain);
+            table.wish.set(this.#terrain, slot * WANG_INDEXES);
+            table.hard[slot] = 0;
+            table.flags[slot] |= HAS_CONSTRAINT;
         }
-        while (corrections.length > 0) {
-            const batch = corrections.splice(0, corrections.length);
-            for (let i = 0; i < batch.length; i += 2) resolve(batch[i]!, batch[i + 1]!);
-        }
+        table.flags[slot] |= IN_REGION;
+        return slot;
+    }
 
-        reset();
-        // A correction cell found invalid and resolved by a later batch is resolved, not
-        // invalid: only cells left unchanged are reported.
-        const unresolved = [...invalid]
-            .filter((key) => !resolved.has(key))
-            .map((key) => ({ x: keyX(key), y: keyY(key) }));
-        return {
-            cells,
-            invalid: regionOf(unresolved),
-            bounds: {
-                x: boundsLeft,
-                y: boundsTop,
-                width: boundsRight - boundsLeft + 1,
-                height: boundsBottom - boundsTop + 1,
-            },
-        };
+    #paint(x: number, y: number, index: number, color: number): void {
+        const slot = this.#touch(x, y);
+        this.#table.wish[slot * WANG_INDEXES + index] = color;
+        this.#table.hard[slot] |= 1 << index;
+    }
+
+    #checkIndex(index: number): void {
+        if (!Number.isInteger(index) || index < 0 || index >= WANG_INDEXES) {
+            throw new RangeError(`A terrain index must be 0..7, got ${index}.`);
+        }
+    }
+
+    #checkColor(color: number): void {
+        const count = this.#settings.analysis.colorCount;
+        if (!Number.isInteger(color) || color < 0 || color > count) {
+            throw new RangeError(`A terrain must be an integer in 0..${count}, got ${color}.`);
+        }
     }
 }
