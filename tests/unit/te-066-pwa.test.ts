@@ -40,7 +40,7 @@ const ENTRIES: PrecacheEntry[] = [
 describe("web manifest (vite.config.ts, SUITE §1 and §7)", () => {
     it("names the app and takes its colours from the design tokens", () => {
         expect(manifest).toMatchObject({
-            id: "./",
+            id: "/ngne-tilemap-editor/",
             start_url: "./",
             scope: "./",
             name: "NGNE Tilemap Editor",
@@ -55,6 +55,19 @@ describe("web manifest (vite.config.ts, SUITE §1 and §7)", () => {
             colours.theme,
             colours.background,
         ]);
+    });
+
+    it("has an identity of its own on an origin it shares with the sprite editor", () => {
+        // A relative `id` resolves against the start URL's origin (Web App Manifest, processing
+        // the id member), so it must not name the origin's root, which another app on the
+        // same GitHub Pages origin would share.
+        const startUrl = new URL(
+            manifest.start_url,
+            "https://example.github.io/ngne-tilemap-editor/",
+        );
+        const id = new URL(manifest.id, startUrl.origin).href;
+        expect(id).toBe("https://example.github.io/ngne-tilemap-editor/");
+        expect(id).not.toBe(`${startUrl.origin}/`);
     });
 
     it("lists the four generated icons, any and maskable", () => {
