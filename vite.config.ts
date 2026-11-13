@@ -82,9 +82,13 @@ const icons = readdirSync(new URL("public/icons/", import.meta.url))
 
 /** The web manifest (SUITE §1, §7). */
 export const manifest = {
+    // The app's identity. Browsers resolve `id` against the origin, not against the manifest's
+    // path, so a relative "./" names the origin's root, which the sprite editor on the same
+    // GitHub Pages origin would share: the browser then takes both for one app and offers to
+    // install only the first. This id names this app alone, whatever the `base`.
+    id: "/ngne-tilemap-editor/",
     // Relative to the manifest, which lies at Vite's `base`: the app works at a nested path
     // (`--base=/ngne-tilemap-editor/`, SUITE §7).
-    id: "./",
     start_url: "./",
     scope: "./",
     name: "NGNE Tilemap Editor",
