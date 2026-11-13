@@ -1,6 +1,6 @@
 import type { StoreApi } from "zustand/vanilla";
 import { createMapSession, findLayer } from "../../core/model";
-import type { MapView, ProjectSession } from "../../core/model";
+import type { MapView, ProjectMap, ProjectSession } from "../../core/model";
 import { cachedDatabase, request } from "../worker/indexedDb";
 import type { SessionState } from "../state/session";
 import type { MapTabsState } from "../tabs/tabs";
@@ -113,6 +113,27 @@ export function sessionRecordOf(
     };
 }
 
+/** Whether a kept view can be shown: finite centre and a positive, finite zoom. */
+function isUsableView(view: MapView): boolean {
+    return (
+        Number.isFinite(view.centreX) &&
+        Number.isFinite(view.centreY) &&
+        Number.isFinite(view.zoom) &&
+        view.zoom > 0
+    );
+}
+
+/** Applies what is kept of one map to its map session: the view, and the layer if it is there. */
+function applyMapState(session: ProjectSession, map: ProjectMap, state: MapState): void {
+    const each = session.perMap.get(map.id) ?? createMapSession(map);
+    const view = state.view;
+    if (isUsableView(view)) {
+        each.view = { centreX: view.centreX, centreY: view.centreY, zoom: view.zoom };
+    }
+    if (findLayer(map, state.activeLayerId)) each.activeLayerId = state.activeLayerId;
+    session.perMap.set(map.id, each);
+}
+
 /**
  * Applies `record` to `session` as far as its maps and layers are still there: each map's view
  * and active layer, the active map. Returns the tabs to open, in order, the active map among
@@ -127,18 +148,7 @@ export function applySessionRecord(
     for (const state of record.maps) {
         const map = maps.get(state.mapId);
         if (!map) continue;
-        const each = session.perMap.get(map.id) ?? createMapSession(map);
-        const view = state.view;
-        if (
-            Number.isFinite(view.centreX) &&
-            Number.isFinite(view.centreY) &&
-            Number.isFinite(view.zoom) &&
-            view.zoom > 0
-        ) {
-            each.view = { centreX: view.centreX, centreY: view.centreY, zoom: view.zoom };
-        }
-        if (findLayer(map, state.activeLayerId)) each.activeLayerId = state.activeLayerId;
-        session.perMap.set(map.id, each);
+        applyMapState(session, map, state);
         applied = true;
     }
     const tabs = record.tabs.filter(
@@ -272,7 +282,7 @@ export function createSessionMemory(options: SessionMemoryOptions): SessionMemor
     const stopSessions = sessions.subscribe(check);
     const stopTabs = tabs.subscribe((state) => {
         // A new project's tabs are taken when the session store tells of it.
-        if (!current || current.history !== sessions.getState().history) return;
+        if (current?.history !== sessions.getState().history) return;
         current.tabs = state.open;
         schedule();
     });

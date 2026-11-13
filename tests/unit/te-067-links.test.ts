@@ -124,6 +124,68 @@ describe("TE-067 documentation links", () => {
         );
     });
 
+    it("slugs headings with links, tags and closing hashes; reads definitions across lines", () => {
+        fixture(
+            {
+                "README.md": [
+                    "# Link [text](x.md) and <b>bold</b> ![img](y.png) ##",
+                    "## Ref [a][b] end ###   ",
+                    "### Hash#tag #",
+                    "#### Unclosed [x(y) <z ##x",
+                    "[one](#link-text-and-bold-img) [two](#ref-a-end) [three](#hashtag)",
+                    "[four](#unclosed-xy-z-x) [defined][d] [bad][e]",
+                    "",
+                    "[d]:",
+                    "  other.md#exists",
+                    "[e]: other.md#absent",
+                ].join("\n"),
+                "other.md": "# Exists\n",
+                "x.md": "",
+                "y.png": "fixture",
+            },
+            (root) => {
+                const result = spawnSync(process.execPath, [SCRIPT], {
+                    cwd: root,
+                    encoding: "utf8",
+                });
+                // `[bad][e]` is checked as a full reference link, and its `[e]` as a shortcut.
+                expect(result.stderr.trim().split("\n")).toEqual([
+                    "README.md:10: other.md#absent — anchor #absent does not exist",
+                    "README.md:6: other.md#absent — anchor #absent does not exist",
+                    "README.md:6: other.md#absent — anchor #absent does not exist",
+                ]);
+            },
+        );
+    });
+
+    it("reads git index versions 3 and 4: intent-to-add and prefix-compressed paths", () => {
+        fixture(
+            {
+                "README.md": "# A\n[b](docs/deep/er/b.md#b)\n",
+                "docs/deep/er/b.md": "# B\n[back](../../../README.md#a)\n",
+            },
+            (root) => {
+                writeFileSync(join(root, "docs/late.md"), "[gone](nowhere.md)\n");
+                execFileSync("git", ["add", "-N", "docs/late.md"], { cwd: root });
+                for (const version of ["3", "4"]) {
+                    if (version === "4") {
+                        execFileSync("git", ["update-index", "--index-version", "4"], {
+                            cwd: root,
+                        });
+                    }
+                    const result = spawnSync(process.execPath, [SCRIPT], {
+                        cwd: root,
+                        encoding: "utf8",
+                    });
+                    expect(result.status).toBe(1);
+                    expect(result.stderr.trim()).toBe(
+                        "docs/late.md:1: nowhere.md — file does not exist",
+                    );
+                }
+            },
+        );
+    });
+
     it("leaves out the vendored engine packages of the runtime compile matrix", () => {
         fixture(
             {
