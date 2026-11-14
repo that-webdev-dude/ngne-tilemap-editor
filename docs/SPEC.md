@@ -1107,6 +1107,7 @@ alone; 43.9–47.7 / 54.7–56.4 ms with the preview).
 Frame-time assertions inside E2E tests are performance assertions: enforced on reference
 hardware, reported only under CI (SwiftShader).
 
-**Definition of done** for every ticket: RULES 7 (every acceptance item backed by a named test or
-a recorded measurement; `npm run check` and the ticket's E2E files pass), no dependency beyond
-SUITE §5, docs unchanged unless the ticket's scope says so, and the clean-up of RULES 9.
+**Definition of done** for every change: RULES 7 (every acceptance item backed by a named test or
+a recorded measurement; `npm run check` and the E2E specs of the touched area pass), no
+dependency beyond SUITE §5, and the docs updated in the same change when behaviour, interface or
+a file format changes.
