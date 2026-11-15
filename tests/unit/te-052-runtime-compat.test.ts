@@ -20,7 +20,7 @@ import { COMPAT_TABLES } from "../runtime-compat/tables";
 
 // TE-052: the runtime compile matrix (SPEC 11.4). `npm run compat` installs each folder's engine
 // and compiles its fixture game; these tests check the folders, the workflows, and compile the
-// 0.3.0 game against the app's own @ngne/core 0.3.0, intact and with its contract broken.
+// 0.3.0 game against the app's own @ngne/core 0.3.1, intact and with its contract broken.
 
 const ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const COMPAT = join(ROOT, "tests/runtime-compat");
@@ -151,7 +151,7 @@ describe("runtime compat folders", () => {
     });
 });
 
-describe("the 0.3.0 fixture game against the app's @ngne/core 0.3.0", () => {
+describe("the 0.3.0 fixture game against the app's @ngne/core 0.3.1", () => {
     const folder = mkdtempSync(join(tmpdir(), "te-052-"));
     afterAll(() => rmSync(folder, { recursive: true, force: true }));
     writeFileSync(join(folder, "ngne-tilemap.ts"), generateRuntime(COMPAT_TABLES));
@@ -168,7 +168,7 @@ describe("the 0.3.0 fixture game against the app's @ngne/core 0.3.0", () => {
             ts.sys,
             folder,
         );
-        expect(JSON.parse(read("node_modules/@ngne/core/package.json")).version).toBe("0.3.0");
+        expect(JSON.parse(read("node_modules/@ngne/core/package.json")).version).toBe("0.3.1");
         options.paths = { "@ngne/core": [join(engine, "dist/engine/index.d.ts")] };
         const host = ts.createCompilerHost(options);
         const getSourceFile = host.getSourceFile.bind(host);

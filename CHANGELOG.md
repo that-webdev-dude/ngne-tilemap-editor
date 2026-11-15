@@ -1,5 +1,12 @@
 # Changelog
 
+## Unreleased
+
+- Uses `@ngne/core` 0.3.1.
+- The overview uploads its chunks to the GPU as raw pixels instead of drawing them into a canvas
+  first: building the overview after a map opens and rebuilding it after a layer change take
+  less time.
+
 ## 1.0.0 – 2026-11-13
 
 First release. The file formats `.ngtilemap` v1, `ngne-tilemap` v1 and the export folder are

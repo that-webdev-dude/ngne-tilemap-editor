@@ -23,7 +23,7 @@
         "check": "npm run typecheck && npm run lint && npm run format:check && npm run test && npm run build"
     },
     "dependencies": {
-        "@ngne/core": "0.3.0",
+        "@ngne/core": "0.3.1",
         "fast-png": "8.0.0",
         "fflate": "0.8.3",
         "lucide-react": "1.55.0",

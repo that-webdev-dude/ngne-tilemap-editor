@@ -2,7 +2,7 @@
 import type {} from "../../../src/app/testing/testHooks";
 
 // TE-068 benchmark page module (tests/perf/te-068-frames-in-flight.perf.ts): counts the frames
-// the editor's viewport has submitted that the GPU has not finished. NGNE 0.3.0 keeps its device
+// the editor's viewport has submitted that the GPU has not finished. NGNE 0.3.1 keeps its device
 // private, so the module wraps `GPUQueue.prototype.submit`. NGNE submits one command buffer per
 // frame (its only `queue.submit` is in `render`); after each submit the wrapper asks that queue
 // for `onSubmittedWorkDone()`, which settles when the frame and everything before it is done.

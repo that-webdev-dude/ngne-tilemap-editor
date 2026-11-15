@@ -11,7 +11,7 @@ import type { FixtureId, MapInfo, View } from "./harness/te-055-game";
 // Each test exports its fixture in the browser (`exportFiles`, as the editor does), writes the
 // files into the test's output folder in the checkout, and opens the exported `ngne-tilemap.ts`
 // from the dev server, as a game's dev server serves an export folder. The fixture game
-// (tests/fixtures/game, `@ngne/core` 0.3.0) draws each map with `pixelSnap` on.
+// (tests/fixtures/game, `@ngne/core` 0.3.1) draws each map with `pixelSnap` on.
 
 const FIXTURES: { id: FixtureId; title: string }[] = [
     { id: "conformance", title: "the reference export project" },

@@ -78,6 +78,8 @@ function fakeRenderer() {
     const updates: Update[] = [];
     const created: string[] = [];
     const released: string[] = [];
+    /** The buffer each update was called with, before the copy. */
+    const sources: Uint8ClampedArray[] = [];
     const target: ChunkTarget = {
         createTexture(id, width, height) {
             if (textures.has(id)) return Promise.reject(new Error(`${id} exists`));
@@ -86,7 +88,13 @@ function fakeRenderer() {
             return Promise.resolve();
         },
         updateTexture(id, source, region) {
-            const pixels = source as unknown as PixelBuffer;
+            // As NGNE with raw RGBA8: the pixels are copied during the call.
+            const pixels = {
+                width: source.width,
+                height: source.height,
+                data: source.data.slice(),
+            };
+            sources.push(source.data);
             return new Promise<void>((resolve, reject) => {
                 updates.push({
                     id,
@@ -125,7 +133,7 @@ function fakeRenderer() {
         },
         has: (id) => textures.has(id),
     };
-    return { target, textures, updates, created, released };
+    return { target, textures, updates, created, released, sources };
 }
 
 /** Slices run when the test says so. */
@@ -155,9 +163,6 @@ function setUp(project: Project, size = { width: 400, height: 300 }) {
             onChange: () => (changes.count += 1),
             onError: (error) => changes.errors.push(error),
         },
-        // A canvas holds a copy of the pixels.
-        source: (pixels) =>
-            ({ ...pixels, data: pixels.data.slice() }) as unknown as HTMLCanvasElement,
         slice: (job) => slices.slice(job),
     });
     const map = project.maps[0]!;
@@ -400,6 +405,29 @@ describe("chunk tier against a fake renderer", () => {
         expect(tier.stats.builds).toBe(1);
         expect(tier.stats.slices).toBe(32);
         expect(tier.stats.bytes).toBe(chunkBytes(16, tier.stats.texelsPerCell));
+        expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
+    });
+
+    it("uploads raw pixels: whole chunks reuse one buffer while an earlier update is pending", async () => {
+        const project = filledProject(128, 8);
+        const { tier, renderer, slices, settleAll } = setUp(project);
+        // Create, populate, create, populate: two whole-chunk updates in flight at once.
+        for (let step = 0; step < 4; step += 1) {
+            await flush();
+            slices.jobs.shift()!();
+        }
+        expect(renderer.updates.length).toBe(2);
+        const side = CHUNK_SIZE * tier.stats.texelsPerCell;
+        expect(renderer.updates.map((update) => update.region)).toMatchObject([
+            { width: side, height: side },
+            { width: side, height: side },
+        ]);
+        // The second composite overwrote the buffer of the first, still pending: correct only
+        // because the renderer copies during the call.
+        expect(renderer.sources[1]).toBe(renderer.sources[0]);
+        expect(renderer.updates[0]!.pixels.data).not.toEqual(renderer.updates[1]!.pixels.data);
+        await settleAll();
+        expect(new Set(renderer.sources).size).toBe(1);
         expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
     });
 

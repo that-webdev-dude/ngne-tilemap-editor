@@ -56,9 +56,14 @@ export interface ChunkRegion {
 /** What the renderer offers for editable textures; `WebGPURenderer` has this shape. */
 export interface ChunkTarget {
     createTexture(id: string, width: number, height: number, signal?: AbortSignal): Promise<void>;
+    /**
+     * Takes the compositor's pixels as raw RGBA8 (NGNE `RgbaPixels`: straight alpha, sRGB, rows
+     * packed). The region is copied before the call returns, so the buffer can be used again at
+     * once, even while the update is still pending.
+     */
     updateTexture(
         id: string,
-        source: HTMLCanvasElement,
+        source: PixelBuffer,
         region: ChunkRegion,
         signal?: AbortSignal,
     ): Promise<void>;
@@ -66,25 +71,6 @@ export interface ChunkTarget {
     /** The renderer holds a registration for `id` (it drops one after a failed copy). */
     has(id: string): boolean;
 }
-
-/**
- * Makes the source of an update: a canvas of its own, kept unchanged until the update settles.
- * It copies the pixels, whose buffer is used again.
- */
-export type ChunkSourceFn = (pixels: PixelBuffer) => HTMLCanvasElement;
-
-/** A canvas holding the pixels (straight RGBA8, as the compositor gives them). */
-export const canvasFromPixels: ChunkSourceFn = (pixels) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = pixels.width;
-    canvas.height = pixels.height;
-    const context = canvas.getContext("2d", { colorSpace: "srgb", willReadFrequently: true });
-    if (!context) throw new Error("A chunk needs a 2D canvas context.");
-    // Pixel buffers never sit on shared memory.
-    const data = pixels.data as Uint8ClampedArray<ArrayBuffer>;
-    context.putImageData(new ImageData(data, pixels.width, pixels.height), 0, 0);
-    return canvas;
-};
 
 /** Runs `job` in a task of its own, soon; returns what cancels it. */
 export type SliceFn = (job: () => void) => () => void;
@@ -208,8 +194,6 @@ function union<R extends { x: number; y: number; width: number; height: number }
 export interface ChunkTierOptions {
     target: ChunkTarget;
     hooks: ChunkHooks;
-    /** Default `canvasFromPixels`. */
-    source?: ChunkSourceFn;
     /** Default `messageSlice`. */
     slice?: SliceFn;
     /** Default `performance.now`. */
@@ -219,7 +203,6 @@ export interface ChunkTierOptions {
 export class ChunkTier {
     readonly #target: ChunkTarget;
     readonly #hooks: ChunkHooks;
-    readonly #source: ChunkSourceFn;
     readonly #slice: SliceFn;
     readonly #now: () => number;
 
@@ -255,7 +238,6 @@ export class ChunkTier {
     constructor(options: ChunkTierOptions) {
         this.#target = options.target;
         this.#hooks = options.hooks;
-        this.#source = options.source ?? canvasFromPixels;
         this.#slice = options.slice ?? messageSlice;
         this.#now = options.now ?? (() => performance.now());
     }
@@ -811,9 +793,9 @@ export class ChunkTier {
             highlight: this.#highlight,
         };
         const pixels = this.#compositor.composite(request, full ? this.#scratch! : undefined);
-        const source = this.#source(pixels);
         chunk.inFlight = true;
-        const update = this.#target.updateTexture(chunk.id, source, {
+        // The renderer copies the pixels during the call: the scratch is free again after it.
+        const update = this.#target.updateTexture(chunk.id, pixels, {
             sourceX: 0,
             sourceY: 0,
             width: rect.width,

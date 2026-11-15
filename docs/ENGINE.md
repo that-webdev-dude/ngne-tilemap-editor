@@ -1,18 +1,18 @@
 # NGNE Tilemap Editor — Engine integration
 
-How the editor uses `@ngne/core` 0.3.0, the viewport architecture, performance budgets, the
+How the editor uses `@ngne/core` 0.3.1, the viewport architecture, performance budgets, the
 spikes that gate the spec, and the engine gaps the editor works around.
 
 Authoritative engine behaviour: the versioned contracts at
-[ngne v0.3.0 `docs/contracts/browser-and-presentation.md`](https://github.com/that-webdev-dude/ngne/blob/v0.3.0/docs/contracts/browser-and-presentation.md)
-([renderer](https://github.com/that-webdev-dude/ngne/blob/v0.3.0/docs/contracts/browser-and-presentation.md#renderer),
-[editable manual textures](https://github.com/that-webdev-dude/ngne/blob/v0.3.0/docs/contracts/browser-and-presentation.md#editable-manual-textures))
-and the [usage guide](https://github.com/that-webdev-dude/ngne/blob/v0.3.0/docs/guide.md).
-Local checkout: `..\ngne` at tag `v0.3.0`.
+[ngne v0.3.1 `docs/contracts/browser-and-presentation.md`](https://github.com/that-webdev-dude/ngne/blob/v0.3.1/docs/contracts/browser-and-presentation.md)
+([renderer](https://github.com/that-webdev-dude/ngne/blob/v0.3.1/docs/contracts/browser-and-presentation.md#renderer),
+[editable manual textures](https://github.com/that-webdev-dude/ngne/blob/v0.3.1/docs/contracts/browser-and-presentation.md#editable-manual-textures))
+and the [usage guide](https://github.com/that-webdev-dude/ngne/blob/v0.3.1/docs/guide.md).
+Local checkout: `..\ngne` at tag `v0.3.1`.
 
 ## 1. Rules
 
-- `@ngne/core` **0.3.0**, exact pin. No engine changes, no internal imports, no patched engine.
+- `@ngne/core` **0.3.1**, exact pin. No engine changes, no internal imports, no patched engine.
 - Only `src/engine/` imports `@ngne/core` (lint-enforced, as in the sprite editor).
 - `src/core/` (document model, compositor, packer, codecs, terrain solver) has no DOM, React
   or NGNE imports and is the source of truth; the GPU only displays it.
@@ -40,20 +40,24 @@ No polling of status or sprite counters, no renderer re-creation on resize.
 | Content | ID | API | Lifetime |
 | --- | --- | --- | --- |
 | Tileset atlas: the export's packed atlas from `core/pack` (even rectangles, 1 px extrusion; SPEC §10.2), never the stored grid, so viewport, preview and runtime share one emitter and UV table and no fractional zoom or DPR samples a neighbour tile | `ed:ts:<tilesetId>` | `renderer.texture(id, source)` (transactional whole-image replace) | Uploaded when a map using it opens; replaced on "Update tileset from source"; `releaseTexture` when no open map uses it |
-| Overview chunk | `ed:chunk:<layerId>:<cx>:<cy>` | `createTexture(id, w, h)` once, then `updateTexture(id, canvas, region)` per dirty rectangle | Created when the chunk tier first needs it; released on eviction (a change leaves it showing nothing, or a new plan drops it or changes T), map close or layer delete |
+| Overview chunk | `ed:chunk:<layerId>:<cx>:<cy>` | `createTexture(id, w, h)` once, then `updateTexture(id, pixels, region)` per dirty rectangle, with the compositor's raw RGBA8 pixels | Created when the chunk tier first needs it; released on eviction (a change leaves it showing nothing, or a new plan drops it or changes T), map close or layer delete |
 | Checkerboard, image layers | `ed:checker`, `ed:img:<layerId>` | `texture()` | As the map |
 
 Editable texture rules (`createTexture` / `updateTexture`):
 
 - `createTexture` needs an absent ID; to change size, release, create, repopulate.
-- `updateTexture` takes an `ImageBitmap` or canvas and a region
+- `updateTexture` takes an `ImageBitmap`, a canvas or raw pixels (`RgbaPixels`: `width`,
+  `height` and `data`, straight-alpha sRGB RGBA8 rows with no padding) and a region
   `{sourceX, sourceY, width, height, destinationX, destinationY}` that fits both images.
-  No clipping, scaling or blending; transparent source pixels erase.
+  No clipping, scaling or blending; transparent source pixels erase. Raw pixels are stored
+  byte for byte, with no canvas capture or readback; the editor passes the compositor's
+  `PixelBuffer` as they are.
 - Per ID, updates run FIFO with at most 32 pending including the active one; overflow
   rejects. The editor coalesces dirty rectangles per chunk and keeps at most one update in
   flight per chunk, so it never approaches the limit.
-- Keep the source canvas unchanged until the update's promise settles (pixels are captured
-  when the queued operation runs). Each chunk has its own source canvas.
+- Raw pixels are copied during the call: the buffer can be used again as soon as it returns,
+  so whole chunks are composited into one buffer even while an earlier update is pending. A
+  canvas or bitmap source instead stays unchanged until the promise settles.
 - A copy or validation failure can drop the registration: re-create and repopulate from the
   CPU document. A loss after submission rejects that update: re-composite the region from
   the document and retry; never replay a write blindly.
@@ -212,7 +216,7 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
 | 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | 9.9 / 10.6 ms (median 9.2 / 9.8 ms, max 14.4 / 15.0 ms) |
 
 Both rows: TE-064, with the machine, power plan, panel and window of the editor budgets. The
-fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.0) imports the exported
+fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.1) imports the exported
 `ngne-tilemap.ts` of the reference project with 32 animated tiles per tileset and draws the
 reference map under a stacked HUD scene of 200 sprites, `pixelSnap` on, the camera panning
 48 × 27 px/s; 10 s after 2 s, on `requestAnimationFrame`. Sprites per frame 4,664 and 66,992,
@@ -237,7 +241,7 @@ Balanced power plan on AC, 144 Hz panel.
 
 ## 7. Engine gaps
 
-Open gaps in 0.3.0 that the editor or the generated runtime works around. The NGNE owner
+Open gaps in 0.3.1 that the editor or the generated runtime works around. The NGNE owner
 reads this table. Costs are the reference-hardware measurements of §6 and SPEC §14 (TE-064 and
 TE-068; Intel UHD / RTX 4060) and the spikes of 2026-10-30; "not measured" marks a gap whose
 workaround no benchmark isolates.
@@ -250,7 +254,7 @@ workaround no benchmark isolates.
 | Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; repeat quads not measured |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime | None in time; features left out (tint, blend modes) |
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 37.2 / 36.4 ms p95 after a paint (47.0 / 41.1 ms for a 16 × 16 stamp); the composite is part of the 491 / 424 ms rebuild |
-| The first `updateTexture` blocks the main thread while Chrome reads its source canvas back from the GPU (initial overview build, §6) | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 29.0 / 35.3 ms against 16 ms (the build's own slices ≤ 8.2 / 8.5 ms) |
+| The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 29.0 / 35.3 ms against 16 ms with canvas uploads (§6; the build's own slices ≤ 8.2 / 8.5 ms). 2026-11-15, `te-015-chunk`, three runs each, same machine and day: 21.1–32.0 / 17.9–22.9 ms with raw uploads against 30.0–37.5 / 37.1–48.6 ms with canvas uploads; slices ≤ 7.8 / 8.3 ms (records outside `evidence/`, without power plan or refresh rate) |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime | Not measured: one extra transparent column or row per odd tile in the atlas |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 10.6 / 10.0 ms p95 (budget 10 ms, accepted for v1) |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor | None in time; `once` animations loop |

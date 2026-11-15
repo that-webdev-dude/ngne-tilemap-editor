@@ -37,7 +37,7 @@ function suiteTable(header: string): Record<string, string> {
 describe("package.json", () => {
     it("has exactly the runtime dependencies of SUITE §5", () => {
         expect(manifest.dependencies).toEqual(suiteTable("Runtime dependency"));
-        expect(manifest.dependencies["@ngne/core"]).toBe("0.3.0");
+        expect(manifest.dependencies["@ngne/core"]).toBe("0.3.1");
     });
 
     it("has exactly the development dependencies of SUITE §5", () => {

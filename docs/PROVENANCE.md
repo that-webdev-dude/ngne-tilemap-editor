@@ -18,7 +18,7 @@ rows.
 | `LICENSE` | `LICENSE` | verbatim | `ea5c91d` | `4d21bde6e4b9d15aafd5e507b3222205aa1ed73c3546650c524a3bf75685305a` | |
 | `eslint.config.js` | `eslint.config.js` | adapt | `ea5c91d` | | `src/core/sprite` imports only itself, `fflate` and `fast-png`; only `src/core` imports `src/core/sprite` (DESIGN §3.1) |
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); favicon `icons/icon-192.png` (TE-066) |
-| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `1.0.0` (TE-067), description; dependencies of SUITE §5 (`@ngne/core` 0.3.0, no `gifenc`); `drift` script |
+| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `1.0.0` (TE-067), description; dependencies of SUITE §5 (`@ngne/core` 0.3.1, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
 | `scripts/check-links.mjs` | `scripts/check-links.mjs` | adapt | `ea5c91d` | | Leaves out the vendored engine packages of the runtime compile matrix (`tests/runtime-compat/*/vendor/`); reads the tracked paths from the git index file (versions 2–4) instead of running `git ls-files`; HTML tags and links in headings, closing hashes, code fences, reference definitions and link labels read by linear scans instead of backtracking regular expressions, with the same results; `check` and `destination` split into helpers |
 | `scripts/icons.ts` | `scripts/icons.ts` | adapt | `ea5c91d` | | The mark is a 2 × 2 tile grid (its lines, the top-left tile painted) instead of "N" (SUITE §1); the drift test is `te-066-pwa.test.ts` |
@@ -362,7 +362,7 @@ rows.
 | `tests/unit/te-048-autosave.test.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | One project of maps, tilesets and images; the store spy counts entry and pixel puts; the snapshot round trip through `serialize`; recovery into the window |
 | `tests/unit/te-048-support.ts` | `tests/unit/se-042-autosave.test.ts` | adapt | `ea5c91d` | | `MemorySnapshots` of that test with entries and pixels instead of images and sources; cell and tileset edits as commands |
 | `tests/unit/te-066-pwa.test.ts` | `tests/unit/se-072-pwa.test.ts` | adapt | `ea5c91d` | | Manifest fields, colours, icons and favicon checked; cache prefix and the sprite editor's caches kept; the tile-grid mark; launch cases for one project per window |
-| `tests/unit/te-067-guide.test.ts` | `tests/unit/se-073-guide.test.ts` | adapt | `ea5c91d` | | The guide's example is compiled against `@ngne/core` 0.3.0 and a generated runtime instead of compared with a fixture |
+| `tests/unit/te-067-guide.test.ts` | `tests/unit/se-073-guide.test.ts` | adapt | `ea5c91d` | | The guide's example is compiled against `@ngne/core` 0.3.1 and a generated runtime instead of compared with a fixture |
 | `tests/unit/te-067-links.test.ts` | `tests/unit/se-073-links.test.ts` | adapt | `ea5c91d` | | Ticket name; fixture `git add` with `core.autocrlf=false`; a case for the vendored engine packages |
 | `tsconfig.json` | `tsconfig.json` | verbatim | `ea5c91d` | `4dd0bfb34ca25b40ad4fc39e95876e50fad6ebdced165919618156742e15081e` | |
 | `tsconfig.node.json` | `tsconfig.node.json` | adapt | `ea5c91d` | | `src/gifenc.d.ts` dropped; `allowImportingTsExtensions` as at `4987001` |

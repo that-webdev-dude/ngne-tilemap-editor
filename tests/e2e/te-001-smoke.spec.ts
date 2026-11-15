@@ -8,7 +8,7 @@ test("the app starts from the dev server", async ({ page }) => {
     await expect(page.locator("#root [data-region]")).toHaveCount(7);
 });
 
-test("NGNE 0.3.0 draws a rect on a WebGPU canvas and readCanvas returns its pixels", async ({
+test("NGNE 0.3.1 draws a rect on a WebGPU canvas and readCanvas returns its pixels", async ({
     page,
 }) => {
     // The engine the dev server resolves `@ngne/core` to.
@@ -18,7 +18,7 @@ test("NGNE 0.3.0 draws a rect on a WebGPU canvas and readCanvas returns its pixe
             "utf8",
         ),
     ) as { version: string };
-    expect(engine.version).toBe("0.3.0");
+    expect(engine.version).toBe("0.3.1");
 
     await page.goto("/tests/e2e/harness/te-001-smoke.html");
     const output = page.locator("#result");

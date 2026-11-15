@@ -801,7 +801,7 @@ Export is accepted when, for the reference project and the FORMAT fixtures:
    `validateTilemap` against them.
 2. Round trip: export → `readTilemap` → cells, flags, properties, collision and markers equal the
    project's.
-3. A fixture NGNE game (`tests/fixtures/game`, `@ngne/core` 0.3.0) imports the exported
+3. A fixture NGNE game (`tests/fixtures/game`, `@ngne/core` 0.3.1) imports the exported
    `ngne-tilemap.ts`, draws every map at scale 1 and 3 with `pixelSnap` on, and its canvas readback
    equals the `core/compositor` reference pixel for pixel, for all 8 orientations of odd and even
    tile sizes, a tile larger than the grid, a tile offset, a parallax layer and an opacity layer

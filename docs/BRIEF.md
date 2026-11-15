@@ -11,7 +11,7 @@ layers (with terrain brushes), mark per-tile collision and properties, place sim
 shapes (spawns, zones), and export a tilemap that an NGNE game loads without hand-editing —
 as ngne-sprite-editor does for sprites.
 
-- The viewport and the game preview are rendered by NGNE (`@ngne/core` 0.3.0): see
+- The viewport and the game preview are rendered by NGNE (`@ngne/core` 0.3.1): see
   [ENGINE.md](ENGINE.md).
 - It is the second tool of the NGNE editor suite: same design system, stack and packaging as
   ngne-sprite-editor: see [SUITE.md](SUITE.md).
@@ -208,7 +208,7 @@ Tiled 1.12.2.
 | D7 | Games load the editor's own format `ngne-tilemap` v1: strict JSON, specified in `FORMAT.md`, frozen at 1.0.0, versioned with migrations. TMJ is import only | A small, validated, stable input for games; TMJ is loose and would push a large defensive reader into every game |
 | D8 | Export repacks every tileset into its own `ngne-sprite-atlas` v1: rectangles padded to even size, 1 px extrude, no gap between rectangles | One tileset path in games; even padding meets the atlas's even-rectangle rule for odd tile sizes; extrude stops neighbour bleeding, and NGNE's nearest/clamp sampler needs no further gap |
 | D9 | Each export writes the generated, import-free runtime `ngne-tilemap.ts` (§6) | NGNE has no tilemap support by design; one tested helper replaces a loader per game; works across the engine versions games use |
-| D10 | `@ngne/core` pinned exactly at 0.3.0; no changes to NGNE; gaps worked around in the editor ([ENGINE.md](ENGINE.md)) | One repo, one release train; 0.3.0's lifecycle, resize, release and editable-texture APIs are what the viewport needs |
+| D10 | `@ngne/core` pinned exactly at 0.3.1; no changes to NGNE; gaps worked around in the editor ([ENGINE.md](ENGINE.md)) | One repo, one release train; 0.3.0's lifecycle, resize, release and editable-texture APIs are what the viewport needs |
 | D11 | Two-tier viewport: live quads up to 65,536 visible cells; above that, flattened CPU-composited chunk textures patched by `updateTexture` ([ENGINE.md](ENGINE.md) §4) | Spikes S1 and S2: per-tile quads cost ~0.12 µs CPU each, so 65,536 is the most that pans within 10 ms p95 on both reference GPUs; a zoomed-out D1 map is ~524k |
 | D12 | Budgets and spike results in [ENGINE.md](ENGINE.md) §6 are the performance baseline for the spec and tickets | Spikes S1, S2 and S4 passed on reference hardware on 2026-10-30 |
 | D13 | Same suite as the sprite editor: identity, design system, stack (exact versions), packaging, hosting ([SUITE.md](SUITE.md)) | Both tools must read as one product |
