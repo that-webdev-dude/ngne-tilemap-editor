@@ -4,12 +4,12 @@
     "measurement": "Paint with the stamp brush on the reference map at 100%, pointer event to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 190 drag moves of one stroke after 10 warm-up moves",
     "budgetMs": 33,
-    "resultMs": 16.200000002980232,
+    "resultMs": 9.099999964237213,
     "details": {
         "adapter": "nvidia lovelace",
-        "pressMs": 34.80000001192093,
-        "medianMs": 14.600000008940697,
-        "maxMs": 19.30000001192093,
+        "pressMs": 15.199999988079071,
+        "medianMs": 7.800000011920929,
+        "maxMs": 13.5,
         "tiers": [
             "live"
         ],
@@ -31,5 +31,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:53:46.420Z"
+    "date": "2026-11-15T20:07:49.068Z"
 }

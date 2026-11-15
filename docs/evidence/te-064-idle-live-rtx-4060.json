@@ -9,22 +9,22 @@
     "details": {
         "adapter": "nvidia lovelace",
         "outside": {
-            "seconds": 10.00479999999702,
+            "seconds": 10.007,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1439,
+            "pageAnimationFrames": 1438,
             "tier": "live"
         },
         "resting": {
-            "seconds": 10.00490000000596,
+            "seconds": 10.005600000023842,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1441,
+            "pageAnimationFrames": 1440,
             "tier": "live"
         },
-        "submitsWhileOpening": 7,
+        "submitsWhileOpening": 6,
         "submitsAfterViewChange": 1,
         "zoom": 1
     },
@@ -44,5 +44,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:56:39.611Z"
+    "date": "2026-11-15T20:10:38.837Z"
 }

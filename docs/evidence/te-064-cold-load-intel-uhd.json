@@ -4,33 +4,33 @@
     "measurement": "Cold load of the production build served locally (vite preview), navigation start to interactive (the first animation frame with the New Project dialog on screen, its button clicked at every frame from the first one that shows it); new Chrome with a fresh profile per load; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "max of 10 loads",
     "budgetMs": 2000,
-    "resultMs": 249.5,
+    "resultMs": 1245.0999999642372,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 231.70000000298023,
+        "medianMs": 220.60000002384186,
         "interactiveMs": [
-            249.5,
-            236.29999999701977,
-            231.70000000298023,
-            234.30000001192093,
-            229.29999999701977,
-            230,
-            227,
-            227,
-            226.3999999910593,
-            238.40000000596046
+            231,
+            232.5,
+            220.60000002384186,
+            227.30000001192093,
+            207.80000001192093,
+            213.69999998807907,
+            210.80000001192093,
+            1245.0999999642372,
+            212.80000001192093,
+            218.19999998807907
         ],
         "shellMs": [
-            228.5,
-            214.79999999701977,
-            209.20000000298023,
-            211.5,
-            208,
-            207.5,
-            204.5,
-            205.20000000298023,
-            205.20000000298023,
-            215.70000000298023
+            210.69999998807907,
+            210.30000001192093,
+            198.30000001192093,
+            204.80000001192093,
+            185.30000001192093,
+            192.39999997615814,
+            189.30000001192093,
+            1226.0999999642372,
+            190.89999997615814,
+            196.60000002384186
         ],
         "clicks": [
             1,
@@ -44,13 +44,13 @@
             1,
             1
         ],
-        "appReadyMedianMs": 155.59999999403954,
-        "firstContentfulPaintMedianMs": 300,
-        "domContentLoadedMedianMs": 141.70000000298023,
-        "loadEventMedianMs": 141.70000000298023,
+        "appReadyMedianMs": 142.39999997615814,
+        "firstContentfulPaintMedianMs": 288,
+        "domContentLoadedMedianMs": 128.30000001192093,
+        "loadEventMedianMs": 128.69999998807907,
         "longTasksMax": 1,
-        "longestTaskMs": 59,
-        "transferBytes": 485112
+        "longestTaskMs": 55,
+        "transferBytes": 390654
     },
     "benchmarkId": "te-064-cold-load",
     "pass": true,
@@ -68,5 +68,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:49:01.551Z"
+    "date": "2026-11-15T20:03:21.799Z"
 }

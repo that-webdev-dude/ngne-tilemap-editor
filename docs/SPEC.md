@@ -1030,15 +1030,15 @@ Feature budgets ENGINE does not list, measured the same way on the reference map
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 38.2 / 34.9 ms (median 28.2 / 27.8 ms; flood alone 4.6 / 4.5 ms). Magic wand: 23.1 / 21.1 ms (median 13.2 / 14.1 ms; flood alone 4.7 / 4.7 ms) |
-| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 11.9 / 11.0 ms (overlay redraws ≤ 10.3 / 11.0 ms) |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 18.5 / 16.3 ms (median 17.0 / 14.7 ms, max 22.3 / 18.1 ms) |
-| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 7.5 / 7.5 ms (median 5.2 / 6.0 ms); total 332.3 / 368.3 ms (median 322.9 / 359.1 ms) |
-| Open of the reference project to first frame | ≤ 3 s | 380.4 / 398.3 ms (median 353.8 / 377.9 ms) |
-| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 7.7 / 5.0 ms (median 4.0 / 4.3 ms) |
-| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | task max 8.3 / 7.0 ms (median 6.4 / 5.1 ms); total 71.9 / 77.6 ms (median 65.1 / 66.4 ms) |
-| Update tileset from source, 1,024 tiles | ≤ 1 s | 209.7 / 209.1 ms (median 187.7 / 173.1 ms; to the history entry, median 132.2 / 129.6 ms) |
-| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | 10.6 / 10.0 ms (overlay 0.2 / 0.2 ms), **over budget** on Intel UHD; 3 / 0 frames; names shown at zoom 1.25: 4.7 / 4.2 ms, 0 / 0 frames |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 27.5 / 28.1 ms (median 23.2 / 23.6 ms; flood alone 3.2 / 5.2 ms). Magic wand: 17.4 / 10.2 ms (median 5.6 / 5.5 ms; flood alone 3.7 / 7.1 ms) |
+| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.9 / 11.3 ms (overlay redraws ≤ 9.5 / 9.8 ms) |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 8.4 / 11.9 ms (median 7.7 / 8.3 ms, max 10.4 / 15.7 ms) |
+| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 8.9 / 7.3 ms (median 5.8 / 5.9 ms); total 345.6 / 371.9 ms (median 307.9 / 350.9 ms) |
+| Open of the reference project to first frame | ≤ 3 s | 352.4 / 390.0 ms (median 329.0 / 360.4 ms) |
+| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 10.6 / 11.0 ms (median 3.9 / 4.3 ms) |
+| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | task max 7.9 / 7.2 ms (median 6.8 / 5.0 ms); total 69.5 / 70.0 ms (median 64.9 / 63.3 ms) |
+| Update tileset from source, 1,024 tiles | ≤ 1 s | 189.6 / 200.4 ms (median 164.0 / 179.5 ms; to the history entry, median 119.5 / 134.9 ms) |
+| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | 8.9 / 9.8 ms (overlay 0.2 / 0.2 ms); 0 / 0 frames; names shown at zoom 1.25: 3.9 / 3.9 ms, 0 / 0 frames |
 
 All rows: TE-064, with the machine, Chrome, power plan, panel and window of ENGINE §6 (each
 record holds them). Raw data: `<benchmark id>-intel-uhd.json` and `<benchmark id>-rtx-4060.json`
@@ -1048,7 +1048,7 @@ Bucket fill and magic wand rows (`te-019-bucket-fill`, `te-020-magic-wand`): the
 parallax layer made one tile everywhere, so each press at the map's middle fills or selects all
 256 × 256 cells; 35 presses after 5 warm-up presses. The wand changes no cells, so its frame is
 the overlay's redraw showing the selection's ants. With the region already found by the bucket's
-hover preview the p95 is 35.8 / 36.3 ms.
+hover preview the p95 is 28.9 / 25.5 ms.
 
 Terrain brush row (`te-044-terrain-brush`): the reference map's first tileset given the 256
 corner combinations of 4 terrains as one terrain set, the tile layer under the parallax layer
@@ -1061,20 +1061,20 @@ map with its two tilesets, a file of 1,419,753 bytes) saved and opened through t
 with the worker's writer and reader, to and from a file in memory; 10 runs after 2 warm-up runs.
 Save: the task max is the longest gap of a message loop from the call to the bytes written.
 Open: from the empty state, as at launch, from the call to the frame that draws the map with
-both tileset textures uploaded; its longest task is 122.9 / 135.4 ms (no budget).
+both tileset textures uploaded; its longest task is 121.4 / 126.2 ms (no budget).
 
 Autosave row (`te-048-autosave`): the reference project opened afresh in the app, one cell
 edited and the first snapshot (every map entry and both tilesets' pixels) stored, then another
 cell edited and the next snapshot (that map's entry) stored; 5 runs of both after 1 warm-up run.
 The task max is the longest gap of a message loop from 300 ms before the 2 s delay ends to the
-snapshot stored. Taking the project is at most 7.6 / 3.9 ms and a map thumbnail 3.6 / 3.6 ms,
-each a task of its own; the snapshot is stored 77.1 / 72.2 ms after the delay ends at most.
+snapshot stored. Taking the project is at most 3.9 / 7.0 ms and a map thumbnail 9.8 / 10.2 ms,
+each a task of its own; the snapshot is stored 74.6 / 72.2 ms after the delay ends at most.
 
 Export row (`te-053-export`): the reference project (524,288 cells, 2 tilesets, 1 map; 7 files)
 exported through the app's export pipeline and the worker into an empty folder in memory, 10 runs
 after 2 warm-up runs, each with a new pipeline. The task max is the longest gap of a message loop
 from the call to the last file written. A re-export into the same folder, every file unchanged,
-has a task max of 7.4 / 6.6 ms and a total of 68.8 / 70.1 ms.
+has a task max of 7.1 / 7.5 ms and a total of 65.3 / 71.7 ms.
 
 Update from source row (`te-028-update`): a tileset of 1,024 tiles of 16 px used by the reference
 map, updated at once from a grid PNG with 64 tiles changed and 2 moved; timed from the call with
@@ -1086,13 +1086,13 @@ marker layer of 2,000 markers (rectangles, ellipses, points, polygons of 6 point
 all named) that stays in view through the pan; the overlay is redrawn in the same callback after
 the viewport's submit. The overlay copies each marker layer from a picture painted once per
 history step, zoom and colour, so its redraw takes 0.2 ms; the rest is the live tier's own frame
-(submit p95 10.5 / 10.0 ms). Owner, 2026-11-12: the pan rows at the live-tier threshold, this one
+(submit p95 8.8 / 9.7 ms). Owner, 2026-11-12: the pan rows at the live-tier threshold, this one
 and ENGINE §6's, are accepted for v1.
 
 Stamp preview row (`te-017-stamp-preview`): the map's overview built first. The task max is the
 longest gap of a message loop, so one gap can hold a task and the frame drawn after it. The
-paste is not in the row: its task holds the Paste command itself (17.9–19.2 / 22.4–23.5 ms
-alone; 43.9–47.7 / 54.7–56.4 ms with the preview).
+paste is not in the row: its task holds the Paste command itself (18.5–18.8 / 21.5–22.0 ms
+alone; 45.7–46.5 / 52.0–52.7 ms with the preview).
 
 ## 15. Quality
 

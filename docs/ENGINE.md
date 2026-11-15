@@ -148,20 +148,20 @@ feature wrote it).
 
 | Metric | Budget | Measured |
 | --- | --- | --- |
-| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | DPR 1: 9.4 / 9.4 ms; DPR 1.25: 9.5 / 9.6 ms (median 8.7 / 8.8 ms) |
-| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | DPR 1: 0.2% / 0%; DPR 1.25: 0.5% / 0% (1 / 0 and 2 / 0 frames of 439–497) |
-| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | 18.5 / 16.2 ms (median 17.2 / 14.6 ms, max 19.5 / 19.3 ms) |
-| Paint at overview: painted cells visible | next frame | the frame after the command (live quads); command → that frame submitted p95 16.3 / 17.1 ms (16×16 stamp: 17.0 / 17.8 ms) |
-| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 37.2 / 36.4 ms (16×16 stamp: 47.0 / 41.1 ms) |
+| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | DPR 1: 8.7 / 9.2 ms; DPR 1.25: 9.0 / 9.2 ms (median 8.1 / 8.4 ms) |
+| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | DPR 1: 0.2% / 0%; DPR 1.25: 0% / 0% (1 / 0 and 0 / 0 frames of 535–560) |
+| Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | 10.8 / 9.1 ms (median 7.7 / 7.8 ms, max 24.5 / 13.5 ms) |
+| Paint at overview: painted cells visible | next frame | the frame after the command (live quads); command → that frame submitted p95 15.3 / 16.3 ms (16×16 stamp: 15.9 / 17.0 ms) |
+| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 30.8 / 32.8 ms (16×16 stamp: 32.1 / 34.6 ms) |
 | Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | 32 / 32 MB (T = 8, 128 chunks) |
-| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 491 / 424 ms; longest build slice 4.2 / 4.3 ms; the live-tier frame drawn meanwhile 118 / 113 ms (§4) |
-| Initial overview build after a map opens (background) | no task > 16 ms | 0.64 / 0.66 s total, longest task 29.0 / 35.3 ms, **over budget** (build slices ≤ 8.2 / 8.5 ms) |
-| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 84.2 / 87.2 ms (median 79.5 / 83.3 ms); 100% view 24.8 / 22.6 ms (median 20.7 / 20.0 ms) |
-| GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 2 (p95 1 / 1); paint 2 / 2 (p95 1 / 2); last submit → GPU idle 3.1–16.4 ms |
+| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 320 / 342 ms; longest build slice 3.6 / 3.9 ms; the live-tier frame drawn meanwhile 110 / 122 ms (§4) |
+| Initial overview build after a map opens (background) | no task > 16 ms | 0.44 / 0.43 s total, longest task 28.6 / 23.2 ms, **over budget** (build slices ≤ 6.2 / 7.4 ms) |
+| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 79.0 / 82.5 ms (median 76.1 / 79.1 ms); 100% view 21.7 / 22.0 ms (median 20.3 / 19.7 ms) |
+| GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 2 (p95 1 / 1); paint 2 / 2 (p95 2 / 2); last submit → GPU idle 3.4–12.5 ms |
 | Idle editor: frames submitted per second | 0 | 0 / 0 (live tier at 100% and chunk tier fitted; pointer outside the viewport and resting on the canvas) |
-| Cold load to interactive (production build, local) | ≤ 2 s | 250 / 1,434 ms (median 232 / 886 ms) |
+| Cold load to interactive (production build, local) | ≤ 2 s | 1,245 / 2,469 ms, **over budget** on the RTX 4060 (median 221 / 741 ms) |
 
-All rows: 2026-11-12, Chrome 157.0.8103.78, i7-12650H, Balanced power plan with the Best
+All rows: 2026-11-15, `@ngne/core` 0.3.1, Chrome 157.0.8103.78, i7-12650H, Balanced power plan with the Best
 performance power mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless
 the row says otherwise; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
 and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
@@ -182,14 +182,14 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
 - Tab switch: `te-031-tab-switch-{fit,100}`. Two open tabs each hold the reference map; a switch
   is timed from the call that shows the other map to the return of the first frame submitted
   after it, 40 switches 1 s apart after 4 warm-up switches. At the fitted view the first frame is
-  a live-tier frame of all 524,289 cells (median draw 65 / 69 ms): the previous map's chunk tier
+  a live-tier frame of all 524,289 cells (median draw 61 / 65 ms): the previous map's chunk tier
   is released on the switch and the new one is built in the background (§4). At 100% the median
-  draw is 5.4 / 5.6 ms of the switch's 20.7 / 20.0 ms.
+  draw is 5.3 / 5.5 ms of the switch's 20.3 / 19.7 ms.
 - Frames in flight: `te-068-frames-in-flight-{pan,overview,paint}`. Counted right after each of
   the viewport's submits, that frame included, as the `onSubmittedWorkDone()` promises of its
   queue still pending; the preview's queue is counted apart. Scenarios: the pan above (5 s), the
   same pan at overview in the chunk tier, and the paint stroke above. In the pan the main thread
-  spends a median 8.8 / 9.3 ms per frame callback. Owner, 2026-11-12: the pan's 4 is accepted for
+  spends a median 8.3 / 8.8 ms per frame callback. Owner, 2026-11-12: the pan's 4 is accepted for
   v1; the NGNE API of §7 follows v1.
 - Idle: `te-064-idle-{live,overview}`, the sprite editor's method (RULES 1). The reference map
   at 100% in its middle and fitted (View › Fit Map); after the chunk tier has no work left and 2 s
@@ -203,17 +203,18 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   Chrome with a fresh profile (no cache, no service worker). From the navigation's start, the
   empty state's New Project button is clicked at every animation frame (at most every 50 ms) from
   the first one that shows it; "interactive" is the first animation frame that shows the New
-  Project dialog. The maximum of 10 loads. The app commits at a median 156 / 152 ms and shows the
-  empty state at 209 / 867 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
-  most of the load, and two loads of the run took 1,323 and 1,414 ms to the empty state (the
-  others 781–889 ms).
+  Project dialog. The maximum of 10 loads. The app commits at a median 142 / 140 ms and shows the
+  empty state at 198 / 721 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
+  most of the load. Single loads set both maxima: on Intel UHD one load took 1,226 ms to the
+  empty state (the others 185–211 ms); on the RTX 4060 the first load of the run took 2,450 ms
+  and another 1,276 ms (the others 669–819 ms).
 
 ### Game runtime budget
 
 | Config (stacked HUD scene, `pixelSnap` on, tile animations on, panning) | Budget: p95 `game.stats.renderMs` | Measured |
 | --- | --- | --- |
-| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | 1.0 / 1.0 ms (median 0.8 / 0.8 ms, max 1.4 / 1.4 ms) |
-| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | 9.9 / 10.6 ms (median 9.2 / 9.8 ms, max 14.4 / 15.0 ms) |
+| 480×270 logical ×3 (typical pixel-art game; 4,664 sprites) | ≤ 8 ms on Intel UHD | 1.0 / 1.1 ms (median 0.7 / 0.8 ms, max 1.3 / 1.4 ms) |
+| 1920×1080 logical ×1, all 8 layers full (67k sprites, worst case) | recorded, not gated | 9.4 / 10.3 ms (median 8.8 / 9.5 ms, max 13.6 / 14.6 ms) |
 
 Both rows: TE-064, with the machine, power plan, panel and window of the editor budgets. The
 fixture game (`tests/fixtures/game`, `@ngne/core` 0.3.1) imports the exported
@@ -248,19 +249,19 @@ workaround no benchmark isolates.
 
 | Gap | Workaround | Where | Cost (measured) |
 | --- | --- | --- | --- |
-| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 9.4 / 9.4 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 491 / 424 ms rebuild after a layer change, a 0.64 / 0.66 s initial build |
-| Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime | Not measured ungrouped. Grouped, the reference map draws in 17 draw calls (4,664 and 66,992 sprites; runtime p95 1.0 / 1.0 ms and 9.9 / 10.6 ms) |
+| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 8.7 / 9.2 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 320 / 342 ms rebuild after a layer change, a 0.44 / 0.43 s initial build |
+| Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime | Not measured ungrouped. Grouped, the reference map draws in 17 draw calls (4,664 and 66,992 sprites; runtime p95 1.0 / 1.1 ms and 9.4 / 10.3 ms) |
 | No camera zoom | Scale quad positions and sizes; runtime takes a render-scale option | editor, runtime | Not measured: the scaling is part of the quad emission above |
 | Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; repeat quads not measured |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime | None in time; features left out (tint, blend modes) |
-| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 37.2 / 36.4 ms p95 after a paint (47.0 / 41.1 ms for a 16 × 16 stamp); the composite is part of the 491 / 424 ms rebuild |
-| The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 29.0 / 35.3 ms against 16 ms with canvas uploads (§6; the build's own slices ≤ 8.2 / 8.5 ms). 2026-11-15, `te-015-chunk`, three runs each, same machine and day: 21.1–32.0 / 17.9–22.9 ms with raw uploads against 30.0–37.5 / 37.1–48.6 ms with canvas uploads; slices ≤ 7.8 / 8.3 ms (records outside `evidence/`, without power plan or refresh rate) |
+| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 30.8 / 32.8 ms p95 after a paint (32.1 / 34.6 ms for a 16 × 16 stamp); the composite is part of the 320 / 342 ms rebuild |
+| The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 28.6 / 23.2 ms against 16 ms (§6; the build's own slices ≤ 6.2 / 7.4 ms). With canvas uploads on 0.3.0 the same machine measured 30.0–37.5 / 37.1–48.6 ms on 2026-11-15 (three runs each) |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime | Not measured: one extra transparent column or row per odd tile in the atlas |
-| No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 10.6 / 10.0 ms p95 (budget 10 ms, accepted for v1) |
+| No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 8.9 / 9.8 ms p95 (budget 10 ms) |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor | None in time; `once` animations loop |
 | Assets checked by object identity; no reference following; unlisted texture throws in render | Runtime caches one definition per ID, namespaces IDs, exposes `assetsFor(tilemap)`, skips unlisted tilesets | runtime | Not measured |
 | No tilemap or atlas schema; no tileset discovery | Editor-owned `ngne-tilemap` and `ngne-sprite-atlas` formats | editor, runtime | None in time; the formats and the runtime are the editor's to maintain |
 | One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor | Not measured |
 | BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview | Not measured |
-| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor | Not measured: no request hung in the measurements. The check is part of the cold load (250 / 1,434 ms, §6), most of it on the RTX 4060; a hung request shows the notice after up to 10 s (two 5 s limits) |
-| `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle 3.1–16.4 ms after the last submit (§6) | editor | Up to 4 / 4 frames in flight in the pan (p95 3 / 3) against a budget of 2, accepted for v1; overview pan and paint 2 / 2 |
+| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor | Not measured: no request hung in the measurements. The check is part of the cold load (1,245 / 2,469 ms, §6), most of it on the RTX 4060; a hung request shows the notice after up to 10 s (two 5 s limits) |
+| `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle 3.4–12.5 ms after the last submit (§6) | editor | Up to 4 / 4 frames in flight in the pan (p95 3 / 3) against a budget of 2, accepted for v1; overview pan and paint 2 / 2 |

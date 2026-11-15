@@ -4,12 +4,12 @@
     "measurement": "Chunk patch settled after painting a 16 × 16 stamp at overview, command to patch settled; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "p95 of 100 paints",
     "budgetMs": 100,
-    "resultMs": 47,
+    "resultMs": 32.10000002384186,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 33.900000005960464,
-        "maxMs": 53.099999994039536,
-        "frameP95Ms": 17
+        "medianMs": 24.30000001192093,
+        "maxMs": 34,
+        "frameP95Ms": 15.899999976158142
     },
     "benchmarkId": "te-015-patch-settle-stamp16",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:45:43.751Z"
+    "date": "2026-11-15T20:00:07.320Z"
 }

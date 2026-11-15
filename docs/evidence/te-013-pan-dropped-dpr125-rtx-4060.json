@@ -4,11 +4,11 @@
     "measurement": "Frames more than 25 ms after the previous one over a 5 s pan; RTX 4060, window 1920 × 1080, DPR 1.25, canvas 2015 × 980",
     "statistic": "count of frame intervals over the limit",
     "unit": "count",
-    "budgetMs": 4,
+    "budgetMs": 5,
     "resultMs": 0,
     "details": {
         "adapter": "nvidia lovelace",
-        "intervals": 493,
+        "intervals": 535,
         "fraction": 0
     },
     "benchmarkId": "te-013-pan-dropped-dpr125",
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:53:36.278Z"
+    "date": "2026-11-15T20:07:40.305Z"
 }

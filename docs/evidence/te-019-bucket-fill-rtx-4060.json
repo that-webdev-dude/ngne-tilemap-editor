@@ -4,16 +4,16 @@
     "measurement": "Bucket fill of a 65536-cell region on the reference map at 100%, the region found after the press, press to the frame containing it submitted; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 35 presses after 5 warm-up presses",
     "budgetMs": 100,
-    "resultMs": 34.900000005960464,
+    "resultMs": 28.099999964237213,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 27.799999997019768,
-        "maxMs": 37,
-        "floodAloneMs": 4.5,
-        "handledMedianMs": 19.599999994039536,
-        "hoverFoundP95Ms": 36.29999999701977,
-        "hoverFoundMedianMs": 25.099999994039536,
-        "hoverFoundHandledMedianMs": 16.5,
+        "medianMs": 23.600000023841858,
+        "maxMs": 30.100000023841858,
+        "floodAloneMs": 5.200000047683716,
+        "handledMedianMs": 14.899999976158142,
+        "hoverFoundP95Ms": 25.5,
+        "hoverFoundMedianMs": 21,
+        "hoverFoundHandledMedianMs": 13.300000011920929,
         "tiers": [
             "live"
         ],
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:58:14.012Z"
+    "date": "2026-11-15T20:12:15.371Z"
 }

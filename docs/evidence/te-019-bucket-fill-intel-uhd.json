@@ -4,16 +4,16 @@
     "measurement": "Bucket fill of a 65536-cell region on the reference map at 100%, the region found after the press, press to the frame containing it submitted; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 35 presses after 5 warm-up presses",
     "budgetMs": 100,
-    "resultMs": 38.20000000298023,
+    "resultMs": 27.5,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 28.200000002980232,
-        "maxMs": 39.599999994039536,
-        "floodAloneMs": 4.600000008940697,
-        "handledMedianMs": 19.899999991059303,
-        "hoverFoundP95Ms": 35.80000001192093,
-        "hoverFoundMedianMs": 24.5,
-        "hoverFoundHandledMedianMs": 15.5,
+        "medianMs": 23.19999998807907,
+        "maxMs": 27.900000035762787,
+        "floodAloneMs": 3.199999988079071,
+        "handledMedianMs": 13.300000011920929,
+        "hoverFoundP95Ms": 28.899999976158142,
+        "hoverFoundMedianMs": 21.899999976158142,
+        "hoverFoundHandledMedianMs": 12.599999964237213,
         "tiers": [
             "live"
         ],
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:49:49.397Z"
+    "date": "2026-11-15T20:04:03.407Z"
 }

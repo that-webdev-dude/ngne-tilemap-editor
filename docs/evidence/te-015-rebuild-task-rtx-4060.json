@@ -4,7 +4,7 @@
     "measurement": "Overview rebuild after a layer opacity change, longest build task; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "longest composite-and-submit slice of the rebuild",
     "budgetMs": 16,
-    "resultMs": 4.299999997019768,
+    "resultMs": 3.900000035762787,
     "details": {
         "adapter": "nvidia lovelace",
         "canvas": [
@@ -13,11 +13,11 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 388.69999998807907,
-        "maxSliceMs": 4.299999997019768,
-        "maxGapMs": 114.5,
+        "chunkBuildMs": 309.5,
+        "maxSliceMs": 3.900000035762787,
+        "maxGapMs": 123.5,
         "liveFrames": 1,
-        "longestLiveFrameMs": 112.70000000298023
+        "longestLiveFrameMs": 121.80000001192093
     },
     "benchmarkId": "te-015-rebuild-task",
     "pass": true,
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:53:52.243Z"
+    "date": "2026-11-15T20:07:54.212Z"
 }

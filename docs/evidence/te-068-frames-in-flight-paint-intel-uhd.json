@@ -8,21 +8,21 @@
     "resultMs": 2,
     "details": {
         "adapter": "intel gen-12lp",
-        "p95": 1,
-        "median": 1,
-        "lastSubmitToIdleMs": 16.400000005960464,
+        "p95": 2,
+        "median": 2,
+        "lastSubmitToIdleMs": 11.400000035762787,
         "frames": 380,
         "tiers": [
             "live"
         ],
-        "previewSubmits": 203,
+        "previewSubmits": 201,
         "previewMaxInFlight": 1,
         "canvas": [
             1612,
             784
         ],
         "events": 201,
-        "eventToFrameMedianMs": 17.400000005960464
+        "eventToFrameMedianMs": 7.799999952316284
     },
     "benchmarkId": "te-068-frames-in-flight-paint",
     "pass": true,
@@ -40,5 +40,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:47:55.270Z"
+    "date": "2026-11-15T20:02:14.512Z"
 }

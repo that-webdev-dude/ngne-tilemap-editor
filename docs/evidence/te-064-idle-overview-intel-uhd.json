@@ -9,22 +9,22 @@
     "details": {
         "adapter": "intel gen-12lp",
         "outside": {
-            "seconds": 10.00109999999404,
+            "seconds": 10.000399999976159,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1441,
+            "pageAnimationFrames": 1439,
             "tier": "chunk"
         },
         "resting": {
-            "seconds": 10.00479999999702,
+            "seconds": 10.00569999998808,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1442,
+            "pageAnimationFrames": 1440,
             "tier": "chunk"
         },
-        "submitsWhileOpening": 8,
+        "submitsWhileOpening": 6,
         "submitsAfterViewChange": 1,
         "zoom": 0.125
     },
@@ -44,5 +44,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:48:50.326Z"
+    "date": "2026-11-15T20:03:08.319Z"
 }

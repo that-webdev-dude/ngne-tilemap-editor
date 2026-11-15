@@ -4,12 +4,12 @@
     "measurement": "Chunk patch settled after painting a 16 × 16 stamp at overview, command to patch settled; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "p95 of 100 paints",
     "budgetMs": 100,
-    "resultMs": 41.099999994039536,
+    "resultMs": 34.60000002384186,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 32.5,
-        "maxMs": 44.400000005960464,
-        "frameP95Ms": 17.799999997019768
+        "medianMs": 24.69999998807907,
+        "maxMs": 35.700000047683716,
+        "frameP95Ms": 17
     },
     "benchmarkId": "te-015-patch-settle-stamp16",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:53:59.092Z"
+    "date": "2026-11-15T20:08:00.309Z"
 }

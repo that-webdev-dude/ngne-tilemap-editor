@@ -4,12 +4,12 @@
     "measurement": "Frames more than 25 ms after the previous one over a 5 s pan; Intel UHD, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "count of frame intervals over the limit",
     "unit": "count",
-    "budgetMs": 4,
+    "budgetMs": 5,
     "resultMs": 1,
     "details": {
         "adapter": "intel gen-12lp",
-        "intervals": 449,
-        "fraction": 0.0022271714922048997
+        "intervals": 560,
+        "fraction": 0.0017857142857142857
     },
     "benchmarkId": "te-013-pan-dropped-dpr1",
     "pass": true,
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-12T17:45:11.054Z"
+    "date": "2026-11-15T19:59:38.318Z"
 }
