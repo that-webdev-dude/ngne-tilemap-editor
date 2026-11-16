@@ -18,7 +18,7 @@ import {
     deleteLayersCommand,
     groupLayersCommand,
     newImageLayerCommand,
-    newLayerName,
+    defaultLayerName,
 } from "../../src/core/layers";
 import { deleteMapCommand, duplicateMapCommand, MAP_LABELS } from "../../src/core/maps";
 import {
@@ -189,7 +189,7 @@ describe("New Image Layer", () => {
         const layer = map.layers[1] as ImageLayer;
         expect(layer).toMatchObject({ imageId: image.id, repeatX: false, repeatY: false });
         expect(history.session.perMap.get(MAP)!.activeLayerId).toBe(layer.id);
-        expect(newLayerName(map, "image")).toBe("Image Layer 2");
+        expect(defaultLayerName(map, "image")).toBe("Image Layer 2");
 
         undo(history);
         expect(images(history)).toEqual([]);

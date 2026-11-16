@@ -87,7 +87,7 @@ function makePlan(
         random,
         corrections: false,
     });
-    filler.setRegion(region);
+    filler.replacePaintedRegion(region);
     const { cells } = filler.apply();
     if (cells.length === 0) return null;
     const stamp = {

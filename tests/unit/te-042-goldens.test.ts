@@ -100,7 +100,7 @@ function runStep(
             height: map.height,
         });
         expect(region.length).toBeGreaterThan(0);
-        filler.setRegion(region);
+        filler.replacePaintedRegion(region);
     }
     const result = filler.apply();
     expect(result.invalid).toEqual([]);

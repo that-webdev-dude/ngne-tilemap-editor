@@ -249,7 +249,7 @@ export class TerrainFiller {
     }
 
     /** The painted region becomes exactly `region`; constraints already made are kept. */
-    setRegion(region: Region): void {
+    replacePaintedRegion(region: Region): void {
         const next = new Map<number, Constraint>();
         forEachRegionCell(region, (x, y) => {
             if (!this.inside(x, y)) return;

@@ -1,6 +1,6 @@
 import { Circle } from "lucide-react";
 import type { CellRect, Stamp } from "../../../core/cells";
-import { ellipseRegion, rectRegion } from "../../../core/fill";
+import { inscribedEllipseRegion, rectRegion } from "../../../core/fill";
 import type { ProjectMap } from "../../../core/model";
 import type { PixelPoint } from "../../../core/raster/line";
 import { clipToMap } from "../cellOutline";
@@ -27,7 +27,7 @@ import { terrainFillPlan } from "./terrainFill";
 //   press, drag: the shape from the pressed cell to the pointer's, previewed
 //   Shift: a square or a circle, the shorter side's length both ways
 //   Alt: centred on the pressed cell
-//   release: fills the rectangle, or the ellipse inscribed in it (`ellipseRegion`),
+//   release: fills the rectangle, or the ellipse inscribed in it (`inscribedEllipseRegion`),
 //     with the stamp tiled from the shape's top-left, or in Terrain mode with the tiles of the
 //     brush's terrain set that match the cells around it, one history entry
 //   right click or Escape during the drag: cancelled, nothing filled
@@ -117,7 +117,7 @@ function shapeRegion(
 ): Region | null {
     const clip = clipToMap(area, map);
     if (!clip) return null;
-    const region = shape === "rectangle" ? rectRegion(clip) : ellipseRegion(area, clip);
+    const region = shape === "rectangle" ? rectRegion(clip) : inscribedEllipseRegion(area, clip);
     return region.length > 0 ? region : null;
 }
 

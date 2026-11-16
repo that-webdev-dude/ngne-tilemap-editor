@@ -196,7 +196,7 @@ interface Command {
 
 - The overlay canvas takes all pointer input (ENGINE §4). Positions map to map pixels through
   the inverse of the view transform, then to cells with `floor`. Coalesced events are used; a
-  drag joins consecutive cells with `pointsOnLine` (a Bresenham line, as in Tiled), so no cell
+  drag joins consecutive cells with `lineCells` (a Bresenham line, as in Tiled), so no cell
   is skipped.
 - Tools paint on the **active layer** only. A hidden or locked layer (or one under a hidden or
   locked group) refuses painting with a status-bar message and no change. A tile tool on a

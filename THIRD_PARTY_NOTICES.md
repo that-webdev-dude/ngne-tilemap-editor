@@ -75,7 +75,7 @@ Version: commit `ce9002f5aa1d95bdb7d71a39ebdb0987df139db5`.
 Used in:
 
 - `src/core/raster/ellipse.ts`: `plotOptimizedEllipse`, the ellipse outline.
-- `src/core/fill/region.ts` (`ellipseRegion`) and `tests/unit/te-019-fill.test.ts`:
+- `src/core/fill/region.ts` (`inscribedEllipseRegion`) and `tests/unit/te-019-fill.test.ts`:
   `plotEllipseRect`, the ellipse inscribed in a rectangle.
 
 ```text

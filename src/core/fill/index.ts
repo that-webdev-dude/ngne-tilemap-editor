@@ -2,7 +2,7 @@ export { floodRegion } from "./flood";
 export type { CellReader } from "./flood";
 export {
     clipRegion,
-    ellipseRegion,
+    inscribedEllipseRegion,
     forEachRegionCell,
     rectRegion,
     regionBounds,

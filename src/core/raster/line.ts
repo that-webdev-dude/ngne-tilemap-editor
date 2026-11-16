@@ -15,11 +15,11 @@ export interface PixelPoint {
  * With `manhattan`, consecutive cells always share a side. Throws `RangeError` for a
  * coordinate that is not a safe integer.
  */
-export function pointsOnLine(from: PixelPoint, to: PixelPoint, manhattan = false): PixelPoint[] {
+export function lineCells(from: PixelPoint, to: PixelPoint, manhattan = false): PixelPoint[] {
     const values = [from.x, from.y, to.x, to.y];
     if (!values.every((value) => Number.isSafeInteger(value))) {
         throw new RangeError(
-            `pointsOnLine needs whole cells, got (${from.x}, ${from.y}) to (${to.x}, ${to.y})`,
+            `lineCells needs whole cells, got (${from.x}, ${from.y}) to (${to.x}, ${to.y})`,
         );
     }
     // Steep lines are walked along y: the axes swap on the way in and back on the way out.

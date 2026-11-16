@@ -14,7 +14,7 @@ import type { PixelPoint } from "./line";
  * plotting order with repeats. Throws `RangeError` for a value that is not a safe integer or a
  * negative radius.
  */
-export function pointsOnEllipse(
+export function ellipseOutlineCells(
     centre: PixelPoint,
     radiusX: number,
     radiusY: number,
@@ -22,7 +22,7 @@ export function pointsOnEllipse(
     const values = [centre.x, centre.y, radiusX, radiusY];
     if (!values.every((value) => Number.isSafeInteger(value)) || radiusX < 0 || radiusY < 0) {
         throw new RangeError(
-            `pointsOnEllipse needs a whole centre and whole radii of at least 0, got (${centre.x}, ${centre.y}) with radii ${radiusX}, ${radiusY}`,
+            `ellipseOutlineCells needs a whole centre and whole radii of at least 0, got (${centre.x}, ${centre.y}) with radii ${radiusX}, ${radiusY}`,
         );
     }
     const { x: cx, y: cy } = centre;

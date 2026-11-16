@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pointsOnEllipse } from "../../src/core/raster/ellipse";
+import { ellipseOutlineCells } from "../../src/core/raster/ellipse";
 import { separatePlacements, stampAnchor, stampOrigin } from "../../src/app/tools/stamp/placement";
 
 // TE-017: the ellipse outline of the stamp brush's Ctrl+Shift+click (Zingl's `plotEllipse`, as
@@ -8,9 +8,9 @@ import { separatePlacements, stampAnchor, stampOrigin } from "../../src/app/tool
 // four quadrants are drawn, repeats included.
 
 const points = (cx: number, cy: number, a: number, b: number) =>
-    pointsOnEllipse({ x: cx, y: cy }, a, b).map((p) => [p.x, p.y]);
+    ellipseOutlineCells({ x: cx, y: cy }, a, b).map((p) => [p.x, p.y]);
 
-describe("pointsOnEllipse", () => {
+describe("ellipseOutlineCells", () => {
     it("is the centre four times for radii 0, 0", () => {
         expect(points(3, 4, 0, 0)).toEqual([
             [3, 4],
@@ -110,8 +110,8 @@ describe("pointsOnEllipse", () => {
     });
 
     it("refuses negative radii and fractions", () => {
-        expect(() => pointsOnEllipse({ x: 0, y: 0 }, -1, 2)).toThrow(RangeError);
-        expect(() => pointsOnEllipse({ x: 0.5, y: 0 }, 1, 2)).toThrow(RangeError);
+        expect(() => ellipseOutlineCells({ x: 0, y: 0 }, -1, 2)).toThrow(RangeError);
+        expect(() => ellipseOutlineCells({ x: 0.5, y: 0 }, 1, 2)).toThrow(RangeError);
     });
 });
 

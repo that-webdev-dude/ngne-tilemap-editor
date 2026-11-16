@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { pointsOnLine } from "../../src/core/raster/line";
+import { lineCells } from "../../src/core/raster/line";
 import { TERRAIN_STROKES } from "../unit/support/terrainFixtures";
 import type { TerrainStep } from "../unit/support/terrainFixtures";
 import { expect, openEditor } from "./te-014-support";
@@ -195,7 +195,7 @@ test.describe("TE-044 terrain brush", () => {
         // From the end of that line, without diagonal steps (Tiled's thin line).
         await clickAt(page, ...vertex(5, 2), ["Shift"]);
         await expect.poll(() => history(page)).toEqual({ undo: 2, label: "Terrain Brush" });
-        const line = pointsOnLine({ x: 3, y: 1 }, { x: 5, y: 2 }, true);
+        const line = lineCells({ x: 3, y: 1 }, { x: 5, y: 2 }, true);
         expect(line).toHaveLength(4);
         expect(await vertices(page)).toEqual(
             picture(SAND, [[1, 1], [2, 1], ...line.map(({ x, y }): [number, number] => [x, y])]),

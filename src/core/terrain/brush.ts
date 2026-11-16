@@ -1,5 +1,5 @@
 import type { TerrainSetType } from "../model";
-import { pointsOnLine } from "../raster/line";
+import { lineCells } from "../raster/line";
 import type { PixelPoint } from "../raster/line";
 import { TerrainFiller } from "./filler";
 import type { TerrainFillResult, TerrainFillerOptions } from "./filler";
@@ -142,10 +142,10 @@ export function mirroredTarget(
 function stepPoints(step: BrushStep, to: PixelPoint, fullTile: boolean): PixelPoint[] {
     const { behaviour, from, mode } = step;
     if (!from || behaviour === "single") return [to];
-    if (behaviour === "line") return pointsOnLine(from, to, !fullTile);
+    if (behaviour === "line") return lineCells(from, to, !fullTile);
     // A drag joins corner and edge mode targets; the point painted before is left out.
     if (mode === "mixed") return [to];
-    const joined = pointsOnLine(from, to, true).slice(1);
+    const joined = lineCells(from, to, true).slice(1);
     return joined.length > 0 ? joined : [to];
 }
 
@@ -156,7 +156,7 @@ function stepPoints(step: BrushStep, to: PixelPoint, fullTile: boolean): PixelPo
 function paintEdges(filler: TerrainFiller, step: BrushStep): WangIndex | null {
     const { behaviour, from, to, color } = step;
     const edge = to.index !== null && !isCorner(to.index) ? to.index : null;
-    const path = from && behaviour !== "single" ? pointsOnLine(from, to.point, true) : [to.point];
+    const path = from && behaviour !== "single" ? lineCells(from, to.point, true) : [to.point];
     if (path.length === 1) {
         if (edge !== null) filler.setEdge(to.point.x, to.point.y, edge, color);
         return edge;

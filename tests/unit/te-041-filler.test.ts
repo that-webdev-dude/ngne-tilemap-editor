@@ -143,7 +143,7 @@ function run(c: Case): TerrainFillResult {
         random: xorshift32(c.seed),
         corrections: c.corrections,
     });
-    if (c.fill) filler.setRegion(rectRegion(c.fill));
+    if (c.fill) filler.replacePaintedRegion(rectRegion(c.fill));
     for (const paint of c.paints) {
         if (paint.kind === "corner") filler.setCorner(paint.x, paint.y, paint.color);
         else if (paint.kind === "edge") filler.setEdge(paint.x, paint.y, paint.index, paint.color);
@@ -604,7 +604,7 @@ describe("terrain filler cases", () => {
             height: 3,
             random: xorshift32(12345),
         });
-        filler.setRegion(rectRegion({ x: 0, y: 0, width: 3, height: 3 }));
+        filler.replacePaintedRegion(rectRegion({ x: 0, y: 0, width: 3, height: 3 }));
         const result = filler.apply();
         expect(result.cells.map(({ value }) => value & 0xfffff)).toEqual(PINNED_TILES);
     });

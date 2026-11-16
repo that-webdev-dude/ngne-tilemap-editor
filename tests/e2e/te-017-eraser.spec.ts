@@ -1,6 +1,6 @@
 import { test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { pointsOnLine } from "../../src/core/raster/line";
+import { lineCells } from "../../src/core/raster/line";
 import {
     LAYERS,
     cells,
@@ -39,7 +39,7 @@ function without(tile: number, removed: readonly string[]): string[] {
 }
 
 const lineKeys = (a: [number, number], b: [number, number]) =>
-    pointsOnLine({ x: a[0], y: a[1] }, { x: b[0], y: b[1] }).map((p) => `${p.x},${p.y}`);
+    lineCells({ x: a[0], y: a[1] }, { x: b[0], y: b[1] }).map((p) => `${p.x},${p.y}`);
 
 /** The rectangle's cells from `a` to `b`, both included, as "x,y". */
 function spanKeys(a: [number, number], b: [number, number]): string[] {

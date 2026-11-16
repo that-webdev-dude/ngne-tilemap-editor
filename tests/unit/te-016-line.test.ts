@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { pointsOnLine } from "../../src/core/raster/line";
+import { lineCells } from "../../src/core/raster/line";
 
-// TE-016: `pointsOnLine` gives the cells Tiled v1.12.2 joins a drag with: the classic Bresenham
+// TE-016: `lineCells` gives the cells Tiled v1.12.2 joins a drag with: the classic Bresenham
 // line. The expected cells below are worked by hand from that algorithm: walk the major axis
 // from the end with the smaller coordinate, start the error at half the major length, step the
 // minor axis when the error drops below zero, and reverse the result of a reversed line.
@@ -9,7 +9,7 @@ import { pointsOnLine } from "../../src/core/raster/line";
 type Cells = [number, number][];
 
 const cells = (from: [number, number], to: [number, number], manhattan = false): Cells =>
-    pointsOnLine({ x: from[0], y: from[1] }, { x: to[0], y: to[1] }, manhattan).map((point) => [
+    lineCells({ x: from[0], y: from[1] }, { x: to[0], y: to[1] }, manhattan).map((point) => [
         point.x,
         point.y,
     ]);
@@ -130,7 +130,7 @@ const TABLE: { name: string; from: [number, number]; to: [number, number]; expec
     },
 ];
 
-describe("pointsOnLine", () => {
+describe("lineCells", () => {
     for (const { name, from, to, expected } of TABLE) {
         it(`gives Tiled's cells: ${name}`, () => {
             expect(cells(from, to)).toEqual(expected);

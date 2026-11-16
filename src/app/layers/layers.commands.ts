@@ -18,7 +18,7 @@ import {
     moveLayer,
     newLayer,
     selectAdjacentLayer,
-    toggleOtherLayers,
+    toggleFlagOnOtherLayers,
     ungroup,
 } from "./layers";
 
@@ -46,58 +46,76 @@ export const commands: CommandSpec[] = [
         title: "New Tile Layer",
         shortcut: "Shift+N",
         enabled: canAddLayer,
-        run: () => void newLayer("tile"),
+        run: () => {
+            newLayer("tile");
+        },
     },
     {
         id: "layer.newMarker",
         title: "New Marker Layer",
         enabled: canAddLayer,
-        run: () => void newLayer("marker"),
+        run: () => {
+            newLayer("marker");
+        },
     },
     {
         id: "layer.newGroup",
         title: "New Group",
         enabled: canAddLayer,
-        run: () => void newLayer("group"),
+        run: () => {
+            newLayer("group");
+        },
     },
     {
         id: "layer.group",
         title: "Group Layers",
         enabled: () => hasLayer() && canAddLayer(),
-        run: () => void groupLayers(),
+        run: () => {
+            groupLayers();
+        },
     },
     {
         id: "layer.ungroup",
         title: "Ungroup",
         enabled: () => layersIdle() && canUngroup(),
-        run: () => void ungroup(),
+        run: () => {
+            ungroup();
+        },
     },
     {
         id: "layer.duplicate",
         title: "Duplicate Layer",
         shortcut: "Ctrl+Shift+D",
         enabled: () => hasLayer() && canAddLayer(),
-        run: () => void duplicateLayers(),
+        run: () => {
+            duplicateLayers();
+        },
     },
     {
         id: "layer.delete",
         title: "Delete Layer",
         enabled: () => layersIdle() && canDeleteLayer(),
-        run: () => void deleteLayers(),
+        run: () => {
+            deleteLayers();
+        },
     },
     {
         id: "layer.moveUp",
         title: "Move Layer Up",
         shortcut: "Ctrl+Shift+ArrowUp",
         enabled: () => layersIdle() && canMoveLayer(1),
-        run: () => void moveLayer(1),
+        run: () => {
+            moveLayer(1);
+        },
     },
     {
         id: "layer.moveDown",
         title: "Move Layer Down",
         shortcut: "Ctrl+Shift+ArrowDown",
         enabled: () => layersIdle() && canMoveLayer(-1),
-        run: () => void moveLayer(-1),
+        run: () => {
+            moveLayer(-1);
+        },
     },
     {
         id: "layer.selectAbove",
@@ -105,7 +123,9 @@ export const commands: CommandSpec[] = [
         shortcut: "ArrowUp",
         context: "canvas",
         enabled: () => layersIdle() && noMarkerSelection() && canSelectLayer(1),
-        run: () => void selectAdjacentLayer(1),
+        run: () => {
+            selectAdjacentLayer(1);
+        },
     },
     {
         id: "layer.selectBelow",
@@ -113,19 +133,25 @@ export const commands: CommandSpec[] = [
         shortcut: "ArrowDown",
         context: "canvas",
         enabled: () => layersIdle() && noMarkerSelection() && canSelectLayer(-1),
-        run: () => void selectAdjacentLayer(-1),
+        run: () => {
+            selectAdjacentLayer(-1);
+        },
     },
     {
         id: "layer.toggleOthers",
         title: "Show/Hide Other Layers",
         enabled: () => layersIdle() && hasOtherLayers(),
-        run: () => void toggleOtherLayers("visible"),
+        run: () => {
+            toggleFlagOnOtherLayers("visible");
+        },
     },
     {
         id: "layer.lockOthers",
         title: "Lock/Unlock Other Layers",
         enabled: () => layersIdle() && hasOtherLayers(),
-        run: () => void toggleOtherLayers("locked"),
+        run: () => {
+            toggleFlagOnOtherLayers("locked");
+        },
     },
     {
         id: "view.highlightLayer",

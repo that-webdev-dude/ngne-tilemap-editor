@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { pointsOnLine } from "../../src/core/raster/line";
+import { lineCells } from "../../src/core/raster/line";
 import {
     LAYERS,
     expect,
@@ -21,9 +21,9 @@ test.beforeEach(async ({ page }) => {
 
 const canUndo = (page: Parameters<typeof painted>[0]) => pageCall<boolean>(page, "canUndo");
 
-/** The cells of `pointsOnLine` from `a` to `b`, as the page module lists them: row by row. */
-function lineCells(a: [number, number], b: [number, number]): string[] {
-    return pointsOnLine({ x: a[0], y: a[1] }, { x: b[0], y: b[1] })
+/** The cells of `lineCells` from `a` to `b`, as the page module lists them: row by row. */
+function sortedLineCells(a: [number, number], b: [number, number]): string[] {
+    return lineCells({ x: a[0], y: a[1] }, { x: b[0], y: b[1] })
         .sort((p, q) => p.y - q.y || p.x - q.x)
         .map((p) => `${p.x},${p.y}`);
 }
@@ -33,7 +33,7 @@ test("a fast drag changes every crossed cell, as one history entry", async ({ pa
     // One pointer event 28 cells away: the pipeline joins the cells between.
     await moveTo(page, 30, 17);
     await page.mouse.up();
-    expect(await painted(page)).toEqual(lineCells([2, 3], [30, 17]));
+    expect(await painted(page)).toEqual(sortedLineCells([2, 3], [30, 17]));
     expect(await canUndo(page)).toBe(true);
     await page.keyboard.press("Control+z");
     expect(await painted(page)).toEqual([]);

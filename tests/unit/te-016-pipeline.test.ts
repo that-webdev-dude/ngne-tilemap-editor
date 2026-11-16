@@ -189,7 +189,7 @@ function ready(): Harness {
 }
 
 describe("cell pointer pipeline", () => {
-    it("joins a fast drag with pointsOnLine and commits one history entry at the release", () => {
+    it("joins a fast drag with lineCells and commits one history entry at the release", () => {
         const h = ready();
         expect(h.pipeline.down(down(at(1, 1)))).toBe(true);
         // One sample far from the last: every cell between is painted.

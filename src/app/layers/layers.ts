@@ -9,7 +9,7 @@ import {
     newLayerCommand,
     otherLayers,
     setLayerValuesCommand,
-    toggleOtherLayersCommand,
+    toggleFlagOnOtherLayersCommand,
     ungroupCommand,
 } from "../../core/layers";
 import type { Command } from "../../core/history";
@@ -219,11 +219,14 @@ export function hasOtherLayers(): boolean {
 }
 
 /** Show/Hide (`"visible"`) or Lock/Unlock (`"locked"`) Other Layers of the active layer. */
-export function toggleOtherLayers(flag: "visible" | "locked", ids?: readonly number[]): boolean {
+export function toggleFlagOnOtherLayers(
+    flag: "visible" | "locked",
+    ids?: readonly number[],
+): boolean {
     const map = activeMap();
     const layers = chosen(ids);
     if (!map || layers.length === 0) return false;
-    const command = toggleOtherLayersCommand(
+    const command = toggleFlagOnOtherLayersCommand(
         sessionStore.getState().session.project,
         map.id,
         layers,

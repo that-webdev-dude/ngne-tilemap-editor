@@ -45,7 +45,7 @@ export interface ToolPointer {
     readonly cell: PixelPoint;
     /**
      * The cells the pointer crossed since the previous sample of the stroke, in order, this
-     * sample's cell last (`pointsOnLine`, SPEC §4.1): no cell of a fast drag is skipped. The
+     * sample's cell last (`lineCells`, SPEC §4.1): no cell of a fast drag is skipped. The
      * press's sample and a hover carry their own cell only; a sample in the cell of the one
      * before carries none.
      */

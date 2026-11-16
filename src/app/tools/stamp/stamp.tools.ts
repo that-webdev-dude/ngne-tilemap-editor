@@ -1,7 +1,7 @@
 import { RotateCcwSquare, RotateCwSquare } from "lucide-react";
 import type { Stamp } from "../../../core/cells";
-import { pointsOnEllipse } from "../../../core/raster/ellipse";
-import { pointsOnLine } from "../../../core/raster/line";
+import { ellipseOutlineCells } from "../../../core/raster/ellipse";
+import { lineCells } from "../../../core/raster/line";
 import type { PixelPoint } from "../../../core/raster/line";
 import { sessionStore } from "../../state/session";
 import type { PaintStroke, ToolAction, ToolModifiers, ToolSpec } from "../types";
@@ -17,7 +17,7 @@ import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
 //     over earlier ones; empty stamp cells leave the map)
 //   Shift+press: a line of stamps from the last painted point to the pressed cell
 //   Ctrl+Shift+press: an ellipse of stamps around the last painted point through the
-//     pressed cell (`pointsOnEllipse` with the distances as radii)
+//     pressed cell (`ellipseOutlineCells` with the distances as radii)
 //
 // A line or an ellipse places its stamps without overlap, as Tiled does
 // (`separatePlacements`). With no last painted point on the map the press only sets it, as
@@ -57,8 +57,8 @@ export function shapePoints(
     to: PixelPoint,
 ): PixelPoint[] {
     return mode === "line"
-        ? pointsOnLine(from, to)
-        : pointsOnEllipse(from, Math.abs(from.x - to.x), Math.abs(from.y - to.y));
+        ? lineCells(from, to)
+        : ellipseOutlineCells(from, Math.abs(from.x - to.x), Math.abs(from.y - to.y));
 }
 
 /** The stroke in progress: the stamp at its press and, for a line or an ellipse, its start. */

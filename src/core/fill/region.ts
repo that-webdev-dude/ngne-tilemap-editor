@@ -88,7 +88,7 @@ function plotEllipseInBox(
  * leftmost to its rightmost outline cell. With `clip`, only the part inside `clip`; rows it
  * leaves out cost no per-cell work. Empty for an empty rectangle.
  */
-export function ellipseRegion(rect: CellRect, clip?: CellRect): Region {
+export function inscribedEllipseRegion(rect: CellRect, clip?: CellRect): Region {
     if (rect.width <= 0 || rect.height <= 0) return [];
     const top = clip ? Math.max(rect.y, clip.y) : rect.y;
     const bottom = clip

@@ -4,7 +4,7 @@ import { touchedNothing } from "../../core/history";
 import type { Touched, Transaction } from "../../core/history";
 import { findLayer } from "../../core/model";
 import type { ProjectSession } from "../../core/model";
-import { pointsOnLine } from "../../core/raster/line";
+import { lineCells } from "../../core/raster/line";
 import type { PixelPoint } from "../../core/raster/line";
 import { maskHas, tileSelectionOf } from "../../core/selection";
 import type { SessionState } from "../state/session";
@@ -29,7 +29,7 @@ import type {
 //
 //   pointer down (left or right) → active tool; a paint tool's target resolved (a visible,
 //     unlocked tile layer) and its transaction begun → onDown → onMove per sample, each with
-//     the cells crossed since the one before (`pointsOnLine`) → onUp → commit (one history
+//     the cells crossed since the one before (`lineCells`) → onUp → commit (one history
 //     entry, or none when nothing changed) → onCommit
 //   Escape, pointer cancel, a right click during a left drag, the active map or layer
 //     changed → onCancel → abort (cells as before)
@@ -195,7 +195,7 @@ function toolButtonOf(button: number): ToolButton | null {
 function cellsSince(last: PixelPoint | null, cell: PixelPoint): PixelPoint[] {
     if (last === null) return [cell];
     if (last.x === cell.x && last.y === cell.y) return [];
-    return pointsOnLine(last, cell).slice(1);
+    return lineCells(last, cell).slice(1);
 }
 
 function modifiersOf(input: Omit<KeyInput, "type" | "key" | "repeat">): ToolModifiers {

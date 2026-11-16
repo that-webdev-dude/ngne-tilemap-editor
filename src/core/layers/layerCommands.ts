@@ -262,7 +262,7 @@ const KIND_NAMES: Record<NamedLayerKind, string> = {
  * The name New Layer gives a layer of `kind`, as Tiled names new layers: "<Kind> N" with N one
  * above the count of layers of that kind, raised past names already taken.
  */
-export function newLayerName(map: ProjectMap, kind: NamedLayerKind): string {
+export function defaultLayerName(map: ProjectMap, kind: NamedLayerKind): string {
     const names = new Set<string>();
     let number = 0;
     for (const { layer } of walkLayers(map.layers)) {
@@ -546,13 +546,13 @@ function takeLayerId(map: ProjectMap): number {
 /**
  * The command that adds a layer of `kind` to map `mapId` right above its active layer, in the
  * active layer's group, and makes it active (as Tiled's New Layer; with no active layer, at the
- * bottom of the map). Its name is `newLayerName`.
+ * bottom of the map). Its name is `defaultLayerName`.
  */
 export function newLayerCommand(mapId: string, kind: NewLayerKind): Command {
     return treeCommand(newLayerLabel(kind), mapId, (map, mapSession) => {
         const entry = findLayer(map, mapSession.activeLayerId);
         const place = entry ? placeOf(map, entry.layer.id) : null;
-        const name = newLayerName(map, kind);
+        const name = defaultLayerName(map, kind);
         const id = takeLayerId(map);
         const layer = createNewLayer(kind, id, name);
         const list = place ? place.list : map.layers;
@@ -593,7 +593,7 @@ export function newImageLayerCommand(
         }
         const entry = findLayer(map, mapSession.activeLayerId);
         const place = entry ? placeOf(map, entry.layer.id) : null;
-        const name = newLayerName(map, "image");
+        const name = defaultLayerName(map, "image");
         const id = takeLayerId(map);
         const list = place ? place.list : map.layers;
         list.splice(place ? place.index + 1 : 0, 0, createImageLayer(id, name, imageId));
@@ -1030,7 +1030,7 @@ export function setLayerValuesCommand(
  * unlocked when every one is locked, else all locked. Only the layers that change are in the
  * entry. Null when there is no other layer.
  */
-export function toggleOtherLayersCommand(
+export function toggleFlagOnOtherLayersCommand(
     project: Project,
     mapId: string,
     ids: readonly number[],

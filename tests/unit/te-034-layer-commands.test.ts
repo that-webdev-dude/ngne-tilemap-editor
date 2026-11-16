@@ -18,10 +18,10 @@ import {
     moveLayerCommand,
     moveLayerToCommand,
     newLayerCommand,
-    newLayerName,
+    defaultLayerName,
     otherLayers,
     setLayerValuesCommand,
-    toggleOtherLayersCommand,
+    toggleFlagOnOtherLayersCommand,
     ungroupCommand,
 } from "../../src/core/layers";
 import {
@@ -350,7 +350,7 @@ describe("every layer command passes the symmetry harness", () => {
         const map = furnish(history);
         // Others of layer 3: its sibling 4, its group's siblings 1 and 5; not the group itself.
         expect(otherLayers(map, [3]).map((layer) => layer.id)).toEqual([1, 4, 5]);
-        const hide = toggleOtherLayersCommand(history.session.project, MAP, [3], "visible")!;
+        const hide = toggleFlagOnOtherLayersCommand(history.session.project, MAP, [3], "visible")!;
         expectSymmetric(history, hide);
         expect(hide.label).toBe(LAYER_LABELS.hideOthers);
         expect([1, 4, 5].map((id) => findLayer(map, id)!.layer.visible)).toEqual([
@@ -358,18 +358,18 @@ describe("every layer command passes the symmetry harness", () => {
             false,
             false,
         ]);
-        const show = toggleOtherLayersCommand(history.session.project, MAP, [3], "visible")!;
+        const show = toggleFlagOnOtherLayersCommand(history.session.project, MAP, [3], "visible")!;
         expectSymmetric(history, show);
         expect(show.label).toBe(LAYER_LABELS.showOthers);
         expect([1, 4, 5].every((id) => findLayer(map, id)!.layer.visible)).toBe(true);
 
         findLayer(map, 4)!.layer.locked = true;
-        const lock = toggleOtherLayersCommand(history.session.project, MAP, [3], "locked")!;
+        const lock = toggleFlagOnOtherLayersCommand(history.session.project, MAP, [3], "locked")!;
         expectSymmetric(history, lock);
         expect(lock.label).toBe(LAYER_LABELS.lockOthers);
         // Only the layers that change are in the entry.
         expect(lock.touched.layerIds).toEqual([1, 5]);
-        const unlock = toggleOtherLayersCommand(history.session.project, MAP, [3], "locked")!;
+        const unlock = toggleFlagOnOtherLayersCommand(history.session.project, MAP, [3], "locked")!;
         expectSymmetric(history, unlock);
         expect(unlock.label).toBe(LAYER_LABELS.unlockOthers);
         expect([1, 4, 5].some((id) => findLayer(map, id)!.layer.locked)).toBe(false);
@@ -377,7 +377,9 @@ describe("every layer command passes the symmetry harness", () => {
 
     it("no other layers: no command", () => {
         const history = setup();
-        expect(toggleOtherLayersCommand(history.session.project, MAP, [1], "visible")).toBeNull();
+        expect(
+            toggleFlagOnOtherLayersCommand(history.session.project, MAP, [1], "visible"),
+        ).toBeNull();
     });
 });
 
@@ -573,11 +575,11 @@ describe("layer order, names and the highlight", () => {
         const history = setup();
         const map = furnish(history);
         // Three tile layers: the next is 4.
-        expect(newLayerName(map, "tile")).toBe("Tile Layer 4");
+        expect(defaultLayerName(map, "tile")).toBe("Tile Layer 4");
         findLayer(map, 4)!.layer.name = "Tile Layer 4";
-        expect(newLayerName(map, "tile")).toBe("Tile Layer 5");
-        expect(newLayerName(map, "marker")).toBe("Marker Layer 2");
-        expect(newLayerName(map, "group")).toBe("Group Layer 2");
+        expect(defaultLayerName(map, "tile")).toBe("Tile Layer 5");
+        expect(defaultLayerName(map, "marker")).toBe("Marker Layer 2");
+        expect(defaultLayerName(map, "group")).toBe("Group Layer 2");
         expect(groupName(map)).toBe("Group 2");
     });
 

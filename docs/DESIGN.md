@@ -151,7 +151,7 @@ PNG codec, zip container and strict JSON reader come from `core/sprite` (§3.1).
 | `app/selection/antsGeometry.ts`, `boundaryCache.ts`, `ringPainter.ts` | Ring around a cell mask instead of a pixel mask |
 | `app/selection/transform/handles.ts` | Handles of marker and collision-shape boxes |
 | `core/selection/mask.ts`, `operations.ts`, `boundary.ts` | Cell masks (replace, add, subtract, intersect, invert) |
-| `core/raster/line.ts` | `pointsOnLine` for cell strokes, checked against Tiled's endpoints |
+| `core/raster/line.ts` | `lineCells` for cell strokes, checked against Tiled's endpoints |
 | `core/history/command.ts`, `transaction.ts`, `history.ts`, `allocate.ts`, `errors.ts` | Cell patches instead of pixel patches; one history per project (SPEC §3) |
 | `ui/import/PixelCanvas.tsx` | Zoomable checkerboard canvas for the tileset import preview and tile editors; its `core/pixels` import points into `core/sprite` |
 | `engine/viewport/checker.ts` | Checkerboard texture for the new viewport |

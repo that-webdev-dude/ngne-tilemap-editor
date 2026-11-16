@@ -127,7 +127,7 @@ it:
   `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`.
 - `src/tiled/geometry.cpp` (2010–2011 Stefan Beller; 2017 Benjamin Trotter; 2020 Zingl Alois;
   2017–2023 Thorbjørn Lindeijer): `src/core/raster/line.ts`, `src/core/raster/ellipse.ts`,
-  `ellipseRegion` in `src/core/fill/region.ts`, the reference ellipse in
+  `inscribedEllipseRegion` in `src/core/fill/region.ts`, the reference ellipse in
   `tests/unit/te-019-fill.test.ts` and `tests/e2e/te-017-tiled-golden.py` (since removed).
 - `src/tiled/tilepainter.cpp` (2009–2011 Thorbjørn Lindeijer; 2009 Jeff Bland):
   `src/core/fill/flood.ts`.
@@ -144,5 +144,5 @@ The current `line.ts`, `filler.ts`, `brush.ts`, `pick.ts` (with `candidates.ts`)
 `shapeArea` were rewritten from this project's specification, its tests and Tiled's user
 manual. They reproduce Tiled's behaviour; no code in them was translated from Tiled's source or
 from the earlier versions, whose public interfaces they keep. The
-current `ellipse.ts`, `ellipseRegion` and the reference ellipse in `te-019-fill.test.ts` follow
+current `ellipse.ts`, `inscribedEllipseRegion` and the reference ellipse in `te-019-fill.test.ts` follow
 Zingl's Bresenham code (MIT), and the current `flood.ts` is an independent design.

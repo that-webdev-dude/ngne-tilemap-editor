@@ -18,11 +18,11 @@ export {
     moveTarget,
     newLayerCommand,
     newImageLayerCommand,
-    newLayerName,
+    defaultLayerName,
     otherLayers,
     placeOf,
     setLayerValuesCommand,
-    toggleOtherLayersCommand,
+    toggleFlagOnOtherLayersCommand,
     ungroupCommand,
 } from "./layerCommands";
 export type {

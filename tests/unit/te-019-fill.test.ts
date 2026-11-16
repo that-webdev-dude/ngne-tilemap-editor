@@ -5,7 +5,7 @@ import { CellStore, cellValue } from "../../src/core/cells";
 import type { CellRect, Stamp } from "../../src/core/cells";
 import {
     clipRegion,
-    ellipseRegion,
+    inscribedEllipseRegion,
     floodRegion,
     forEachTileFillCell,
     rectRegion,
@@ -285,7 +285,7 @@ describe("ellipse region", () => {
     it("is the ellipse of Tiled's shape fill: goldens", () => {
         for (const [width, height, rows] of GOLDENS) {
             const rect = { x: 3, y: -2, width, height };
-            const region = ellipseRegion(rect);
+            const region = inscribedEllipseRegion(rect);
             expect(draw(region, rect), `${width} × ${height}`).toEqual(rows);
             expectNormal(region);
         }
@@ -296,7 +296,7 @@ describe("ellipse region", () => {
         for (let width = 1; width <= 40; width++) {
             for (let height = 1; height <= 40; height++) {
                 const rect = { x: -5, y: 7, width, height };
-                const region = ellipseRegion(rect);
+                const region = inscribedEllipseRegion(rect);
                 const reference = referenceEllipse(rect);
                 const ours = regionCells(region).map(({ x, y }) => `${x},${y}`);
                 if (ours.length !== reference.size || ours.some((cell) => !reference.has(cell))) {
@@ -314,19 +314,21 @@ describe("ellipse region", () => {
     it("clips to a rectangle, also for rectangles far larger than a map", () => {
         const rect = { x: 0, y: 0, width: 9, height: 5 };
         const clip = { x: 1, y: 1, width: 3, height: 10 };
-        expect(ellipseRegion(rect, clip)).toEqual(clipRegion(ellipseRegion(rect), clip));
+        expect(inscribedEllipseRegion(rect, clip)).toEqual(
+            clipRegion(inscribedEllipseRegion(rect), clip),
+        );
         const huge = { x: -30_000, y: -20_000, width: 60_001, height: 40_001 };
         const map = { x: 0, y: 0, width: 4, height: 4 };
         // The middle of the huge ellipse: every cell of the map is inside.
-        expect(ellipseRegion(huge, map)).toEqual(rectRegion(map));
+        expect(inscribedEllipseRegion(huge, map)).toEqual(rectRegion(map));
         // Its top and bottom rows: one run each, the same, about the middle column.
-        const top = ellipseRegion(huge, { ...huge, height: 1 });
-        const bottom = ellipseRegion(huge, { ...huge, y: 20_000, height: 1 });
+        const top = inscribedEllipseRegion(huge, { ...huge, height: 1 });
+        const bottom = inscribedEllipseRegion(huge, { ...huge, y: 20_000, height: 1 });
         expect(top).toHaveLength(1);
         expect(top[0]!.start + top[0]!.end).toBe(2 * huge.x + huge.width);
         expect(bottom).toEqual([{ ...top[0]!, y: 20_000 }]);
-        expect(ellipseRegion({ x: 0, y: 0, width: 0, height: 3 })).toEqual([]);
-        expect(ellipseRegion(rect, { x: 0, y: 9, width: 9, height: 2 })).toEqual([]);
+        expect(inscribedEllipseRegion({ x: 0, y: 0, width: 0, height: 3 })).toEqual([]);
+        expect(inscribedEllipseRegion(rect, { x: 0, y: 9, width: 9, height: 2 })).toEqual([]);
     });
 });
 

@@ -1,5 +1,5 @@
 import { test } from "@playwright/test";
-import { pointsOnLine } from "../../src/core/raster/line";
+import { lineCells } from "../../src/core/raster/line";
 import { GOLDEN } from "./te-017-goldens";
 import {
     LAYERS,
@@ -31,7 +31,7 @@ test("a drag paints the stamp at every crossed cell, one entry; undo and redo", 
 }) => {
     await setStamp(page, 1, 1, [2]);
     await drag(page, [2, 3], [[20, 12]]);
-    const line = pointsOnLine({ x: 2, y: 3 }, { x: 20, y: 12 }).map((p) => `${p.x},${p.y}:2`);
+    const line = lineCells({ x: 2, y: 3 }, { x: 20, y: 12 }).map((p) => `${p.x},${p.y}:2`);
     expect(await cells(page)).toEqual(rowOrder(line));
     expect(await history(page)).toEqual({ undo: "Stamp Brush", redo: null });
 
