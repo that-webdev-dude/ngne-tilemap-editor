@@ -462,9 +462,31 @@ BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
 | `tests/unit/te-044-brush.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
 | `tests/unit/te-060-tilesets.test.ts` | Names | Pending |
 
+## Clean-room records
+
+- 2026-11-16, terrain filler and terrain brush: `src/core/terrain/filler.ts`, `brush.ts`,
+  `pick.ts` and `src/app/tools/terrain/terrainBrush.tools.ts` written anew;
+  `src/core/terrain/candidates.ts` removed. Roles: a specification writer, who had read the
+  earlier versions of these files but not Tiled's source, made SPEC §5.2 and §5.3
+  behaviour-only (the earlier bound on how far a stroke reaches and an unused painting mode were
+  dropped), rewrote the te-041 cases that tested the earlier filler's internals as behaviour
+  properties, and wrote stubs (the exported signatures, each with a one-line behaviour comment).
+  An implementer who had read neither Tiled's source, nor the earlier files or their history,
+  nor the reference doc or the audit reports, wrote the four files in a separate worktree from
+  which the earlier files were deleted. It received SPEC §2.2, §2.3, §3, §4.1, §4.3 and §5, the
+  terrain parts of DESIGN, the stubs, the tests and Tiled's user manual; it was told to run no
+  Git command and to open no file outside the worktree, and asked no question. The specification
+  writer reviewed the result by tests and outputs only. The goldens captured from Tiled 1.12.2
+  (te-042, te-044, te-045) pass unchanged.
+
 ## Owner decisions
 
 - 2026-11-16: the bundled `@ngne/core` 0.3.1 contains six modules adapted from cluster-renderer,
   the owner's own earlier repository (owner's statement, 2026-11-15), used in the engine under
   its MIT licence. The origin, commit and files are recorded in the engine repository's
   `docs/provenance.md` at `c6e08ab`.
+- 2026-11-16: the drag threshold of the marker tools and the rectangle select (5 CSS px, summed
+  over both axes; SPEC §8 for markers) is kept as this project's own documented value. Its origin is listed
+  in "Tiled source named or read" (`markerToolSupport.ts`, `selection.tools.ts`).
+- 2026-11-16: the bucket fill no longer keeps the region its hover preview found for the press;
+  each preview and each press finds its own region.

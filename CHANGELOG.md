@@ -7,6 +7,10 @@
   first: building the overview after a map opens and rebuilding it after a layer change take
   less time.
 - The generated `ngne-tilemap.ts` describes `findLayer` and `setCell` by their behaviour.
+- Terrain painting and terrain fill are rewritten from the specification. On complete terrain
+  sets the results are unchanged; on incomplete sets the brush can adjust the cells around a
+  stroke differently, and further out, than before. The Tiled-captured test cases give the same
+  results as before.
 
 ## 1.0.0 – 2026-11-13
 

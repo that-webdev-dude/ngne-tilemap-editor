@@ -7,11 +7,9 @@ import { record } from "./record";
 // on the reference map, 1920 × 1080 at DPR 1. The layer under the parallax layer is made one
 // tile everywhere, so each press at the map's middle fills all 256 × 256 cells; the presses
 // alternate two stamps, so each one changes every cell and is one history entry. Before each
-// press the stamp is set and the overlay has redrawn its hover preview, which finds the region
-// (as Tiled's bucket does on hover). The timed presses then forget it, so each finds its region,
-// writes the cells and the frame shows them (SPEC §14: the region found after the press); as many
-// presses after them keep it, for the details. Each press is timed from its event's time stamp
-// to the first frame submitted after it. Run alone
+// press the stamp is set and the overlay has redrawn its hover preview; each press finds its
+// region, writes the cells and the frame shows them (SPEC §14: the region found after the press).
+// Each press is timed from its event's time stamp to the first frame submitted after it. Run alone
 // on the reference machine, one GPU at a time (tests/perf/README.md):
 //
 //     PERF_GPU=intel-uhd npx vitest run --config vitest.perf.config.ts --silent=false tests/perf/te-019-bucket.perf.ts
@@ -45,19 +43,18 @@ describeBrowser("te-019 bucket", () => {
             const { mouse } = run.page;
             const at = await call<{ x: number; y: number }>("cellClient", 128, 128);
             await mouse.move(at.x, at.y);
-            // The timed presses, the region found after each; then as many found on hover.
-            for (let n = 0; n < 2 * PRESSES; n++) {
-                await call("useTile", n % 2 === 0 ? 7 : 5, n < PRESSES);
+            // The timed presses, the region found after each.
+            for (let n = 0; n < PRESSES; n++) {
+                await call("useTile", n % 2 === 0 ? 7 : 5);
                 await mouse.down();
                 await call("recorded", n + 1);
                 await mouse.up();
             }
             const filled = await call<BucketRecord>("result");
             expect(filled.undo).toBe("Bucket Fill");
-            expect(filled.entries).toBe(2 * PRESSES);
+            expect(filled.entries).toBe(PRESSES);
             const timed = filled.ms.slice(WARMUP, PRESSES);
             const sorted = [...timed].sort((a, b) => a - b);
-            const hover = filled.ms.slice(PRESSES + WARMUP).sort((a, b) => a - b);
             const handled = (from: number, to: number) =>
                 percentile(
                     filled.handledMs.slice(from, to).sort((a, b) => a - b),
@@ -74,13 +71,9 @@ describeBrowser("te-019 bucket", () => {
                 details: {
                     adapter: run.adapter,
                     medianMs: percentile(sorted, 0.5),
-                    maxMs: sorted[sorted.length - 1],
+                    maxMs: sorted.at(-1),
                     floodAloneMs: flood.ms,
                     handledMedianMs: handled(WARMUP, PRESSES),
-                    // The same presses with the region already found by the hover preview.
-                    hoverFoundP95Ms: percentile(hover, 0.95),
-                    hoverFoundMedianMs: percentile(hover, 0.5),
-                    hoverFoundHandledMedianMs: handled(PRESSES + WARMUP, 2 * PRESSES),
                     tiers: [...new Set(filled.tiers)],
                     layerId: opened.layerId,
                 },

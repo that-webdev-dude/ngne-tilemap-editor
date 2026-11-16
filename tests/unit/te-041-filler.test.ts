@@ -22,10 +22,10 @@ import { LAYER, MAP, SLOT, commit, setup, tileLayer, tileset } from "./te-006-su
 
 // TE-041: the terrain filler (SPEC §5.2), with Tiled's terrain fill behaviour. Properties over
 // random sets, maps and painting: every resolved cell matches its painted indexes and its
-// resolved neighbours; a complete set leaves no invalid cell; nothing outside the bounds (the
-// touched region grown by the maximum distance, clipped to the map) changes; a fixed seed gives
-// the same result twice. Then unresolvable painting on an incomplete set, and the result as a
-// cell patch of a stroke transaction.
+// resolved neighbours; a complete set leaves no invalid cell; the brush changes only the touched
+// cells and cells joined to them through changed cells, a fill only its region; a fixed seed
+// gives the same result twice. Then unresolvable painting on an incomplete set, and the result
+// as a cell patch of a stroke transaction.
 
 /** Every combination of `count` indexes over terrains `1..c`. */
 function combinations(c: number, count: number): number[][] {
@@ -184,8 +184,8 @@ const setArb = (complete: boolean) =>
 
 /**
  * Brush paints the set's type supports, around and just outside a `width × height` map. Each
- * paints an index in every cell that shares it; a lone `setWangIndex` does not, so a neighbour
- * resolved first may override it, as in Tiled.
+ * paints an index in every cell that shares it; a lone `setWangIndex` paints one cell only, so
+ * the neighbours sharing that index may disagree with it, and it is left out here.
  */
 function paintArb(analysis: TerrainAnalysis, width: number, height: number, withNone: boolean) {
     const color = fc.integer({ min: withNone ? 0 : 1, max: analysis.colorCount });
@@ -242,14 +242,14 @@ function caseArb(
                               })
                               .map((rect): CellRect | null => rect)
                         : fc.constant(null),
-                    corrections: options.fill ? fc.constant(false) : fc.boolean(),
+                    corrections: fc.constant(!options.fill),
                     seed: fc.integer({ min: 0, max: 0xffffffff }),
                 });
             }),
     );
 }
 
-/** Painting every index the type uses of every cell of a rectangle, corrections off. */
+/** Painting every index the type uses of every cell of a rectangle. */
 function paintedFill(analysis: TerrainAnalysis, rect: CellRect, color: number): Paint[] {
     const paints: Paint[] = [];
     forEachRegionCell(rectRegion(rect), (x, y) => {
@@ -262,28 +262,25 @@ function paintedFill(analysis: TerrainAnalysis, rect: CellRect, color: number): 
     return paints;
 }
 
-/** The touched cells inside the map: painted cells and the fill region. */
-function touchedRect(c: Case): CellRect | null {
+/** The touched cells inside the map, as `x,y` keys: painted cells and the fill region. */
+function touchedCells(c: Case): Set<string> {
     const cells = constraintsOf(c.paints, c.analysis.type).map(([x, y]) => ({ x, y }));
     if (c.fill) cells.push(...regionCells(rectRegion(c.fill)));
-    const inside = cells.filter(
-        ({ x, y }) => x >= 0 && y >= 0 && x < c.grid.width && y < c.grid.height,
+    return new Set(
+        cells
+            .filter(({ x, y }) => x >= 0 && y >= 0 && x < c.grid.width && y < c.grid.height)
+            .map(({ x, y }) => `${x},${y}`),
     );
-    if (inside.length === 0) return null;
-    const xs = inside.map((p) => p.x);
-    const ys = inside.map((p) => p.y);
-    return {
-        x: Math.min(...xs),
-        y: Math.min(...ys),
-        width: Math.max(...xs) - Math.min(...xs) + 1,
-        height: Math.max(...ys) - Math.min(...ys) + 1,
-    };
+}
+
+/** The cells a result resolves or reports invalid, as `x,y` keys. */
+function reachedCells(result: TerrainFillResult): Set<string> {
+    const out = new Set(result.cells.map(({ x, y }) => `${x},${y}`));
+    forEachRegionCell(result.invalid, (x, y) => out.add(`${x},${y}`));
+    return out;
 }
 
 const RUNS = { numRuns: 300 };
-
-/** Tile IDs `xorshift32(12345)` picks in "pins the tie-breaking of a fixed seed". */
-const PINNED_TILES: number[] = [2, 7, 12, 5, 11, 12, 8, 1, 8];
 
 describe("terrain filler properties", () => {
     it("every resolved cell matches its painted indexes and its resolved neighbours", () => {
@@ -297,7 +294,7 @@ describe("terrain filler properties", () => {
                         const placed = new Map(
                             result.cells.map((cell) => [`${cell.x},${cell.y}`, cell.value]),
                         );
-                        // Last paint of an index wins, as later paints overwrite `desired`.
+                        // Painting an index again replaces its terrain (SPEC §5.2).
                         const wanted = new Map<string, number>();
                         for (const [x, y, index, color] of constraintsOf(
                             c.paints,
@@ -337,7 +334,7 @@ describe("terrain filler properties", () => {
         );
     });
 
-    it("a complete set leaves no invalid cell (brush with and without corrections, fill mode)", () => {
+    it("a complete set leaves no invalid cell (brush, brush painting a whole rectangle, fill mode)", () => {
         fc.assert(
             fc.property(
                 caseArb(setArb(true), { covered: true, fill: false }),
@@ -355,7 +352,6 @@ describe("terrain filler properties", () => {
                     const fill = {
                         ...c,
                         paints: paintedFill(c.analysis, rect, color),
-                        corrections: false,
                     };
                     expect(run(fill).invalid).toEqual([]);
                     // Terrain fill mode (SPEC §5.4): the region only, corrections off.
@@ -367,7 +363,7 @@ describe("terrain filler properties", () => {
         );
     });
 
-    it("changes nothing outside the bounds: the touched cells grown by the maximum distance, clipped to the map", () => {
+    it("a fill reaches only its region; the brush only the touched cells and cells joined to them through reached cells", () => {
         fc.assert(
             fc.property(
                 fc.oneof(
@@ -376,26 +372,31 @@ describe("terrain filler properties", () => {
                 ),
                 (c) => {
                     const result = run(c);
-                    const touched = touchedRect(c);
-                    if (!touched) {
-                        expect(result).toEqual({ cells: [], invalid: [], bounds: null });
+                    const touched = touchedCells(c);
+                    const reached = reachedCells(result);
+                    if (touched.size === 0) {
+                        expect(result.cells).toEqual([]);
+                        expect(result.invalid).toEqual([]);
                         return;
                     }
-                    const m = c.analysis.maximumDistance;
-                    const left = Math.max(0, touched.x - m);
-                    const top = Math.max(0, touched.y - m);
-                    const right = Math.min(c.grid.width, touched.x + touched.width + m);
-                    const bottom = Math.min(c.grid.height, touched.y + touched.height + m);
-                    expect(result.bounds).toEqual({
-                        x: left,
-                        y: top,
-                        width: right - left,
-                        height: bottom - top,
-                    });
-                    const inside = (x: number, y: number) =>
-                        x >= left && x < right && y >= top && y < bottom;
-                    for (const cell of result.cells) expect(inside(cell.x, cell.y)).toBe(true);
-                    forEachRegionCell(result.invalid, (x, y) => expect(inside(x, y)).toBe(true));
+                    if (c.fill) {
+                        for (const key of reached) expect(touched.has(key), key).toBe(true);
+                        return;
+                    }
+                    // Walk out from the touched cells through reached cells, 8 neighbours.
+                    const joined = new Set(touched);
+                    const queue = [...touched];
+                    while (queue.length > 0) {
+                        const [x, y] = queue.pop()!.split(",").map(Number) as [number, number];
+                        for (const [dx, dy] of AROUND) {
+                            const key = `${x + dx},${y + dy}`;
+                            if (reached.has(key) && !joined.has(key)) {
+                                joined.add(key);
+                                queue.push(key);
+                            }
+                        }
+                    }
+                    for (const key of reached) expect(joined.has(key), key).toBe(true);
                 },
             ),
             RUNS,
@@ -453,33 +454,40 @@ describe("terrain filler cases", () => {
             { y: 2, start: 1, end: 3 },
         ]);
         expect(result.cells).toEqual([]);
-        expect(result.bounds).toEqual({ x: 0, y: 0, width: 4, height: 4 });
     });
 
-    it("without corrections takes the unreachable terrain at the highest penalty", () => {
+    it("the brush uses no tile with a terrain unreachable from what its index had, at an index not painted", () => {
         const filler = new TerrainFiller({
             analysis: noTransitions,
             back: at(grassMap),
             width: 4,
             height: 4,
             random: xorshift32(1),
+            corrections: true,
         });
         filler.setFullTile(1, 1, 2);
         const result = filler.apply();
-        expect(result.invalid).toEqual([]);
-        expect(
-            result.cells.filter((cell) => cell.value === SAND).map(({ x, y }) => [x, y]),
-        ).toEqual([
-            [0, 0],
-            [1, 0],
-            [2, 0],
-            [0, 1],
-            [1, 1],
-            [2, 1],
-            [0, 2],
-            [1, 2],
-            [2, 2],
+        // Full tile mode paints every index of (1, 1) and the indexes its neighbours share.
+        const painted = new Set(
+            constraintsOf([{ kind: "full", x: 1, y: 1, color: 2 }], "corner").map(
+                ([x, y, index]) => `${x},${y},${index}`,
+            ),
+        );
+        for (const { x, y, value } of result.cells) {
+            const wangId = wangOf(noTransitions, value);
+            for (let index = 0; index < 8; index++) {
+                if (wangId[index] !== 2) continue;
+                expect(painted.has(`${x},${y},${index}`), `${x},${y} index ${index}`).toBe(true);
+            }
+        }
+        // Sand only meets sand: the cells around (1, 1) cannot match and stay as they are.
+        expect(result.invalid).toEqual([
+            { y: 0, start: 0, end: 3 },
+            { y: 1, start: 0, end: 1 },
+            { y: 1, start: 2, end: 3 },
+            { y: 2, start: 0, end: 3 },
         ]);
+        expect(result.cells).toEqual([{ x: 1, y: 1, value: SAND }]);
     });
 
     it("corner brush on a complete set routes the corner and corrects the neighbours", () => {
@@ -571,7 +579,7 @@ describe("terrain filler cases", () => {
         expect(result.invalid).toEqual([]);
         const after = [...map.cells];
         for (const { x, y, value } of result.cells) after[y * 6 + x] = value;
-        // Cells outside the painted 2 × 2 changed: the corrections pass reached them.
+        // Cells outside the painted 2 × 2 changed, so that the map matches again.
         const outsideRegion = result.cells.filter(
             ({ x, y }) => !(x >= 2 && x <= 3 && y >= 2 && y <= 3) && after[y * 6 + x] !== all1,
         );
@@ -590,23 +598,33 @@ describe("terrain filler cases", () => {
         }
     });
 
-    it("pins the tie-breaking of a fixed seed", () => {
+    it("leaves ties to the seed: the same seed decides them the same way, other seeds differently", () => {
         // A fill region on an empty map: every candidate ties, so the seed decides.
         const analysis = analyzeTerrainSet(
             terrainSet("corner", 2, completeWangIds("corner", 2)),
             SLOT,
         );
         const empty: Grid = { width: 3, height: 3, cells: Array<number>(9).fill(0) };
-        const filler = new TerrainFiller({
-            analysis,
-            back: at(empty),
-            width: 3,
-            height: 3,
-            random: xorshift32(12345),
-        });
-        filler.replacePaintedRegion(rectRegion({ x: 0, y: 0, width: 3, height: 3 }));
-        const result = filler.apply();
-        expect(result.cells.map(({ value }) => value & 0xfffff)).toEqual(PINNED_TILES);
+        const fill = (seed: number) => {
+            const filler = new TerrainFiller({
+                analysis,
+                back: at(empty),
+                width: 3,
+                height: 3,
+                random: xorshift32(seed),
+            });
+            filler.replacePaintedRegion(rectRegion({ x: 0, y: 0, width: 3, height: 3 }));
+            return filler.apply();
+        };
+        const outcomes = new Set<string>();
+        for (let seed = 1; seed <= 20; seed++) {
+            const result = fill(seed);
+            expect(fill(seed)).toEqual(result);
+            expect(result.invalid).toEqual([]);
+            expect(result.cells).toHaveLength(9);
+            outcomes.add(JSON.stringify(result.cells));
+        }
+        expect(outcomes.size).toBeGreaterThan(1);
     });
 
     it("refuses terrains and indexes outside the set", () => {

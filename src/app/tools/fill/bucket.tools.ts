@@ -1,5 +1,5 @@
 import type { Stamp } from "../../../core/cells";
-import { floodRegion, rectRegion, regionContains } from "../../../core/fill";
+import { floodRegion, rectRegion } from "../../../core/fill";
 import type { Region } from "../../../core/fill";
 import { findLayer } from "../../../core/model";
 import type { ProjectMap, ProjectSession } from "../../../core/model";
@@ -40,18 +40,6 @@ import { terrainFillPlan } from "./terrainFill";
 // the pressed cell fills nothing in Tile mode, as in Tiled. A right drag captures a stamp
 // (`capture.ts`).
 
-/** The region last computed, kept while the layer and the inputs are the same. */
-interface Known {
-    readonly session: ProjectSession;
-    readonly revision: number;
-    readonly mapId: string;
-    readonly layerId: number;
-    readonly whole: boolean;
-    readonly stamp: Stamp | null;
-    readonly region: Region;
-}
-
-let known: Known | null = null;
 const listeners = new Set<() => void>();
 const changed = () => {
     for (const listener of [...listeners]) listener();
@@ -70,31 +58,16 @@ export function subscribeBucket(listener: () => void): () => void {
  * over the map, cut to the map's tile selection when it has one (SPEC §4.3); or with `whole`
  * the selection's every cell when `cell` lies in it, or the layer's without one. Empty off the
  * map, without a tile layer, or when a 1 × 1 stamp equals the cell (not with `whole`; `stamp`
- * is null in Terrain mode, which has no such case). Kept between calls while the session's
- * revision, the layer, `whole` and the stamp stay and `cell` lies in it: any cell of a flood
- * region floods to the same region.
+ * is null in Terrain mode, which has no such case).
  */
 export function bucketRegion(
     session: ProjectSession,
-    revision: number,
     map: ProjectMap,
     layerId: number,
     cell: PixelPoint,
     whole: boolean,
     stamp: Stamp | null,
 ): Region {
-    const last = known;
-    if (
-        last?.session === session &&
-        last.revision === revision &&
-        last.mapId === map.id &&
-        last.layerId === layerId &&
-        last.whole === whole &&
-        last.stamp === stamp &&
-        regionContains(last.region, cell.x, cell.y)
-    ) {
-        return last.region;
-    }
     const layer = findLayer(map, layerId)?.layer;
     const inside = cell.x >= 0 && cell.y >= 0 && cell.x < map.width && cell.y < map.height;
     let region: Region = [];
@@ -111,16 +84,7 @@ export function bucketRegion(
             region = selection ? maskSpans(intersectMask(spansMask(flood), selection)) : flood;
         }
     }
-    known = { session, revision, mapId: map.id, layerId, whole, stamp, region };
     return region;
-}
-
-/**
- * Forgets the region kept between calls, so the next press finds its region itself: SPEC §14
- * times the bucket with the region found after the press.
- */
-export function forgetBucketRegion(): void {
-    known = null;
 }
 
 /**
@@ -138,12 +102,12 @@ export function bucketPlan(
     if (mode === "terrain") {
         const brush = brushSource.current();
         if (!brush) return null;
-        const region = bucketRegion(session, revision, map, layerId, cell, whole, null);
+        const region = bucketRegion(session, map, layerId, cell, whole, null);
         return terrainFillPlan(session, revision, map, layerId, brush.analysis, region);
     }
     const stamp = currentStamp();
     if (!stamp || stampIsEmpty(stamp)) return null;
-    return regionPlan(bucketRegion(session, revision, map, layerId, cell, whole, stamp), stamp);
+    return regionPlan(bucketRegion(session, map, layerId, cell, whole, stamp), stamp);
 }
 
 function hasStamp(): boolean {

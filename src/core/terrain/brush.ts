@@ -18,22 +18,18 @@ import {
 } from "./wangId";
 import type { WangIndex } from "./wangId";
 
-// One paint step of the terrain brush (SPEC §5.3) on the terrain filler of §5.2, with
-// corrections on.
+// The terrain brush's targets and paint steps (SPEC §5.3).
 //
-// Targets: in full tile mode the cell under the pointer; otherwise the index `brushIndexAt`
-// picks, a corner given as its grid vertex (the `TOP_LEFT` of the vertex's cell), an edge as its
-// cell and side. While an edge drag stays in the row or column of the target before it, the
-// edge follows the direction of travel: the cell entered is painted on the side it was entered
-// from.
-//
-// Steps: a single target paints that corner, edge or cell. A drag joins its target to the point
-// painted before by a line without diagonal steps (corner and edge modes, in full tile mode
-// too) and paints the points after that one; an edge mode drag paints at each cell the edge it
-// crossed to get there, and at the target the target's edge. A line (Shift) paints from its
-// start to the target, both included: without diagonal steps in corner and edge modes, with
-// them in full tile mode; a mixed set's line is painted in full tile mode. Symmetry repaints
-// every painted index turned 180° about the map's centre.
+// A target is what one position of the pointer paints: a vertex for a corner (held as the cell
+// it is the top-left corner of, with index `TOP_LEFT`), a cell and one of its edges, or, in
+// full tile mode, a cell. A step paints targets into one filler run with corrections:
+//   - single: the target;
+//   - drag: the targets between the point painted before and the new one, that point left out,
+//     along a line without diagonal steps (in a mixed set the new target alone);
+//   - line: the targets from the line's start to the new one, both ends included; corner and
+//     edge lines take no diagonal steps, full tile lines may, and a mixed set's line is
+//     painted in full tile mode.
+// Each painted cell or vertex of a line or drag is painted with the new target's index.
 
 /** Where the brush paints: a cell and its index, or a vertex (`TOP_LEFT` of its cell). */
 export interface BrushTarget {
@@ -41,12 +37,12 @@ export interface BrushTarget {
     readonly index: WangIndex | null;
 }
 
-/** How a step joins its target to the point before. */
+/** A single press, a drag step, or a Shift line. */
 export type BrushBehaviour = "single" | "drag" | "line";
 
 /** One paint step. */
 export interface BrushStep {
-    /** Painting mode: the effective type of the terrain in its set. */
+    /** Painting mode: the terrain's mode in its set (SPEC §5.3). */
     readonly mode: TerrainSetType;
     /** Full tile mode. */
     readonly tileMode: boolean;
@@ -60,42 +56,31 @@ export interface BrushStep {
     readonly symmetry: boolean;
 }
 
-/** A step's fill result and the index it ended on. */
+/** A step's result and the index it ended on. */
 export interface BrushStepResult extends TerrainFillResult {
     readonly index: WangIndex | null;
 }
 
-/** The grid vertex at corner `index` of cell `(x, y)`. */
-function vertexOf(x: number, y: number, index: WangIndex): PixelPoint {
+/** The vertex a corner index of a cell names, as the cell it is the top-left corner of. */
+function cornerVertex(cell: PixelPoint, index: WangIndex): PixelPoint {
     const right = index === TOP_RIGHT || index === BOTTOM_RIGHT;
-    const bottom = index === BOTTOM_LEFT || index === BOTTOM_RIGHT;
-    return { x: right ? x + 1 : x, y: bottom ? y + 1 : y };
+    const below = index === BOTTOM_LEFT || index === BOTTOM_RIGHT;
+    return { x: cell.x + (right ? 1 : 0), y: cell.y + (below ? 1 : 0) };
 }
 
 /**
- * The edge of `cell` an edge drag from `drag` paints when it stays in the drag's row or column:
- * the same edge in the same cell, else the side the cell was entered from. Null after a
- * diagonal move.
+ * The edge of an edge drag that moved from `from` into the cell `cell` along its row or column:
+ * the edge it crossed to come in. Null for a move that changed both row and column.
  */
-function followedEdge(drag: BrushTarget, cell: PixelPoint): WangIndex | null {
-    const { point, index } = drag;
-    if (index === null || isCorner(index)) return null;
-    if (cell.x === point.x && cell.y === point.y) return index;
-    if (cell.y === point.y) return cell.x > point.x ? LEFT : RIGHT;
-    if (cell.x === point.x) return cell.y > point.y ? TOP : BOTTOM;
+function crossedEdge(from: PixelPoint, cell: PixelPoint): WangIndex | null {
+    if (cell.y === from.y && cell.x !== from.x) return cell.x > from.x ? LEFT : RIGHT;
+    if (cell.x === from.x && cell.y !== from.y) return cell.y > from.y ? TOP : BOTTOM;
     return null;
 }
 
-/** The edge of `to` crossed when moving to it from the side neighbour `from`. */
-function crossedEdge(from: PixelPoint, to: PixelPoint): WangIndex {
-    if (to.x > from.x) return LEFT;
-    if (to.x < from.x) return RIGHT;
-    return to.y > from.y ? TOP : BOTTOM;
-}
-
 /**
- * The target under the pointer at fractional cell position `(cx, cy)`. During an edge drag
- * that stays in the row or column of `drag`, the edge follows the direction of travel.
+ * The target under the pointer at fractional cell position `(cx, cy)`; `drag` is the target of
+ * an edge drag in progress, whose edge follows the direction of travel.
  */
 export function brushTargetAt(
     mode: TerrainSetType,
@@ -106,21 +91,23 @@ export function brushTargetAt(
 ): BrushTarget {
     const cell = { x: Math.floor(cx), y: Math.floor(cy) };
     if (tileMode) return { point: cell, index: null };
-    if (mode === "edge" && drag) {
-        const followed = followedEdge(drag, cell);
-        if (followed !== null) return { point: cell, index: followed };
+    if (mode === "corner") {
+        // The nearest vertex.
+        return { point: { x: Math.floor(cx + 0.5), y: Math.floor(cy + 0.5) }, index: TOP_LEFT };
+    }
+    if (mode === "edge" && drag?.index != null && !isCorner(drag.index)) {
+        if (cell.x === drag.point.x && cell.y === drag.point.y) return drag;
+        const crossed = crossedEdge(drag.point, cell);
+        if (crossed !== null) return { point: cell, index: crossed };
     }
     const index = brushIndexAt(mode, cx - cell.x, cy - cell.y);
     if (index !== null && isCorner(index)) {
-        return { point: vertexOf(cell.x, cell.y, index), index: TOP_LEFT };
+        return { point: cornerVertex(cell, index), index: TOP_LEFT };
     }
     return { point: cell, index };
 }
 
-/**
- * `target` turned 180° about the map's centre: a vertex to the vertex `(width − x,
- * height − y)`, a cell to `(width − x − 1, height − y − 1)` with its index turned by 4.
- */
+/** `target` turned 180° about the centre of a `width × height` map. */
 export function mirroredTarget(
     target: BrushTarget,
     tileMode: boolean,
@@ -129,82 +116,57 @@ export function mirroredTarget(
 ): BrushTarget {
     const { point, index } = target;
     if (!tileMode && index !== null && isCorner(index)) {
-        const vertex = vertexOf(point.x, point.y, index);
-        return { point: { x: width - vertex.x, y: height - vertex.y }, index: TOP_LEFT };
+        // A vertex: the map's vertices run 0..width and 0..height.
+        return { point: { x: width - point.x, y: height - point.y }, index: TOP_LEFT };
     }
     return {
-        point: { x: width - point.x - 1, y: height - point.y - 1 },
-        index: index === null ? null : oppositeIndex(index),
+        point: { x: width - 1 - point.x, y: height - 1 - point.y },
+        index: tileMode || index === null ? null : oppositeIndex(index),
     };
 }
 
-/** The points a step paints, in order, for targets that are points (vertices or cells). */
-function stepPoints(step: BrushStep, to: PixelPoint, fullTile: boolean): PixelPoint[] {
-    const { behaviour, from, mode } = step;
-    if (!from || behaviour === "single") return [to];
-    if (behaviour === "line") return lineCells(from, to, !fullTile);
-    // A drag joins corner and edge mode targets; the point painted before is left out.
-    if (mode === "mixed") return [to];
-    const joined = lineCells(from, to, true).slice(1);
-    return joined.length > 0 ? joined : [to];
+/** Paints one full tile mode target into `filler`: a whole cell. */
+function paintCell(filler: TerrainFiller, point: PixelPoint, color: number): void {
+    filler.setFullTile(point.x, point.y, color);
 }
 
-/**
- * Paints an edge mode step: the target's edge, and on a drag or line each cell before it on the
- * way with the edge crossed to reach it. Returns the index painted last.
- */
-function paintEdges(filler: TerrainFiller, step: BrushStep): WangIndex | null {
-    const { behaviour, from, to, color } = step;
-    const edge = to.index !== null && !isCorner(to.index) ? to.index : null;
-    const path = from && behaviour !== "single" ? lineCells(from, to.point, true) : [to.point];
-    if (path.length === 1) {
-        if (edge !== null) filler.setEdge(to.point.x, to.point.y, edge, color);
-        return edge;
-    }
-    let last: WangIndex | null = null;
-    for (let i = 1; i < path.length; i++) {
-        const point = path[i]!;
-        const final = i === path.length - 1;
-        last = final && edge !== null ? edge : crossedEdge(path[i - 1]!, point);
-        filler.setEdge(point.x, point.y, last, color);
-    }
-    return last;
+/** Paints one target into `filler`: a vertex or an edge; nothing for no index. */
+function paintIndex(
+    filler: TerrainFiller,
+    point: PixelPoint,
+    index: WangIndex | null,
+    color: number,
+): void {
+    if (index === null) return;
+    if (isCorner(index)) filler.setCorner(point.x, point.y, color);
+    else filler.setEdge(point.x, point.y, index, color);
 }
 
-/** Paints the step's targets on `filler`; returns the index the step ended on. */
-function paintStep(filler: TerrainFiller, step: BrushStep): WangIndex | null {
-    const { mode, tileMode, behaviour, to, color } = step;
-    const fullTile = tileMode || (behaviour === "line" && mode === "mixed");
-    if (fullTile) {
-        for (const { x, y } of stepPoints(step, to.point, true)) filler.setFullTile(x, y, color);
-        return to.index;
+/** The points a step paints, and whether it paints them in full tile mode. */
+function stepPoints(step: BrushStep): { points: PixelPoint[]; tileMode: boolean } {
+    const { behaviour, from, to, mode } = step;
+    if (behaviour === "line" && from) {
+        const tileMode = step.tileMode || mode === "mixed";
+        return { points: lineCells(from, to.point, !tileMode), tileMode };
     }
-    if (mode === "edge") return paintEdges(filler, step);
-    if (mode === "corner") {
-        const vertex = vertexOf(to.point.x, to.point.y, to.index ?? TOP_LEFT);
-        for (const { x, y } of stepPoints(step, vertex, false)) filler.setCorner(x, y, color);
-        return to.index;
+    if (behaviour === "drag" && from && mode !== "mixed") {
+        return { points: lineCells(from, to.point, true).slice(1), tileMode: step.tileMode };
     }
-    // A mixed set's single target: a corner as its vertex, an edge with its cell, the middle
-    // of a cell nothing.
-    const { index, point } = to;
-    if (index === null) return null;
-    if (isCorner(index)) {
-        const vertex = vertexOf(point.x, point.y, index);
-        filler.setCorner(vertex.x, vertex.y, color);
-    } else {
-        filler.setEdge(point.x, point.y, index, color);
-    }
-    return index;
+    return { points: [to.point], tileMode: step.tileMode };
 }
 
-/** Runs one paint step of the brush on a filler with corrections on. */
+/** Runs one paint step of the brush. */
 export function brushStep(
     options: Omit<TerrainFillerOptions, "corrections">,
     step: BrushStep,
 ): BrushStepResult {
     const filler = new TerrainFiller({ ...options, corrections: true });
-    const index = paintStep(filler, step);
+    const { points, tileMode } = stepPoints(step);
+    const paint = tileMode
+        ? (point: PixelPoint) => paintCell(filler, point, step.color)
+        : (point: PixelPoint) => paintIndex(filler, point, step.to.index, step.color);
+    for (const point of points) paint(point);
     if (step.symmetry) filler.mirror();
-    return { ...filler.apply(), index };
+    const result = filler.apply();
+    return { ...result, index: tileMode ? null : step.to.index };
 }

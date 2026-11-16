@@ -1,7 +1,9 @@
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../../src/app/testing/testHooks";
+// Add the overlay's and the tools' hooks to it.
+import type {} from "../../../src/app/overlay/mountOverlay";
+import type {} from "../../../src/app/tools/attachToolPointer";
 import { toolState } from "../../../src/app/tools/activeTool";
-import { forgetBucketRegion } from "../../../src/app/tools/fill/bucket.tools";
 import { setCurrentStamp } from "../../../src/app/tools/stamp/currentStamp";
 import { currentViewMapping } from "../../../src/app/view/viewNavigation";
 import { cellValue } from "../../../src/core/cells";
@@ -92,14 +94,12 @@ export async function openReference(): Promise<Opened> {
 
 /**
  * Makes a 1 × 1 stamp of `tile` current, the tile the next press fills with, and resolves
- * after the overlay redrew its preview, which finds the region on hover (as in Tiled). With
- * `cold` the region is then forgotten, so the press finds it again (SPEC §14).
+ * after the overlay redrew its preview.
  */
-export async function useTile(tile: number, cold: boolean): Promise<void> {
+export async function useTile(tile: number): Promise<void> {
     setCurrentStamp({ width: 1, height: 1, cells: Uint32Array.of(cellValue(1, tile)) });
     await new Promise((resolve) => requestAnimationFrame(resolve));
     await until(() => window.__ngneTest!.overlay?.pending === false);
-    if (cold) forgetBucketRegion();
 }
 
 /** The client position of the centre of cell `(x, y)` as the map is on screen. */
