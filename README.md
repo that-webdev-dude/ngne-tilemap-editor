@@ -113,8 +113,9 @@ a game that ships it needs no licence notice for it.
 ### Earlier versions of some files
 
 Before their current versions, the files listed below followed the source of Tiled's editor
-(<https://github.com/mapeditor/tiled>), which is GPL-2.0-or-later. Every earlier version of
-them in this repository's history is available under GPL-2.0-or-later
+(<https://github.com/mapeditor/tiled>), which is GPL-2.0-or-later: code ported from it, test
+data worked out through it, or a document written from it. Every earlier version of them in
+this repository's history is available under GPL-2.0-or-later
 ([LICENSES/GPL-2.0-or-later.txt](LICENSES/GPL-2.0-or-later.txt)), not MIT;
 `git log --follow -- <file>` lists them.
 
@@ -122,27 +123,50 @@ Each Tiled file below, with the copyright lines of its header, and the files her
 it:
 
 - `src/tiled/wangfiller.cpp` (2017 Benjamin Trotter; 2020–2023 Thorbjørn Lindeijer; 2023
-  a-morphous): `src/core/terrain/filler.ts`.
+  a-morphous): `src/core/terrain/filler.ts`, `src/core/terrain/candidates.ts` (since removed),
+  `tests/unit/te-041-filler.test.ts`, and the terrain goldens (`tests/fixtures/terrain/*-brush.golden.tmj`,
+  `*-full-tile.golden.tmj`, and the pictures and traces once in
+  `tests/unit/support/terrainFixtures.ts`).
 - `src/tiled/wangbrush.cpp` (2017 Benjamin Trotter; 2020 Thorbjørn Lindeijer):
-  `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`.
+  `src/core/terrain/brush.ts`, `src/core/terrain/pick.ts`,
+  `src/app/tools/terrain/terrainBrush.tools.ts`.
 - `src/tiled/geometry.cpp` (2010–2011 Stefan Beller; 2017 Benjamin Trotter; 2020 Zingl Alois;
   2017–2023 Thorbjørn Lindeijer): `src/core/raster/line.ts`, `src/core/raster/ellipse.ts`,
   `inscribedEllipseRegion` in `src/core/fill/region.ts`, the reference ellipse in
-  `tests/unit/te-019-fill.test.ts` and `tests/e2e/te-017-tiled-golden.py` (since removed).
+  `tests/unit/te-019-fill.test.ts`, the expected cells of `tests/unit/te-016-line.test.ts` and
+  `tests/unit/te-017-ellipse.test.ts`, and `tests/e2e/te-017-tiled-golden.py` (since removed).
 - `src/tiled/tilepainter.cpp` (2009–2011 Thorbjørn Lindeijer; 2009 Jeff Bland):
   `src/core/fill/flood.ts`.
 - `src/tiled/shapefilltool.cpp` (2017 Benjamin Trotter): `shapeArea` in
   `src/app/tools/fill/shapeFill.tools.ts`.
 - `src/tiled/stampbrush.cpp` (2009–2010 Thorbjørn Lindeijer; 2010 Stefan Beller):
-  `tests/e2e/te-017-tiled-golden.py`.
+  `tests/e2e/te-017-tiled-golden.py` (since removed) and the goldens it worked out,
+  `tests/e2e/te-017-goldens.ts`.
+- Several files of Tiled's editor: `docs/reference/tiled.md` (since removed), written from its
+  source.
 
 Parts of those earlier versions derived from libtiled (BSD 2-clause) and Zingl's Bresenham
-code (MIT) remain under their own licences, with
-their notices in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
+code (MIT) remain under their own licences, with their notices in
+[THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
-The current `line.ts`, `filler.ts`, `brush.ts`, `pick.ts` (with `candidates.ts`) and
-`shapeArea` were rewritten from this project's specification, its tests and Tiled's user
-manual. They reproduce Tiled's behaviour; no code in them was translated from Tiled's source or
-from the earlier versions, whose public interfaces they keep. The
-current `ellipse.ts`, `inscribedEllipseRegion` and the reference ellipse in `te-019-fill.test.ts` follow
-Zingl's Bresenham code (MIT), and the current `flood.ts` is an independent design.
+Other files only named parts of Tiled's source in comments, tests or specs, or said that it had
+been read to confirm a detail, among them `src/core/fill/tileFill.ts` and the selection files
+`src/app/selection/tools/selectionMode.ts`, `src/core/selection/commands.ts` and
+`src/core/selection/operations.ts`. Those names and claims were removed on 2026-11-15; the files
+and their classes are listed in [docs/PROVENANCE.md](docs/PROVENANCE.md) ("Tiled source named
+or read").
+
+The current versions:
+
+- `filler.ts`, `brush.ts`, `pick.ts` and `terrainBrush.tools.ts` were written anew on
+  2026-11-16 under clean-room separation, from this project's specification, its tests and
+  Tiled's user manual (docs/PROVENANCE.md, Clean-room records).
+- `line.ts`, `ellipse.ts`, `flood.ts`, `inscribedEllipseRegion` and `shapeArea` were rewritten on
+  2026-11-13 by a writer who had read their earlier versions; no separation was recorded.
+  `ellipse.ts`, `inscribedEllipseRegion` and the reference ellipse in `te-019-fill.test.ts`
+  follow Zingl's Bresenham code (MIT).
+- The expected cells of te-016 and te-017, the te-017 goldens and the terrain goldens are output
+  captured by running Tiled 1.12.2 (2026-11-16); they equal the earlier data, the ellipse cases
+  as sets of cells. The one ellipse case Tiled draws nothing for, radii (0, 0), follows Zingl's
+  reference instead. The te-041 cases
+  are behaviour properties written on 2026-11-16.

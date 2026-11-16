@@ -112,6 +112,7 @@ reports it and a ticket takes the new versions deliberately.
 | `app/view/wheel.ts` | Wheel travel → zoom steps and pan |
 | `core/color/*` (`hex`, `hsv`, `rgba`, `oklab`, `contrast`) | Colour maths for pickers and properties |
 | `engine/testing/readCanvas.ts` | Canvas readback in E2E |
+| `app/keymap/install.ts`, `ui/commands/runCommand.ts`, `useEditorKeymap.ts`, `contextMenu.ts`, `ui/tools/VariantToolButton.tsx`, `useToolState.ts`, `ui/colour/pickerMath.ts` | Unchanged: the adapted modules they import (§3.3) keep their exports |
 
 PNG codec, zip container and strict JSON reader come from `core/sprite` (§3.1).
 
@@ -126,14 +127,13 @@ PNG codec, zip container and strict JSON reader come from `core/sprite` (§3.1).
 | `app/keymap/contextState.ts`, `app/keymap/environment.ts`, `app/keymap/resolve.ts` | This editor's contexts (§10.1): `markers` and `panel` instead of `floating` and `timeline` |
 | `app/commands/invoke.ts` | Drop the playback-state dependency |
 | `app/commands/appCommands.ts` | Bind to this editor's session store |
-| `ui/commands/runCommand.ts`, `useCommands.ts`, `useEditorKeymap.ts`, `contextMenu.ts` | Follow the adapted `appCommands` |
-| `app/keymap/install.ts` | This editor's contexts (§10.1) |
+| `ui/commands/useCommands.ts` | Follow the adapted `appCommands` |
 | `ui/commandPalette/CommandPalette.tsx`, `CommandPaletteTrigger.tsx`, `app/commandPalette/commandPalette.commands.ts` | Follow the adapted commands |
 | `ui/shell/AppShell.tsx`, `ui/shell/layoutStore.ts`, `ui/shell/RailFrame.tsx` | Bottom panel in the timeline's slot; rail fed by the active layer's tool set |
 | `ui/shell/regions/MenuBar.tsx`, `ContextBar.tsx`, `Dock.tsx`, `StatusBar.tsx`, `ToolRail.tsx`, `Viewport.tsx` | Map tabs; stamp preview instead of colour chips; this editor's status fields and empty state |
 | `ui/tabs/DocumentTabs.tsx`, `ui/tabs/tabs.css`, `app/tabs/*` → `ui/tabs/MapTabs.tsx` | Tabs are maps of the open project; same metrics, keys, drag, overflow menu ("All maps") |
-| `ui/tools/VariantToolButton.tsx`, `ui/tools/useToolState.ts`, `toolRail.css`, `contextBar.css` | Bound to this editor's active-tool store |
-| `ui/colour/ColourPicker.tsx` (+ `pickerMath`, `pickerEdits`) | Edits a value given by its caller instead of FG/BG: background colour, layer colours, terrain colours, colour properties |
+| `ui/tools/toolRail.css`, `contextBar.css` | Bound to this editor's active-tool store |
+| `ui/colour/ColourPicker.tsx` (+ `pickerEdits`) | Edits a value given by its caller instead of FG/BG: background colour, layer colours, terrain colours, colour properties |
 | `ui/preferences/hexColour.ts`, `ui/preferences/PreferencesDialog.tsx` | This editor's preferences (theme, checkerboard, grid colour and opacity, highlight-layer opacity, autosave) |
 | `ui/sprite/EmptyState.tsx` | Actions New Project, Open, Import Tiled Map; recent projects |
 | `ui/sprite/PivotGrid.tsx` (+ `pivotGridKeys`) | Anchor grid of the Resize / Offset Map dialog |

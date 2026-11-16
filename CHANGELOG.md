@@ -11,6 +11,8 @@
   sets the results are unchanged; on incomplete sets the brush can adjust the cells around a
   stroke differently, and further out, than before. The Tiled-captured test cases give the same
   results as before.
+- Open Source Licences also lists UZIP.js, react-merge-refs and smooth-ui, whose code reaches
+  the app inside bundled packages.
 
 ## 1.0.0 – 2026-11-13
 

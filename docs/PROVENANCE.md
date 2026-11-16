@@ -1,5 +1,32 @@
 # Provenance
 
+Where this repository's code, tests, data and specifications come from: the upstreams it uses,
+the files copied from the NGNE Sprite Editor whole or in part, the files whose comments, tests or
+specs named Tiled's source, the clean-room rewrites, the licence audits and the owner's
+decisions. Records name roles and dates. The notices the app ships are in
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md); the history of files that once followed
+Tiled's source is in the README (Licence).
+
+## Upstreams
+
+| Upstream | Source and version | Files used and their licence | Class | Use |
+| -------- | ------------------ | ---------------------------- | ----- | --- |
+| libtiled | `src/libtiled` of <https://github.com/mapeditor/tiled>, tag `v1.12.2` | `wangset.h`, `wangset.cpp`, `tilelayer.cpp`: BSD-2-Clause | Permissive | Derived and noticed: the layout of terrain IDs, the terrain-set analysis, the default terrain colours, the orientation tables. Its map reader and writer, global tile ID mapper, renderer, and map, map object and tileset classes were consulted for facts of the published file formats and of rendering; no code was taken from them and the notices do not list them (Owner decisions, 2026-11-13) |
+| qjsonparser | `src/plugins/json/qjsonparser/json.cpp` of Tiled, tag `v1.12.2` | `json.cpp`: permissive notice of Girish Ramakrishnan | Permissive (Owner decisions, 2026-11-15) | Derived and noticed: the JSON text of the test fixtures |
+| Tiled, the editor application | `src/tiled` of <https://github.com/mapeditor/tiled>; Tiled 1.12.2 | GPL-2.0-or-later | Copyleft: behaviour only | Behaviour from Tiled's user manual (<https://doc.mapeditor.org/en/stable/>) and from output captured by running Tiled 1.12.2 (capture folder `ngne-captures/tiled-1.12.2`). Earlier versions of some files followed its source (README, Licence); files that named its source are listed in "Tiled source named or read" |
+| Zingl's Bresenham algorithms | <https://github.com/zingl/Bresenham>, commit `ce9002f` | `bresenham.c`, `plotOptimizedEllipse` and `plotEllipseRect`: MIT | Permissive | Derived and noticed: the ellipse outline, the inscribed ellipse and the reference ellipse of te-019 |
+| Aseprite Document Library | <https://github.com/aseprite/aseprite>, v1.3.18.6, commit `331e898` | `src/doc/blend_funcs.cpp`: MIT (`src/doc/LICENSE.txt`) | Permissive | Derived and noticed, through the sprite editor's `blend.ts` |
+| Aseprite, the application | <https://github.com/aseprite/aseprite> | End-User License Agreement | Restricted: not read | Format names only (`.aseprite.json` in the sprite core). The sprite editor's pending Aseprite record, its magic wand, does not reach this repository: its `wand.ts` was not copied, and `selectionMode.ts` holds no Aseprite code (2026-11-16 pre-classification) |
+| pixman | <https://gitlab.freedesktop.org/pixman/pixman>, 0.46.4 | `pixman/pixman-combine32.h`, `MUL_UN8` and `DIV_UN8`: MIT | Permissive | Derived and noticed, through the sprite editor's `blend.ts` |
+| NGNE Sprite Editor | The owner's repository (`se/`, SUITE §1), commits `ea5c91d`, `4987001`, `3c55bf9` | MIT, the owner's | Owner's own | Files copied whole or in part (the next two sections); `blend.ts` brings the Aseprite and pixman notices |
+| cluster-renderer | The owner's earlier repository, private and unpublished; reaches the app inside `@ngne/core` 0.3.1 | MIT, as used in the engine | Owner's own | Six engine modules, recorded in the engine repository (Owner decisions, 2026-11-16) |
+| UZIP.js | <https://github.com/photopea/UZIP.js>, licence file at commit `9507109` | MIT | Permissive | Inside the bundled `fflate` 0.8.3, whose source says part of its code is similar to UZIP.js; noticed |
+| react-merge-refs | <https://github.com/gregberge/react-merge-refs>, licence file at commit `f81b2fa` | MIT | Permissive | Inside the bundled `use-callback-ref` 1.3.3, whose README says its `mergeRefs` is based on it; noticed |
+| smooth-ui | <https://github.com/smooth-code/smooth-ui> (archived), licence file at commit `ad2e9a2` | MIT | Permissive | Inside the bundled `aria-hidden` 1.2.6, whose README says it is based on smooth-ui's modal dialogs; noticed |
+| react-remove-scroll-bar licence text | `scripts/licence-texts/react-remove-scroll-bar.txt`, from the `LICENSE` of <https://github.com/theKashey/react-remove-scroll-bar> at commit `7301c160` | MIT | Permissive | The package ships no licence file; the build takes this text (Owner decisions, 2026-11-13) |
+
+## Files copied from the sprite editor
+
 Files copied from ngne-sprite-editor (`se/` = `..\ngne-sprite-editor`, SUITE §1), one row per
 file, sorted by path. Kinds as DESIGN §3: **verbatim** files are byte-identical to the `se/`
 file at the recorded commit and carry its SHA-256; **adapt** files were copied and then
@@ -52,7 +79,7 @@ rows.
 | `src/app/file/workflows.ts` | `src/app/file/workflows.ts` | adapt | `ea5c91d` | | One project per window instead of tabs of documents: New Project, Open, Close Project ask Save / Discard / Cancel before the project goes; Revert keeps the views of the maps still there; bytes written and read in the worker (`projectCodec.ts`); `onSaved` steps take no document (Export on Save, TE-054); no floating selection; idle also waits for a tileset import or update |
 | `src/app/keymap/contextState.ts` | `src/app/keymap/contextState.ts` | adapt | `ea5c91d` | | Contexts `gesture` and `markers` (DESIGN §10.1) |
 | `src/app/keymap/environment.ts` | `src/app/keymap/environment.ts` | adapt | `ea5c91d` | | `inPanel` from `PANEL_SELECTOR` (the bottom panel region or `data-keymap-panel`) instead of `inTimeline`; `markers` instead of `floating` |
-| `src/app/keymap/install.ts` | `src/app/keymap/install.ts` | adapt | `ea5c91d` | | No change: it reads the contexts through contextState.ts and environment.ts |
+| `src/app/keymap/install.ts` | `src/app/keymap/install.ts` | verbatim | `ea5c91d` | `0ac32058e87ed237c0ce9f6917ee990681ede2f9a5f043ecff527b53be246d93` | |
 | `src/app/keymap/keyClasses.ts` | `src/app/keymap/keyClasses.ts` | verbatim | `ea5c91d` | `f8a26308a617fffec31cd268ffe309d19c8adc1400f35d9ecf1ef2f0db60020b` | |
 | `src/app/keymap/regions.commands.ts` | `src/app/keymap/regions.commands.ts` | verbatim | `ea5c91d` | `4abaeb31767f3ac6e0b9b9027df5edd9b13a44aba035a6e2cece364711b27e93` | |
 | `src/app/keymap/regions.ts` | `src/app/keymap/regions.ts` | verbatim | `ea5c91d` | `6d180e5dc433fd882b16133ef66d834ac11e25c23fe4c5f628a9d46221df19fb` | |
@@ -130,7 +157,7 @@ rows.
 | `src/core/history/history.ts` | `src/core/history/history.ts` | adapt | `ea5c91d` | | One history per project: `markSaved` and `dirty` (SPEC §3), `undoMapId`/`redoMapId`, memory limit and one warning per crossing (SPEC §2.2), a `verify` option that runs `assertInvariants` in development and tests and reverses a failing step; no cel limits or ID generator |
 | `src/core/history/index.ts` | `src/core/history/index.ts` | adapt | `ea5c91d` | | Exports of this editor's history: cell patch, `Touched`, memory warning listener, verifier; no chained command or pixel patch |
 | `src/core/history/transaction.ts` | `src/core/history/transaction.ts` | adapt | `ea5c91d` | | Target is a tile layer of a map; `begin` snapshots nothing, `set` records `(index, before, after)` on a cell's first write, `commit` stores 12 bytes a cell through `cellPatchCommand`, one patch per tile layer written (other layers of the map by id); no clip mask, no cel creation |
-| `src/core/raster/line.ts` | `src/core/raster/line.ts` | adapt | `ea5c91d` |  | `lineCells`, a clean-room integer Bresenham line with a `manhattan` option (SPEC §4.1, §4.3; README, Licence), replaces `linePixels` and `forEachLinePixel`; only the `PixelPoint` type is kept |
+| `src/core/raster/line.ts` | `src/core/raster/line.ts` | adapt | `ea5c91d` |  | `lineCells`, an integer Bresenham line with a `manhattan` option (SPEC §4.1, §4.3), rewritten on 2026-11-13 with no separation recorded (Clean-room records; README, Licence); replaces `linePixels` and `forEachLinePixel`, the sprite editor's line after Zingl's `plotLine`, of which only the `PixelPoint` type and the check that the ends are whole numbers are kept |
 | `src/core/selection/boundary.ts` | `src/core/selection/boundary.ts` | adapt | `ea5c91d` | | Cell grid lines of a cell mask over its rectangle instead of a document-sized bit mask |
 | `src/core/selection/commands.ts` | `src/core/selection/commands.ts` | adapt | `ea5c91d` | | Commands on `MapSession.tileSelection` of one map of the project (`touched.mapId`); Select None instead of Deselect |
 | `src/core/selection/mask.ts` | `src/core/selection/mask.ts` | adapt | `ea5c91d` | | Cell masks: the model's `Region` (a rectangle of cells, one byte a cell) instead of a document-sized bit mask; conversions to and from `core/fill` row spans |
@@ -208,16 +235,16 @@ rows.
 | `src/ui/colour/cancelContextMenu.ts` | `src/ui/colour/cancelContextMenu.ts` | verbatim | `ea5c91d` | `9c1041c45ee133476335ca53e92e1882d5ea79b3d6139c5a665466cc920242af` | |
 | `src/ui/colour/colourPicker.css` | `src/ui/colour/colourPicker.css` | verbatim | `ea5c91d` | `99a9d989a8409246bfd017f3e104db21c144428e49d0740f6bf1fa5272af2cd6` | |
 | `src/ui/colour/pickerEdits.ts` | `src/ui/colour/pickerEdits.ts` | adapt | `ea5c91d` | | Edits a `ColourStore` (the panel's colour 0xRRGGBBAA with its HSV, `PickerColour`) instead of a colour slot of the editor store: same functions without the `slot` parameter; `ColourStore` and `PickerColour` instead of `EditorStore` |
-| `src/ui/colour/pickerMath.ts` | `src/ui/colour/pickerMath.ts` | adapt | `ea5c91d` | | No change: it imports only the `Hsv` type, which `core/color` exports as in the sprite editor |
+| `src/ui/colour/pickerMath.ts` | `src/ui/colour/pickerMath.ts` | verbatim | `ea5c91d` | `9ddbd9e96be1aea4359556a918305eb04c4921ea77e8cd16d8f79ecb73d470db` | |
 | `src/ui/commandPalette/CommandPalette.tsx` | `src/ui/commandPalette/CommandPalette.tsx` | verbatim | `ea5c91d` | `0b28da9e42ce9e91c73f1b8a6d0873801cc319c4f921fde16a0d359871373723` | |
 | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | `src/ui/commandPalette/CommandPaletteTrigger.tsx` | verbatim | `ea5c91d` | `414b2165c6eac389f9797a4371f24e64171daf524c636262c1ca5b7f1c01b4f6` | |
 | `src/ui/commandPalette/commandPalette.css` | `src/ui/commandPalette/commandPalette.css` | verbatim | `ea5c91d` | `c4cc79edc7940ebaa46b4424c69756ea1033cf1f01101c2559f73c785983da98` | |
 | `src/ui/commands/Chord.tsx` | `src/ui/commands/Chord.tsx` | verbatim | `ea5c91d` | `4e74f7638162b047e17049c7b21c20900542365c11707aa892ca1695652b93c7` | |
 | `src/ui/commands/chord.css` | `src/ui/commands/chord.css` | verbatim | `ea5c91d` | `c94a08c100868e5877de06530839692722ba17c41cf6eb21580213fbce21020d` | |
-| `src/ui/commands/contextMenu.ts` | `src/ui/commands/contextMenu.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
-| `src/ui/commands/runCommand.ts` | `src/ui/commands/runCommand.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `invoke` keep their exports |
+| `src/ui/commands/contextMenu.ts` | `src/ui/commands/contextMenu.ts` | verbatim | `ea5c91d` | `b30c91f5ea044459eb6d60f9d111c6482b95edc08672ed43d13e06c443ffb7e6` | |
+| `src/ui/commands/runCommand.ts` | `src/ui/commands/runCommand.ts` | verbatim | `ea5c91d` | `684db543b4a81da1974c373635dc2083c41ab859b5bef03836132fa79f673a00` | |
 | `src/ui/commands/useCommands.ts` | `src/ui/commands/useCommands.ts` | adapt | `ea5c91d` | | A component renders again only when a command it read changed (`commandTracker.ts`), not on every registry refresh |
-| `src/ui/commands/useEditorKeymap.ts` | `src/ui/commands/useEditorKeymap.ts` | adapt | `ea5c91d` | | No change: the adapted `appCommands` and `install` keep their exports |
+| `src/ui/commands/useEditorKeymap.ts` | `src/ui/commands/useEditorKeymap.ts` | verbatim | `ea5c91d` | `f8130f17fba00424c029639bcf7a83fd407607590e915f8f407683b01cd7b670` | |
 | `src/ui/dialogs/DialogHost.tsx` | `src/ui/dialogs/DialogHost.tsx` | verbatim | `ea5c91d` | `d80f3e296fc4dce2ccb5dd09023ec782594b82a47e0e3bf1261e7055bb2c23df` | |
 | `src/ui/dialogs/registry.ts` | `src/ui/dialogs/registry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/dock/DockSection.tsx` | `src/ui/dock/DockSection.tsx` | verbatim | `ea5c91d` | `3e46144a531c70c4b70420d3d1276115ee7eab9665728c15d43ad7f2dadd6e25` | |
@@ -310,11 +337,11 @@ rows.
 | `src/ui/toast/ToastViewport.tsx` | `src/ui/toast/ToastViewport.tsx` | verbatim | `ea5c91d` | `5afbf9241ea9e98bcde716d37b96cb649c7cd09b8846ce9c77b4e5b8ff3b151f` | |
 | `src/ui/toast/toast.css` | `src/ui/toast/toast.css` | verbatim | `ea5c91d` | `3b72cd806b701adc7f137bda1d694bac53047e151db222432cfde10a1fbc824e` | |
 | `src/ui/toast/toast.ts` | `src/ui/toast/toast.ts` | verbatim | `ea5c91d` | `35cdddcdfb41732710dea2c026a5c22c443c2b16fcf6a3fdb5701b594cce70e7` | |
-| `src/ui/tools/VariantToolButton.tsx` | `src/ui/tools/VariantToolButton.tsx` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/types.ts` keeps `RailSlot` and `Tool` |
+| `src/ui/tools/VariantToolButton.tsx` | `src/ui/tools/VariantToolButton.tsx` | verbatim | `ea5c91d` | `7100f35f5111258d3d1e8230e06deb53fa5c8f4763da45157461db5b2cabf258` | |
 | `src/ui/tools/contextBar.css` | `src/ui/tools/contextBar.css` | adapt | `ea5c91d` |  | Readout text (`.context-readout`) |
 | `src/ui/tools/contextBarRegistry.ts` | `src/ui/tools/contextBarRegistry.ts` | adapt | `ea5c91d` | | Workflow-file references removed |
 | `src/ui/tools/toolRail.css` | `src/ui/tools/toolRail.css` | adapt | `ea5c91d` |  | The stamp preview button (`.tool-rail__stamp`) |
-| `src/ui/tools/useToolState.ts` | `src/ui/tools/useToolState.ts` | adapt | `ea5c91d` |  | No change: the adapted `app/tools/activeTool.ts` keeps `toolState` and `ToolState`, bound to this editor's active-tool store (per layer kind) |
+| `src/ui/tools/useToolState.ts` | `src/ui/tools/useToolState.ts` | verbatim | `ea5c91d` | `1aa4ae98e4d8abdc689abe12142cbd646b65fc7afcb171441ab84a3ad922c352` | |
 | `tests/e2e/cleanup-licences.spec.ts` | `tests/e2e/licences.spec.ts` | adapt | `4987001` | | This repo's helpers (`openEditor`, `openMenu`, `menuItem`); opened with no project open; this editor's title and libtiled notice |
 | `tests/e2e/harness/te-001-smoke.html` | `tests/e2e/harness/smoke.html` | adapt | `ea5c91d` | | Title and script name |
 | `tests/e2e/harness/te-001-smoke.ts` | `tests/e2e/harness/smoke.ts` | adapt | `ea5c91d` | | Ticket ID in the comment; both far edges of the rect read; status read before the renderer is disposed |
@@ -370,97 +397,136 @@ rows.
 | `vitest.config.ts` | `vitest.config.ts` | verbatim | `ea5c91d` | `4a41581bc1a038dec83a21477c0a1288d693602ee3001af4327f3d08bad5fea4` | |
 | `vitest.perf.config.ts` | `vitest.perf.config.ts` | verbatim | `ea5c91d` | `09675eb8bb88964f2e553c15966b99ced61c8910e3363731e977aa05d1955c9c` | |
 
+## Code taken in part from the sprite editor
+
+Files of this editor that took some code from a sprite editor file and are otherwise this
+editor's own. Measured on 2026-11-16 as the distinct lines of 30 characters or more that the
+file shares with the `se/` file at `ea5c91d`; the commit a part was taken from was not recorded
+when it was taken. The sprite editor lists none of these sources as derived from a third party:
+all are the owner's MIT code.
+
+| Path | `se/` path | Shared lines | What was taken |
+| ---- | ------------ | ------------ | -------------- |
+| `src/app/export/exportProject.ts` | `src/app/export/exportWorkflows.ts` | 50 | The folder choice, permission and storage time-out steps of the export |
+| `src/app/preview/mountPreview.ts` | `src/app/preview/mountPreview.ts` | 18 | Mounting the preview stage and following its size |
+| `src/app/tilesets/import/tilesetDrop.ts` | `src/app/file/install.ts` | 16 | The drag-over and drop handlers |
+| `src/core/project/errors.ts` | `src/core/project/errors.ts` | 16 | The project error class, its options and `quoted` |
+| `src/core/project/json.ts` | `src/core/project/json.ts` | 42 | `parseJson`, `encodeJson` and the checked JSON reader |
+| `src/core/project/manifest.ts` | `src/core/project/manifest.ts` | 11 | Writing and reading the manifest entry |
+| `src/core/runtime/runtime.ts` | `src/core/export/validateAtlas.ts` | 25 | The atlas checks' helpers (`quoted`, `shown`, `at`, `object`, `member`, `integer`); shipped in the generated `ngne-tilemap.ts` under MIT-0 |
+| `src/engine/preview/demandScheduler.ts` | `src/engine/preview/demandScheduler.ts` | 21 | The demand-driven frame scheduler |
+| `src/engine/preview/previewGame.ts` | `src/engine/NgnePreview.ts` | 87 | The preview game's instance, probe, retry and canvas handling |
+| `src/ui/export/ExportDialog.tsx` | `src/ui/export/ExportDialog.tsx` | 30 | `formatSize`, the section layout and the destination row |
+| `src/ui/layers/LayerProperties.tsx` | `src/ui/timeline/LayerProperties.tsx` | 18 | The popover host and its anchor |
+| `src/ui/preview/PreviewPanel.tsx` | `src/ui/preview/PreviewPanel.tsx` | 18 | The preview stage and row |
+| `tests/e2e/te-003-shell.spec.ts` | `tests/e2e/se-006-shell.spec.ts` | 24 | The layout checks of the shell's regions |
+| `tests/e2e/te-013-devices.ts` | `tests/e2e/se-011-toolkit.ts` | 14 | Tracking the GPU devices a page creates |
+| `tests/e2e/te-047-save-open.spec.ts` | `tests/e2e/se-041-files.spec.ts` | 20 | Download, file chooser and drop steps |
+| `tests/e2e/te-065-axe.spec.ts` | `tests/e2e/se-071-axe-shell.spec.ts` | 49 | The accessibility checks of menus, submenus and popovers |
+| `tests/e2e/te-065-keyboard.spec.ts` | `tests/e2e/se-071-keyboard.spec.ts` | 97 | The keyboard reach checks of the command palette and menus |
+| `tests/e2e/te-065-support.ts` | `tests/e2e/se-071-support.ts` | 214 | The audit helpers: start-up, commands, file choosers, axe and layout checks |
+| `tests/e2e/te-065-targets.spec.ts` | `tests/e2e/se-071-layout.spec.ts` | 43 | The target-size and layout checks |
+| `tests/perf/browser.ts` | `tests/perf/se-024-playback.perf.ts` | 21 | Starting the browser with a GPU and a free port |
+| `tests/unit/te-002-sprite-core.test.ts` | `tests/unit/se-040-support.ts` | data | `FIRST_FRAME_COMPOSITE`, the composite of the golden file's first frame |
+
 ## Tiled source named or read
 
 Tiled's editor (<https://github.com/mapeditor/tiled>, GPL-2.0-or-later outside its BSD-2-Clause
 `src/libtiled`) is followed for behaviour only. Until 2026-11-15 the comments, test names or specs
 of the files below named classes, functions, members or files of Tiled's source; where the second
 column says so, they also said that its source had been read at tag `v1.12.2` to confirm a detail.
-On 2026-11-15 those names and claims were replaced by behaviour wording; the code was not changed.
-No approval to read Tiled's source is on record, so the reading is treated as not approved, and
-each file's class stays pending until the next full audit classifies it. Comments that credit the
+On 2026-11-15 those names and claims were replaced by behaviour wording. No approval to read
+Tiled's source is on record, so the reading is treated as not approved. Comments that credit the
 BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
 
-| Path | What the file carried before 2026-11-15 | Class |
-| ---- | --------------------------------------- | ----- |
-| `docs/DESIGN.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `docs/FORMAT.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `docs/SPEC.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/clipboard/clipboard.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/layers/layerTree.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/markers/create/markerCreate.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/markers/markerGeometry.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/markers/markerSelection.ts` | Names | Pending |
-| `src/app/markers/markerToolSupport.ts` | Names | Pending |
-| `src/app/markers/points/markerPoints.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/markers/select/markerSelect.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/properties/propertiesPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/selection/tools/selection.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/selection/tools/selectionMode.ts` | Names | Pending |
-| `src/app/terrains/terrains.commands.ts` | Names | Pending |
-| `src/app/terrains/terrainsPanel.ts` | Names | Pending |
-| `src/app/tilesets/animation/animationEditor.ts` | Names | Pending |
-| `src/app/tilesets/panel/tilesetPanel.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tilesets/panel/tilesetPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/eraser/eraser.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/fill/bucket.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/fill/fillPlan.ts` | Names | Pending |
-| `src/app/tools/fill/fillPreview.overlay.ts` | Names | Pending |
-| `src/app/tools/fill/shapeFill.tools.ts` | Names | Pending |
-| `src/app/tools/fill/terrainFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/pipeline.ts` | Names | Pending |
-| `src/app/tools/stamp/capture.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/stamp/placement.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/stamp/stamp.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/stamp/stampImage.ts` | Names | Pending |
-| `src/app/tools/terrain/brushTerrain.ts` | Names | Pending |
-| `src/app/tools/terrain/terrainBrush.overlay.ts` | Names | Pending |
-| `src/app/tools/terrain/terrainBrush.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/app/tools/types.ts` | Names | Pending |
-| `src/core/fill/region.ts` | Names | Pending |
-| `src/core/fill/tileFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/core/layers/layerCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/core/maps/resizeMap.ts` | Names | Pending |
-| `src/core/markers/markerCommands.ts` | Names | Pending |
-| `src/core/properties/convert.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/core/runtime/runtime.ts` | Names | Pending |
-| `src/core/selection/commands.ts` | Names | Pending |
-| `src/core/selection/copy.ts` | Names | Pending |
-| `src/core/selection/operations.ts` | Names | Pending |
-| `src/core/terrain/analysis.ts` | Names | Pending |
-| `src/core/terrain/terrainCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/core/tileset/animationCommands.ts` | Names | Pending |
-| `src/core/tileset/gridPng.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/core/tmj/gid.ts` | Names | Pending |
-| `src/core/tmj/objects.ts` | Names | Pending |
-| `src/core/tmj/properties.ts` | Names | Pending |
-| `src/core/tmj/tileset.ts` | Names | Pending |
-| `src/core/tmj/tsx.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `src/ui/maps/ResizeMapDialog.tsx` | Names | Pending |
-| `src/ui/maps/mapDialogs.css` | Names | Pending |
-| `src/ui/tilesets/TilesetsPanel.tsx` | Names | Pending |
-| `src/ui/tilesets/collision/CollisionEditor.tsx` | Names | Pending |
-| `tests/e2e/te-018-capture.spec.ts` | Names | Pending |
-| `tests/e2e/te-019-shape.spec.ts` | Names | Pending |
-| `tests/e2e/te-020-clipping.spec.ts` | Names | Pending |
-| `tests/e2e/te-021-clipboard.spec.ts` | Names | Pending |
-| `tests/e2e/te-025-panel.spec.ts` | Names | Pending |
-| `tests/e2e/te-034-layers.spec.ts` | Names | Pending |
-| `tests/fixtures/tmj/build.ts` | Names | Pending |
-| `tests/unit/te-018-capture.test.ts` | Names | Pending |
-| `tests/unit/te-019-fill.test.ts` | Names | Pending |
-| `tests/unit/te-021-clipboard.test.ts` | Names | Pending |
-| `tests/unit/te-022-grid-png.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-033-resize.test.ts` | Names | Pending |
-| `tests/unit/te-033-selection.test.ts` | Names | Pending |
-| `tests/unit/te-034-layer-commands.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-035-layers-panel.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-036-images.test.ts` | Names | Pending |
-| `tests/unit/te-038-marker-geometry.test.ts` | Names | Pending |
-| `tests/unit/te-040-conversion.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-041-filler.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-044-brush.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
-| `tests/unit/te-060-tilesets.test.ts` | Names | Pending |
+The class is that of a pre-classification on 2026-11-16 by reviewers who had not read Tiled's
+source, from each file, its earlier versions and the wording change, updated for the changes made
+since (Clean-room records, Owner decisions); comparison against Tiled's source was not part of it.
+The next full audit confirms or corrects each class (Audits). **Behaviour-dictated**: what the
+file does is fixed by results seen when running Tiled, in its manual or in its published formats.
+Where a rule was learned from the source first, the row says it is to be confirmed by running
+Tiled.
+
+| Path | What the file carried before 2026-11-15 | Class | Reason |
+| ---- | --------------------------------------- | ----- | ------ |
+| `docs/DESIGN.md` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Layer drop targets, tree keys, tool keys and the tool set of each layer kind: results seen in Tiled; the keys cite Tiled's published shortcuts page. |
+| `docs/FORMAT.md` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated (published format; libtiled consulted) | The orientation table, tile placement and bottom-left alignment follow from the drawn output and the published global tile ID bits; the order in which the flags are applied was read in libtiled's renderer (Upstreams). |
+| `docs/SPEC.md` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | §5.2 and §5.3 were made behaviour-only on 2026-11-16 (Clean-room records). Open for the next audit: §4.3 describes the ellipse fill by its algorithm (Zingl's, MIT) and the flood fill by a design, not by their output cells, and §8 still names a class of Tiled's source for the Edit Points tool. |
+| `src/app/clipboard/clipboard.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Only a lock refuses Cut; Paste trims the empty border, selects the Stamp Brush and ignores an empty clipboard; Cut acts inside the map. |
+| `src/app/layers/layerTree.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Where a layer dropped on a group lands, as Tiled's Layers view shows. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/markers/create/markerCreate.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A new marker becomes the selection; Shift makes a square from the longer side; a right click finishes; a click on the first point closes. |
+| `src/app/markers/markerGeometry.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A move snaps the least x and y of the moved markers; the topmost hit is taken, the active layer's first while highlighted; Alt makes a band select enclosed markers only. Learned first from the source: to be confirmed by running Tiled. A comment still names a class of Tiled's source. |
+| `src/app/markers/markerSelection.ts` | Names | Independent | Tiled was named only to say that selecting adds no undo step. |
+| `src/app/markers/markerToolSupport.ts` | Names | Owner decision | The 5 CSS px drag threshold is this project's own value (Owner decisions, 2026-11-16); hit reach and snapping are behaviour or the project's own. |
+| `src/app/markers/points/markerPoints.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A click on empty space first lets go of the chosen point, then of the selection; a double click on an edge inserts a point. A comment still names a class of Tiled's source. |
+| `src/app/markers/select/markerSelect.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Click, Shift and Ctrl, band, move and handle rules, each seen in Tiled; press, then band, move or resize is the generic form of a drag tool. Comments still name a class of Tiled's source. |
+| `src/app/properties/propertiesPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | What the Properties view shows after each action is seen in Tiled; the list of actions that take the focus away from a tile was taken from the source. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/selection/tools/selection.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Owner decision | The 5 CSS px drag threshold is this project's own value (Owner decisions, 2026-11-16); a click clears, the magic wand records on release, Select Same Tile adds while dragging, a right click clears. Comments still name classes of Tiled's source. |
+| `src/app/selection/tools/selectionMode.ts` | Names | Behaviour-dictated | Shift adds, Ctrl subtracts, Ctrl+Shift intersects, as Tiled's manual gives them; otherwise the sprite editor's copy, with no Aseprite code (Upstreams). A comment still names a function of Tiled's source. |
+| `src/app/terrains/terrains.commands.ts` | Names | Independent | Menu items named as Tiled's UI names them, on this project's command registry. |
+| `src/app/terrains/terrainsPanel.ts` | Names | Behaviour-dictated | A new set or terrain starts its rename at once; a tile click picks by the set's type. |
+| `src/app/tilesets/animation/animationEditor.ts` | Names | Behaviour-dictated | A default frame duration of 100 ms and one undo step per edit, as Tiled's Animation Editor shows. |
+| `src/app/tilesets/panel/tilesetPanel.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | `[` and `]` stop at the first and last tileset and are disabled there. |
+| `src/app/tilesets/panel/tilesetPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | The tool active after picking tiles and the tab shown after a removal are seen in Tiled; the set of tools that keep a picked stamp was taken from the source. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/tools/eraser/eraser.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A drag erases the crossed cells, a right drag a rectangle at release, Shift every paintable tile layer. |
+| `src/app/tools/fill/bucket.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Flood the map, then keep the selected cells; nothing from outside the selection; a 1 × 1 stamp equal to the cell fills nothing. The region kept between the hover preview and the press was removed on 2026-11-16 (Owner decisions). |
+| `src/app/tools/fill/fillPlan.ts` | Names | Behaviour-dictated | A multi-cell stamp is tiled from the region's top-left cell. |
+| `src/app/tools/fill/fillPreview.overlay.ts` | Names | Independent | The drawing follows DESIGN §4 and this project's overlay API. |
+| `src/app/tools/fill/shapeFill.tools.ts` | Names | Behaviour-dictated | Shift makes a square, Alt centres on the press, both corners included; in terrain mode the selection cuts the filled shape. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/tools/fill/terrainFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A fill matches its surroundings, leaves cells outside the region unchanged and ignores the selected terrain; it calls the filler written in the clean room (Clean-room records). |
+| `src/app/tools/pipeline.ts` | Names | Behaviour-dictated | With a selection, only selected cells are painted. |
+| `src/app/tools/stamp/capture.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A captured stamp is trimmed to its non-empty cells; Ctrl+right press does not capture; a hidden layer takes no press; a locked layer is captured, not cut; Shift at release cuts; the tool stays. |
+| `src/app/tools/stamp/placement.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | A stamp is placed by its centre cell and its empty cells are skipped; a placement whose cells meet cells already painted in the stroke is left out. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/tools/stamp/stamp.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Shift draws a line and Ctrl+Shift an ellipse of stamps; their shapes equal captured output (te-017); the press and release rules with Shift held were taken from the source. Learned first from the source: to be confirmed by running Tiled. |
+| `src/app/tools/stamp/stampImage.ts` | Names | Independent | Chunks and time slices are this project's own. |
+| `src/app/tools/terrain/brushTerrain.ts` | Names | Independent | The brush follows the terrain selected in the panel. |
+| `src/app/tools/terrain/terrainBrush.overlay.ts` | Names | Behaviour-dictated | A preview of the cells a press would leave invalid; the line start is forgotten when the tool is selected. |
+| `src/app/tools/terrain/terrainBrush.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Independent (clean room) | Written anew on 2026-11-16 (Clean-room records). |
+| `src/app/tools/types.ts` | Names | Independent | Tiled was named only to say that the terrain brush paints across the selection. |
+| `src/core/fill/region.ts` | Names | Derived and noticed (Zingl) | The inscribed ellipse follows Zingl's `plotEllipseRect` (MIT, noticed); each row is filled between its outline cells. |
+| `src/core/fill/tileFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | The stamp is tiled from the region's top-left cell; its empty cells leave cells unchanged. |
+| `src/core/layers/layerCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Layer order for Select Next and Previous, the other layers that Show/Hide Other Layers changes, the row selected after Delete, where Raise and Lower move a layer, default layer names. Learned first from the source: to be confirmed by running Tiled. A comment names a preference that the manual does not list. |
+| `src/core/maps/resizeMap.ts` | Names | Behaviour-dictated | Cells clipped, markers kept outside the bounds, image-layer offsets moved, the selection moved, one undo step, the offset range. The order of steps inside was not compared (not permitted). Learned first from the source: to be confirmed by running Tiled. |
+| `src/core/markers/markerCommands.ts` | Names | Independent | Tiled's undo steps were named only to say that each edit is one undo step. |
+| `src/core/properties/convert.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Change Type keeps or resets a value as Tiled's Properties view shows; the table was taken from the source. Learned first from the source: to be confirmed by running Tiled. |
+| `src/core/runtime/runtime.ts` | Names | Behaviour-dictated (published format; libtiled consulted) | A layer found by name, from the bottom; a bounds-checked cell write named after Tiled's published scripting API. |
+| `src/core/selection/commands.ts` | Names | Independent | The sprite editor's copy; Tiled was named only to say that selection changes are undoable. |
+| `src/core/selection/copy.ts` | Names | Behaviour-dictated | A copied stamp is the size of the selection's bounding box, with cells outside the selection empty. |
+| `src/core/selection/operations.ts` | Names | Independent | The sprite editor's union, subtract and intersect, line for line. |
+| `src/core/terrain/analysis.ts` | Names | Derived and noticed (libtiled) | The terrain-set analysis follows libtiled's terrain sets (BSD, noticed). Its completeness flag, which only the earlier filler read, is no longer used. |
+| `src/core/terrain/terrainCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Undo labels, the default set name, terrains after a removed one moving down, tiles without terrain dropped; the default colours are libtiled's (BSD, noticed). |
+| `src/core/tileset/animationCommands.ts` | Names | Behaviour-dictated | Each animation edit is one undo step. |
+| `src/core/tileset/gridPng.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated (published format; libtiled consulted) | Whole tiles only, from the margin and spacing of the published tileset format. |
+| `src/core/tmj/gid.ts` | Names | Behaviour-dictated (published format; libtiled consulted) | Flag bits 31 to 28; a tile belongs to the tileset with the largest first GID not above it. |
+| `src/core/tmj/objects.ts` | Names | Behaviour-dictated (published format; libtiled consulted) | An instance's members override its template's. |
+| `src/core/tmj/properties.ts` | Names | Behaviour-dictated (published format; libtiled consulted) | Template properties first, those the instance sets replaced in place, then the instance's own. |
+| `src/core/tmj/tileset.ts` | Names | Behaviour-dictated (published format; libtiled consulted) | The colour key from `transparentcolor`; the corner and edge masks of terrain sets. A comment names a libtiled member (BSD) without a pointer to its notice. |
+| `src/core/tmj/tsx.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated (published format; libtiled consulted) | TSX attribute and member names of the published formats. |
+| `src/ui/maps/ResizeMapDialog.tsx` | Names | Behaviour-dictated | The look of the preview and the clamping of the offsets, as Tiled's dialog shows them. |
+| `src/ui/maps/mapDialogs.css` | Names | Independent | Styles from this project's tokens; Tiled named only the dialog. |
+| `src/ui/tilesets/TilesetsPanel.tsx` | Names | Behaviour-dictated | The stamp follows the tiles picked while dragging. |
+| `src/ui/tilesets/collision/CollisionEditor.tsx` | Names | Independent | Tiled was named only to say that this editor differs. |
+| `tests/e2e/te-018-capture.spec.ts` | Names | Behaviour-dictated | Inputs and outputs of a capture. |
+| `tests/e2e/te-019-shape.spec.ts` | Names | Behaviour-dictated | Cells of shape-fill drags. The ellipse pictures equal Zingl's routine; capturing them from Tiled is open. |
+| `tests/e2e/te-020-clipping.spec.ts` | Names | Behaviour-dictated | Results of painting and filling with a selection. |
+| `tests/e2e/te-021-clipboard.spec.ts` | Names | Behaviour-dictated | Menus, keys and the stamp after Paste. |
+| `tests/e2e/te-025-panel.spec.ts` | Names | Behaviour-dictated | The tool selected after a drag in the tileset panel. |
+| `tests/e2e/te-034-layers.spec.ts` | Names | Behaviour-dictated | The result of Move Layer Down into a group. |
+| `tests/fixtures/tmj/build.ts` | Names | Derived and noticed (qjsonparser) | The JSON text follows qjsonparser (noticed); the members of each object are those of the published formats. |
+| `tests/unit/te-018-capture.test.ts` | Names | Behaviour-dictated | The trimmed stamp and the tool staying active. |
+| `tests/unit/te-019-fill.test.ts` | Names | Behaviour-dictated | Fill outputs and Zingl's reference ellipse (MIT, noticed). Capturing the ellipse goldens from Tiled is open. |
+| `tests/unit/te-021-clipboard.test.ts` | Names | Behaviour-dictated | The copied stamp. |
+| `tests/unit/te-022-grid-png.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Column and tile counts of grid images. |
+| `tests/unit/te-033-resize.test.ts` | Names | Behaviour-dictated | Offset ranges, cells, markers and image-layer offsets after a resize. |
+| `tests/unit/te-033-selection.test.ts` | Names | Behaviour-dictated | The selection after a resize and its undo. |
+| `tests/unit/te-034-layer-commands.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Layer order, names, other layers and the active layer after a removal. |
+| `tests/unit/te-035-layers-panel.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Where a dropped layer lands. |
+| `tests/unit/te-036-images.test.ts` | Names | Behaviour-dictated | Default image-layer names. |
+| `tests/unit/te-038-marker-geometry.test.ts` | Names | Behaviour-dictated | The snapped move. |
+| `tests/unit/te-040-conversion.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Change Type results; the expected table comes from the same reading as `convert.ts`. Learned first from the source: to be confirmed by running Tiled. |
+| `tests/unit/te-041-filler.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Rewritten on 2026-11-16 as behaviour properties of fills and strokes (Clean-room records). |
+| `tests/unit/te-044-brush.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Behaviour-dictated | Goldens captured from Tiled 1.12.2; targets, lines, drags, symmetry and invalid cells as inputs and outputs. |
+| `tests/unit/te-060-tilesets.test.ts` | Names | Behaviour-dictated | GIDs and first GIDs a saved map shows. |
 
 ## Clean-room records
 
@@ -477,7 +543,38 @@ BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
   terrain parts of DESIGN, the stubs, the tests and Tiled's user manual; it was told to run no
   Git command and to open no file outside the worktree, and asked no question. The specification
   writer reviewed the result by tests and outputs only. The goldens captured from Tiled 1.12.2
-  (te-042, te-044, te-045) pass unchanged.
+  (te-042, te-044, te-045) pass unchanged. A later change to `filler.ts` and `brush.ts` for code
+  quality findings was made by another implementer who had not read the earlier files or their
+  history.
+
+Earlier rewrites without a recorded separation:
+
+- 2026-11-13: `src/core/raster/line.ts`, `src/core/raster/ellipse.ts`, `src/core/fill/flood.ts`,
+  `inscribedEllipseRegion` in `src/core/fill/region.ts`, `shapeArea` in
+  `src/app/tools/fill/shapeFill.tools.ts`, and the terrain filler, brush and pick were rewritten
+  in the tree that held their earlier versions, by a writer who had read those versions. SPEC
+  §5.2 was then still traced against Tiled's source. No separation was recorded, so these
+  rewrites are not clean-room work. Since then the terrain files were written anew in the clean
+  room (above); `line.ts` is a textbook integer Bresenham line, pre-classified independent;
+  `ellipse.ts` and `inscribedEllipseRegion` follow Zingl's code (MIT, noticed); `shapeArea`
+  follows the drag rules of SPEC §4.3, pre-classified behaviour-dictated; `flood.ts` is not
+  classified yet (Audits).
+- Before 2026-11-16 the README, this document and `tests/unit/te-004-orientation.test.ts` said
+  these files were "clean-room", "rewritten from the specification", "an independent design" or
+  "copied independently". Those words are gone; the rotation tables of te-004 are libtiled's
+  (BSD, noticed).
+
+## Audits
+
+- 2026-11-13: v1.0.0 was tagged at `49917e7` with no licence audit recorded.
+- 2026-11-15: full audit at `46121d4`: all tracked files, the built output, a generated export
+  and every row of the sprite editor table, by seven area reviewers and four verifiers. They read
+  the permissive upstream files at their registered versions (libtiled's three files,
+  qjsonparser, Zingl, Aseprite's `blend_funcs.cpp`, pixman); Tiled's editor source was not read,
+  so comparison against it was not checked. Not clean: names and claims of Tiled's source in
+  comments, tests and specs; a tracked reference doc written from that source; test data traced
+  from it; a terrain filler that kept the step structure of a port; notices without versions or
+  pointers; none of the records of this document. The fixes followed from `6c7d40a`.
 
 ## Owner decisions
 
@@ -490,3 +587,22 @@ BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
   in "Tiled source named or read" (`markerToolSupport.ts`, `selection.tools.ts`).
 - 2026-11-16: the bucket fill no longer keeps the region its hover preview found for the press;
   each preview and each press finds its own region.
+- 2026-11-13: the libtiled files read for the published formats (the global tile ID mapper, the
+  map reader and writer) are not listed in the notices: no code was taken from them.
+- 2026-11-13: the stand-in licence text `scripts/licence-texts/react-remove-scroll-bar.txt` was
+  approved in the sprite editor (`2fc5270`): the `LICENSE` of
+  <https://github.com/theKashey/react-remove-scroll-bar> at commit `7301c160`, compared byte for
+  byte. Copied here at `4987001`.
+- 2026-11-15: qjsonparser's notice ("Use, modification and distribution is allowed without
+  limitation, warranty, liability or support of any kind") is classified permissive.
+- 2026-11-16: BRIEF D3 defines terrain parity by behaviour: the results of the fixture cases
+  captured from Tiled 1.12.2.
+- 2026-11-16: SPEC §5.2 drops the bound on how far a stroke reaches and the painting mode without
+  adjustment; the closest-distance rule stays as a rule on the result. The te-041 cases that
+  tested the earlier filler's internals become behaviour properties. The terrain brush keeps
+  the Ctrl-release and drag-joining behaviour, specified in SPEC §5.3.
+- 2026-11-16: code that bundled packages credit to another project: UZIP.js (in `fflate`) and
+  react-merge-refs (in `use-callback-ref`) are listed in the notices. The article
+  `@floating-ui/dom` cites above `observeMove` (samthor.au) is accepted as a residual risk.
+- 2026-11-16: smooth-ui (in `aria-hidden`) is listed in the notices with the MIT licence of its
+  repository.

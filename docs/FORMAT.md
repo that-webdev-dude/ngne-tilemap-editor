@@ -97,7 +97,8 @@ Screen axes point right and down. `fx`, `fy` and `θ` are the values of an NGNE 
 width and height, rotation in radians, clockwise on screen): NGNE maps the texel at `(a, b)` to
 `R(θ)·(fx·a, fy·b)` with `R(θ)·(p, q) = (p·cos θ − q·sin θ, p·sin θ + q·cos θ)`. This is
 Tiled's rendering: anti-diagonal first, then horizontal, then vertical; with `D` set Tiled
-draws at 90° with `H' = V` and `V' = not H` (Tiled 1.12.2). Each row has a test fixture with a
+draws at 90° with `H' = V` and `V' = not H` (Tiled 1.12.2; read in libtiled's renderer, BSD
+2-clause, PROVENANCE Upstreams). Each row has a test fixture with a
 3 × 2 asymmetric tile.
 
 ### 1.3 Placing a tile

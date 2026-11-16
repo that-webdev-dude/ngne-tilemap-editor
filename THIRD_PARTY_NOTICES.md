@@ -4,7 +4,8 @@ Parts of this repository are derived from third-party source code. Each part and
 is listed below. Runtime dependencies installed through npm carry their own licences in
 `node_modules`; the build writes this file, the program's licence, the licence of every npm
 package it bundles and the licence of rolldown, the bundler, to `licences.txt`, which the app
-shows in a dialog (View → Open Source Licences…).
+shows in a dialog (View → Open Source Licences…). Code that a bundled package credits to another
+project is listed here too (UZIP.js, react-merge-refs, smooth-ui).
 
 NGNE Tilemap Editor is not affiliated with or endorsed by Tiled or Thorbjørn Lindeijer, nor by
 Aseprite or Igara Studio S.A. "Tiled" and "Aseprite" are used only to name the programs whose
@@ -207,4 +208,98 @@ Copyright (c) 2010 Girish Ramakrishnan <girish@forwardbias.in>
 
 Use, modification and distribution is allowed without limitation,
 warranty, liability or support of any kind.
+```
+
+## UZIP.js (MIT)
+
+Source: <https://github.com/photopea/UZIP.js>, which the npm package `fflate` credits: its
+source says part of its code is similar to UZIP.js.
+
+Version: the licence file at commit `95071093542682c2d4ed9b4e91855110ade73ce2`; the version
+`fflate` followed is not stated.
+
+Used in:
+
+- `fflate` 0.8.3, bundled (its own licence is in `licences.txt`).
+
+```text
+MIT License
+
+Copyright (c) 2018 Photopea
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## react-merge-refs (MIT)
+
+Source: <https://github.com/gregberge/react-merge-refs>, on which the npm package
+`use-callback-ref` says its `mergeRefs` is based.
+
+Version: the licence file at commit `f81b2fa4110a660d82d6558ef99826120ce43805`; the version
+`use-callback-ref` followed is not stated.
+
+Used in:
+
+- `use-callback-ref` 1.3.3, bundled (its own licence is in `licences.txt`).
+
+```text
+MIT License
+
+Copyright (c) 2020 Greg Bergé
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+## smooth-ui (MIT)
+
+Source: <https://github.com/smooth-code/smooth-ui> (archived), on whose modal dialogs the npm
+package `aria-hidden` says it is based.
+
+Version: the licence file at commit `ad2e9a20c0dcf0da49fab09ade2c7bb8e3145b56`; the version
+`aria-hidden` followed is not stated.
+
+Used in:
+
+- `aria-hidden` 1.2.6, bundled (its own licence is in `licences.txt`).
+
+```text
+Copyright 2018 Smooth Code
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 ```
