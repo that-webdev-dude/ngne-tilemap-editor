@@ -159,7 +159,7 @@ feature wrote it).
 | Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 79.0 / 82.5 ms (median 76.1 / 79.1 ms); 100% view 21.7 / 22.0 ms (median 20.3 / 19.7 ms) |
 | GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 4 / 4 (p95 3 / 3), **over budget**; overview pan 2 / 2 (p95 1 / 1); paint 2 / 2 (p95 2 / 2); last submit → GPU idle 3.4–12.5 ms |
 | Idle editor: frames submitted per second | 0 | 0 / 0 (live tier at 100% and chunk tier fitted; pointer outside the viewport and resting on the canvas) |
-| Cold load to interactive (production build, local) | ≤ 2 s | 1,245 / 1,307 ms (median 221 / 726 ms) |
+| Cold load to interactive (production build, local) | ≤ 2 s | 1,245 / 1,153 ms (median 221 / 911 ms) |
 
 All rows: 2026-11-15, `@ngne/core` 0.3.1, Chrome 157.0.8103.78, i7-12650H, Balanced power plan with the Best
 performance power mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless
@@ -203,11 +203,11 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   Chrome with a fresh profile (no cache, no service worker). From the navigation's start, the
   empty state's New Project button is clicked at every animation frame (at most every 50 ms) from
   the first one that shows it; "interactive" is the first animation frame that shows the New
-  Project dialog. The maximum of 10 loads. The app commits at a median 142 / 129 ms and shows the
-  empty state at 198 / 708 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
+  Project dialog. The maximum of 10 loads. The app commits at a median 142 / 154 ms and shows the
+  empty state at 198 / 890 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
   most of the load. Single loads set both maxima: on Intel UHD one load took 1,226 ms to the
-  empty state (the others 185–211 ms); on the RTX 4060 two loads took 1,257 and 1,288 ms (the
-  others 653–759 ms).
+  empty state (the others 185–211 ms); on the RTX 4060 two loads took 1,111 and 1,132 ms (the
+  others 799–928 ms).
 
 ### Game runtime budget
 
@@ -263,5 +263,5 @@ workaround no benchmark isolates.
 | No tilemap or atlas schema; no tileset discovery | Editor-owned `ngne-tilemap` and `ngne-sprite-atlas` formats | editor, runtime | None in time; the formats and the runtime are the editor's to maintain |
 | One GPU device per renderer; no multi-viewport | Secondary views in Canvas2D | editor | Not measured |
 | BrowserGame: no in-scene uploads, fixed logical size | Preview restarts its scene on tileset change; fixed preview resolution | preview | Not measured |
-| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor | Not measured: no request hung in the measurements. The check is part of the cold load (1,245 / 1,307 ms, §6), most of it on the RTX 4060; a hung request shows the notice after up to 10 s (two 5 s limits) |
+| `WebGPURenderer.create` awaits `requestAdapter` and `requestDevice` without a time limit, and its abort signal cannot end that wait | The editor's WebGPU check runs first with a limit (5 s, one retry) and shows WebGPU required ([DESIGN.md](DESIGN.md) §9); a hang that starts after the check has passed leaves the viewport loading | editor | Not measured: no request hung in the measurements. The check is part of the cold load (1,245 / 1,153 ms, §6), most of it on the RTX 4060; a hung request shows the notice after up to 10 s (two 5 s limits) |
 | `WebGPURenderer` exposes neither its `GPUDevice` nor its submitted work, so the editor cannot hold a redraw while frames are in flight: a pan at the live-tier threshold keeps up to 4 (§6, TE-068). Needed: `renderer.framesInFlight`, or a promise that settles when the submitted work is done | None: frames follow animation frames, which Chrome paces; the GPU is idle 3.4–12.5 ms after the last submit (§6) | editor | Up to 4 / 4 frames in flight in the pan (p95 3 / 3) against a budget of 2, accepted for v1; overview pan and paint 2 / 2 |
