@@ -22,24 +22,23 @@ import { FILL_MODE_OPTION, fillModeOf, paintPlan, regionPlan } from "./fillPlan"
 import type { FillMode, FillPlan } from "./fillPlan";
 import { terrainFillPlan } from "./terrainFill";
 
-// The bucket fill (SPEC §4.3), Tiled's `BucketFillTool` (`src/tiled/bucketfilltool.cpp`,
-// checked at v1.12.2) in its Tile and Terrain fill modes (the context bar's Fill; Terrain is
-// `terrainFill.ts`, SPEC §5.4). Its rail slot, key (G) and icon are planned in
-// `planned.tools.ts`; the overlay preview is `fillPreview.overlay.ts`.
+// The bucket fill (SPEC §4.3), behaving as Tiled's `BucketFillTool` in its Tile and Terrain
+// fill modes (the context bar's Fill; Terrain is `terrainFill.ts`, SPEC §5.4). Its rail slot,
+// key (G) and icon are planned in `planned.tools.ts`; the overlay preview is
+// `fillPreview.overlay.ts`.
 //
 //   hover: the region the press would fill, previewed
 //   press: fills the 4-connected region of cells equal to the pressed one (tile and flags), in
-//     the map, then only its cells in the tile selection (Tiled's
-//     `computePaintableFillRegion` on a fixed-size map), with the stamp tiled from the
-//     region's bounding box top-left (`TileFill`); in Terrain mode with the tiles of the
-//     brush's terrain set that match the cells around the region (`wangFill`)
+//     the map, then only its cells in the tile selection (as in Tiled on a fixed-size map),
+//     with the stamp tiled from the region's bounding box top-left; in Terrain mode with the
+//     tiles of the brush's terrain set that match the cells around the region
 //   Shift, or the context bar's Whole selection: the whole selection, or the whole layer
-//     without one; the pressed cell must lie in it (Tiled's `BucketFillTool`)
+//     without one; the pressed cell must lie in it (as in Tiled)
 //
 // The fill is made at the press (SPEC §14 times it press → frame) and is one history entry
 // when the stroke ends; a right click before the release cancels it. A 1 × 1 stamp equal to
-// the pressed cell fills nothing in Tile mode, as Tiled's (`computeRegion = false`). A right drag captures
-// a stamp (`capture.ts`).
+// the pressed cell fills nothing in Tile mode, as in Tiled. A right drag captures a stamp
+// (`capture.ts`).
 
 /** The region last computed, kept while the layer and the inputs are the same. */
 interface Known {
@@ -70,10 +69,10 @@ export function subscribeBucket(listener: () => void): () => void {
  * The cells a press on `cell` fills: the flood region of the cell in the active tile layer,
  * over the map, cut to the map's tile selection when it has one (SPEC §4.3); or with `whole`
  * the selection's every cell when `cell` lies in it, or the layer's without one. Empty off the
- * map, without a tile layer, or when a 1 × 1 stamp equals the cell (not with `whole`; `stamp` is null in
- * Terrain mode, which has no such case). Kept between calls while the session's revision, the layer, `whole`
- * and the stamp stay and `cell` lies in it (Tiled's own shortcut: any cell of a flood region
- * floods to the same region).
+ * map, without a tile layer, or when a 1 × 1 stamp equals the cell (not with `whole`; `stamp`
+ * is null in Terrain mode, which has no such case). Kept between calls while the session's
+ * revision, the layer, `whole` and the stamp stay and `cell` lies in it: any cell of a flood
+ * region floods to the same region.
  */
 export function bucketRegion(
     session: ProjectSession,
@@ -105,7 +104,7 @@ export function bucketRegion(
         const rect = { x: 0, y: 0, width: map.width, height: map.height };
         const value = layer.cells.get(cell.x, cell.y);
         if (whole) {
-            // Tiled: the pressed cell must lie in the region filled.
+            // As in Tiled, the pressed cell must lie in the region filled.
             if (!selection) region = rectRegion(rect);
             else if (maskHas(selection, cell.x, cell.y)) region = maskSpans(selection);
         } else if (!stamp || stamp.width !== 1 || stamp.height !== 1 || stamp.cells[0] !== value) {

@@ -11,8 +11,7 @@ import type { Point } from "../view/coordinates";
 // (`layerShift`, FORMAT §3.4): a pointer at map position `p` lies at `p − shift` in the
 // coordinates of a marker of that layer, as Tiled works in the coordinates of an object's layer.
 //
-// What the select tool takes is Tiled's (`AbstractObjectTool::topMostMapObjectAt`,
-// `filterMapObjects`, checked at v1.12.2): the markers of every visible, unlocked marker layer,
+// What the select tool takes, as in Tiled: the markers of every visible, unlocked marker layer,
 // the topmost first (the last layer of the tree, the last marker of its list); with Highlight
 // Current Layer on, a marker of the active layer before one of another layer. A rubber band takes
 // the markers its rectangle touches, or with Alt only those it encloses (`ObjectSelectionTool`).
@@ -232,8 +231,8 @@ export function snapPoint(
 
 /**
  * The move of a drag by `(dx, dy)` map pixels of markers whose positions start at `align` (the
- * least `x` and `y` of their positions, Tiled's `mAlignPosition`): `align` moved and placed as
- * `snapPoint` places it, less `align`.
+ * least `x` and `y` of their positions, the point that snaps, as in Tiled): `align` moved and
+ * placed as `snapPoint` places it, less `align`.
  */
 export function snappedMove(
     align: Point,

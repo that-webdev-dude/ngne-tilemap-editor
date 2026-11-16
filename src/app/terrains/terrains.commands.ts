@@ -24,9 +24,10 @@ import {
 
 // The commands of the Terrains panel (SPEC §5.1, DESIGN §8.6; TE-043), in three context menus
 // the panel shows: the menu of its Add button (New Corner Set, New Edge Set, New Mixed Set, as
-// Tiled's `WangDock`), the menu of a terrain set's row and the menu of a terrain's row. They act
-// on the active tileset's selected set and terrain, which opening a row's menu selects; none runs
-// during a stroke. A refusal (the only terrain of a set) is reported by the registry's toast.
+// Tiled's Terrain Sets view), the menu of a terrain set's row and the menu of a terrain's row.
+// They act on the active tileset's selected set and terrain, which opening a row's menu
+// selects; none runs during a stroke. A refusal (the only terrain of a set) is reported by the
+// registry's toast.
 
 const hasSet = () => terrainEditable() && selectedSet() !== null;
 

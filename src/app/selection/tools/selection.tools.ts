@@ -17,15 +17,15 @@ import {
     selectionModeOf,
 } from "./selectionMode";
 
-// The tile selection tools (SPEC §4.3, Tiled's `TileSelectionTool`, `MagicWandTool` and
-// `SelectSameTileTool`, checked at v1.12.2). Their rail slots, keys (M, W, S) and icons are
+// The tile selection tools (SPEC §4.3), behaving as Tiled's `TileSelectionTool`,
+// `MagicWandTool` and `SelectSameTileTool`. Their rail slots, keys (M, W, S) and icons are
 // planned in `planned.tools.ts`. They read the active tile layer, hidden or locked too (Tiled's
 // selection tools ignore whether the layer is a visible one), and change only the selection of
 // the map, through the history (`selectionMode.ts`).
 //
 //   Rectangle select: press and drag a rectangle of cells, from the pressed cell to the
 //     pointer's, both included; the ants show the selection it would leave; the release
-//     records it. A click that never drags (Tiled: under half the drag distance) clears the
+//     records it. A click that never drags (moves under `SELECT_DRAG_DISTANCE`) clears the
 //     selection, as Tiled's does.
 //   Magic wand: the press finds the 4-connected region of cells equal to the pressed one
 //     (tile and flags), in the map (`core/fill`'s flood), and the ants show at once the
@@ -38,7 +38,7 @@ import {
 // Modes come from the modifiers at the press (`selectionModeOf`). A right click clears the
 // selection; a right click during a drag cancels the drag (`pipeline.ts`), as Escape does.
 
-/** CSS pixels a press must move before the rectangle select drags: half of Qt's 10. */
+/** CSS pixels a press must move before the rectangle select drags; a shorter move is a click. */
 export const SELECT_DRAG_DISTANCE = 5;
 
 /** The tile layer a selection tool reads: the active layer of the stroke, or null. */
@@ -63,8 +63,8 @@ function rectShape(map: ProjectMap, rect: CellRect): Region {
 }
 
 /**
- * The cells of `layer` whose value is one of `values`, over `map`: Tiled's
- * `SelectSameTileTool`, empty cells included when 0 is one of them.
+ * The cells of `layer` whose value is one of `values`, over `map`, as Tiled's
+ * `SelectSameTileTool` selects them, empty cells included when 0 is one of them.
  */
 export function sameValueShape(
     map: ProjectMap,

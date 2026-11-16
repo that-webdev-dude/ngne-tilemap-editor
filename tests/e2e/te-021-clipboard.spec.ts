@@ -20,8 +20,8 @@ import {
     undo,
 } from "./te-020-support";
 
-// TE-021: the cell clipboard (SPEC §4.4, Tiled's `MapDocumentActionHandler` and
-// `MapEditor::paste`) on the Edit menu and its keys (DESIGN §5, §10.3): Copy takes the selected
+// TE-021: the cell clipboard (SPEC §4.4, as in Tiled) on the Edit menu and its keys
+// (DESIGN §5, §10.3): Copy takes the selected
 // cells of the active layer, cells outside the selection empty; Paste makes them the current
 // stamp, cut to its non-empty cells, clears the selection and selects the stamp brush; Cut and
 // Delete erase the selected cells as one entry each, Cut also clearing the selection. Cells are
@@ -121,7 +121,7 @@ test("Copy and Paste from the Edit menu; the stamp is cut to its non-empty cells
     await editItem(page, "edit.copy");
     expect(await editItemDisabled(page, "edit.paste")).toBe(false);
     await editItem(page, "edit.paste");
-    // Tiled's `normalizeTileLayerPositionsAndMapSize`: the empty border is not part of the stamp.
+    // As in Tiled, the empty border is not part of the stamp.
     expect(await stamp(page)).toEqual({
         width: 3,
         height: 3,

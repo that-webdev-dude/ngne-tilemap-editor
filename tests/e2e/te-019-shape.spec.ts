@@ -30,8 +30,8 @@ import {
 const FILL: CellSpec = [1, 0];
 
 /**
- * The cells of a picture (`#` filled, `.` not) laid over `rect`: the ellipses here are Tiled's
- * `ellipseRegion` of their rectangle (SPEC §4.3).
+ * The cells of a picture (`#` filled, `.` not) laid over `rect`: the ellipses here are the
+ * cells Tiled's ellipse shape fill gives for their rectangle (SPEC §4.3).
  */
 function pictureEntries(rect: Rect, rows: string[], cell: CellSpec): [number, number, CellSpec][] {
     return rectEntries(rect, cell).filter(([x, y]) => rows[y - rect.y]![x - rect.x] === "#");

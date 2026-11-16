@@ -23,15 +23,15 @@ import type { PaintStroke, ToolContext, ToolModifiers, ToolPointer, ToolSpec } f
 import { brushSource } from "./brushSource";
 import type { BrushTerrain } from "./brushSource";
 
-// The terrain brush (SPEC §5.3), Tiled's `WangBrush` (`src/tiled/wangbrush.cpp`, tag v1.12.2)
-// with the set and terrain of `brushTerrain.ts` (through `brushSource.ts`); the painting itself is `core/terrain/brush.ts`.
+// The terrain brush (SPEC §5.3), behaving as Tiled's `WangTool`, with the set and terrain of
+// `brushTerrain.ts` (through `brushSource.ts`); the painting itself is `core/terrain/brush.ts`.
 // Its rail slot, key (T) and icon are planned in `planned.tools.ts`; the context bar is
 // `ui/terrains/terrainBrush.contextbar.tsx`, the overlay `terrainBrush.overlay.ts`.
 //
 //   press: paints the corner, edge or (full tile mode) cell under the pointer
 //   drag: paints at every new target, the points between joined as Tiled joins them
 //   Shift+press: a line from the last painted point (the first after the tool is selected
-//     only sets the start; Tiled's `mLineStartSet`)
+//     only sets the start, as in Tiled)
 //   Ctrl: inverts the context bar's Full tile while held; Alt: rotational symmetry; both
 //     repaint at the pointer when they change during a drag; Shift pressed during a drag ends
 //     its painting (Tiled's brush turns to its line behaviour)
@@ -39,8 +39,8 @@ import type { BrushTerrain } from "./brushSource";
 //
 // Each step runs the filler with corrections on the layer as the steps before it left it;
 // cells it cannot resolve stay unchanged and are drawn red. The tile selection does not clip
-// the brush (Tiled's brush paints through `PaintTileLayer`, without `TilePainter`). A stroke
-// is one history entry.
+// the brush (Tiled's terrain brush paints outside the selection too). A stroke is one history
+// entry.
 
 export const TERRAIN_TOOL_ID = "terrain";
 
@@ -112,12 +112,12 @@ interface Stroke {
     readonly line: boolean;
     tileMode: boolean;
     symmetry: boolean;
-    /** Tiled's `mPrevPaintPoint` and `mPaintPoint` / `mWangIndex`. */
+    /** The point of the target before the current one (a step joins them), and the current. */
     previous: PixelPoint | null;
     current: BrushTarget;
     /**
-     * The index the pointer picks outside full tile mode, kept while full tile mode is on
-     * (Tiled's `mWangIndex` is not updated then): where an edge drag goes on when Ctrl is let go.
+     * The index the pointer picks outside full tile mode, kept unchanged while full tile mode
+     * is on: where an edge drag goes on when Ctrl is let go.
      */
     edgeIndex: WangIndex | null;
     /**
@@ -134,7 +134,7 @@ interface Stroke {
 }
 
 let stroke: Stroke | null = null;
-/** Tiled's `mLineStartPos`, by map: set by every step, forgotten when the tool is selected. */
+/** The line start, by map: set by every step, forgotten when the tool is selected. */
 let lineStart: { mapId: string; point: PixelPoint } | null = null;
 const listeners = new Set<() => void>();
 const changed = () => {
@@ -165,7 +165,7 @@ export function subscribeTerrainBrush(listener: () => void): () => void {
 }
 
 /**
- * Forgets the line start: when the tool is selected again (Tiled's `WangBrush::activate`;
+ * Forgets the line start: when the tool is selected again (as in Tiled;
  * `terrainBrush.overlay.ts` follows the active tool, which this module cannot import) and when
  * a test starts a new map.
  */
@@ -200,7 +200,7 @@ const samePoint = (a: PixelPoint, b: PixelPoint) => a.x === b.x && a.y === b.y;
 
 /**
  * The drag of `current` reached `(cx, cy)` with `modifiers` held: paints when the target or a
- * mode changed (Tiled's `mouseMoved` and `modifiersChanged`, then `stateChanged`).
+ * mode changed, so a modifier pressed or let go repaints at the pointer as a move does.
  */
 function follow(
     context: ToolContext,

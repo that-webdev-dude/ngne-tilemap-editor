@@ -84,8 +84,8 @@
     color: var(--danger);
 }
 
-/* Resize / Offset Map preview (Tiled's ResizeHelper): the new bounds solid, the old map at half
-   opacity with a dashed outline at its offset. */
+/* Resize / Offset Map preview (as in Tiled's Resize Map dialog): the new bounds solid, the old
+   map at half opacity with a dashed outline at its offset. */
 .resize-preview {
     position: relative;
     flex: none;

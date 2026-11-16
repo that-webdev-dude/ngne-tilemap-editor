@@ -466,7 +466,7 @@ describe("image collections", () => {
 
     it("keeps Tiled's IDs and next tile ID when IDs have gaps", async () => {
         // The bush becomes tile 7, as after deleting tiles in Tiled: its GID 3 becomes 8, and
-        // the next tileset starts at 9 (Tiled's `firstgid += nextTileId`).
+        // the next tileset starts at 9 (this tileset's `firstgid` plus its `nexttileid`).
         const tsj = fixtureText("props.tsj").replace('"id":2,', '"id":7,');
         const json = JSON.parse(fixtureText("collection-uniform.tmj")) as {
             layers: { data: number[] }[];

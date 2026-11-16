@@ -12,19 +12,20 @@ import type {
 } from "../model";
 import { MapEditError, mapOf, newMapProblems } from "./mapCommands";
 
-// Resize / Offset Map (SPEC §7.1; Tiled's `MapDocument::resizeMap`): a new width and height in
-// cells and an offset in cells, the place of the old map's top-left cell in the new one. In one
-// history entry, every tile layer's cells move by the offset and those outside the new bounds
-// are removed; every marker moves by the offset in pixels and is kept even outside the bounds;
-// every image layer's offset moves by the offset in pixels (Tiled's `SetLayerOffset` by the
-// change of the map's bounding rectangle); the tile selection moves by the offset and is not cut
-// to the new bounds, and undo puts back the selection it moved (Tiled's `ChangeSelectedArea`).
-// Other layer offsets stay.
+// Resize / Offset Map (SPEC §7.1; Tiled's Resize Map): a new width and height in cells and an
+// offset in cells, the place of the old map's top-left cell in the new one. In one history
+// entry, every tile layer's cells move by the offset and those outside the new bounds are
+// removed; every marker moves by the offset in pixels and is kept even outside the bounds;
+// every image layer's offset moves by the offset in pixels (as in Tiled, where an image layer
+// moves with the map's bounds); the tile selection moves by the offset and is not cut to the
+// new bounds, and undo puts back the selection it moved (as in Tiled). Other layer offsets
+// stay.
 //
-// The offset is limited as Tiled's `ResizeHelper` limits it: on each axis, from 0 to the growth
-// when the map grows and from the shrink to 0 when it shrinks, so the old map either holds the
-// new bounds or lies inside them. The new cells of each tile layer are laid out when the command
-// is made, so `do` and `undo` swap whole cell stores; a redo puts back the same stores.
+// The offset is limited as Tiled's Resize Map dialog limits it: on each axis, from 0 to the
+// growth when the map grows and from the shrink to 0 when it shrinks, so the old map either
+// holds the new bounds or lies inside them. The new cells of each tile layer are laid out when
+// the command is made, so `do` and `undo` swap whole cell stores; a redo puts back the same
+// stores.
 
 /** The label of the history entry (Tiled's "Resize Map"). */
 export const RESIZE_MAP_LABEL = "Resize Map";
@@ -44,7 +45,7 @@ export interface OffsetRange {
 }
 
 /**
- * The offsets Tiled's `ResizeHelper` allows on an axis whose size goes from `from` to `to`
+ * The offsets Tiled's Resize Map dialog allows on an axis whose size goes from `from` to `to`
  * cells: `0..to − from` when it grows (or stays), `to − from..0` when it shrinks.
  */
 export function offsetRange(from: number, to: number): OffsetRange {

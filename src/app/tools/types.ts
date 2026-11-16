@@ -292,7 +292,7 @@ export interface ToolSpec {
     /**
      * Whether the map's tile selection clips the stroke's cells (SPEC §4.1: the stamp brush,
      * eraser, bucket and shape fill). The default is true; the terrain brush paints across it,
-     * as Tiled's `WangBrush` does.
+     * as Tiled's `WangTool` does.
      */
     clipsToSelection?: boolean;
     /** A key that makes this tool the active one while it is held. */

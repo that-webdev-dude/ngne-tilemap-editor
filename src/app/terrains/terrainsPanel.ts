@@ -28,11 +28,12 @@ import { currentTileset, historyIdle } from "../tilesets/edit/tilesetEdit";
 // Tilesets panel shows. Per tileset it keeps the selected set and terrain, which clicks on the
 // tileset grid assign, and the sets collapsed in the list. Every change of the project goes
 // through the history as one command of `core/terrain`; the selection follows the set or
-// terrain an operation adds or moves. As Tiled's `WangDock`, a new set or terrain starts its
-// rename at once. A click on a tile assigns the selected terrain to the index under the pointer,
-// picked as the terrain brush picks it for the set's type (`brushIndexAt`: SPEC §5.3 names the
-// rule per set type, and Tiled's tileset view picks by `WangSet::type()`, not the terrain's
-// effective type, so a terrain used only at corners of a mixed set can still go on an edge); a
+// terrain an operation adds or moves. As in Tiled's Terrain Sets view, a new set or terrain
+// starts its rename at once. A click on a tile assigns the selected terrain to the index under
+// the pointer, picked as the terrain brush picks it for the set's type (`brushIndexAt`: SPEC
+// §5.3 names the rule per set type, and Tiled's tileset view picks by the set's type
+// (`WangSet.type`), not the terrain's effective type, so a terrain used only at corners of a
+// mixed set can still go on an edge); a
 // right click clears that index; with Shift either acts on the whole tile.
 
 /** The menu of the panel's Add Terrain Set button (`CommandSpec.contextMenus`). */

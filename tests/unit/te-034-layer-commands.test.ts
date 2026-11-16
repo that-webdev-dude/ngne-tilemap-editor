@@ -41,8 +41,8 @@ import type { Layer, MarkerLayer, ProjectMap, TileLayer } from "../../src/core/m
 import { expectSymmetric, snapshotProject } from "./support/symmetry";
 import { MAP, setup, tile } from "./te-006-support";
 
-// TE-034: the layer commands of SPEC §7.2 with Tiled's behaviour (MapDocument, MoveLayer,
-// LayerModel at v1.12.2). Every command passes the TE-006 symmetry harness; layer and marker IDs
+// TE-034: the layer commands of SPEC §7.2 with Tiled's behaviour. Every command passes the
+// TE-006 symmetry harness; layer and marker IDs
 // come from the map's counters and are never given twice; the limits of FORMAT §2.8 (256 layers,
 // groups 16 deep) and the effective ranges of §2.5 are refused with the project unchanged. The
 // map of `setup` is 8 × 8 with one tile layer (ID 1), active.
@@ -185,7 +185,7 @@ describe("every layer command passes the symmetry harness", () => {
     });
 
     it("ungroup of an empty active group passes the active layer as Delete does", () => {
-        // Below it: the layer below; at the bottom: the one above (Qt's current row).
+        // Below it: the layer below; at the bottom: the one above (as in Tiled).
         const history = setup();
         const map = mapOf(history);
         map.layers.push(createTileLayer(2, "Above"));
@@ -287,7 +287,7 @@ describe("every layer command passes the symmetry harness", () => {
         expect(command.touched).toMatchObject({ layerIds: [3], structure: false });
     });
 
-    it("move up and down: past siblings, into and out of groups (Tiled's MoveLayer)", () => {
+    it("move up and down: past siblings, into and out of groups, as in Tiled", () => {
         const history = setup();
         const map = furnish(history);
         const steps: [number, -1 | 1, string][] = [
@@ -345,7 +345,7 @@ describe("every layer command passes the symmetry harness", () => {
         ).toMatchObject({ offsetX: 3, offsetY: 30, parallaxX: 0.5, parallaxY: 2 });
     });
 
-    it("show/hide and lock/unlock other layers (Tiled's toggleOtherLayers)", () => {
+    it("show/hide and lock/unlock other layers, as in Tiled", () => {
         const history = setup();
         const map = furnish(history);
         // Others of layer 3: its sibling 4, its group's siblings 1 and 5; not the group itself.
@@ -558,7 +558,7 @@ describe("limits and refusals leave the project unchanged", () => {
 });
 
 describe("layer order, names and the highlight", () => {
-    it("select above and below follow Tiled's LayerIterator: a group after its children", () => {
+    it("select above and below follow Tiled's layer order: a group after its children", () => {
         const history = setup();
         const map = furnish(history);
         expect(layerOrder(map.layers).map((layer) => layer.id)).toEqual([1, 3, 4, 2, 5]);

@@ -20,7 +20,7 @@ import {
 import type { Marker, ProjectMap } from "../../src/core/model";
 
 // TE-038: the geometry of the marker tools (SPEC §8): snapping to the map's tile grid, the move
-// of a drag (Tiled's align position), what a press and a rubber band take, the selection's box.
+// of a drag (snapped as in Tiled), what a press and a rubber band take, the selection's box.
 
 const base = { name: "", class: "", properties: [] };
 
@@ -90,7 +90,7 @@ describe("snapping (Snap to Grid: the map's tile size; off: whole pixels)", () =
         });
     });
 
-    it("moves markers so their least position lands on the grid (Tiled's align position)", () => {
+    it("moves markers so their least position lands on the grid, as Tiled snaps a drag", () => {
         const grid = { tileWidth: 16, tileHeight: 8 };
         expect(snappedMove({ x: 10, y: 10 }, 30, 1, grid, true)).toEqual({ x: 38, y: -2 });
         expect(snappedMove({ x: 10, y: 10 }, 30.6, 1.2, grid, false)).toEqual({ x: 31, y: 1 });

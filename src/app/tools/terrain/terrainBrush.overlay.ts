@@ -31,7 +31,7 @@ import {
 // resolve with a 35% `--danger` fill. While a drag is in progress it shows the drag's target
 // and what its last step left invalid; between strokes it shows what a press there would do,
 // the filler run on the layer as it is with the press's own generator (`previewStep`), so the
-// press leaves invalid what the preview showed (Tiled's brush preview, `WangBrush::updateBrush`).
+// press leaves invalid what the preview showed (as Tiled's terrain brush preview shows it).
 
 /** Side of the corner mark and width of the edge bar, CSS px (DESIGN §4). */
 const CORNER_MARK = 6;
@@ -208,7 +208,7 @@ export const overlayLayers: OverlayLayer[] = [
     },
 ];
 
-// Tiled forgets the brush's line start when the tool is selected again (`WangBrush::activate`).
+// As in Tiled, the brush's line start is forgotten when the tool is selected again.
 let activeId = toolState.activeId();
 toolState.subscribe(() => {
     const next = toolState.activeId();

@@ -15,9 +15,9 @@ import { createMask, rectMask, selectionOf, selectionsEqual } from "../../src/co
 import { tileset } from "./te-006-support";
 
 // TE-033: the tile selection under Resize / Offset Map (SPEC §7.1, §4.4). It moves by the
-// offset in the same history entry and is not cut to the new bounds (Tiled's
-// `MapDocument::resizeMap`); undo puts it back. Copy, Cut and Delete then act on its cells
-// inside the map only (Tiled's `eraseTileLayers` cuts the region to the layer's bounds).
+// offset in the same history entry and is not cut to the new bounds (as in Tiled's Resize
+// Map); undo puts it back. Copy, Cut and Delete then act on its cells inside the map only
+// (as in Tiled, they act within the layer's bounds).
 
 const v = (tile: number) => cellValue(1, tile, 0);
 
@@ -97,7 +97,7 @@ describe("Resize / Offset Map: the tile selection", () => {
         expect(selectionsEqual(selection(session), pictured(4, 3, ["##", ".#"]))).toBe(true);
     });
 
-    it("undo puts back the selection the resize moved, as Tiled's ChangeSelectedArea", () => {
+    it("undo puts back the selection the resize moved, as in Tiled", () => {
         const session = load();
         const before = pictured(1, 1, ["##", ".#"]);
         select(session, before);

@@ -20,9 +20,8 @@ import type { Region } from "../../src/core/fill";
 // TE-019: `core/fill` (SPEC §4.3). The flood fill of the bucket and the magic wand, 4-connected
 // over cells equal by tile and flags, bounded by the map or a region; the rectangle and ellipse
 // regions of the shape fill (the ellipse inscribed in the rectangle, as Tiled's shape fill
-// draws it); and the stamp tiled over a region from its bounding box top-left (Tiled's
-// `TileFill`). Regions are
-// compared with golden pictures: `#` a cell of the region, `.` not.
+// draws it); and the stamp tiled over a region from its bounding box top-left, as in Tiled.
+// Regions are compared with golden pictures: `#` a cell of the region, `.` not.
 
 /** The region of a picture whose top-left cell is `(x, y)`. */
 function picture(rows: readonly string[], x = 0, y = 0): Region {
@@ -283,7 +282,7 @@ describe("ellipse region", () => {
         [9, 5, ["..#####..", ".#######.", "#########", ".#######.", "..#####.."]],
     ];
 
-    it("is Tiled's ellipseRegion: goldens", () => {
+    it("is the ellipse of Tiled's shape fill: goldens", () => {
         for (const [width, height, rows] of GOLDENS) {
             const rect = { x: 3, y: -2, width, height };
             const region = ellipseRegion(rect);

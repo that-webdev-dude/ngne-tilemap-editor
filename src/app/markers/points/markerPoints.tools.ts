@@ -20,8 +20,8 @@ import { EDIT_POINTS_TOOL } from "./editPointsId";
 import { chosenVertex, isPath, setChosenVertex } from "./markerVertex";
 import type { PathMarker } from "./markerVertex";
 
-// The Edit points tool (O; SPEC §8, DESIGN §4, §6, §10.4; TE-039), Tiled's `EditPolygonTool`
-// (checked at v1.12.2) for one point at a time. The points of the selected polygons and
+// The Edit points tool (O; SPEC §8, DESIGN §4, §6, §10.4; TE-039), as Tiled's `EditPolygonTool`
+// for one point at a time. The points of the selected polygons and
 // polylines show as 5 px squares (markerPointsDrawing.ts, drawn by markerTools.overlay.ts).
 //
 //   press on a point of a selected polygon or polyline: it becomes the chosen point; a drag

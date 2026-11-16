@@ -386,7 +386,7 @@ function CollisionEditorBody({
         if (!next) return;
         if (active.kind === "create") {
             // A shape with no area blocks nothing: a click, or a drag along one axis, makes
-            // none (SPEC §6.4; unlike Tiled's `CreateObjectTool`, reference/tiled.md §6).
+            // none (SPEC §6.4; unlike Tiled's object tools, reference/tiled.md §6).
             const { width, height } = shapeBox(next[next.length - 1]!);
             if (width === 0 || height === 0) {
                 setChosen(null);

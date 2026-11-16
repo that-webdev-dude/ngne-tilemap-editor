@@ -7,11 +7,11 @@ import { createProject, createProjectSession, sequentialIds } from "../../src/co
 import type { TileLayer } from "../../src/core/model";
 
 // TE-018: the stamp a capture makes from a rectangle of cells (SPEC §4.2): cut to the
-// bounding box of the non-empty cells as Tiled's `normalizeTileLayerPositionsAndMapSize` does,
+// bounding box of the non-empty cells as Tiled's capture does,
 // empty cells inside it kept, orientation flags kept; none when every cell is empty. And
 // `withCapture` on a tool other than the stamp brush (TE-019's fill tools): a right press and
-// release capture and leave that tool active (Tiled's `MapEditor::setStamp`: a tool that uses
-// the stamp stays), a left one reaches the tool.
+// release capture and leave that tool active (as in Tiled, a tool that uses the stamp
+// stays), a left one reaches the tool.
 
 const v = (tile: number, orientation: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 = 0) =>
     cellValue(1, tile, orientation);

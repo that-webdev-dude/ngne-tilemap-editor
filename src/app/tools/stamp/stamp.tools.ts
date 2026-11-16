@@ -9,9 +9,9 @@ import { withCapture } from "./capture";
 import { currentStamp, currentStampStore } from "./currentStamp";
 import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
 
-// The stamp brush (SPEC §4.3), Tiled's `StampBrush` (`src/tiled/stampbrush.cpp`, checked at
-// v1.12.2) with the current stamp (`currentStamp.ts`). Its rail slot, key (B) and icon are
-// planned in `planned.tools.ts`; the overlay preview is `stampPreview.overlay.ts`.
+// The stamp brush (SPEC §4.3), behaving as Tiled's `StampTool`, with the current stamp
+// (`currentStamp.ts`). Its rail slot, key (B) and icon are planned in `planned.tools.ts`; the
+// overlay preview is `stampPreview.overlay.ts`.
 //
 //   press, drag: the stamp at the pressed cell and at every cell crossed (later placements
 //     over earlier ones; empty stamp cells leave the map)
@@ -19,13 +19,13 @@ import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
 //   Ctrl+Shift+press: an ellipse of stamps around the last painted point through the
 //     pressed cell (`pointsOnEllipse` with the distances as radii)
 //
-// A line or an ellipse places its stamps as Tiled's `drawPreviewLayer` does
+// A line or an ellipse places its stamps without overlap, as Tiled does
 // (`separatePlacements`). With no last painted point on the map the press only sets it, as
 // Tiled's Shift+click sets the line's start. Held on and released on another cell with Shift
 // still down, the press also draws the shape from the pressed cell to the released one, a line
-// or, with Ctrl too, an ellipse (Tiled's StartSet release; Shift let go returns Tiled's brush to
-// free, and the release draws nothing). Each stroke is one history entry; the last cell it
-// painted (or set) is the next one's start, in this project.
+// or, with Ctrl too, an ellipse, as in Tiled; with Shift let go before the release the brush
+// returns to free, and the release draws nothing. Each stroke is one history entry; the last
+// cell it painted (or set) is the next one's start, in this project.
 //
 // A right drag captures a stamp from the map (`capture.ts`). The context bar's buttons rotate
 // and flip the stamp (`stamp.commands.ts`).
@@ -44,7 +44,7 @@ export const STAMP_TRANSFORM_ACTIONS: readonly ToolAction[] = [
 /** How a press of the brush paints, by its modifiers. */
 export type BrushMode = "free" | "line" | "ellipse";
 
-/** The mode of a press with `modifiers` (Tiled's `updateBrushBehavior`). */
+/** The mode of a press with `modifiers`: Shift a line, Ctrl+Shift an ellipse, as in Tiled. */
 export function brushMode(modifiers: Readonly<ToolModifiers>): BrushMode {
     if (!modifiers.shift) return "free";
     return modifiers.ctrl ? "ellipse" : "line";

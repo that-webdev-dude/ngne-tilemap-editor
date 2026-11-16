@@ -48,7 +48,7 @@ import "./tilesetsPanel.css";
 
 // The Tilesets panel (SPEC §6.2, DESIGN §8.5): tabs per tileset with New Tileset (+), the class
 // filter and the zoom on the right, and the tile grid. A click or a drag over the grid selects
-// a rectangle of tiles, which is the current stamp at every change (Tiled's `TilesetDock`);
+// a rectangle of tiles, which is the current stamp at every change (as in Tiled);
 // from the keyboard the grid is one tab stop, arrows move the selection, Shift extends it and
 // Enter makes the stamp. The tile
 // menu (Menu key, right click, overflow button) lists the commands registered for the context

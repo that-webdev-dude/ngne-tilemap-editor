@@ -20,7 +20,7 @@ import {
 import type { TerrainAnalysis, TerrainFillResult, WangIndex } from "../../src/core/terrain";
 import { LAYER, MAP, SLOT, commit, setup, tileLayer, tileset } from "./te-006-support";
 
-// TE-041: the terrain filler (SPEC §5.2), Tiled's `WangFiller` at v1.12.2. Properties over
+// TE-041: the terrain filler (SPEC §5.2), with Tiled's terrain fill behaviour. Properties over
 // random sets, maps and painting: every resolved cell matches its painted indexes and its
 // resolved neighbours; a complete set leaves no invalid cell; nothing outside the bounds (the
 // touched region grown by the maximum distance, clipped to the map) changes; a fixed seed gives
@@ -514,7 +514,7 @@ describe("terrain filler cases", () => {
 
     it("full tile mode in a mixed set paints only the indexes the terrain is used at", () => {
         // Terrain 2 appears only on corners, so Tiled's `effectiveTypeForColor` makes the
-        // brush paint corners (`wangbrush.cpp` `setColor`).
+        // brush paint corners, as Tiled's terrain brush does.
         const analysis = analyzeTerrainSet(
             terrainSet("mixed", 2, [
                 [1, 1, 1, 1, 1, 1, 1, 1],

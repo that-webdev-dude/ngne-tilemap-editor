@@ -193,7 +193,8 @@ interface Command {
 
 - The overlay canvas takes all pointer input (ENGINE §4). Positions map to map pixels through
   the inverse of the view transform, then to cells with `floor`. Coalesced events are used; a
-  drag joins consecutive cells with `pointsOnLine` (Bresenham, Tiled's), so no cell is skipped.
+  drag joins consecutive cells with `pointsOnLine` (a Bresenham line, as in Tiled), so no cell
+  is skipped.
 - Tools paint on the **active layer** only. A hidden or locked layer (or one under a hidden or
   locked group) refuses painting with a status-bar message and no change. A tile tool on a
   non-tile layer does nothing and says so.
@@ -211,9 +212,8 @@ centre cell (`floor(w/2), floor(h/2)`). It comes from: a tileset selection (a re
 in the Tilesets panel, laid out as in the panel); a capture from the map; the clipboard. It is
 shown at the cursor as a translucent preview on the overlay and in the tool rail.
 
-- **Preview cost** follows what is shown, not the stamp's pixels (Tiled's `BrushItem` draws only
-  the exposed part of its preview layer, at the view's scale). The rail composites the stamp at
-  its own size. The overlay's stamp and fill previews composite only the part of the stamp in
+- **Preview cost** follows what is shown, not the stamp's pixels. The rail composites the stamp
+  at its own size. The overlay's stamp and fill previews composite only the part of the stamp in
   view, at the view's scale and at most one texel per map pixel, in chunks of at most 256 × 256
   texels made when first in view; a redraw makes chunks for at most 8 ms after its first and
   leaves the rest to the next frames. A new stamp costs its cells, not the tilesets' pixels: the
@@ -224,9 +224,9 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
 - **Capture** (Tiled): with the stamp brush, bucket or shape fill active, a right drag on the
   map selects a rectangle of the active layer; on release it becomes the current stamp and the
   active tool stays (Tiled switches to the stamp brush only from a tool that does not use the
-  stamp, `MapEditor::setStamp`). Shift held at release also erases the captured cells (cut), one
-  history entry. A right click without drag captures one cell. As Tiled's
-  `capturestamphelper.cpp` (v1.12.2): the stamp is the rectangle's part inside the map, cut to
+  stamp). Shift held at release also erases the captured cells (cut), one history entry. A
+  right click without drag captures one cell. As in Tiled, the stamp is the rectangle's part
+  inside the map, cut to
   the bounding box of its non-empty cells (empty cells inside stay empty); a rectangle with none
   leaves no stamp. A capture only reads: a locked layer is captured but not cut (§4.1); a
   hidden layer, or one under a hidden group, refuses the press (Tiled hides its brush there);
@@ -240,11 +240,11 @@ shown at the cursor as a translucent preview on the overlay and in the tool rail
 
 ### 4.3 Tools
 
-| Tool | Behaviour (Tiled's, `stampbrush.cpp` and siblings) |
-| ---- | -------------------------------------------------- |
-| Stamp brush | Press and drag paint the stamp at each cell crossed. Empty stamp cells leave the map as it is. Shift+click: a line of stamps from the last painted point. Ctrl+Shift+click: an ellipse of stamps centred on the last painted point through the cursor. Along a line or an ellipse a stamp that would overlap one placed before it is left out (Tiled's `drawPreviewLayer`); with no painted point on the map yet, a Shift+click only sets the start (Tiled sets it at every Shift+click that does not continue a line) |
+| Tool | Behaviour (as in Tiled) |
+| ---- | ----------------------- |
+| Stamp brush | Press and drag paint the stamp at each cell crossed. Empty stamp cells leave the map as it is. Shift+click: a line of stamps from the last painted point. Ctrl+Shift+click: an ellipse of stamps centred on the last painted point through the cursor. Along a line or an ellipse a stamp that would overlap one placed before it is left out (Tiled); with no painted point on the map yet, a Shift+click only sets the start (Tiled sets it at every Shift+click that does not continue a line) |
 | Eraser | Press and drag erase the cell under the cursor (line-interpolated). Right drag: erase a rectangle. Shift: erase on all unlocked visible tile layers |
-| Bucket fill | Fills the 4-connected region of cells equal to the clicked cell (same tile and flags; Tiled's `Cell` equality) in the map, then only its cells in the selection, if any (Tiled's `computePaintableFillRegion` on a fixed-size map). Shift: fill the whole selection when the clicked cell is in it, or the whole layer without one. The stamp tiles the region from the region's bounding box top-left (Tiled `TileFill`); its empty cells leave the map as it is (Tiled paints the fill's non-empty cells, `modifiedRegion`). A 1 × 1 stamp equal to the clicked cell fills nothing (Tiled). The fill is made at the press (Tiled fills at the release and, since 1.12, also fills the regions of the cells dragged over; neither is done here). Hover previews the region |
+| Bucket fill | Fills the 4-connected region of cells equal to the clicked cell (same tile and flags, as Tiled compares cells) in the map, then only its cells in the selection, if any (as Tiled does on a fixed-size map). Shift: fill the whole selection when the clicked cell is in it, or the whole layer without one. The stamp tiles the region from the region's bounding box top-left (Tiled); its empty cells leave the map as it is (Tiled paints only the fill's non-empty cells). A 1 × 1 stamp equal to the clicked cell fills nothing (Tiled). The fill is made at the press (Tiled fills at the release and, since 1.12, also fills the regions of the cells dragged over; neither is done here). Hover previews the region |
 | Shape fill | Drag a rectangle or ellipse (context bar toggle); Shift: square / circle; Alt: centred on the press. Filled with the stamp as bucket fill does. Right click or Escape cancels |
 | Rectangle select | Drag a rectangle of cells. Mode by modifiers (Tiled): none = replace (or the context bar's locked mode), Shift = add, Ctrl = subtract, Ctrl+Shift = intersect. Right click clears the selection |
 | Magic wand | Selects the 4-connected region of cells equal to the clicked one; modes as rectangle select |
@@ -257,9 +257,9 @@ Tools are offered by the active layer's kind (DESIGN §6). Bucket fill, shape fi
 context bar: **Tile** (stamp) or **Terrain**.
 
 Flood fill (`core/fill`) is one queue-based scanline fill, 4-connected, used by bucket fill and
-the magic wand; it returns a region (row spans). An ellipse region has the cells of Tiled's
-`ellipseRegion` of the drag rectangle: Zingl's Bresenham ellipse with each row filled between
-its edge cells; it touches all four sides of the rectangle.
+the magic wand; it returns a region (row spans). An ellipse region has the cells Tiled's
+ellipse shape fill gives for the drag rectangle: Zingl's Bresenham ellipse with each row
+filled between its edge cells; it touches all four sides of the rectangle.
 
 ### 4.4 Selection and clipboard
 
@@ -270,12 +270,11 @@ its edge cells; it touches all four sides of the rectangle.
 - **Copy** copies the selected cells of the active layer into the clipboard as a stamp (its bounding
   box, cells outside the selection empty). **Cut** copies, erases and clears the selection, one
   entry. **Delete** erases the selected cells and keeps the selection. Cut and Delete are refused on
-  a locked layer or one under a locked group, not on a hidden one (Tiled's `isTileSelectionLocked`);
-  Copy only reads. **Paste** makes the clipboard the current stamp, cut to the bounding box of its
-  non-empty cells, clears the selection (an entry of its own) and selects the stamp brush (Tiled's
-  `MapEditor::paste`, v1.12.2). Copy, Cut and Delete act on the selected cells inside the map
-  only; a selection moved by Resize / Offset Map (§7.1) can reach past it (Tiled's
-  `eraseTileLayers` cuts the region to the layer's bounds). The clipboard is the editor's own,
+  a locked layer or one under a locked group, not on a hidden one (Tiled); Copy only reads.
+  **Paste** makes the clipboard the current stamp, cut to the bounding box of its non-empty
+  cells, clears the selection (an entry of its own) and selects the stamp brush (Tiled). Copy,
+  Cut and Delete act on the selected cells inside the map only, as in Tiled; a selection moved
+  by Resize / Offset Map (§7.1) can reach past it. The clipboard is the editor's own,
   shared by all maps of the project; it holds slots and tile IDs, so it is cleared when another
   project opens and loses its cells on removed tiles (§4.2).
 - **Crop to Selection** and **New Layer from Selection** are Later.
@@ -298,7 +297,7 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 
 ### 5.2 Terrain filler
 
-`core/terrain` reproduces the behaviour of Tiled's `WangFiller` and `WangSet` analysis
+`core/terrain` reproduces the behaviour of Tiled's terrain fill and `WangSet` analysis
 ([reference/tiled.md](reference/tiled.md) §4):
 
 - Per set, computed when it changes: the candidate list (base tiles only; no generated
@@ -328,8 +327,8 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 
 ### 5.3 Terrain brush
 
-The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behaviour is Tiled's
-`wangbrush.cpp`, tag `v1.12.2`:
+The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behaviour is that of
+Tiled 1.12.2's terrain brush:
 
 - The set and terrain are the Terrains panel's selection for the active tileset (§5.1), as
   Tiled's brush follows its terrain sets view; the context bar and right-click sampling change
@@ -343,7 +342,7 @@ The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behavi
   diagonal steps (corner and edge modes; in full tile mode with them), and in edge mode the
   edge follows the direction of the drag (moving right paints the left edge of the cell
   entered). Shift: a line from the last painted point; the first Shift+click after the tool is
-  selected only sets the start (Tiled's `mLineStartSet`); Shift pressed during a drag ends its
+  selected only sets the start (Tiled); Shift pressed during a drag ends its
   painting, as Tiled's brush then turns to its line behaviour. Lines of corner and edge modes
   take no diagonal steps; a line in full tile mode may, and a line of a mixed set is painted in
   full tile mode, as Tiled does. **Full tile mode** (context bar
@@ -353,16 +352,15 @@ The context bar picks a terrain set and terrain (or "erase terrain" = 0). Behavi
 - Right click without modifiers samples the terrain under the cursor into the context bar (an
   empty cell or a tile outside the set samples "erase terrain").
 - One stroke is one entry; the filler runs with corrections on at each step. The tile selection
-  does not clip the brush (Tiled's brush paints through `PaintTileLayer`, not `TilePainter`;
-  §4.1 lists the tools it clips). Between strokes the overlay shows what a press at the cursor
-  would leave invalid (Tiled's brush preview).
+  does not clip the brush (as in Tiled; §4.1 lists the tools it clips). Between strokes the
+  overlay shows what a press at the cursor would leave invalid (Tiled's brush preview).
 
 ### 5.4 Terrain fill mode
 
 Bucket fill and shape fill in Terrain mode fill their region with tiles of the terrain set
-selected for the terrain brush, as Tiled's `wangFill` (`abstracttilefilltool.cpp`, tag
-`v1.12.2`): `WangFiller` given the region only (`setRegion`, no index painted, so the selected
-terrain is not used), border seeding from outside neighbours, corrections off. Only the border
+selected for the terrain brush, as Tiled's terrain fill does: the filler given the region only
+(no index painted, so the selected terrain is not used), border seeding from outside
+neighbours, corrections off. Only the border
 has to match the cells around the region; inside it the filler chooses freely among equal
 candidates (§5.2).
 
@@ -381,11 +379,11 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
 - **Grid PNG**: dialog with tile
   width and height, margin, spacing, a live grid preview, name and export name (slug of the
   file name, made unique). Every grid cell becomes a tile, IDs 0.. in row-major order (Tiled);
-  partial cells at the right and bottom are not tiles. As Tiled's `initializeTilesetTiles`
-  (v1.12.2), the grid starts at the margin and steps by the tile size plus the spacing, and a
+  partial cells at the right and bottom are not tiles. As in Tiled, the grid starts at the
+  margin and steps by the tile size plus the spacing, and a
   cell is a tile when it lies whole inside the image: the margin counts at the left and top
-  only. The tiles' pixels are copied into the tileset's stored grid. As Tiled's New Tileset
-  dialog (v1.12.2), the form starts with the active map's tile size and the margin and spacing
+  only. The tiles' pixels are copied into the tileset's stored grid. As Tiled 1.12.2's New
+  Tileset dialog, the form starts with the active map's tile size and the margin and spacing
   of the last grid PNG imported in the window (0 at first). The export name follows the name
   until it is typed.
 - **Sprite project `.ngsprite`** (picked or dropped like a PNG): the sprite editor's own file,
@@ -440,15 +438,15 @@ else in the window is imported as a tileset too (a `.ngtilemap` dropped there op
 
 ### 6.2 Tilesets panel
 
-Tabs per tileset (Tiled's `tilesetdock`), a zoomable grid of tiles in display order drawn with
+Tabs per tileset (as Tiled's Tilesets view), a zoomable grid of tiles in display order drawn with
 Canvas2D, a filter by tile class; click or drag a rectangle to make the current stamp. The tile
 under the cursor and the selected tile show
 their ID and class in the status bar. Tiles with collision, animation or properties carry small
-markers (DESIGN). As Tiled's `TilesetDock` (v1.12.2): the grid lays tiles out on the tileset's
+markers (DESIGN). As Tiled's Tilesets view: the grid lays tiles out on the tileset's
 own columns; a pointer selection is the current stamp at every change (a keyboard selection on
 Enter, DESIGN §8.5); Previous and Next Tileset stop at the first and last tab; adding a tileset
-leaves the tab shown, and removing the shown one shows the tab after it, else the last. As
-Tiled's `MapEditor::setStamp`, a stamp from the panel selects the stamp brush unless the stamp
+leaves the tab shown, and removing the shown one shows the tab after it, else the last. As in
+Tiled, a stamp from the panel selects the stamp brush unless the stamp
 brush, the bucket or the shape fill is active, and a selection without a tile leaves the stamp
 as it is. The class filter (Tiled has none) shows the tiles whose class contains its text,
 ignoring case, and hides the others in place: the layout is kept, and a hidden tile is an empty
@@ -526,8 +524,8 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
 - **Animation editor**: the frame list of the tile; add tiles by dragging from the tileset grid
   or a button for the tileset selection; default 100 ms; edit durations (one or many); reorder by
   drag; delete; a looping preview at the tile's size. A tile is animated when its list is not
-  empty. Animation frames are tiles of the same tileset (Tiled). As Tiled's
-  `TileAnimationEditor` (v1.12.2): the editor edits the tile the panel's selection ends on, that
+  empty. Animation frames are tiles of the same tileset (Tiled). As Tiled's Tile Animation
+  Editor: the editor edits the tile the panel's selection ends on, that
   tile only, and holds its own grid of the tileset's tiles (the dialog is modal, so the panel
   cannot be reached), starting with the panel's selection. A tile dragged from that grid is
   inserted where it is dropped, a double click appends it, and the button appends the grid's
@@ -555,13 +553,13 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
 - **Resize / Offset Map** (Tiled's dialog): new width and height and an offset in cells; a
   preview shows the old map inside the new bounds. Cells outside the new bounds are removed;
   markers are moved by the offset and kept even outside the bounds (Tiled). The tile selection
-  moves by the offset and is not cut to the new bounds (Tiled's `MapDocument::resizeMap`). One
-  entry. The offset is limited on each axis as Tiled's `ResizeHelper` limits it: 0 to the growth
+  moves by the offset and is not cut to the new bounds (Tiled). One entry. The offset is limited
+  on each axis as Tiled's Resize Map dialog limits it: 0 to the growth
   when the map grows, the shrink to 0 when it shrinks, so the old map holds the new bounds or
   lies inside them; with an anchor checked, a new size keeps the old map at the anchor
   (offset truncated towards zero, as the sprite editor's canvas size); with none, the offset is
   moved into its range. An image layer's offset moves by the offset in pixels, as markers do
-  (Tiled's `SetLayerOffset` by the change of the map's bounds); other layer offsets stay. An
+  (Tiled); other layer offsets stay. An
   offset that would move a marker or an image layer past its coordinate range is refused.
 - Maps are tabs in the menu bar (SUITE §3). Closing a tab hides the map; it stays in the
   project. The project's map list (DESIGN) opens them.
@@ -599,7 +597,7 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
   editor's tested envelope"), naming what the map exceeds: more than 65,536 cells per layer
   (width × height), more than 16 layers (groups included) or more than 2,000 markers. The other
   D1 bounds are hard limits already, or the project's (tileset pixels).
-- As Tiled (`MapDocument`, `MoveLayer`, `LayerModel`, `LayerIterator` at `v1.12.2`):
+- As in Tiled:
   - A new layer goes right above the active layer, in its group, and becomes active; it is
     named "Tile Layer N", "Marker Layer N", "Image Layer N" or "Group Layer N", N one above the
     count of layers of that kind, raised past names taken. Group Layers puts a group named "Group N" (N one above
@@ -617,7 +615,7 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
     layer and of each of its groups, not the layer, its groups or the children of a sibling
     group.
   - When Delete or Ungroup removes the active layer, the row that takes its place in the Layers
-    panel becomes active (Qt's current row after a removal): the next layer below it in its
+    panel becomes active (as in Tiled): the next layer below it in its
     group, else the one above, else the group; Ungroup of the active group, its top child.
 - Delete is refused when the map would have no layer. Undo does not give layer or marker IDs
   back, as in Tiled: undo and redo leave `nextLayerId` and `nextMarkerId` at the highest value
@@ -639,7 +637,7 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
   **Polyline** (click points; Enter finishes; Escape cancels; Backspace removes the last point).
 - Snap to grid is on by default (context toggle); Ctrl inverts it while moving; Ctrl while
   resizing keeps aspect; Alt while resizing inverts snapping (Tiled).
-- Tool details, from Tiled's object tools (v1.12.2):
+- Tool details, as Tiled 1.12.2's object tools behave:
   - Snapping puts a position on the map's tile grid; with snapping off it goes to the nearest
     whole map pixel, as the sprite editor places pixels (Tiled keeps fractions unless its Snap
     to Pixels is on). A move snaps the least `x` and `y` of the moved markers' positions; a
@@ -663,7 +661,7 @@ Tiled's layer model: tile, marker, image and group layers in a tree; the Layers 
     works on one chosen point at a time (Tiled selects several, with a rubber band). A press on a
     point chooses it and a drag moves it, placed as a move is; a double click on an edge, away
     from the points, inserts a point at the nearest position on the edge, on the nearest whole
-    pixel and not snapped (Tiled's `nearestPointOnLine`), and chooses it. Any other click selects
+    pixel and not snapped, and chooses it. Any other click selects
     as Select's click does; where no marker is, a chosen point alone is let go first. Arrows nudge
     the chosen point 1 px and Shift+arrows one cell, as they nudge markers (Tiled's arrows move
     objects only). Delete removes the chosen point, refused below 3 points of a polygon or 2 of a
@@ -696,11 +694,11 @@ layer, else the map; the project and the active tileset are reachable from their
   properties of some items show as mixed (Tiled).
 - Every edit is an undoable command.
 
-As Tiled's Properties view follows its document's current object (v1.12.2): the selected tiles
+As Tiled's Properties view follows the current object: the selected tiles
 are the selection while the Tilesets panel has the focus, which it takes when the panel takes
 the keyboard focus, when its selection changes, or from the tile menu's Properties; it loses it
 when the active map, the active layer or the marker selection changes, or the focus enters the
-Maps or Layers section. Change Type converts as Qt's `QVariant::convert` does in Tiled: bool,
+Maps or Layers section. Change Type converts as Tiled's Properties view does: bool,
 int and float convert among themselves (non-zero is true, a float rounds half away from zero,
 and one outside the int range gives the default) and to text; text converts to bool (false for
 "", "0" and "false" in any case), to an int or float when it is one, to a colour when it is
@@ -888,7 +886,7 @@ export function invalidate(tilemap: Tilemap, layer: TileLayerData): void;
     `options.report` (default `console.warn`).
 - Data functions use map pixels at parallax 1: positions include the layer's offset and no
   parallax shift. Cells outside the map are empty.
-  - `findLayer` returns the first layer of that name from the bottom (Tiled's `Map::findLayer`).
+  - `findLayer` returns the first layer of that name from the bottom.
   - `tileAt` returns `{ tileset, id, flipH, flipV, flipD }`; `classAt` `""` for none;
     `propertyAt` the tile's property value.
   - `grid` returns `width × height` bytes, 1 where the cell's tile has the named property with a
@@ -902,7 +900,7 @@ export function invalidate(tilemap: Tilemap, layer: TileLayerData): void;
   - `markers` returns the markers of marker layers, optionally filtered by layer name, marker
     name and class, with positions in map pixels.
 - Results of `collisionShapes`, `collisionRects` and `grid` are cached per layer. `setCell`
-  writes a cell value at cell coordinates (as Tiled's `TileLayer.setTile`; a cell outside the
+  writes a cell value at cell coordinates (as Tiled's `TileLayerEdit.setTile`; a cell outside the
   map is not written) and drops that layer's cache; a game that writes `data` directly calls
   `invalidate(tilemap, layer)` afterwards.
 
@@ -983,9 +981,9 @@ until the user accepts the report.
 - **Conversion** beyond the table of BRIEF §7:
   - IDs: layer IDs, object IDs (→ marker IDs), `nextlayerid` and `nextobjectid` kept; tile IDs
     are Tiled's local IDs; `nextTileId` = Tiled's tile count (image tilesets) or its next tile
-    ID (collections: one above the highest tile ID, as Tiled's `Tileset::addTile` sets it).
+    ID (collections: one above the highest tile ID, as in Tiled).
     An image tileset's tiles are the grid cells of its image, cut as §6.1 cuts a grid PNG
-    (Tiled's `initializeTilesetTiles`); a cell naming a tile the tileset lacks refuses the map.
+    (as in Tiled); a cell naming a tile the tileset lacks refuses the map.
   - Tile layers: `csv`, `base64` with no compression, `zlib` or `gzip` (fflate) decoded; GIDs
     decoded with `>>> 0`, bits 31/30/29 kept, bit 28 cleared; local ID via `firstgid`.
   - Infinite maps: the union of used chunks becomes the map; every layer and marker moves by the
@@ -997,7 +995,7 @@ until the user accepts the report.
     properties of shapes dropped, reported), wang sets → terrain sets (colours, tiles; class,
     properties, probabilities dropped, reported). `transparentcolor` of tilesets and image layers
     is applied as a colour key (alpha 0) when the pixels are copied: opaque pixels of its red,
-    green and blue, as Tiled masks `transparentColor.rgb()`. Two tiles of one collection showing
+    green and blue, its alpha ignored, as in Tiled. Two tiles of one collection showing
     one image file refuse the map (the source key is the file name). `tilerendersize: "grid"`
     is dropped (tiles draw at tile size; reported). Tile sizes above 256 refuse the map.
   - Object layers → marker layers (layer `color` kept); a template instance is merged with its

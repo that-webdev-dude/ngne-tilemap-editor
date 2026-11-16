@@ -22,8 +22,8 @@ import {
     undo,
 } from "./te-018-support";
 
-// TE-018: capture of a stamp from the map with the stamp brush (SPEC §4.2, Tiled's
-// `CaptureStampHelper`): a right drag captures the rectangle of the active layer, cut to its
+// TE-018: capture of a stamp from the map with the stamp brush (SPEC §4.2, as in Tiled): a
+// right drag captures the rectangle of the active layer, cut to its
 // non-empty cells, empty cells inside kept empty; Shift at the release also erases it, one
 // entry; a right click captures one cell. Cells are [tile, orientation].
 

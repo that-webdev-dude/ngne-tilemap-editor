@@ -2,11 +2,10 @@ import type { Stamp } from "../cells";
 import type { PixelPoint } from "../raster/line";
 import type { Region } from "./region";
 
-// The Tile fill mode of the bucket and shape fill (SPEC §4.3): Tiled's `TileFill`
-// (`AbstractTileFillTool::fillWithStamp`, checked at v1.12.2) for one stamp. The stamp is laid
-// side by side over the region's bounding box from its top-left cell, row by row, and only the
-// region's cells are kept. An empty stamp cell writes nothing: the cell keeps its value (Tiled
-// paints a preview layer's `modifiedRegion`, its non-empty cells). Pure.
+// The Tile fill mode of the bucket and shape fill (SPEC §4.3), as Tiled fills with one stamp.
+// The stamp is laid side by side over the region's bounding box from its top-left cell, row by
+// row, and only the region's cells are kept. An empty stamp cell writes nothing: the cell keeps
+// its value, as in Tiled. Pure.
 
 const wrap = (value: number, size: number) => ((value % size) + size) % size;
 

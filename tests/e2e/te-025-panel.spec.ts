@@ -35,7 +35,7 @@ test("a drag over 3 × 2 tiles makes a 3 × 2 stamp that paints those tiles", as
 
     await dragTiles(page, [1, 0], [3, 1]);
     expect(await stamp(page)).toEqual({ width: 3, height: 2, cells: BLOCK });
-    // Tiled's `MapEditor::setStamp`: a stamp from the panel selects the stamp brush.
+    // As in Tiled, a stamp from the panel selects the stamp brush.
     expect(await pageCall(page, "selectedTool")).toBe("stamp");
 
     // The stamp's anchor is its centre cell (1, 1): a click on (10, 5) paints from (9, 4).

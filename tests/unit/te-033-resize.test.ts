@@ -39,7 +39,7 @@ import { expectSymmetric, snapshotProject } from "./support/symmetry";
 import { tileset } from "./te-006-support";
 import { movePivotPreset } from "../../src/ui/sprite/pivotGridKeys";
 
-// TE-033: Resize / Offset Map (SPEC §7.1; Tiled's `MapDocument::resizeMap`), in `core/maps`.
+// TE-033: Resize / Offset Map (SPEC §7.1; Tiled's Resize Map), in `core/maps`.
 // The fixture map is 5 × 4 cells of 16 × 8 px: a full tile layer at the bottom, and a group
 // holding a sparse tile layer and a marker layer, so nested layers are covered. Cells move by
 // the offset and those outside the new bounds go; markers move by the offset in pixels and are
@@ -302,7 +302,7 @@ describe("Resize / Offset Map: limits", () => {
         ).toThrow(/marker 2 of “Markers”/);
     });
 
-    it("offsetRange and clampOffset follow Tiled's ResizeHelper", () => {
+    it("offsetRange and clampOffset give the offset range of Tiled's Resize Map", () => {
         expect(offsetRange(5, 8)).toEqual({ min: 0, max: 3 });
         expect(offsetRange(5, 2)).toEqual({ min: -3, max: 0 });
         expect(offsetRange(5, 5)).toEqual({ min: 0, max: 0 });
@@ -347,7 +347,7 @@ describe("Resize / Offset Map: anchors", () => {
     });
 });
 
-describe("Resize / Offset Map: image layers (Tiled's resizeMap: SetLayerOffset by the offset)", () => {
+describe("Resize / Offset Map: image layers (layer offset moved by the offset, as in Tiled)", () => {
     /** The fixture with an image layer on top, at layer offset (5, −2) px. */
     function withImage(): History {
         const history = fixture();

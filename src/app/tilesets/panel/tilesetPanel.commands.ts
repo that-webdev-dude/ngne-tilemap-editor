@@ -4,8 +4,8 @@ import { sessionStore } from "../../state/session";
 import { shownTileset, tilesetPanel, tilesetPanelStore } from "./tilesetPanel";
 
 // Tileset → Previous Tileset and Next Tileset (DESIGN §5), Tiled's `[` and `]` (DESIGN §10.3):
-// the Tilesets panel shows the tab before or after its own; as Tiled's `TilesetDock` (v1.12.2)
-// they stop at the ends, where they are disabled. They take the menu items planned for their
+// the Tilesets panel shows the tab before or after its own; as in Tiled's Tilesets view they
+// stop at the ends, where they are disabled. They take the menu items planned for their
 // ids; both act from the viewport and from the panels.
 
 export const commands: CommandSpec[] = [

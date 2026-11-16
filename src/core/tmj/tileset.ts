@@ -140,7 +140,8 @@ interface Source {
 
 /**
  * A colour key applied to `pixels` in place (SPEC §13): every opaque pixel of the colour's red,
- * green and blue becomes transparent, as Tiled masks the colour of `transparentColor.rgb()`.
+ * green and blue becomes transparent, as Tiled masks a tileset's transparent colour (alpha
+ * ignored).
  */
 export function applyColorKey(pixels: PixelBuffer, color: number): void {
     const r = (color >>> 24) & 0xff;
@@ -334,7 +335,7 @@ async function imageTileset(context: Context, source: Source): Promise<Tileset |
     const size = guard(path, () => readPngSize(bytes));
     const columns = gridCount(size.width, tileWidth, options.margin, options.spacing);
     const rows = gridCount(size.height, tileHeight, options.margin, options.spacing);
-    // Tiled opens a tileset whose image holds no whole tile; it is dropped (`convertOne`).
+    // Tiled opens a tileset whose image holds no whole tile; the import drops it.
     if (columns === 0 || rows === 0) return null;
     const planned = guard(path, () => planGridPng(NO_PROJECT, size, options));
     const shape = { ...planned, name: source.name };
@@ -388,7 +389,7 @@ function collectionTiles(
         }
         if (ids.has(id)) throw new TmjError("format", `${what} lists tile ${id} twice.`);
         ids.add(id);
-        // Tiled creates a listed tile with or without an image (`Tileset::findOrCreateTile`).
+        // Tiled keeps a listed tile with or without an image.
         highest = Math.max(highest, id);
         const image = str(raw, "image", "", what);
         if (image === "") {
@@ -441,7 +442,7 @@ async function collectionTileset(
 ): Promise<Tileset | null> {
     const { tiles, highest } = collectionTiles(context, source);
     const first = tiles[0];
-    // Tiled opens a collection without images; it is dropped (`convertOne`).
+    // Tiled opens a collection without images; the import drops it.
     if (first === undefined) return null;
     const sizes = [...new Set(tiles.map((tile) => `${tile.width} × ${tile.height}`))];
     if (sizes.length > 1) {

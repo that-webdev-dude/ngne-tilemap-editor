@@ -110,7 +110,7 @@ export function convertProperties(
 }
 
 /**
- * Template properties overridden by the instance's (Tiled's `MapObject::syncWithTemplate`): the
+ * Template properties overridden by the instance's (as Tiled applies a template): the
  * template's in their order, an instance property of the same name replacing it, then the
  * instance's own.
  */

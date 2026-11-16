@@ -8,8 +8,8 @@ import { cellDeviceRect, clipToMap } from "../cellOutline";
 
 // The picture of the current stamp (SPEC §4.2): its tiles on a grid of the map's cell size, as
 // `core/compositor` draws a map. A tile larger than the cell is cut at the stamp's edge. What it
-// costs follows what is shown, never the stamp's pixels (as Tiled's `BrushItem` draws only the
-// exposed part of its preview layer): the rail's preview is composited at its own size
+// costs follows what is shown, never the stamp's pixels (only the visible part of a preview is
+// drawn): the rail's preview is composited at its own size
 // (`stampThumbnail`); the overlay's previews at the view's scale, in chunks of the stamp made
 // when first in view (`drawStamp`). One compositor reads the tilesets, again only when one of
 // them or the cell size changed; a new stamp only puts its layer in, so it costs its cells.

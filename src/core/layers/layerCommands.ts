@@ -41,8 +41,8 @@ import type {
     ProjectSession,
 } from "../model";
 
-// The layer commands of SPEC §7.2, with Tiled's behaviour (`MapDocument`, `MoveLayer`,
-// `LayerModel`, tag v1.12.2): New Tile / Marker / Image Layer and New Group above the active layer,
+// The layer commands of SPEC §7.2, with the behaviour of Tiled's Layer menu and Layers view:
+// New Tile / Marker / Image Layer and New Group above the active layer,
 // Group Layers, Ungroup, Duplicate (new IDs for the layers and their markers), Delete, Rename,
 // Move Up / Down into and out of groups, a move to any place (a drag), and the setters of a
 // layer's values, one layer or several (Show/Hide and Lock/Unlock Other Layers).
@@ -60,8 +60,8 @@ import type {
 //
 // The active layer is session state that the commands set and restore (SPEC §3): a new or
 // duplicated layer becomes active; Delete and Ungroup pass it on to the row that takes the
-// removed layer's place in the Layers panel (Qt's current row after a removal: the next row
-// below, else the one above, else the parent).
+// removed layer's place in the Layers panel, as Tiled's Layers view selects after a removal: the
+// next row below, else the one above, else the parent.
 
 export type LayerEditErrorCode =
     /** The command names a map or layer that does not exist. */
@@ -118,7 +118,7 @@ export const LAYER_LABELS = {
 /** The kinds New Layer makes; an image layer is made with its image (`newImageLayerCommand`). */
 export type NewLayerKind = "tile" | "marker" | "group";
 
-/** The kinds a new layer's name counts (Tiled's `newLayerName`). */
+/** The kinds a new layer's name counts (as Tiled names new layers). */
 export type NamedLayerKind = NewLayerKind | "image";
 
 /** The values a layer setter changes (SPEC §7.2); every field is optional. */
@@ -198,8 +198,8 @@ function mapSessionOf(session: ProjectSession, map: ProjectMap): MapSession {
 // Tree order
 
 /**
- * The layers of the tree in Tiled's `LayerIterator` order, bottom to top: a group comes right
- * after its children. Select Layer Above and Below step through it.
+ * The layers of the tree in Tiled's layer order, bottom to top: a group comes right after its
+ * children. Select Layer Above and Below step through it.
  */
 export function layerOrder(layers: readonly Layer[]): Layer[] {
     const out: Layer[] = [];
@@ -222,9 +222,9 @@ export function adjacentLayer(map: ProjectMap, id: number, step: -1 | 1): Layer 
 }
 
 /**
- * The layers Show/Hide and Lock/Unlock Other Layers change for `ids` (Tiled's
- * `collectAllSiblings`): the siblings of each layer and of each of its groups, without the
- * layers themselves and their groups. The children of a sibling group are not among them (the
+ * The layers Show/Hide and Lock/Unlock Other Layers change for `ids`, as in Tiled: the
+ * siblings of each layer and of each of its groups, without the layers themselves and their
+ * groups. The children of a sibling group are not among them (the
  * group's value covers them).
  */
 export function otherLayers(map: ProjectMap, ids: readonly number[]): Layer[] {
@@ -259,7 +259,7 @@ const KIND_NAMES: Record<NamedLayerKind, string> = {
 };
 
 /**
- * The name New Layer gives a layer of `kind`, as Tiled's `newLayerName`: "<Kind> N" with N one
+ * The name New Layer gives a layer of `kind`, as Tiled names new layers: "<Kind> N" with N one
  * above the count of layers of that kind, raised past names already taken.
  */
 export function newLayerName(map: ProjectMap, kind: NamedLayerKind): string {
@@ -528,7 +528,7 @@ function takeLayerId(map: ProjectMap): number {
 
 /**
  * The command that adds a layer of `kind` to map `mapId` right above its active layer, in the
- * active layer's group, and makes it active (Tiled's `addLayer`; with no active layer, at the
+ * active layer's group, and makes it active (as Tiled's New Layer; with no active layer, at the
  * bottom of the map). Its name is `newLayerName`.
  */
 export function newLayerCommand(mapId: string, kind: NewLayerKind): Command {
@@ -557,7 +557,7 @@ export function newLayerCommand(mapId: string, kind: NewLayerKind): Command {
 
 /**
  * The command that adds an image layer showing `choice` to `project`'s map `mapId`, as New Layer
- * does (right above the active layer, active, named "Image Layer N" as Tiled's `newLayerName`),
+ * does (right above the active layer, active, named "Image Layer N" as Tiled names it),
  * one step with the new image when `choice` is one (SPEC §7.2): undo removes both.
  */
 export function newImageLayerCommand(
@@ -601,7 +601,7 @@ function assertKnown(map: ProjectMap, ids: readonly number[]): void {
 }
 
 /**
- * The command that wraps layers `ids` of map `mapId` in a new group (Tiled's `groupLayers`): the
+ * The command that wraps layers `ids` of map `mapId` in a new group (Tiled's Group Layers): the
  * group goes right above the first of them in its list, named `groupName`, and takes them in
  * tree order. The active layer stays.
  */
@@ -625,7 +625,7 @@ export function groupLayersCommand(mapId: string, ids: readonly number[]): Comma
 }
 
 /**
- * The command that ungroups layers `ids` of map `mapId` (Tiled's `ungroupLayers`): a group's
+ * The command that ungroups layers `ids` of map `mapId` (Tiled's Ungroup Layers): a group's
  * children move into its parent where it was, a layer inside a group moves out right above
  * that group; a group left empty is removed. A removed active group passes the active layer to
  * the top child that took its place. Layers outside any group are left alone; when none of
@@ -675,7 +675,7 @@ export function ungroupCommand(mapId: string, ids: readonly number[]): Command {
 
 /**
  * The layer that becomes active when the layer at `place` is removed: the next one below it in
- * its list, else the one above, else its group (Qt's current row after a removal).
+ * its list, else the one above, else its group (the row Tiled's Layers view selects then).
  */
 function neighbourAfterRemoval(place: LayerPlace): number | null {
     const below = place.list[place.index - 1];
@@ -738,8 +738,8 @@ function cloneLayer(map: ProjectMap, layer: Layer): Layer {
 }
 
 /**
- * The command that duplicates layers `ids` of `project`'s map `mapId` (Tiled's
- * `duplicateLayers`): each copy, with its children, cells and markers, goes right above its
+ * The command that duplicates layers `ids` of `project`'s map `mapId` (Tiled's Duplicate
+ * Layers): each copy, with its children, cells and markers, goes right above its
  * original with new layer and marker IDs and the same name (Tiled leaves the name as it is
  * unless its "duplicate adds Copy" preference is on, which is off by default). A layer inside
  * another chosen group is copied with that group. The copy of the active layer, else the first
@@ -773,7 +773,7 @@ export function duplicateLayersCommand(
 
 /**
  * The command that deletes layers `ids` of `project`'s map `mapId` with their children (Tiled's
- * `removeLayers`). Its `do` throws `LayerEditError` ("last") when the map would be left without
+ * Remove Layers). Its `do` throws `LayerEditError` ("last") when the map would be left without
  * a layer. An active layer that goes passes the active layer to `neighbourAfterRemoval`. An image
  * that no layer uses any more is removed with it (SPEC §7.2).
  */
@@ -811,7 +811,10 @@ export function deleteLayersCommand(
     return withUnusedImagesRemoved(project, command, images);
 }
 
-/** Where Move Up (`1`) or Down (`-1`) puts layer `id`: Tiled's `MoveLayer`; null at the ends. */
+/**
+ * Where Move Up (`1`) or Down (`-1`) puts layer `id`, as Tiled's Raise and Lower Layer; null at
+ * the ends.
+ */
 export function moveTarget(
     map: ProjectMap,
     id: number,
@@ -990,7 +993,7 @@ export function setLayerValuesCommand(
 
 /**
  * Show/Hide Other Layers (`"visible"`) or Lock/Unlock Other Layers (`"locked"`) for layers
- * `ids` of `project`'s map `mapId`, as Tiled's `toggleOtherLayers` and `toggleLockOtherLayers`:
+ * `ids` of `project`'s map `mapId`, as Tiled's Show/Hide and Lock/Unlock Other Layers:
  * the other layers (`otherLayers`) are all shown when none is visible, else all hidden; all
  * unlocked when every one is locked, else all locked. Only the layers that change are in the
  * entry. Null when there is no other layer.

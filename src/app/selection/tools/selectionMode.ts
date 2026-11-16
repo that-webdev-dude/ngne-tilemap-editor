@@ -9,8 +9,8 @@ import type {
     ToolOptionValue,
 } from "../../tools/types";
 
-// How a selection tool's shape combines with the tile selection (SPEC §4.3, Tiled's
-// `AbstractTileSelectionTool`): the context bar's Mode, unless Shift (add), Ctrl (subtract) or
+// How a selection tool's shape combines with the tile selection (SPEC §4.3, as Tiled's tile
+// selection tools combine it): the context bar's Mode, unless Shift (add), Ctrl (subtract) or
 // both (intersect) are held at the press that begins the gesture. A completed gesture is one
 // command of the project's history, labelled with the tool's name; one that would leave the
 // same cells selected records nothing. A right click clears the selection.

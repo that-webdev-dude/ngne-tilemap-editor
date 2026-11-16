@@ -8,17 +8,17 @@ import { REFUSALS, resolvePaintTarget } from "../paintTarget";
 import type { ToolButton, ToolContext, ToolPointer, ToolSpec } from "../types";
 import { setCurrentStamp } from "./currentStamp";
 
-// Capture of a stamp from the map (SPEC §4.2), Tiled's `CaptureStampHelper`
-// (`src/tiled/capturestamphelper.cpp`, checked at v1.12.2). A tool enables it by wrapping its
-// spec in `withCapture`: the stamp brush here, the bucket and shape fill (TE-019).
+// Capture of a stamp from the map (SPEC §4.2), as a right drag captures one in Tiled. A tool
+// enables it by wrapping its spec in `withCapture`: the stamp brush here, the bucket and shape
+// fill (TE-019).
 //
-//   right press (without Ctrl, which Tiled keeps for picking a layer), drag: a rectangle of cells from the pressed cell to the pointer's, both
-//     included (`QRect::span`), outlined on the overlay (`capturePreview.overlay.ts`)
+//   right press (without Ctrl, which Tiled keeps for picking a layer), drag: a rectangle of
+//     cells from the pressed cell to the pointer's, both included, outlined on the overlay
+//     (`capturePreview.overlay.ts`)
 //   release: the cells of the active tile layer in that rectangle, inside the map, become the
-//     current stamp, cut to the bounding box of its non-empty cells (Tiled's
-//     `normalizeTileLayerPositionsAndMapSize`); empty cells inside it stay empty; a rectangle
-//     with none leaves no stamp. The active tool stays: it uses the stamp (Tiled's
-//     `MapEditor::setStamp` keeps a tool that uses the selected tiles).
+//     current stamp, cut to the bounding box of its non-empty cells; empty cells inside it
+//     stay empty; a rectangle with none leaves no stamp. The active tool stays: it uses the
+//     stamp (in Tiled too, a tool that uses the selected tiles stays selected).
 //   Shift held at the release: the rectangle is also erased, one history entry ("Cut"), on a
 //     visible, unlocked layer (SPEC §4.1); on another the stamp is captured and nothing erased.
 //

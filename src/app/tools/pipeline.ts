@@ -460,8 +460,8 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         const writable = new Set(paintable);
         const inMap = (x: number, y: number) =>
             opened !== null && x >= 0 && y >= 0 && x < opened.map.width && y < opened.map.height;
-        // The map's tile selection as at the press clips the stroke (SPEC §4.1, Tiled's
-        // `TilePainter::paintableRegion`); a selection is a value nobody changes.
+        // The map's tile selection as at the press clips the stroke (SPEC §4.1, as in Tiled:
+        // only selected cells are painted); a selection is a value nobody changes.
         const selection =
             opened && tool.clipsToSelection !== false
                 ? tileSelectionOf(session, opened.mapId)

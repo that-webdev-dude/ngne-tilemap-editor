@@ -62,9 +62,9 @@ function Thumbnail({ preview }: { preview: PixelBuffer }) {
 }
 
 /**
- * The preview of Resize / Offset Map (DESIGN §9; Tiled's `ResizeHelper`): the new bounds as a
- * solid outline and the old map, its thumbnail at half opacity with a dashed outline, at the
- * offset, both scaled to fit the box, in map pixels.
+ * The preview of Resize / Offset Map (DESIGN §9; as Tiled's Resize Map preview): the new
+ * bounds as a solid outline and the old map, its thumbnail at half opacity with a dashed
+ * outline, at the offset, both scaled to fit the box, in map pixels.
  */
 function ResizePreview({
     request,
@@ -121,7 +121,7 @@ function ResizePreview({
  * width and height in cells, the offset of the old map in the new one, the anchor grid that
  * sets the offset, and a preview of the old map inside the new bounds. While an anchor is
  * checked, a new size keeps the old map at that anchor; with none, the offset is moved into its
- * range, as Tiled's `ResizeHelper` does. The number fields take any number, so that a value out
+ * range, as Tiled's Resize Map dialog does. The number fields take any number, so that a value out
  * of range is shown with its message; OK is disabled until every value is accepted. Nothing
  * changes until OK.
  */

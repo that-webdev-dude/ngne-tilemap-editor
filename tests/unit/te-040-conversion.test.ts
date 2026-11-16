@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import type { Property, PropertyType } from "../../src/core/model";
 import { PROPERTY_TYPES, convertProperty, defaultProperty } from "../../src/core/properties";
 
-// TE-040: Change Type (SPEC §9). Every type-to-type conversion: the value converted where Qt's
-// `QVariant::convert` converts it (as Tiled's Properties view, v1.12.2), else the new type's
-// default (`false`, `0`, `""`, `#000000ff`). The table is in src/core/properties/convert.ts.
+// TE-040: Change Type (SPEC §9). Every type-to-type conversion: the value converted where
+// Tiled's Properties view converts it on a type change, else the new type's default
+// (`false`, `0`, `""`, `#000000ff`). The table is in src/core/properties/convert.ts.
 
 const p = (type: PropertyType, value: Property["value"]) =>
     ({ name: "x", type, value }) as Property;

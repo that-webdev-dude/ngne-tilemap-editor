@@ -369,3 +369,95 @@ rows.
 | `vite.config.ts` | `vite.config.ts` | adapt | `ea5c91d` | | Ports 5183/4183 (strict); the `NGNE_CORE_DIR` engine alias; manifest names of SUITE §1, exported as `manifest` for the unit test; file handler `.ngtilemap` (`application/x-ngtilemap`); base path from the deploy build; the licences file, the worker module collector, `txt` precached, the code-unit icon sort and `String.raw` in `tokenColour` as at `4987001`, with rolldown listed (`BUILD_PACKAGES`) and no `gifenc` alias |
 | `vitest.config.ts` | `vitest.config.ts` | verbatim | `ea5c91d` | `4a41581bc1a038dec83a21477c0a1288d693602ee3001af4327f3d08bad5fea4` | |
 | `vitest.perf.config.ts` | `vitest.perf.config.ts` | verbatim | `ea5c91d` | `09675eb8bb88964f2e553c15966b99ced61c8910e3363731e977aa05d1955c9c` | |
+
+## Tiled source named or read
+
+Tiled's editor (<https://github.com/mapeditor/tiled>, GPL-2.0-or-later outside its BSD-2-Clause
+`src/libtiled`) is followed for behaviour only. Until 2026-11-15 the comments, test names or specs
+of the files below named classes, functions, members or files of Tiled's source; where the second
+column says so, they also said that its source had been read at tag `v1.12.2` to confirm a detail.
+On 2026-11-15 those names and claims were replaced by behaviour wording; the code was not changed.
+No approval to read Tiled's source is on record, so the reading is treated as not approved, and
+each file's class stays pending until the next full audit classifies it. Comments that credit the
+BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
+
+| Path | What the file carried before 2026-11-15 | Class |
+| ---- | --------------------------------------- | ----- |
+| `docs/DESIGN.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `docs/FORMAT.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `docs/SPEC.md` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/clipboard/clipboard.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/layers/layerTree.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/markers/create/markerCreate.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/markers/markerGeometry.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/markers/markerSelection.ts` | Names | Pending |
+| `src/app/markers/markerToolSupport.ts` | Names | Pending |
+| `src/app/markers/points/markerPoints.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/markers/select/markerSelect.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/properties/propertiesPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/selection/tools/selection.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/selection/tools/selectionMode.ts` | Names | Pending |
+| `src/app/terrains/terrains.commands.ts` | Names | Pending |
+| `src/app/terrains/terrainsPanel.ts` | Names | Pending |
+| `src/app/tilesets/animation/animationEditor.ts` | Names | Pending |
+| `src/app/tilesets/panel/tilesetPanel.commands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tilesets/panel/tilesetPanel.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/eraser/eraser.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/fill/bucket.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/fill/fillPlan.ts` | Names | Pending |
+| `src/app/tools/fill/fillPreview.overlay.ts` | Names | Pending |
+| `src/app/tools/fill/shapeFill.tools.ts` | Names | Pending |
+| `src/app/tools/fill/terrainFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/pipeline.ts` | Names | Pending |
+| `src/app/tools/stamp/capture.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/stamp/placement.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/stamp/stamp.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/stamp/stampImage.ts` | Names | Pending |
+| `src/app/tools/terrain/brushTerrain.ts` | Names | Pending |
+| `src/app/tools/terrain/terrainBrush.overlay.ts` | Names | Pending |
+| `src/app/tools/terrain/terrainBrush.tools.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/app/tools/types.ts` | Names | Pending |
+| `src/core/fill/region.ts` | Names | Pending |
+| `src/core/fill/tileFill.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/core/layers/layerCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/core/maps/resizeMap.ts` | Names | Pending |
+| `src/core/markers/markerCommands.ts` | Names | Pending |
+| `src/core/properties/convert.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/core/runtime/runtime.ts` | Names | Pending |
+| `src/core/selection/commands.ts` | Names | Pending |
+| `src/core/selection/copy.ts` | Names | Pending |
+| `src/core/selection/operations.ts` | Names | Pending |
+| `src/core/terrain/analysis.ts` | Names | Pending |
+| `src/core/terrain/terrainCommands.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/core/tileset/animationCommands.ts` | Names | Pending |
+| `src/core/tileset/gridPng.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/core/tmj/gid.ts` | Names | Pending |
+| `src/core/tmj/objects.ts` | Names | Pending |
+| `src/core/tmj/properties.ts` | Names | Pending |
+| `src/core/tmj/tileset.ts` | Names | Pending |
+| `src/core/tmj/tsx.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `src/ui/maps/ResizeMapDialog.tsx` | Names | Pending |
+| `src/ui/maps/mapDialogs.css` | Names | Pending |
+| `src/ui/tilesets/TilesetsPanel.tsx` | Names | Pending |
+| `src/ui/tilesets/collision/CollisionEditor.tsx` | Names | Pending |
+| `tests/e2e/te-018-capture.spec.ts` | Names | Pending |
+| `tests/e2e/te-019-shape.spec.ts` | Names | Pending |
+| `tests/e2e/te-020-clipping.spec.ts` | Names | Pending |
+| `tests/e2e/te-021-clipboard.spec.ts` | Names | Pending |
+| `tests/e2e/te-025-panel.spec.ts` | Names | Pending |
+| `tests/e2e/te-034-layers.spec.ts` | Names | Pending |
+| `tests/fixtures/tmj/build.ts` | Names | Pending |
+| `tests/unit/te-018-capture.test.ts` | Names | Pending |
+| `tests/unit/te-019-fill.test.ts` | Names | Pending |
+| `tests/unit/te-021-clipboard.test.ts` | Names | Pending |
+| `tests/unit/te-022-grid-png.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-033-resize.test.ts` | Names | Pending |
+| `tests/unit/te-033-selection.test.ts` | Names | Pending |
+| `tests/unit/te-034-layer-commands.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-035-layers-panel.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-036-images.test.ts` | Names | Pending |
+| `tests/unit/te-038-marker-geometry.test.ts` | Names | Pending |
+| `tests/unit/te-040-conversion.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-041-filler.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-044-brush.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
+| `tests/unit/te-060-tilesets.test.ts` | Names | Pending |

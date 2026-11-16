@@ -2,7 +2,7 @@ import type { CellStore, Stamp } from "../cells";
 import type { Region } from "../model";
 import { maskHas } from "./mask";
 
-// Copy of the selected cells (SPEC §4.4; TE-021), Tiled's `ClipboardManager::copySelection`:
+// Copy of the selected cells (SPEC §4.4; TE-021), as Tiled's Copy behaves on a tile layer:
 // the cells of one tile layer inside the selection, over the selection's bounding box; a cell
 // of the box outside the selection is empty. Pure.
 

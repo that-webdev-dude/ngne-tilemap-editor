@@ -28,9 +28,8 @@ import { terrainFillPlan } from "./terrainFill";
 //   Shift: a square or a circle, the shorter side's length both ways
 //   Alt: centred on the pressed cell
 //   release: fills the rectangle, or the ellipse inscribed in it (`ellipseRegion`),
-//     with the stamp tiled from the shape's top-left (`TileFill`), or in Terrain mode with the
-//     tiles of the brush's terrain set that match the cells around it (`wangFill`), one
-//     history entry
+//     with the stamp tiled from the shape's top-left, or in Terrain mode with the tiles of the
+//     brush's terrain set that match the cells around it, one history entry
 //   right click or Escape during the drag: cancelled, nothing filled
 //
 // The modifiers count as they are at each sample and at the release. A right drag that is not
@@ -125,8 +124,8 @@ function shapeRegion(
 /**
  * The fill the drag in progress makes if it is released on `cell` of `map` with `modifiers`
  * held; null while no drag is in progress or it fills nothing. In Terrain mode the filler is
- * given the whole shape inside the map, as Tiled's `wangFill`; the tile selection clips what
- * is written (SPEC §4.1).
+ * given the whole shape inside the map, so the tiles match as Tiled's terrain fill matches
+ * them; the tile selection clips what is written (SPEC §4.1).
  */
 export function shapeDragPlan(
     map: ProjectMap,

@@ -14,18 +14,16 @@ import type { WangIndex } from "./wangId";
 
 // The terrain set commands of SPEC §5.1 (Terrains panel, DESIGN §8.6; TE-043): add, rename,
 // remove and move terrain sets and terrains, a set's type, a terrain's colour and icon tile, and
-// the terrain of one index, or every index, of a tile. As Tiled's (`changewangsetdata.cpp`,
-// `changewangcolordata.cpp`, `changetilewangid.cpp`, tag v1.12.2):
+// the terrain of one index, or every index, of a tile. As in Tiled's terrain editing:
 //
-// - A new set is "Unnamed Set" with one terrain (`TilesetEditor::addWangSet`); a new terrain
-//   takes the next of Tiled's default colours (`defaultWangColors`, cycled past the 15th where
-//   Tiled picks a random one, so a redo repeats the do). Tiled leaves its name empty; FORMAT
-//   §2.4 wants one, so it is "Terrain n".
-// - Removing a terrain clears it from every tile and moves the terrains after it down one
-//   (`ChangeTileWangId::changesOnRemoveColor`). The last terrain of a set is not removed: a set
-//   has 1 to 254 (FORMAT §2.4).
+// - A new set is "Unnamed Set" with one terrain; a new terrain takes the next of Tiled's
+//   default colours (`defaultWangColors`, cycled past the 15th where Tiled picks a random one,
+//   so a redo repeats the do). Tiled leaves its name empty; FORMAT §2.4 wants one, so it is
+//   "Terrain n".
+// - Removing a terrain clears it from every tile and moves the terrains after it down one. The
+//   last terrain of a set is not removed: a set has 1 to 254 (FORMAT §2.4).
 // - A type change clears, in the same entry, every index the new type does not use (SPEC §5.1).
-// - A tile whose terrains are all 0 leaves the set (`WangSet::setWangId`).
+// - A tile whose terrains are all 0 leaves the set.
 //
 // Every command replaces `Tileset.terrainSets` and each set it changes with new arrays and
 // objects, never changing one in place, so `terrainAnalysis` sees the change and undo puts the

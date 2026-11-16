@@ -20,10 +20,10 @@ import {
     undo,
 } from "./te-020-support";
 
-// TE-020: the tile selection clips painting (SPEC §4.1, Tiled's `TilePainter::paintableRegion`):
+// TE-020: the tile selection clips painting as in Tiled (SPEC §4.1):
 // the stamp brush, the eraser (its rectangle and all-layers modes too), the bucket fill and the
 // shape fill change only selected cells of the active tile layer. The bucket floods over the
-// map and fills the selected cells of its region (Tiled's `computePaintableFillRegion`);
+// map and fills the selected cells of its region, as in Tiled;
 // Shift (or Whole selection) fills exactly the selection, and only from a cell inside it
 // (Tiled's `BucketFillTool`).
 
@@ -113,7 +113,7 @@ test("the bucket fills its flood region over the map, cut to the selection", asy
     await selectAandB(page);
     await setStamp(page, 1, 1, [ONE]);
     // The empty layer is one region: both selected parts fill, though no selected cell joins
-    // them (Tiled's `computePaintableFillRegion` on a fixed-size map).
+    // them (as in Tiled on a fixed-size map).
     const both = listed([...rectEntries(A, ONE), ...rectEntries(B, ONE)]);
     await clickAt(page, 6, 6);
     expect(await cells(page)).toEqual(both);
@@ -152,7 +152,7 @@ test("Shift bucket fills exactly the selection, as Whole selection does", async 
     expect(await undo(page)).toBe(true);
     expect(await cells(page)).toEqual(listed(wall));
 
-    // From a cell outside the selection: nothing (Tiled's "the mouse needs to be in the region").
+    // From a cell outside the selection: nothing (as in Tiled, the press must be inside it).
     await holding(page, ["Shift"], () => clickAt(page, 12, 12));
     expect(await cells(page)).toEqual(listed(wall));
 

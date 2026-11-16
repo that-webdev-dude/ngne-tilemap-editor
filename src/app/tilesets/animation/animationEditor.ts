@@ -14,9 +14,9 @@ import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 // Tileset → Edit Animation… (SPEC §6.4, DESIGN §9; TE-030): the Animation Editor opens on the
 // tile the Tilesets panel's selection ends on (Tiled's current tile) and edits that tile's frame
 // list. Its edits are live commands of the project history, made while the dialog is open, as
-// Tiled's editor pushes a `ChangeTileAnimation` on every change; the dialog closes with Close and
-// applies nothing then. New frames take the editor's frame duration, 100 ms until the user sets
-// another (Tiled's `frame.defaultDuration`); it is kept while the page is open.
+// every change in Tiled's Animation Editor is an undo step at once; the dialog closes with Close
+// and applies nothing then. New frames take the editor's frame duration, 100 ms until the user
+// sets another (as in Tiled's Animation Editor); it is kept while the page is open.
 
 /** What the Animation Editor dialog is opened with. */
 export interface AnimationEditorRequest {
@@ -35,7 +35,7 @@ export interface FrameDurationState {
     readonly ms: number;
 }
 
-/** The editor's frame duration (Tiled's `frame.defaultDuration`), shared by every opening. */
+/** The editor's frame duration (Tiled's frame duration field), shared by every opening. */
 export const frameDurationStore = createStore<FrameDurationState>(() => ({
     ms: DEFAULT_FRAME_MS,
 }));

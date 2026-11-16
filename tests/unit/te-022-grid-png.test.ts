@@ -10,7 +10,7 @@ import {
 import type { GridPngOptions } from "../../src/core/tileset";
 import { emptyProject, pixelAt, png, positionImage } from "./te-022-support";
 
-// TE-022: grid PNG → tileset (SPEC §6.1). Tiled's grid (`initializeTilesetTiles`, v1.12.2):
+// TE-022: grid PNG → tileset (SPEC §6.1). Tiled's grid:
 // tiles from `margin`, a step of the tile size plus `spacing`, every whole cell a tile, IDs row
 // by row, source keys `[column, row]`, pixels copied into the stored grid without margin or
 // spacing.
@@ -87,7 +87,7 @@ describe("grid PNG import", () => {
         const project = emptyProject();
         const shape = (width: number, height: number) =>
             planGridPng(project, { width, height }, options());
-        // Tiled: x runs from the margin while x <= width - tileWidth.
+        // As in Tiled: from the margin, a column is a tile only if the whole tile fits.
         expect(shape(13, 7)).toMatchObject({ columns: 3, tileCount: 6 });
         expect(shape(12, 7)).toMatchObject({ columns: 2, tileCount: 4 });
         expect(shape(13, 6)).toMatchObject({ columns: 3, tileCount: 3 });

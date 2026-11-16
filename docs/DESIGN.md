@@ -275,7 +275,7 @@ text in `--text-muted`. Drag reorders and moves into groups (drop on a group row
 third). Header: New Tile Layer (+) with a variant menu for the other kinds, Delete. The tree is
 one tab stop; ↑ ↓ move, ← → collapse/expand, Enter makes active, F2 renames.
 
-As Tiled (`LayerModel::dropMimeData`, `QTreeView` at `v1.12.2`): a layer dropped on a group
+As in Tiled: a layer dropped on a group
 goes to the bottom of its children; dropped below an expanded group's row, to the top of its
 children (the row shown below it); dropped below the last row, to the bottom of the map. ← on
 a row that is no expanded group goes to its group's row, → on an expanded group to its top

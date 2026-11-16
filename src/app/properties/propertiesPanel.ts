@@ -54,13 +54,13 @@ import { toolPipeline } from "../tools/appPipeline";
 
 // The Properties panel (SPEC §9, DESIGN §8.3; TE-040): what it shows and the edits it makes.
 //
-// What is shown, as Tiled's Properties view follows its document's current object (v1.12.2):
+// What is shown, as Tiled's Properties view follows the object last selected or focused:
 // the selected markers of the active map, else the tiles selected in the Tilesets panel while
 // the tiles have the focus, else the active layer, else the active map. The tiles take the
 // focus when the Tilesets panel takes the keyboard focus or its selection changes, or from
 // the tile menu's Properties; they lose it when the active map, the active layer or the marker
-// selection changes, or the focus enters the Maps or Layers section (Tiled's
-// `MapDocument::setCurrentObject` calls). The project and the shown tileset are shown from the
+// selection changes, or the focus enters the Maps or Layers section, as Tiled's Properties view
+// changes at those actions. The project and the shown tileset are shown from the
 // panel's menu (Show Project Properties, Show Tileset Properties) until the selection changes.
 //
 // Every edit is one command on the history (SPEC §9); a refused one changes nothing and is

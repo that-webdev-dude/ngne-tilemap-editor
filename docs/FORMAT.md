@@ -96,8 +96,8 @@ Screen axes point right and down. `fx`, `fy` and `θ` are the values of an NGNE 
 width and height, rotation in radians, clockwise on screen): NGNE maps the texel at `(a, b)` to
 `R(θ)·(fx·a, fy·b)` with `R(θ)·(p, q) = (p·cos θ − q·sin θ, p·sin θ + q·cos θ)`. This is
 Tiled's rendering: anti-diagonal first, then horizontal, then vertical; with `D` set Tiled
-draws at 90° with `H' = V` and `V' = not H` (`src/libtiled/maprenderer.cpp`, `CellRenderer`,
-tag `v1.12.2`). Each row has a test fixture with a 3 × 2 asymmetric tile.
+draws at 90° with `H' = V` and `V' = not H` (Tiled 1.12.2). Each row has a test fixture with a
+3 × 2 asymmetric tile.
 
 ### 1.3 Placing a tile
 
@@ -111,8 +111,8 @@ centre = (B.x + offX + box.w/2, B.y + offY − box.h/2)
 ```
 
 The tile as drawn has its bottom-left corner on the cell's bottom-left corner, moved by the tile
-offset; a tile larger than the grid grows up and to the right. This is Tiled's `BottomLeft`
-origin, including its correction for a swapped box under `D`.
+offset; a tile larger than the grid grows up and to the right. This is Tiled's bottom-left
+tile alignment, including its correction for a swapped box under `D`.
 
 **Odd sizes.** The atlas rectangle of a tile is `w × h` = `tw × th` rounded up to even (§4),
 with the extra column on the right and the extra row at the bottom, transparent. A renderer

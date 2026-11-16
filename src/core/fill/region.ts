@@ -3,8 +3,8 @@ import type { PixelPoint } from "../raster/line";
 
 // Regions of cells (SPEC §4.3): what the flood fill, the shape fill and the magic wand (TE-020)
 // work on, as row spans. A region is a list of spans sorted by row and then by start, none of
-// them empty and no two of one row overlapping or touching: Tiled's `QRegion` of 1-cell-high
-// rectangles. Pure, integer arithmetic only.
+// them empty and no two of one row overlapping or touching: a set of 1-cell-high rectangles.
+// Pure, integer arithmetic only.
 
 /** The cells `start .. end - 1` of row `y`. */
 export interface RowSpan {

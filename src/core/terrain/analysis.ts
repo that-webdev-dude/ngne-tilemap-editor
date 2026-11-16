@@ -34,7 +34,7 @@ export interface TerrainAnalysis {
     /** Every combination of the type's indexes is present (SPEC §5.1, §5.2). */
     readonly complete: boolean;
     /**
-     * Tiled's `WangSet::isComplete()`, which the filler reads to skip its look-ahead. It counts
+     * libtiled's `WangSet::isComplete()`, which this editor's filler reads (SPEC §5.2). It counts
      * only WangIds with a terrain at all eight indexes after the type mask, so a corner or edge
      * set is never complete to the filler (reference/tiled.md §4).
      */
@@ -199,7 +199,7 @@ export function analyzeTerrainSet(set: TerrainSet, slot: number): TerrainAnalysi
 /**
  * Tiled's `effectiveTypeForColor`: the set's type, except in a mixed set, where a terrain used
  * only at corners acts as a corner terrain and one used only at edges as an edge terrain. The
- * terrain brush picks its painting mode from it (`wangbrush.cpp` `setColor`).
+ * terrain brush picks its painting mode from it.
  */
 export function effectiveTypeForColor(analysis: TerrainAnalysis, color: number): TerrainSetType {
     if (analysis.type !== "mixed") return analysis.type;

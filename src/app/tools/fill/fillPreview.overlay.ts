@@ -25,7 +25,7 @@ import {
 
 // The preview of the bucket and the shape fill (DESIGN §4: fill tools preview their region as
 // the stamp brush its stamp): the stamp tiled (in Terrain mode, the tiles the terrain fill
-// resolved, as Tiled previews its `wangFill`) over the cells the fill would write at 60%
+// resolved, as Tiled previews a terrain fill) over the cells the fill would write at 60%
 // opacity, the empty stamp cells clear, and the bounding box of those cells outlined 1 px in
 // `--accent`. The bucket shows the region of the cell under the pointer (the whole selection or
 // layer with Shift or Whole selection) until it is pressed; the shape fill the part of the

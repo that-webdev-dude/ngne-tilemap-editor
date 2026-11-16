@@ -101,7 +101,7 @@ const LIVE_CASES: Case[] = [
         changes: true,
     },
     // Far moves up out of the group, above it, and loses the group's values; down again, it
-    // enters the group at its top (Tiled's MoveLayer).
+    // enters the group at its top (as in Tiled).
     { step: { kind: "move", id: 3, step: 1 }, tree: "Base,Group 1[Faint],Far", changes: true },
     { step: { kind: "move", id: 3, step: -1 }, tree: "Base,Group 1[Faint,Far]", changes: true },
     // Ungrouped, the children keep their own values only.

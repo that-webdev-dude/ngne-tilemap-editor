@@ -88,8 +88,8 @@ export function selectAll(width: number, height: number): Region {
 
 /**
  * `shape` combined with `current` by `mode`: `replace` is the shape alone, `add` the union,
- * `subtract` what `current` keeps outside the shape, `intersect` what both select (Tiled's
- * `applySelectionPreview`). Without a current selection, `add` acts as `replace` and
+ * `subtract` what `current` keeps outside the shape, `intersect` what both select (as in
+ * Tiled). Without a current selection, `add` acts as `replace` and
  * `subtract` and `intersect` select nothing. The result may keep `shape` itself only for
  * `replace` (`selectionOf`). Null when no cell is selected.
  */

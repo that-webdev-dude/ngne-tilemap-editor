@@ -1364,7 +1364,7 @@ function cacheOf(tilemap: Tilemap, layer: TileLayerData): LayerCache {
 }
 
 /**
- * The first layer named `name`, from the bottom (as Tiled's `Map::findLayer`); undefined for
+ * The first layer named `name`, searched from the bottom of the layer list; undefined for
  * none. Names are case-sensitive and need not be unique.
  */
 export function findLayer(tilemap: Tilemap, name: string): TilemapLayer | undefined {
@@ -1669,7 +1669,7 @@ export function markers(
 
 /**
  * Writes the cell value `value` (FORMAT 1.2) into the cell `cellX, cellY` of `layer`, in cells
- * as Tiled's `TileLayer.setTile` takes them, and drops the layer's cached `grid`,
+ * as Tiled's `TileLayerEdit.setTile` takes them, and drops the layer's cached `grid`,
  * `collisionShapes` and `collisionRects`. A cell outside the map is not written. A value with
  * the reserved bit 28 set, flags without a GID or a GID outside every span reads as an empty
  * cell.

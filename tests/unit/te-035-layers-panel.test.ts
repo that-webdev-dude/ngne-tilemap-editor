@@ -22,7 +22,7 @@ import { expectSymmetric } from "./support/symmetry";
 import { MAP, setup } from "./te-006-support";
 
 // TE-035: what the Layers panel shows of a layer tree (DESIGN §8.2), where a drag drops a layer
-// (Tiled's `LayerModel::dropMimeData` at v1.12.2 for a drop on a group), the one history entry
+// (as Tiled drops on a group), the one history entry
 // the layer properties popover makes, and the registry of kind-specific popover fields. The
 // map is
 //

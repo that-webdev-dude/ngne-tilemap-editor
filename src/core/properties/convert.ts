@@ -6,9 +6,9 @@ import {
 } from "../model";
 import type { Property, PropertyType } from "../model";
 
-// Property values of FORMAT §1.4 and Change Type (SPEC §9). As Tiled's `PropertiesWidget`
-// (v1.12.2), a changed type keeps the value where Qt's `QVariant::convert` can turn it into the
-// new type, and takes the type's default otherwise: `false`, `0`, `""`, `#000000ff`.
+// Property values of FORMAT §1.4 and Change Type (SPEC §9). As in Tiled's Properties view, a
+// changed type keeps the value where it can be turned into the new type, and takes the type's
+// default otherwise: `false`, `0`, `""`, `#000000ff`.
 //
 // The conversions, from the row type to the column type ("·": unchanged; "d": the default):
 //
@@ -20,13 +20,13 @@ import type { Property, PropertyType } from "../model";
 //     color      d             d                d              its text        ·       d
 //     file       d             d                d              same            d       ·
 //
-// ¹ Half away from zero (Qt's `qRound64`); out of ±9 007 199 254 740 991 gives the default.
-// ² ECMAScript's shortest round-trip text, as Qt's `FloatingPointShortest`.
-// ³ False for "", "0" and "false" in any letter case, else true (Qt's string to bool).
-// ⁴ Surrounding white space ignored (Qt's `toLongLong`, `toDouble`); text that is no integer
-//   (int) or no finite number (float) gives the default, as does an integer out of range.
+// ¹ Half away from zero, as in Tiled; out of ±9 007 199 254 740 991 gives the default.
+// ² ECMAScript's shortest round-trip text (the shortest text that reads back as the number).
+// ³ False for "", "0" and "false" in any letter case, else true, as in Tiled.
+// ⁴ Surrounding white space ignored, as in Tiled; text that is no integer (int) or no finite
+//   number (float) gives the default, as does an integer out of range.
 // ⁵ A colour of FORMAT §1.1 (`#rrggbbaa`, either case, written lowercase) or `#rrggbb` (alpha
-//   ff); anything else gives the default. Tiled reads Qt's colour names and `#aarrggbb`; this
+//   ff); anything else gives the default. Tiled also reads colour names and `#aarrggbb`; this
 //   editor's colours are `#rrggbbaa`, so only its own spellings convert.
 // ⁶ Tiled turns text into a file path; a text over 1024 code units gives the default.
 
@@ -47,7 +47,7 @@ export function defaultProperty(name: string, type: PropertyType): Property {
 }
 
 const INTEGER_TEXT = /^[+-]?\d+$/;
-/** Decimal number text as Qt's `toDouble` takes it (no hexadecimal, no "Infinity"). */
+/** Decimal number text as Tiled converts it (no hexadecimal, no "Infinity"). */
 const NUMBER_TEXT = /^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/;
 const COLOUR_TEXT = /^#[0-9a-fA-F]{8}$/;
 const RGB_TEXT = /^#[0-9a-fA-F]{6}$/;

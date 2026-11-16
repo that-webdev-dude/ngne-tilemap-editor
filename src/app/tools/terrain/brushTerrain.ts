@@ -12,7 +12,7 @@ import { provideBrushSource } from "./brushSource";
 import type { BrushTerrain } from "./brushSource";
 
 // The terrain set and terrain the terrain brush paints (SPEC §5.3, DESIGN §7). As Tiled's brush
-// follows the terrain sets view (`WangDock`), the brush takes the set and terrain selected in
+// follows its Terrain Sets view, the brush takes the set and terrain selected in
 // the Terrains panel for the active tileset (`terrainsPanel.ts`); the context bar and right-click
 // sampling change that selection. "Erase terrain" (terrain 0) is the brush's own choice on top
 // of it, dropped when a terrain is selected again, in the panel or the context bar.

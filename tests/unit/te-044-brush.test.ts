@@ -19,10 +19,10 @@ import type { BrushStep, BrushTarget, TerrainAnalysis } from "../../src/core/ter
 import { TERRAIN_STROKES } from "./support/terrainFixtures";
 import type { TerrainStep } from "./support/terrainFixtures";
 
-// TE-044: the terrain brush's painting in `core/terrain/brush.ts` (SPEC §5.3, Tiled's
-// `wangbrush.cpp` at v1.12.2). The pointer positions the E2E test clicks give the targets of
-// the TE-042 strokes, and those targets painted one step each give the goldens; lines, drags
-// and rotational symmetry constrain what Tiled's `updateBrush` constrains.
+// TE-044: the terrain brush's painting in `core/terrain/brush.ts` (SPEC §5.3, Tiled's terrain
+// brush). The pointer positions the E2E test clicks give the targets of the TE-042 strokes,
+// and those targets painted one step each give the goldens; lines, drags and rotational
+// symmetry constrain the targets a pointer move gives, as in Tiled's terrain brush.
 
 const FOLDER = new URL("../fixtures/terrain/", import.meta.url);
 const SLOT = 1;
@@ -332,7 +332,7 @@ describe("TE-044 brush steps", () => {
     it("paints terrain 0 as a wish like any other (erase)", () => {
         // No tile of a corner set has an empty corner and "no terrain" is unreachable from its
         // terrains, so with corrections on the four cells around the vertex cannot be resolved
-        // (Tiled's \`findBestMatch\` discards unreachable candidates): reported and unchanged.
+        // (as in Tiled, unreachable candidates are discarded): reported and unchanged.
         const analysis = analysisOf("corner-complete");
         const map = readMap("corner-complete.tmj");
         const before = [...map.cells];

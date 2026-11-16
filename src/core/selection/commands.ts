@@ -7,7 +7,7 @@ import { combineSelection, invertSelection, selectAll } from "./operations";
 import type { SelectionMode } from "./operations";
 
 // Tile selection changes as commands of the project's history (SPEC §3, §4.4; TE-020): undoable
-// as Tiled's `ChangeSelectedArea` and the sprite editor's selection commands, not saved. A
+// as selection changes are in Tiled and in the sprite editor's selection commands, not saved. A
 // command keeps the selection of its map before and after; both are values nobody changes
 // (mask.ts), so undo puts back the very mask that was there. A change that would leave the same
 // cells selected makes no command (null), so it records no history entry, as a stroke that

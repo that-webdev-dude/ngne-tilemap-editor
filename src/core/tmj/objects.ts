@@ -42,7 +42,7 @@ export class Templates {
     }
 }
 
-/** An instance with its template's members under its own (`MapObject::syncWithTemplate`). */
+/** An instance with its template's members under its own (as Tiled applies a template). */
 function inlineTemplate(instance: JsonObject, templates: Templates): JsonObject {
     const path = instance.template;
     if (typeof path !== "string") return instance;

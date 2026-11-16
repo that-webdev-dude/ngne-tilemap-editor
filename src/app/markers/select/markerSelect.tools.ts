@@ -29,8 +29,8 @@ import {
 } from "../markerToolSupport";
 import type { ToolView } from "../markerToolSupport";
 
-// The marker select tool (SPEC §8, DESIGN §6, §7; TE-038), Tiled's `ObjectSelectionTool`
-// (checked at v1.12.2) for markers without rotation:
+// The marker select tool (SPEC §8, DESIGN §6, §7; TE-038), as Tiled's `ObjectSelectionTool`
+// for markers without rotation:
 //
 //   click a marker: it alone is selected; Shift (or Ctrl) click: it joins the selection, or
 //     leaves it when it was in it

@@ -18,7 +18,7 @@ export const HIT_REACH_CSS = 4;
 
 /**
  * A press becomes a drag once the pointer has moved this far, CSS pixels, summed over both
- * axes (Tiled: half of Qt's start-drag distance of 10).
+ * axes (the drag threshold of Tiled's object tools).
  */
 export const DRAG_DISTANCE_CSS = 5;
 

@@ -181,7 +181,7 @@ describe("New Image Layer", () => {
         expect(history.undoLabel).toBe("New Image Layer");
         expect(images(history)).toEqual(["sky"]);
         const map = project.maps[0]!;
-        // Tiled's `newLayerName`: "Image Layer N".
+        // As in Tiled: "Image Layer N".
         expect(map.layers.map((layer) => [layer.type, layer.name])).toEqual([
             ["tile", "Tile Layer 1"],
             ["image", "Image Layer 1"],

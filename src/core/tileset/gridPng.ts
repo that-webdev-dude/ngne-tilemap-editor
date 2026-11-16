@@ -8,10 +8,10 @@ import { readPngSize } from "./pngSize";
 import { checkLimits, checkPackability } from "./room";
 import type { TilesetShape } from "./room";
 
-// Grid PNG → tileset (SPEC §6.1). The grid is Tiled's (`Tileset::initializeTilesetTiles`,
-// `columnCountForWidth`, v1.12.2): tiles start at `margin` and step by the tile size plus
-// `spacing`; a tile is every grid cell that lies whole inside the image, so the margin counts at
-// the left and top only and partial cells at the right and bottom are not tiles. IDs 0.. run row
+// Grid PNG → tileset (SPEC §6.1). The grid is the one Tiled cuts from a tileset image: tiles
+// start at `margin` and step by the tile size plus `spacing`; a tile is every grid cell that
+// lies whole inside the image, so the margin counts at the left and top only and partial cells
+// at the right and bottom are not tiles. IDs 0.. run row
 // by row, source keys are `[column, row]`, and the tiles' pixels are copied into the stored grid
 // without margin or spacing, the source's columns kept.
 

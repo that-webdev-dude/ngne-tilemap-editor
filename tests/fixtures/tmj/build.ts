@@ -5,9 +5,9 @@ import { encode } from "fast-png";
 import { gzipSync, zlibSync } from "fflate";
 
 // TE-058: writes the TMJ import fixtures of SPEC §13 into tests/fixtures/tmj/, replacing what
-// is there (this file excepted). Maps, tilesets and templates follow Tiled 1.12.2's JSON
-// writer (`MapToVariantConverter`, `JsonWriter` with auto-formatting) and its TSX writer
-// (`MapWriter`); tile and image PNGs are generated. The TE-058 tests check that the committed
+// is there (this file excepted). Maps, tilesets and templates are written as Tiled 1.12.2
+// saves them: JSON with auto-formatting on (the qjsonparser `JsonWriter` below) and TSX; tile
+// and image PNGs are generated. The TE-058 tests check that the committed
 // files are exactly what this script writes, and that the README names every BRIEF §7 row and
 // SPEC §13 coverage item.
 //
@@ -49,7 +49,7 @@ function escape(text: string): string {
     return out;
 }
 
-/** A double as `QString::number(value, 'g', 15)` writes it, for the values used here. */
+/** A double as Tiled writes it: 15 significant digits, no trailing zeros (values used here). */
 function numberText(value: number): string {
     if (!Number.isFinite(value)) throw new Error(`Cannot write ${value}.`);
     if (Number.isInteger(value)) return String(value);
@@ -60,14 +60,14 @@ function numberText(value: number): string {
 
 const INDENT = "    ";
 
-/** Orders strings by UTF-16 code unit, as `QVariantMap` keys and the default sort do. */
+/** Orders strings by UTF-16 code unit: the key order of Tiled's JSON and the default sort. */
 function byCodeUnit(a: string, b: string): number {
     return Number(a > b) - Number(a < b);
 }
 
 /**
- * Tiled's `JsonWriter::stringify` with auto-formatting on: 4-space indent, map keys in
- * `QVariantMap` order, arrays wrapped every `wrap` items (0: never).
+ * Tiled's `JsonWriter::stringify` with auto-formatting on: 4-space indent, object keys by
+ * UTF-16 code unit, arrays wrapped every `wrap` items (0: never).
  */
 function stringify(value: Json, depth: number, wrap: number): string {
     const indent = INDENT.repeat(depth);
@@ -1314,8 +1314,8 @@ function projectFile(): string {
             },
         ],
     };
-    // Tiled writes the project with `QJsonDocument::Indented`, which re-saves it whenever the
-    // project opens: like `JSON.stringify` at 4 spaces, except that an empty array spans two
+    // Tiled writes the project file indented and re-saves it whenever the project opens:
+    // like `JSON.stringify` at 4 spaces, except that an empty array spans two
     // lines, its `]` at the key's indent. Writing the same layout keeps a re-save from changing it.
     const lines = JSON.stringify(project, null, 4)
         .split("\n")

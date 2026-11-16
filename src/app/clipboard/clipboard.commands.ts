@@ -44,15 +44,14 @@ import {
 // Cut, Copy, Paste and Delete of cells (SPEC §4.4, DESIGN §5, §10.3; TE-021): Ctrl+X, Ctrl+C,
 // Ctrl+V and Delete in the `global` context, on the active map's tile selection and active tile
 // layer. They take the items planned for them in the Edit menu (commands/planned.commands.ts).
-// As Tiled's `MapDocumentActionHandler` and `MapEditor::paste` (v1.12.2):
+// They behave as Tiled's Edit menu does on a tile layer:
 //
 //   Copy    the selected cells of the active layer, over the selection's bounding box, cells
 //           outside it empty (`clipboard.ts`). It reads only, so a hidden or locked layer is
 //           copied. No history entry.
 //   Cut     Copy, then the selected cells are erased and the selection cleared: one entry,
 //           "Cut". Refused on a locked layer, or one under a locked group, before anything is
-//           copied; a hidden layer is cut (Tiled's `isTileSelectionLocked` looks at the lock
-//           only).
+//           copied; a hidden layer is cut (only the lock refuses it, as in Tiled).
 //   Delete  the selected cells are erased, the selection kept: one entry, "Delete"; refused as
 //           Cut is. Erasing only empty cells records nothing (SPEC §3). While the `markers`
 //           context applies (a marker layer active, markers selected), Delete removes the
@@ -60,10 +59,9 @@ import {
 //           Edit points tool's chosen point, that point (TE-039): one entry, "Edit Marker
 //           Points", refused below 3 points of a polygon or 2 of a polyline.
 //   Paste   the clipboard becomes the current stamp, cut to the bounding box of its non-empty
-//           cells (Tiled's `normalizeTileLayerPositionsAndMapSize`), and the stamp brush is
-//           selected. A tile selection is cleared first, one entry ("Select None"), so the
-//           stamp is not clipped to it. A clipboard of empty cells only leaves the stamp as it
-//           is (Tiled's `setStamp` ignores an empty stamp).
+//           cells, and the stamp brush is selected. A tile selection is cleared first, one
+//           entry ("Select None"), so the stamp is not clipped to it. A clipboard of empty
+//           cells only leaves the stamp as it is (in Tiled too, pasting it changes nothing).
 //
 // Markers (SPEC §8; TE-039), while the `markers` context applies, as Tiled's object clipboard:
 //
@@ -89,8 +87,8 @@ const historyIdle = () => !sessionStore.getState().history.transaction && !toolP
 /**
  * The active map's id and the selected cells inside it when its active layer is a tile layer;
  * null when none is. A selection moved by Resize / Offset Map can reach past the map: Copy,
- * Cut and Delete act on its cells inside the map only (SPEC §4.4; Tiled's `eraseTileLayers`
- * cuts the region to the layer's bounds).
+ * Cut and Delete act on its cells inside the map only (SPEC §4.4; in Tiled too, cells past the
+ * layer's bounds are left alone).
  */
 function selectedTileCells(): { mapId: string; selection: Region } | null {
     const { session } = sessionStore.getState();

@@ -1,13 +1,13 @@
 import type { Stamp } from "../../../core/cells";
 import type { PixelPoint } from "../../../core/raster/line";
 
-// Where the stamp brush puts the current stamp (SPEC §4.2, §4.3), as Tiled's `StampBrush`
-// (`src/tiled/stampbrush.cpp`, checked at v1.12.2) does. Pure: no store.
+// Where the stamp brush puts the current stamp (SPEC §4.2, §4.3), as Tiled's `StampTool`
+// places it. Pure: no store.
 //
 // - A stamp is placed with its anchor, the cell `floor(w/2), floor(h/2)`, on the point.
-// - Its empty cells leave the map as it is (Tiled's `TileLayer::merge` skips empty cells).
-// - Along a line or an ellipse (`drawPreviewLayer`), a placement whose non-empty cells meet
-//   the cells of a placement before it is left out, so the stamps do not overlap.
+// - Its empty cells leave the map as it is, as in Tiled.
+// - Along a line or an ellipse, a placement whose non-empty cells meet the cells of a
+//   placement before it is left out, so the stamps do not overlap.
 
 /** The anchor of a stamp: its centre cell (SPEC §4.2). */
 export function stampAnchor(stamp: Pick<Stamp, "width" | "height">): PixelPoint {
@@ -47,8 +47,8 @@ export function placedCells(stamp: Stamp, point: PixelPoint): StampCell[] {
 
 /**
  * The points of `points` whose placement of `stamp` meets no earlier accepted one, in order
- * (Tiled's `drawPreviewLayer`: a stamp whose non-empty cells intersect the painted region is
- * left out). Repeated points are left out with it.
+ * (as in Tiled, a stamp whose non-empty cells meet the cells already painted is left out).
+ * Repeated points are left out with it.
  */
 export function separatePlacements(stamp: Stamp, points: readonly PixelPoint[]): PixelPoint[] {
     const painted = new Set<string>();

@@ -18,10 +18,10 @@ import {
 } from "../markerToolSupport";
 import type { CreateTarget, ToolView } from "../markerToolSupport";
 
-// The marker create tools (SPEC §8, DESIGN §6, §10.3; TE-038), Tiled's `CreateObjectTool`s
-// (checked at v1.12.2) for rectangles, ellipses, points, polygons and polylines. Each adds to the
-// active layer, when it is a visible, unlocked marker layer; one history entry per marker, which
-// becomes the selection (Tiled's `finishNewMapObject`). Positions snap to the grid of the map's
+// The marker create tools (SPEC §8, DESIGN §6, §10.3; TE-038), as Tiled's insert tools for
+// rectangles, ellipses, points, polygons and polylines. Each adds to the active layer, when it is
+// a visible, unlocked marker layer; one history entry per marker, and the new marker becomes the
+// selection, as in Tiled. Positions snap to the grid of the map's
 // tile size (Snap to Grid; Ctrl inverts it), else to whole pixels; they are in the coordinates
 // of the layer, which its offset and parallax move on screen.
 //

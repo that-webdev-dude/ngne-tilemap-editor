@@ -5,13 +5,13 @@ import { TilesetEditError } from "./errors";
 import { tilesetOf } from "./lookup";
 
 // The animation editor's command (SPEC §6.4; TE-030): the frame list of one tile of a tileset
-// set to a new list, one history entry, as Tiled's `ChangeTileAnimation`. Every edit of the
-// editor (frames added, moved, their durations changed, deleted) is this command with the list
-// after the edit. Its `do` checks the list against FORMAT §2.4 (1024 frames a tile, 65 536 a
-// tileset, durations 1..65 535 ms, frames naming tiles of the tileset) and throws
-// `TilesetEditError` ("animation") before changing anything. The viewport draws every tile as
-// itself (an animated tile shows its own pixels), so `touched` names no tileset: the Tilesets
-// panel's animated mark and the editor follow the history itself.
+// set to a new list, one history entry, as each change in Tiled's Animation Editor is one undo
+// step. Every edit of the editor (frames added, moved, their durations changed, deleted) is this
+// command with the list after the edit. Its `do` checks the list against FORMAT §2.4 (1024
+// frames a tile, 65 536 a tileset, durations 1..65 535 ms, frames naming tiles of the tileset)
+// and throws `TilesetEditError` ("animation") before changing anything. The viewport draws
+// every tile as itself (an animated tile shows its own pixels), so `touched` names no tileset:
+// the Tilesets panel's animated mark and the editor follow the history itself.
 
 /** Labels of the history entries, by the edit. */
 export const ANIMATION_LABELS = {

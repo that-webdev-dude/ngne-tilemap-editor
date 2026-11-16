@@ -101,8 +101,8 @@ export interface DropPlace {
  * - Above a row: right above its layer, in its group.
  * - Below a row: right below its layer, in its group; below the row of an expanded group with
  *   children, at the top of the group, the row shown right below it.
- * - Into a group (the middle third of its row): at the bottom of its children, as Tiled's
- *   `LayerModel::dropMimeData` reparents a layer dropped on a group at index 0 (v1.12.2).
+ * - Into a group (the middle third of its row): at the bottom of its children, as in Tiled,
+ *   where a layer dropped on a group goes below the group's other layers.
  *
  * `expanded` says whether the target group's children are shown.
  */

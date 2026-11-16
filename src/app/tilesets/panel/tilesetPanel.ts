@@ -10,14 +10,14 @@ import { gridLayout, selectionStamp, shownTile, spanGridRect, tileIndex } from "
 import type { GridPoint, GridRect, PanelZoom } from "./tileGrid";
 
 // The state of the Tilesets panel (SPEC §6.2, DESIGN §8.5), outside the project and not
-// undoable, as Tiled's tileset dock keeps it: the tab shown, a selection per tileset, the
-// zoom, the class filter and the tile under the pointer. As Tiled's `TilesetDock` (v1.12.2),
-// a selection made with the pointer becomes the current stamp at every change, one made with
+// undoable, as Tiled's Tilesets view keeps it: the tab shown, a selection per tileset, the
+// zoom, the class filter and the tile under the pointer. As in Tiled's Tilesets view, a
+// selection made with the pointer becomes the current stamp at every change, one made with
 // the keyboard when Enter is pressed (DESIGN §8.5); `[` and `]` move one tab and stop at the
 // ends; adding a tileset does not change the tab shown; removing the shown one shows the tab
-// that took its place, else the last (Qt's `QTabBar::SelectRightTab`). As Tiled's
-// `MapEditor::setStamp`, a new stamp from the panel selects the stamp brush unless the stamp
-// brush, the bucket or the shape fill is the tool (they all use the stamp), and a selection
+// that took its place, else the last. As in Tiled, a new stamp from the panel selects the
+// stamp brush unless the stamp brush, the bucket or the shape fill is the tool (they all use
+// the stamp), and a selection
 // without a tile leaves the stamp as it is. Another project in the window starts the panel
 // afresh.
 
@@ -128,7 +128,7 @@ export interface TilesetPanelActions {
     setHovered(hovered: TilesetPanelState["hovered"]): void;
 }
 
-/** The tools that use the stamp, which a new stamp keeps (Tiled's `MapEditor::setStamp`). */
+/** The tools that use the stamp, which a new stamp keeps (as in Tiled). */
 const STAMP_TOOLS: ReadonlySet<string> = new Set([
     "stamp",
     "bucket",

@@ -6,6 +6,7 @@
 - The overview uploads its chunks to the GPU as raw pixels instead of drawing them into a canvas
   first: building the overview after a map opens and rebuilding it after a layer change take
   less time.
+- The generated `ngne-tilemap.ts` describes `findLayer` and `setCell` by their behaviour.
 
 ## 1.0.0 – 2026-11-13
 

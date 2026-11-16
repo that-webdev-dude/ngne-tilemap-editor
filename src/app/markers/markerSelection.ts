@@ -56,7 +56,7 @@ export function selectedMarkerIds(session: ProjectSession, map: ProjectMap): num
 
 /**
  * Makes `ids` the marker selection of map `mapId` of `store`'s session (no history entry, as
- * Tiled's `setSelectedObjects`); listeners are told when it changed.
+ * selecting objects in Tiled adds none); listeners are told when it changed.
  */
 export function setMarkerSelection(
     ids: readonly number[],

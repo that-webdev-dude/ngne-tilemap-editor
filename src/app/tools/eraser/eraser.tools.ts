@@ -2,13 +2,12 @@ import type { CellRect } from "../../../core/cells";
 import type { PixelPoint } from "../../../core/raster/line";
 import type { PaintStroke, ToolContext, ToolPointer, ToolSpec } from "../types";
 
-// The eraser (SPEC §4.3), Tiled's `Eraser` (`src/tiled/eraser.cpp`, checked at v1.12.2). Its
-// rail slot, key (E) and icon are planned in `planned.tools.ts`; the overlay preview is
-// `eraserPreview.overlay.ts`.
+// The eraser (SPEC §4.3), behaving as Tiled's `EraserTool`. Its rail slot, key (E) and icon
+// are planned in `planned.tools.ts`; the overlay preview is `eraserPreview.overlay.ts`.
 //
 //   press, drag: empties the cell under the pointer and every cell crossed
 //   right drag: empties the rectangle from the pressed cell to the released one, both
-//     included (Tiled's `QRect::span`), at the release
+//     included, at the release
 //   Shift, or the context bar's All layers: on every visible, unlocked tile layer of the map
 //     (under no hidden or locked group) instead of the active one; Shift counts at each sample
 //

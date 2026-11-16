@@ -274,7 +274,7 @@ export interface AddMarkerCommand extends Command {
 
 /**
  * The command that adds `marker` at the top of marker layer `layerId` of map `mapId` (the end of
- * its list, as Tiled's `AddMapObjects`), with the ID `nextMarkerId` gives at its first `do`.
+ * its list, as Tiled adds a new object), with the ID `nextMarkerId` gives at its first `do`.
  * Throws `MarkerEditError` for a shape, name or class out of range, now or at `do`; its `do`
  * throws for a layer that is gone or of another kind, a map full of markers or points, or a
  * map out of marker IDs.
@@ -341,8 +341,8 @@ export interface PasteMarkersCommand extends Command {
 
 /**
  * The command that adds `markers` at the top of marker layer `layerId` of map `mapId`, in their
- * order, one entry labelled `label` (Paste of markers, SPEC §8; Tiled's `AddMapObjects` of
- * pasted objects): each keeps its geometry, name, class and properties and takes the next ID of
+ * order, one entry labelled `label` (Paste of markers, SPEC §8; as Tiled adds pasted
+ * objects): each keeps its geometry, name, class and properties and takes the next ID of
  * `nextMarkerId` at the first `do`; redo puts back the same markers with the same IDs. The
  * marker selection is kept, as `addMarkerCommand` keeps it. Throws `MarkerEditError` for no
  * marker, or a shape, name or class out of range, now or at `do`; its `do` throws for a layer
@@ -419,8 +419,8 @@ interface Removed {
 }
 
 /**
- * The command that deletes markers `ids` of `project`'s map `mapId` from their layers (Tiled's
- * `RemoveMapObjects`); they leave the marker selection. Throws `MarkerEditError` ("missing") for
+ * The command that deletes markers `ids` of `project`'s map `mapId` from their layers (as
+ * Tiled's Delete); they leave the marker selection. Throws `MarkerEditError` ("missing") for
  * no marker or an unknown one, now or at `do`.
  */
 export function deleteMarkersCommand(
@@ -544,7 +544,7 @@ function setGeometry(marker: Marker, shape: Shape): void {
 
 /**
  * The command that moves markers `ids` of `project`'s map `mapId` by `(dx, dy)` map pixels, one
- * entry however many (Tiled's `MoveMapObject`). Throws `MarkerEditError` for an unknown marker or
+ * entry however many (as in Tiled). Throws `MarkerEditError` for an unknown marker or
  * a position past ±1 048 576, now or at `do`.
  */
 export function moveMarkersCommand(
@@ -564,8 +564,8 @@ export function moveMarkersCommand(
 }
 
 /**
- * The command that fits marker `id` of `project`'s map `mapId` to `box` (Tiled's
- * `ResizeMapObject`, and the point scaling of its polygons): a rectangle or ellipse takes the
+ * The command that fits marker `id` of `project`'s map `mapId` to `box` (a resize in Tiled,
+ * which scales the points of a polygon): a rectangle or ellipse takes the
  * box, a polygon or polyline scales its points from its own box to it, a point moves to the
  * box's corner (`fitShape`). Throws `MarkerEditError` for an unknown marker or a box out of
  * range.

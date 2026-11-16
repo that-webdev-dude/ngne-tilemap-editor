@@ -17,7 +17,7 @@ import type { Region } from "../../src/core/model";
 import { tileset } from "./te-006-support";
 
 // TE-021: the cell clipboard (SPEC §4.4). Copy takes the selected cells of the active layer over
-// the selection's bounding box, cells outside the mask empty (Tiled's `copySelection`); the
+// the selection's bounding box, cells outside the mask empty (as in Tiled); the
 // clipboard is the editor's, one for the window, so its content is the same whichever map of
 // the project is active, and Paste on another map makes that content the current stamp.
 
