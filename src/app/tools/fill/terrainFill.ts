@@ -6,11 +6,10 @@ import { TerrainFiller, clockSeed, xorshift32 } from "../../../core/terrain";
 import type { TerrainAnalysis, TerrainCell } from "../../../core/terrain";
 import type { FillPlan } from "./fillPlan";
 
-// The Terrain fill mode of the bucket and the shape fill (SPEC §5.4), as Tiled's terrain fill
-// behaves. The filler is given the region only (no index painted, so the terrain selected for
-// the brush is not used) with corrections off: the region's cells get tiles that match the
-// cells around it, which stay as they are. Cells it cannot resolve are left out of the plan,
-// so they stay as they are too.
+// The Terrain fill mode of the bucket and the shape fill (SPEC §5.4). The region's cells get
+// tiles of the brush's terrain set (the selected terrain itself is not used) that match the
+// cells around the region, which stay as they are. Cells the filler cannot resolve are left
+// out of the plan, so they stay as they are too.
 
 /** Breaks the filler's ties (SPEC §5.2): seeded from the clock once per session. */
 const random = xorshift32(clockSeed());

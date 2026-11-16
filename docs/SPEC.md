@@ -300,26 +300,61 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 
 ### 5.2 Terrain filler
 
-`core/terrain` reproduces the behaviour of Tiled's terrain fill and `WangSet` analysis:
+`core/terrain` chooses the tiles of terrain painting (§5.3) and terrain fills (§5.4). Its
+results match those of Tiled 1.12.2 on the fixture cases below, which define parity (BRIEF D3);
+beyond them, a result satisfies the rules of this section. The set definitions follow libtiled
+(BSD 2-clause; THIRD_PARTY_NOTICES.md).
 
-- Per set, computed when it changes: the candidate list (base tiles only; no generated
-  variants, since transformations are Later), the colour-distance matrix by fixed-point
-  relaxation, the maximum distance, completeness (C⁴ or C⁸ combinations present).
-- Fill: painting constraints per touched cell (`desired`, `mask`), border seeding for fill
-  tools, bounds = region grown by the maximum distance and clipped to the map, row-major
-  resolve with lowest transition penalty, one-step look-ahead unless the set is complete,
-  updating neighbours' constraints, and the corrections pass for the brush.
-- Random choice among equal candidates uses a seeded generator (`xorshift32`); the session
-  seeds it from the clock, tests seed it with a constant. With a fixed seed the result is
-  deterministic.
-- Cells that cannot be resolved are returned as an invalid region; the brush shows them red on
-  the overlay and leaves them unchanged.
+What the filler knows of a set, recomputed when the set changes and reused otherwise:
+
+- Candidates: the set's tiles that have a terrain at one index at least, each with its terrain
+  at every index the set's type uses (base tiles only: no generated variants, since
+  transformations are Later).
+- Distance between two terrains, "no terrain" (0) included: 0 for the same terrain, 1 when one
+  tile has both, otherwise the fewest such steps through other terrains; unreachable when no
+  chain of tiles joins them. The maximum distance is the largest reachable distance, and at
+  least 1.
+- Complete: every combination of the type's indexes over the set's terrains (C⁴ for corner and
+  edge sets, C⁸ for mixed sets) is on some tile.
+
+What a terrain operation is given: a tile layer, a set, and either painted indexes (a terrain
+at an index of a cell, from the brush; painting an index again replaces its terrain) or a
+region (from a fill). The touched cells are the cells with a painted index, or the region's.
+The brush also changes cells around the touched ones where they would no longer match; a fill
+changes cells of its region only.
+
+What every result satisfies:
+
+- Each resolved cell takes a tile of the set (or the empty cell, when terrain 0 is painted)
+  with every painted terrain of that cell at its index, matching each neighbour, as the
+  neighbour is after the change, at the indexes they share.
+- Among the tiles that do, a cell takes one whose other indexes are closest, in terrain
+  distance, to the terrains the cell had there before. A fill does not keep what its region
+  had: the cells just outside the region decide its border indexes, and its other indexes are
+  free.
+- With the brush, a tile with a terrain that cannot be reached from the terrain its index had
+  before is not used. Without the brush (the filler given painted indexes and no adjustment of
+  the cells around), such a tile is used when nothing closer fits, as farther than any
+  reachable terrain.
+- With the brush, cells around the touched ones change only where they would no longer match
+  their neighbours, and as far out as needed (within the bounds) for the map to match again.
+- Nothing changes outside the bounds: the bounding rectangle of the touched cells, grown on
+  every side by the maximum distance and clipped to the map.
+- Cells that cannot be given a matching tile are invalid: returned as a region, left
+  unchanged and never in the patch; the brush shows them red on the overlay. A complete set
+  leaves no invalid cell, with the brush or a fill.
+- Ties between equally close tiles are broken by a seeded generator (`xorshift32`); the
+  session seeds it from the clock, tests seed it with a constant. With a fixed seed the result
+  is deterministic.
+
+Fixtures and parity:
+
 - Fixtures (`tests/fixtures/terrain/`): corner, edge and mixed sets, complete and incomplete,
   each with exactly one tile per terrain combination; each with scripted strokes (brush,
   full-tile, fill mode) that constrain every index of every cell the filler resolves. Only then
-  does one candidate have the lowest penalty, so Tiled's random choice never applies and its
-  result is deterministic; an index with no wish (inside a fill region wider than the seeded
-  border) leaves equal candidates.
+  is one tile closest for every cell, so the random choice never decides and Tiled's result is
+  deterministic; an index with no wish (inside a fill region wider than its border) leaves
+  equally close tiles.
   - Automated: fast-check properties (every resolved cell matches its constraints; a complete
     set leaves no invalid cell; nothing outside the bounds of §5.2 changes) and golden results,
     each traced by hand against `wangfiller.cpp` when written and committed as TMJ.
@@ -335,17 +370,18 @@ Tiled 1.12.2's terrain brush:
 - The set and terrain are the Terrains panel's selection for the active tileset (§5.1), as
   Tiled's brush follows its terrain sets view; the context bar and right-click sampling change
   that selection. "Erase terrain" is the brush's own choice, dropped when a terrain is selected
-  again. The painting mode is the terrain's effective type in its set (Tiled's
-  `effectiveTypeForColor`: in a mixed set a terrain used only at corners paints corners).
+  again. The painting mode is the set's type, except in a mixed set, where a terrain used only
+  at corners paints corners and one used only at edges paints edges; in full tile mode such a
+  terrain is painted at those indexes only.
 - The painted index is picked from the cursor within the cell: corner sets round to the nearest
   corner; edge sets pick the edge by the cell's diagonals; mixed sets use a 3 × 3 grid of the
-  cell (`WangId::indexByGrid`: sides = edges, corners = corners, the centre paints nothing).
+  cell (sides = edges, corners = corners, the centre paints nothing).
 - Drag paints continuously: each new target is joined to the one before by a line without
   diagonal steps (corner and edge modes; in full tile mode with them), and in edge mode the
   edge follows the direction of the drag (moving right paints the left edge of the cell
   entered). Shift: a line from the last painted point; the first Shift+click after the tool is
   selected only sets the start (Tiled); Shift pressed during a drag ends its
-  painting, as Tiled's brush then turns to its line behaviour. Lines of corner and edge modes
+  painting, as in Tiled. Lines of corner and edge modes
   take no diagonal steps; a line in full tile mode may, and a line of a mixed set is painted in
   full tile mode, as Tiled does. **Full tile mode** (context bar
   toggle, Ctrl inverts it while held) sets every index of the cell and the shared indexes of its
@@ -353,18 +389,19 @@ Tiled 1.12.2's terrain brush:
   `(width − x − 1, height − y − 1)` with the terrain index turned by 180°.
 - Right click without modifiers samples the terrain under the cursor into the context bar (an
   empty cell or a tile outside the set samples "erase terrain").
-- One stroke is one entry; the filler runs with corrections on at each step. The tile selection
+- One stroke is one entry. Each step paints on the layer as the steps before it left it, and
+  the cells around the painted ones change where they would no longer match (§5.2). Painting
+  terrain 0 is a wish like any other. The tile selection
   does not clip the brush (as in Tiled; §4.1 lists the tools it clips). Between strokes the
   overlay shows what a press at the cursor would leave invalid (Tiled's brush preview).
 
 ### 5.4 Terrain fill mode
 
 Bucket fill and shape fill in Terrain mode fill their region with tiles of the terrain set
-selected for the terrain brush, as Tiled's terrain fill does: the filler given the region only
-(no index painted, so the selected terrain is not used), border seeding from outside
-neighbours, corrections off. Only the border
-has to match the cells around the region; inside it the filler chooses freely among equal
-candidates (§5.2).
+selected for the terrain brush; the selected terrain itself is not used. Cells outside the
+region do not change. The region's cells next to cells outside it match those cells at the
+indexes they share; inside it the filler chooses freely among equally close tiles (§5.2), as
+Tiled's manual describes. Cells it cannot resolve stay as they are.
 
 ## 6. Tilesets
 
@@ -1055,7 +1092,7 @@ hover preview the p95 is 28.9 / 25.5 ms.
 Terrain brush row (`te-044-terrain-brush`): the reference map's first tileset given the 256
 corner combinations of 4 terrains as one terrain set, the tile layer under the parallax layer
 filled with terrain 1; one stroke of terrain 2 at 100%, 200 drag moves to a new cell each (each
-paints a new vertex and runs the filler with corrections), timed from the event to the first
+paints a new vertex and adjusts the cells around it, §5.2), timed from the event to the first
 frame submitted after it; live tier.
 
 Save and open rows (`te-047-save`, `te-047-open`): the reference project (ENGINE §6's reference

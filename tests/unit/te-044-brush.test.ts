@@ -331,8 +331,8 @@ describe("TE-044 brush steps", () => {
 
     it("paints terrain 0 as a wish like any other (erase)", () => {
         // No tile of a corner set has an empty corner and "no terrain" is unreachable from its
-        // terrains, so with corrections on the four cells around the vertex cannot be resolved
-        // (as in Tiled, unreachable candidates are discarded): reported and unchanged.
+        // terrains, so the brush finds no tile for the four cells around the vertex (SPEC §5.2):
+        // they are reported and left unchanged.
         const analysis = analysisOf("corner-complete");
         const map = readMap("corner-complete.tmj");
         const before = [...map.cells];
