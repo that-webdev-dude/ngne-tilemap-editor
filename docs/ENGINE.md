@@ -177,8 +177,8 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   is timed from the map's first frame at 100% to the tier ready; its longest task is the longest
   gap of a message loop, and the build's own slices are recorded beside it. The rebuild follows
   an opacity change at overview, where the editor draws the change in the live tier until the
-  chunks are composited again (§4). Owner, 2026-11-12: the initial build's longest task (the
-  first `updateTexture`, §7) is accepted for v1.
+  chunks are composited again (§4). Owner: the initial build's longest task (§7) is accepted
+  for v1.0.0 (2026-11-12) and, at 28.6 / 23.2 ms, for v1.0.1 (2026-11-15).
 - Tab switch: `te-031-tab-switch-{fit,100}`. Two open tabs each hold the reference map; a switch
   is timed from the call that shows the other map to the return of the first frame submitted
   after it, 40 switches 1 s apart after 4 warm-up switches. At the fitted view the first frame is
@@ -189,8 +189,8 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   the viewport's submits, that frame included, as the `onSubmittedWorkDone()` promises of its
   queue still pending; the preview's queue is counted apart. Scenarios: the pan above (5 s), the
   same pan at overview in the chunk tier, and the paint stroke above. In the pan the main thread
-  spends a median 8.3 / 8.8 ms per frame callback. Owner, 2026-11-12: the pan's 4 is accepted for
-  v1; the NGNE API of §7 follows v1.
+  spends a median 8.3 / 8.8 ms per frame callback. Owner: the pan's 4 / 4 is accepted for v1.0.0
+  (2026-11-12) and for v1.0.1 (2026-11-15); the NGNE API of §7 follows v1.
 - Idle: `te-064-idle-{live,overview}`, the sprite editor's method (RULES 1). The reference map
   at 100% in its middle and fitted (View › Fit Map); after the chunk tier has no work left and 2 s
   more, two windows of 10 s with nothing done: the pointer outside the viewport, then resting on

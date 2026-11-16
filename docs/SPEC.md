@@ -1067,7 +1067,10 @@ until the user accepts the report.
 
 The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes its row's
 benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
-Feature budgets ENGINE does not list, measured the same way on the reference map:
+Two ENGINE §6 rows are over budget and accepted by the owner for v1.0.1 (2026-11-15): the
+initial overview build after a map opens (longest task 28.6 / 23.2 ms on Intel UHD / RTX 4060,
+against 16 ms) and GPU frames in flight during the pan at the live-tier threshold (4 / 4,
+against 2). Feature budgets ENGINE does not list, measured the same way on the reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
@@ -1126,8 +1129,8 @@ marker layer of 2,000 markers (rectangles, ellipses, points, polygons of 6 point
 all named) that stays in view through the pan; the overlay is redrawn in the same callback after
 the viewport's submit. The overlay copies each marker layer from a picture painted once per
 history step, zoom and colour, so its redraw takes 0.2 ms; the rest is the live tier's own frame
-(submit p95 8.8 / 9.7 ms). Owner, 2026-11-12: the pan rows at the live-tier threshold, this one
-and ENGINE §6's, are accepted for v1.
+(submit p95 8.8 / 9.7 ms). This row and ENGINE §6's pan time rows at the live-tier threshold are
+within their 10 ms budget.
 
 Stamp preview row (`te-017-stamp-preview`): the map's overview built first. The task max is the
 longest gap of a message loop, so one gap can hold a task and the frame drawn after it. The

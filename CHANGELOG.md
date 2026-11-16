@@ -1,18 +1,48 @@
 # Changelog
 
-## Unreleased
+## 1.0.1 – 2026-11-16
 
 - Uses `@ngne/core` 0.3.1.
 - The overview uploads its chunks to the GPU as raw pixels instead of drawing them into a canvas
   first: building the overview after a map opens and rebuilding it after a layer change take
   less time.
-- The generated `ngne-tilemap.ts` describes `findLayer` and `setCell` by their behaviour.
+- The web app manifest has an `id` of its own (`/ngne-tilemap-editor/`), so the editor installs
+  as an app beside the NGNE Sprite Editor served from the same site. An app installed from 1.0.0
+  keeps working and receives updates, but Chrome now treats the editor as a different app:
+  uninstall it and install the editor again to receive later changes to its name, icons and file
+  handling, and to avoid a second copy.
 - Terrain painting and terrain fill are rewritten from the specification. On complete terrain
   sets the results are unchanged; on incomplete sets the brush can adjust the cells around a
   stroke differently, and further out, than before. The Tiled-captured test cases give the same
   results as before.
-- Open Source Licences also lists UZIP.js, react-merge-refs and smooth-ui, whose code reaches
-  the app inside bundled packages.
+- The generated `ngne-tilemap.ts` describes `findLayer` and `setCell` by their behaviour; its
+  code is restructured with the same API and behaviour.
+- Files the editor writes name `ngne-tilemap-editor 1.0.1` as their generator, so the first
+  export after the update rewrites the JSON files and `ngne-tilemap.ts` of an export folder once.
+- Open Source Licences: the third-party notices give the version of each upstream and every file
+  that uses it, and also list UZIP.js, react-merge-refs and smooth-ui, whose code reaches the app
+  inside bundled packages.
+
+### Known limitations
+
+- Desktop Chrome or Edge with WebGPU only; other browsers are unverified. The viewport is not
+  operable by screen reader.
+- Performance rows over budget on reference hardware, accepted by the owner for 1.0.1
+  ([ENGINE.md §6](docs/ENGINE.md#6-budgets-and-spikes), [SPEC.md §14](docs/SPEC.md#14-performance)):
+    - the initial overview build after a map opens has one task of 28.6 / 23.2 ms (Intel UHD /
+      RTX 4060) against 16 ms; its cause is not identified;
+    - a pan at the live-tier threshold keeps up to 4 GPU frames in flight against 2;
+      `@ngne/core` 0.3.1 gives the editor no way to wait for submitted work.
+- Paste of a full 256 × 256 layer runs as one main-thread task of 18.5–22.0 ms; no budget
+  covers it.
+- Markers and collision shapes are drawn above all tile layers, ignoring layer order and opacity
+  (`@ngne/core` 0.3.1 has no line or polygon primitives).
+- Maps beyond 65,536 cells per layer, 16 layers or 2,000 markers open with a warning and are not
+  held to the budgets. Orthogonal maps only.
+- Not in 1.0.1: layer tint and blend modes, terrain and tile probabilities, automapping, tile
+  objects, TMX import and TMJ export, map PNG export, marker rotation.
+- The engine gaps the editor works around are listed with their measured costs in
+  [ENGINE.md §7](docs/ENGINE.md#7-engine-gaps).
 
 ## 1.0.0 – 2026-11-13
 
