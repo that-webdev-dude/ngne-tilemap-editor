@@ -1,10 +1,12 @@
 import { describe, expect, it } from "vitest";
 import { lineCells } from "../../src/core/raster/line";
 
-// TE-016: `lineCells` gives the cells Tiled v1.12.2 joins a drag with: the classic Bresenham
-// line. The expected cells below are worked by hand from that algorithm: walk the major axis
-// from the end with the smaller coordinate, start the error at half the major length, step the
-// minor axis when the error drops below zero, and reverse the result of a reversed line.
+// TE-016: `lineCells` gives the cells Tiled 1.12.2 joins two points with. The expected cells
+// are captured from Tiled 1.12.2 on 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`):
+// each line drawn with the stamp brush's Shift+click on an empty map (translated onto the map,
+// for the case outside it) and the map saved as JSON; the manhattan lines are the Sand corners
+// of the terrain brush's Shift+click lines on a corner set. A line has one cell per step along
+// its longer axis, so its cells listed from `from` give the order.
 
 type Cells = [number, number][];
 
@@ -49,7 +51,7 @@ const TABLE: { name: string; from: [number, number]; to: [number, number]; expec
         ],
     },
     {
-        // Zingl's all-octant form steps diagonally first here, to (1, 1); Tiled does not.
+        // Tiled steps along x first here, not diagonally to (1, 1).
         name: "shallow, the tie Tiled breaks along x",
         from: [0, 0],
         to: [2, 1],
@@ -96,7 +98,7 @@ const TABLE: { name: string; from: [number, number]; to: [number, number]; expec
         ],
     },
     {
-        // The cells of the forward line, last first: not a line drawn from the other end.
+        // The cells of the forward line, last first.
         name: "reversed shallow",
         from: [2, 1],
         to: [0, 0],

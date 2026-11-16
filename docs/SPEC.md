@@ -357,10 +357,8 @@ Fixtures and parity:
   equally close tiles.
   - Automated: fast-check properties (every resolved cell matches its constraints; a complete
     set leaves no invalid cell; nothing outside the bounds of §5.2 changes) and golden results,
-    each traced by hand against `wangfiller.cpp` when written and committed as TMJ.
-  - Once, at the terrain ticket: the owner paints the scripted strokes in Tiled 1.12.2 on the
-    fixture maps and confirms the goldens cell for cell (manual check card); a mismatch is a
-    bug in the editor.
+    captured from Tiled 1.12.2 (each stroke made in Tiled on its fixture map and the result
+    saved) and committed as TMJ; a mismatch is a bug in the editor.
 
 ### 5.3 Terrain brush
 

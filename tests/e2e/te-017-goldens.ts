@@ -1,9 +1,9 @@
-// Golden cells of the stamp brush's Shift line and Ctrl+Shift ellipse (TE-017, SPEC §4.3): what
-// Tiled v1.12.2 paints for the same points (a Bresenham line or Zingl's ellipse of anchor
-// points, each stamp left out when it would overlap one placed before it, empty stamp cells
-// leaving the map as it is), fixed data computed independently of the editor's code. Each cell
-// is "x,y:tile", row by row, on the 40 × 30 test map; the stamp is painted once at the first
-// point, as the free click that makes it the last painted point.
+// Golden cells of the stamp brush's Shift line and Ctrl+Shift ellipse (TE-017, SPEC §4.3),
+// captured from Tiled 1.12.2 on 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`): the
+// same points and stamps on the same 40 × 30 map of 16 px tiles, saved as JSON. Each cell is
+// "x,y:tile", row by row; the stamp is painted once at the first point by a plain click. In
+// Tiled the first Shift or Ctrl+Shift click after that click sets the start point and paints
+// nothing, so each capture clicked the first point again with the modifier before the others.
 
 export const GOLDEN: Record<string, readonly string[]> = {
     "line-1x1": [

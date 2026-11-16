@@ -2,13 +2,19 @@ import { describe, expect, it } from "vitest";
 import { ellipseOutlineCells } from "../../src/core/raster/ellipse";
 import { separatePlacements, stampAnchor, stampOrigin } from "../../src/app/tools/stamp/placement";
 
-// TE-017: the ellipse outline of the stamp brush's Ctrl+Shift+click (Zingl's `plotEllipse`, as
-// Tiled v1.12.2 draws it) and the stamp placement along a line or an ellipse. The expected
-// points are fixed data computed independently of the editor's code: points in the order the
-// four quadrants are drawn, repeats included.
+// TE-017: the ellipse outline of the stamp brush's Ctrl+Shift+click and the stamp placement
+// along a line or an ellipse. The expected outline cells are captured from Tiled 1.12.2 on
+// 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`): each ellipse drawn with the stamp
+// brush on its own layer and the map saved as JSON, as cells relative to the centre. A saved
+// map shows which cells are painted, not their order or repeats, so these tests compare sets;
+// the TE-017 stamp goldens cover the order of the stamps.
 
 const points = (cx: number, cy: number, a: number, b: number) =>
     ellipseOutlineCells({ x: cx, y: cy }, a, b).map((p) => [p.x, p.y]);
+
+/** The distinct cells of `cells`, sorted. */
+const cellSet = (cells: readonly (readonly number[])[]) =>
+    [...new Set(cells.map(([x, y]) => `${x},${y}`))].sort();
 
 describe("ellipseOutlineCells", () => {
     it("is the centre four times for radii 0, 0", () => {
@@ -20,82 +26,73 @@ describe("ellipseOutlineCells", () => {
         ]);
     });
 
-    it("gives Tiled's points for a 1 × 1 circle", () => {
-        expect(points(0, 0, 1, 1)).toEqual([
-            [1, 0],
-            [-1, 0],
-            [-1, 0],
-            [1, 0],
-            [0, 1],
-            [0, 1],
-            [0, -1],
-            [0, -1],
-        ]);
+    it("gives Tiled's cells for a 1 × 1 circle", () => {
+        expect(cellSet(points(0, 0, 1, 1))).toEqual(
+            cellSet([
+                [0, -1],
+                [-1, 0],
+                [1, 0],
+                [0, 1],
+            ]),
+        );
     });
 
-    it("gives Tiled's points for flat ellipses", () => {
-        expect(points(0, 0, 3, 1)).toEqual([
-            [3, 0],
-            [-3, 0],
-            [-3, 0],
-            [3, 0],
-            [2, 1],
-            [-2, 1],
-            [-2, -1],
-            [2, -1],
-            [1, 1],
-            [-1, 1],
-            [-1, -1],
-            [1, -1],
-            [0, 1],
-            [0, 1],
-            [0, -1],
-            [0, -1],
-        ]);
-        // Radius x 1 stops the quadrant loop early; the closing loop adds the tips.
-        expect(points(0, 0, 1, 7)).toEqual([
-            [1, 0],
-            [-1, 0],
-            [-1, 0],
-            [1, 0],
-            [1, 1],
-            [-1, 1],
-            [-1, -1],
-            [1, -1],
-            [1, 2],
-            [-1, 2],
-            [-1, -2],
-            [1, -2],
-            [1, 3],
-            [-1, 3],
-            [-1, -3],
-            [1, -3],
-            [1, 4],
-            [-1, 4],
-            [-1, -4],
-            [1, -4],
-            [0, 5],
-            [0, 5],
-            [0, -5],
-            [0, -5],
-            [0, 6],
-            [0, -6],
-            [0, 7],
-            [0, -7],
-        ]);
-        // Radius x 0: the centre, then the tips alone.
-        expect(points(0, 0, 0, 3)).toEqual([
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 0],
-            [0, 1],
-            [0, -1],
-            [0, 2],
-            [0, -2],
-            [0, 3],
-            [0, -3],
-        ]);
+    it("gives Tiled's cells for flat ellipses", () => {
+        expect(cellSet(points(0, 0, 3, 1))).toEqual(
+            cellSet([
+                [-2, -1],
+                [-1, -1],
+                [0, -1],
+                [1, -1],
+                [2, -1],
+                [-3, 0],
+                [3, 0],
+                [-2, 1],
+                [-1, 1],
+                [0, 1],
+                [1, 1],
+                [2, 1],
+            ]),
+        );
+        expect(cellSet(points(0, 0, 1, 7))).toEqual(
+            cellSet([
+                [0, -7],
+                [0, -6],
+                [0, -5],
+                [-1, -4],
+                [1, -4],
+                [-1, -3],
+                [1, -3],
+                [-1, -2],
+                [1, -2],
+                [-1, -1],
+                [1, -1],
+                [-1, 0],
+                [1, 0],
+                [-1, 1],
+                [1, 1],
+                [-1, 2],
+                [1, 2],
+                [-1, 3],
+                [1, 3],
+                [-1, 4],
+                [1, 4],
+                [0, 5],
+                [0, 6],
+                [0, 7],
+            ]),
+        );
+        expect(cellSet(points(0, 0, 0, 3))).toEqual(
+            cellSet([
+                [0, -3],
+                [0, -2],
+                [0, -1],
+                [0, 0],
+                [0, 1],
+                [0, 2],
+                [0, 3],
+            ]),
+        );
     });
 
     it("is symmetric about its centre", () => {

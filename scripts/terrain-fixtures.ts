@@ -3,7 +3,7 @@ import { fileURLToPath } from "node:url";
 import { terrainFixtureFiles } from "../tests/unit/support/terrainFixtures.ts";
 
 // TE-042: writes the terrain fixtures of SPEC §5.2 into tests/fixtures/terrain/, replacing
-// what is there. The definitions, the hand-traced goldens and the writers are in
+// what is there. The definitions, the captured goldens and the writers are in
 // tests/unit/support/terrainFixtures.ts; the TE-042 test checks the committed files against
 // them byte for byte.
 //

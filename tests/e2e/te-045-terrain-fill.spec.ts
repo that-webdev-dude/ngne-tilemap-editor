@@ -2,15 +2,16 @@ import { readFileSync } from "node:fs";
 import { test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import { floodRegion, regionBounds } from "../../src/core/fill";
-import { TERRAIN_STROKES } from "../unit/support/terrainFixtures";
+import { SHAPE_FILL_CAPTURES, TERRAIN_STROKES } from "../unit/support/terrainFixtures";
 import { expect, openEditor } from "./te-014-support";
 
 // TE-045: the Terrain fill mode of the bucket and the shape fill (SPEC §5.4) on the TE-042
 // fixtures, loaded through the TE-044 page module (8 × 8 maps of 24 px cells at 2×). Every
 // fill stroke of the fixtures, clicked with the bucket and dragged with the rectangle fill over
-// the same region, gives its golden cell for cell with one history entry per step, and undo
-// restores the map. The fill mode is kept per tool across tool switches; the shape fill's
-// Rectangle and Ellipse share it (Tiled's one `ShapeFillTool`).
+// the same region, gives what Tiled 1.12.2 gave for the same actions (captured results in
+// `terrainFixtures.ts`) cell for cell with one history entry per step, and undo restores the
+// map. The fill mode is kept per tool across tool switches; the shape fill's Rectangle and
+// Ellipse share it, as in Tiled.
 
 const PAGE_MODULE = "/tests/e2e/harness/te-044-page.ts";
 const FIXTURES = new URL("../fixtures/terrain/", import.meta.url);
@@ -100,7 +101,7 @@ test.describe("TE-045 terrain fill mode", () => {
             expect(await gids(page)).toEqual(original);
         });
 
-        test(`${stroke.fixture} fill with the shape fill gives its golden; undo restores`, async ({
+        test(`${stroke.fixture} fill with the shape fill gives its capture; undo restores`, async ({
             page,
         }) => {
             await open(page, stroke.fixture, stroke.map);
@@ -120,13 +121,13 @@ test.describe("TE-045 terrain fill mode", () => {
                     .poll(() => history(page))
                     .toEqual({ undo: entries, label: "Rectangle Fill" });
             }
-            expect(await gids(page)).toEqual(tmj(stroke.golden).data);
+            expect(await gids(page)).toEqual(SHAPE_FILL_CAPTURES.rectangle[stroke.fixture]);
             for (let i = 0; i < entries; i++) expect(await call(page, "undo")).toBe(true);
             expect(await gids(page)).toEqual(original);
         });
     }
 
-    test("the ellipse fill in Terrain mode gives the golden", async ({ page }) => {
+    test("the ellipse fill in Terrain mode gives the capture", async ({ page }) => {
         // Single-cell regions: the ellipse of a 1 × 1 drag is its cell.
         const stroke = FILL_STROKES.find((each) => each.fixture === "edge-complete")!;
         await open(page, stroke.fixture, stroke.map);
@@ -142,7 +143,7 @@ test.describe("TE-045 terrain fill mode", () => {
                 .poll(() => history(page))
                 .toEqual({ undo: entries, label: "Ellipse Fill" });
         }
-        expect(await gids(page)).toEqual(tmj(stroke.golden).data);
+        expect(await gids(page)).toEqual(SHAPE_FILL_CAPTURES.edgeCompleteEllipse);
     });
 
     test("the tile selection clips what a terrain shape fill writes", async ({ page }) => {
@@ -163,6 +164,7 @@ test.describe("TE-045 terrain fill mode", () => {
             return Math.floor(i / 8) === 3 && x >= 1 && x <= 3 ? golden[i]! : gid;
         });
         expect(expected).not.toEqual(original);
+        expect(expected).toEqual(SHAPE_FILL_CAPTURES.cornerCompleteClipped);
         expect(await gids(page)).toEqual(expected);
     });
 

@@ -1,16 +1,14 @@
 import { encode } from "fast-png";
 
 // TE-042: the terrain fixtures of SPEC §5.2 (`tests/fixtures/terrain/`) and everything that
-// writes them: the tileset PNGs, the TSJ tilesets and the TMJ maps as Tiled 1.12.2 writes them
-// (`MapToVariantConverter` into the JSON plugin's `JsonWriter`, auto-formatted, CSV layer data,
-// map format version "1.11"), the scripted strokes and the README that lists them for the
-// owner's check in Tiled.
+// writes them: the tileset PNGs, the TSJ tilesets and the TMJ maps in the layout Tiled 1.12.2
+// saves (auto-formatted JSON, layer data in rows, map format version "1.11"), the scripted
+// strokes and the README that lists them.
 //
-// Every set has exactly one tile per terrain combination it holds. Each golden is a picture of
-// the terrain at every vertex and edge of the map after its stroke, traced by hand against
-// Tiled's `wangfiller.cpp` (v1.12.2) and written here; the tiles of a golden are the tiles whose
-// combination its picture gives each cell. `scripts/terrain-fixtures.ts` writes the files; the
-// TE-042 test checks that the committed files are exactly what `terrainFixtureFiles` returns.
+// Every set has exactly one tile per terrain combination it holds. Each golden is the map Tiled
+// 1.12.2 saved after its stroke (captured results, below). `scripts/terrain-fixtures.ts` writes
+// the files; the TE-042 test checks that the committed files are exactly what
+// `terrainFixtureFiles` returns.
 //
 // Node runs this file directly through `scripts/terrain-fixtures.ts`, so it imports nothing
 // relative and uses only erasable TypeScript syntax.
@@ -136,59 +134,284 @@ export function fixtureWangIds(fixture: TerrainFixture): number[][] {
     return out;
 }
 
-// --- Pictures -------------------------------------------------------------------------------
+// --- Captured results -----------------------------------------------------------------------
 //
-// A picture is `2 × MAP_SIZE + 1` lines of as many characters: vertex (x, y) at line 2y,
-// column 2x; the top edge of cell (x, y) at line 2y, column 2x + 1; its left edge at line
-// 2y + 1, column 2x; line 2y + 1, column 2x + 1 is the cell itself (a space). A letter of
-// `TERRAINS` is that terrain; a space is "no terrain" (vertices of an edge set, edges of a
-// corner set).
+// Captured from Tiled 1.12.2 on 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`): each
+// stroke of `TERRAIN_STROKES` made in Tiled on its start map, and the map saved as JSON. An
+// array is the saved layer's GIDs (firstgid 1), row by row. The shape fills of TE-045 were
+// captured the same way on the fill maps: `<set>-rectangle` is the Rectangle Fill dragged over
+// each fill region, `edge-complete-ellipse` the Ellipse Fill on each edge-complete fill cell,
+// `corner-complete-clipped` the Rectangle Fill dragged over row 3 from cell (1,3) to (6,3) with
+// cells (1,3)–(3,3) selected.
 
-const GRASS_CORNER = [..."G G G G G G G G G"];
-const BLANK = " ".repeat(17);
-const GRASS_EDGE_ROW = " G G G G G G G G ";
-const GRASS_EDGE_COLUMN = "G G G G G G G G G";
-const GRASS_MIXED_ROW = "GGGGGGGGGGGGGGGGG";
+// prettier-ignore
+const CAPTURED: Readonly<Record<string, readonly number[]>> = {
+    "corner-complete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 5, 1, 1, 1,
+        1, 1, 2, 10, 9, 1, 1, 1,
+        1, 1, 1, 1, 3, 5, 1, 1,
+        1, 1, 1, 1, 2, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-complete-full-tile": [
+        1, 1, 1, 1, 3, 7, 5, 1,
+        1, 1, 1, 1, 4, 16, 13, 1,
+        1, 1, 1, 1, 2, 10, 9, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 3, 7, 5, 1, 1, 1, 1,
+        1, 4, 16, 13, 1, 1, 1, 1,
+        1, 2, 10, 9, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-complete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 5, 1, 1, 1,
+        1, 1, 2, 10, 9, 1, 1, 1,
+        1, 1, 1, 1, 3, 5, 1, 1,
+        1, 1, 1, 1, 2, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-complete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 5, 1, 1, 1,
+        1, 1, 2, 10, 9, 1, 1, 1,
+        1, 1, 1, 1, 3, 5, 1, 1,
+        1, 1, 1, 1, 2, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-incomplete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 7, 7, 5, 1,
+        1, 1, 4, 18, 22, 20, 13, 1,
+        1, 1, 4, 17, 25, 24, 13, 1,
+        1, 1, 2, 10, 10, 10, 9, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-incomplete-full-tile": [
+        3, 7, 7, 7, 5, 1, 1, 1,
+        4, 18, 22, 20, 13, 1, 1, 1,
+        4, 19, 31, 28, 13, 1, 1, 1,
+        4, 17, 25, 24, 15, 7, 7, 5,
+        2, 10, 10, 12, 18, 22, 20, 13,
+        1, 1, 1, 4, 19, 31, 28, 13,
+        1, 1, 1, 4, 17, 25, 24, 13,
+        1, 1, 1, 2, 10, 10, 10, 9,
+    ],
+    "corner-incomplete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 7, 7, 5, 1,
+        1, 1, 4, 18, 22, 20, 13, 1,
+        1, 1, 4, 17, 25, 24, 13, 1,
+        1, 1, 2, 10, 10, 10, 9, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-incomplete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 7, 7, 5, 1,
+        1, 1, 4, 18, 22, 20, 13, 1,
+        1, 1, 4, 17, 25, 24, 13, 1,
+        1, 1, 2, 10, 10, 10, 9, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-complete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 1, 4, 9, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 3, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-complete-full-tile": [
+        1, 1, 1, 1, 1, 5, 1, 1,
+        1, 1, 1, 1, 3, 16, 9, 1,
+        1, 1, 1, 1, 1, 2, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 5, 1, 1, 1, 1, 1,
+        1, 3, 16, 9, 1, 1, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-complete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 1, 4, 9, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 3, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-complete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 1, 4, 9, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 3, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-incomplete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 3, 20, 13, 1, 1, 1,
+        1, 1, 3, 19, 24, 9, 1, 1,
+        1, 1, 1, 2, 2, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-incomplete-full-tile": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 5, 1, 1, 1, 1, 1,
+        1, 7, 20, 13, 1, 1, 1, 1,
+        3, 18, 31, 24, 9, 1, 1, 1,
+        1, 4, 17, 10, 1, 1, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 1,
+    ],
+    "edge-incomplete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 3, 20, 13, 1, 1, 1,
+        1, 1, 3, 19, 24, 9, 1, 1,
+        1, 1, 1, 2, 2, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "edge-incomplete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 3, 20, 13, 1, 1, 1,
+        1, 1, 3, 19, 24, 9, 1, 1,
+        1, 1, 1, 2, 2, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-complete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 33, 1, 1, 1, 1,
+        1, 1, 3, 129, 1, 1, 1, 1,
+        1, 1, 1, 1, 5, 65, 1, 1,
+        1, 1, 17, 1, 1, 1, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-complete-full-tile": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 9, 57, 33, 1, 1,
+        1, 1, 1, 15, 256, 225, 1, 1,
+        1, 1, 1, 3, 132, 129, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-complete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 33, 1, 1, 1, 1,
+        1, 1, 3, 129, 1, 1, 1, 1,
+        1, 1, 1, 1, 5, 65, 1, 1,
+        1, 1, 17, 1, 1, 1, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-complete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 33, 1, 1, 1, 1,
+        1, 1, 3, 129, 1, 1, 1, 1,
+        1, 1, 1, 1, 5, 65, 1, 1,
+        1, 1, 17, 1, 1, 1, 1, 1,
+        1, 1, 2, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-incomplete-brush": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 57, 57, 33, 1, 1,
+        1, 1, 15, 264, 288, 225, 1, 1,
+        9, 57, 47, 258, 384, 225, 1, 1,
+        15, 272, 227, 132, 132, 129, 1, 1,
+        15, 257, 225, 1, 1, 1, 1, 1,
+        3, 132, 129, 1, 1, 1, 1, 1,
+    ],
+    "mixed-incomplete-full-tile": [
+        9, 57, 57, 57, 33, 1, 1, 1,
+        15, 264, 312, 288, 225, 1, 1, 1,
+        15, 270, 511, 480, 225, 1, 1, 1,
+        15, 258, 387, 384, 225, 1, 1, 1,
+        3, 132, 132, 132, 129, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "mixed-incomplete-fill": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 57, 57, 33, 1, 1,
+        1, 1, 15, 264, 288, 225, 1, 1,
+        9, 57, 47, 258, 384, 225, 1, 1,
+        15, 272, 227, 132, 132, 129, 1, 1,
+        15, 257, 225, 1, 1, 1, 1, 1,
+        3, 132, 129, 1, 1, 1, 1, 1,
+    ],
+    "mixed-incomplete-rectangle": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 9, 57, 57, 33, 1, 1,
+        1, 1, 15, 264, 288, 225, 1, 1,
+        9, 57, 47, 258, 384, 225, 1, 1,
+        15, 272, 227, 132, 132, 129, 1, 1,
+        15, 257, 225, 1, 1, 1, 1, 1,
+        3, 132, 129, 1, 1, 1, 1, 1,
+    ],
+    "edge-complete-ellipse": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 5, 1, 1, 1, 1,
+        1, 1, 1, 4, 9, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 3, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+    "corner-complete-clipped": [
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 3, 7, 5, 1, 1, 1,
+        1, 1, 2, 10, 0, 0, 0, 1,
+        1, 1, 1, 1, 3, 5, 1, 1,
+        1, 1, 1, 1, 2, 9, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+        1, 1, 1, 1, 1, 1, 1, 1,
+    ],
+};
 
-/** A picture of Grass everywhere, with `lines` replacing the lines at their keys. */
-function picture(type: TerrainFixtureType, lines: Record<number, string> = {}): string[] {
-    return Array.from({ length: 2 * MAP_SIZE + 1 }, (_, line) => {
-        const replaced = lines[line];
-        if (replaced !== undefined) {
-            if (replaced.length !== 2 * MAP_SIZE + 1) {
-                throw new Error(`Picture line ${line} is ${replaced.length} characters long.`);
-            }
-            return replaced;
-        }
-        const even = line % 2 === 0;
-        if (type === "corner") return even ? GRASS_CORNER.join("") : BLANK;
-        if (type === "edge") return even ? GRASS_EDGE_ROW : GRASS_EDGE_COLUMN;
-        return even ? GRASS_MIXED_ROW : GRASS_EDGE_COLUMN;
-    });
-}
-
-function terrainOf(letter: string): number {
-    if (letter === " ") return 0;
-    const index = TERRAINS.findIndex((terrain) => terrain.letter === letter);
-    if (index < 0) throw new Error(`Unknown terrain letter "${letter}".`);
-    return index + 1;
-}
-
-/** The WangId a picture gives cell (x, y). */
-function pictureWangId(lines: readonly string[], x: number, y: number): number[] {
-    const at = (line: number, column: number) => terrainOf(lines[line]![column]!);
-    const top = 2 * y;
-    const left = 2 * x;
-    return [
-        at(top, left + 1),
-        at(top, left + 2),
-        at(top + 1, left + 2),
-        at(top + 2, left + 2),
-        at(top + 2, left + 1),
-        at(top + 2, left),
-        at(top + 1, left),
-        at(top, left),
-    ];
+function capture(key: string): readonly number[] {
+    const data = CAPTURED[key];
+    if (!data) throw new Error(`No capture "${key}".`);
+    return data;
 }
 
 // --- Maps and strokes -----------------------------------------------------------------------
@@ -197,14 +420,13 @@ export interface TerrainMap {
     /** File name in the fixture folder. */
     readonly file: string;
     readonly fixture: string;
-    readonly picture: readonly string[];
-    /** Cells left empty, whatever the picture gives them. */
-    readonly erased: readonly (readonly [number, number])[];
+    /** GIDs (firstgid 1), row by row. */
+    readonly data: readonly number[];
 }
 
 export type TerrainSide = "top" | "right" | "bottom" | "left";
 
-/** One click in Tiled: one run of the filler on the map as the steps before left it. */
+/** One click in Tiled, made on the map as the steps before left it. */
 export type TerrainStep =
     /** Terrain brush at vertex (x, y), the top-left corner of cell (x, y). */
     | { readonly kind: "corner"; readonly x: number; readonly y: number; readonly terrain: number }
@@ -227,61 +449,38 @@ export interface TerrainStroke {
     /** The map the stroke starts from. */
     readonly map: string;
     readonly steps: readonly TerrainStep[];
-    /** The map the stroke must leave. */
+    /** The map the stroke must leave: its capture. */
     readonly golden: string;
-    /** How the golden was traced, for the README. */
-    readonly trace: string;
 }
 
 const SAND = 2;
 const WATER = 3;
 
-const grass = (fixture: string, type: TerrainFixtureType): TerrainMap => ({
+/** Tile 0 of every set is all Grass (combination 0), so an all-Grass map is GID 1 throughout. */
+const grass = (fixture: string): TerrainMap => ({
     file: `${fixture}.tmj`,
     fixture,
-    picture: picture(type),
-    erased: [],
+    data: new Array<number>(MAP_SIZE * MAP_SIZE).fill(1),
 });
 
-const golden = (fixture: string, stroke: string, lines: readonly string[]): TerrainMap => ({
-    file: `${fixture}-${stroke}.golden.tmj`,
+const goldenFile = (fixture: string, stroke: TerrainStroke["name"]) =>
+    `${fixture}-${stroke}.golden.tmj`;
+
+const golden = (fixture: string, stroke: TerrainStroke["name"]): TerrainMap => ({
+    file: goldenFile(fixture, stroke),
     fixture,
-    picture: lines,
-    erased: [],
+    data: capture(`${fixture}-${stroke}`),
 });
 
-const damaged = (from: TerrainMap, erased: readonly (readonly [number, number])[]): TerrainMap => ({
+/** The fill stroke's start map: a captured brush result with the fill regions erased. */
+const erased = (from: TerrainMap, cells: readonly (readonly [number, number])[]): TerrainMap => ({
     file: `${from.fixture}-fill.tmj`,
     fixture: from.fixture,
-    picture: from.picture,
-    erased,
+    data: from.data.map((gid, i) => (cells.some(([x, y]) => y * MAP_SIZE + x === i) ? 0 : gid)),
 });
 
-// Corner complete: Grass and Sand, all 16 combinations. Every combination exists, so each
-// cell the filler resolves takes the tile of exactly the corners it is given: the result is
-// the picture of the painted vertices.
-
-const cornerCompleteBrush = golden(
-    "corner-complete",
-    "brush",
-    picture("corner", {
-        6: "G G G S S G G G G",
-        10: "G G G G G S G G G",
-    }),
-);
-
-const cornerCompleteFullTile = golden(
-    "corner-complete",
-    "full-tile",
-    picture("corner", {
-        2: "G G G G G S S G G",
-        4: "G G G G G S S G G",
-        10: "G G S S G G G G G",
-        12: "G G S S G G G G G",
-    }),
-);
-
-const cornerCompleteFill = damaged(cornerCompleteBrush, [
+const cornerCompleteBrush = golden("corner-complete", "brush");
+const cornerCompleteFill = erased(cornerCompleteBrush, [
     [1, 3],
     [2, 3],
     [3, 3],
@@ -289,35 +488,8 @@ const cornerCompleteFill = damaged(cornerCompleteBrush, [
     [5, 3],
     [6, 3],
 ]);
-
-// Corner incomplete: Grass–Sand and Sand–Water, 31 combinations; Grass and Water are two
-// transitions apart (maximum distance 2), so Water painted into Grass is ringed with Sand.
-
-const cornerIncompleteBrush = golden(
-    "corner-incomplete",
-    "brush",
-    picture("corner", {
-        6: "G G G S S S S G G",
-        8: "G G G S W W S G G",
-        10: "G G G S S S S G G",
-    }),
-);
-
-const cornerIncompleteFullTile = golden(
-    "corner-incomplete",
-    "full-tile",
-    picture("corner", {
-        2: "G S S S S G G G G",
-        4: "G S W W S G G G G",
-        6: "G S W W S G G G G",
-        8: "G S S S S S S S G",
-        10: "G G G G S W W S G",
-        12: "G G G G S W W S G",
-        14: "G G G G S S S S G",
-    }),
-);
-
-const cornerIncompleteFill = damaged(cornerIncompleteBrush, [
+const cornerIncompleteBrush = golden("corner-incomplete", "brush");
+const cornerIncompleteFill = erased(cornerIncompleteBrush, [
     [1, 4],
     [2, 4],
     [3, 4],
@@ -325,161 +497,72 @@ const cornerIncompleteFill = damaged(cornerIncompleteBrush, [
     [5, 4],
     [6, 4],
 ]);
-
-// Edge complete: Grass and Sand, all 16 combinations.
-
-const edgeCompleteBrush = golden(
-    "edge-complete",
-    "brush",
-    picture("edge", {
-        6: " G G G S G G G G ",
-        7: "G G G G S G G G G",
-        11: "G G G G G S G G G",
-    }),
-);
-
-const edgeCompleteFullTile = golden(
-    "edge-complete",
-    "full-tile",
-    picture("edge", {
-        2: " G G G G G S G G ",
-        3: "G G G G G S S G G",
-        4: " G G G G G S G G ",
-        10: " G G S G G G G G ",
-        11: "G G S S G G G G G",
-        12: " G G S G G G G G ",
-    }),
-);
-
-const edgeCompleteFill = damaged(edgeCompleteBrush, [
+const edgeCompleteBrush = golden("edge-complete", "brush");
+const edgeCompleteFill = erased(edgeCompleteBrush, [
     [3, 3],
     [5, 5],
 ]);
-
-// Edge incomplete: Grass–Sand and Sand–Water, 31 combinations.
-
-const edgeIncompleteBrush = golden(
-    "edge-incomplete",
-    "brush",
-    picture("edge", {
-        4: " G G G S G G G G ",
-        5: "G G G S S G G G G",
-        6: " G G G W S G G G ",
-        7: "G G G S W S G G G",
-        8: " G G G S S G G G ",
-    }),
-);
-
-const edgeIncompleteFullTile = golden(
-    "edge-incomplete",
-    "full-tile",
-    picture("edge", {
-        8: " G G S G G G G G ",
-        9: "G G S S G G G G G",
-        10: " G S W S G G G G ",
-        11: "G S W W S G G G G",
-        12: " G S W S G G G G ",
-        13: "G G S S G G G G G",
-        14: " G G S G G G G G ",
-    }),
-);
-
-const edgeIncompleteFill = damaged(edgeIncompleteBrush, [
+const edgeIncompleteBrush = golden("edge-incomplete", "brush");
+const edgeIncompleteFill = erased(edgeIncompleteBrush, [
     [3, 2],
     [4, 3],
 ]);
-
-// Mixed complete: Grass and Sand at all eight indexes, 256 combinations.
-
-const mixedCompleteBrush = golden(
-    "mixed-complete",
-    "brush",
-    picture("mixed", {
-        6: "GGGGGGSGGGGGGGGGG",
-        9: "G G G G G S G G G",
-        12: "GGGGGSGGGGGGGGGGG",
-    }),
-);
-
-const mixedCompleteFullTile = golden(
-    "mixed-complete",
-    "full-tile",
-    picture("mixed", {
-        4: "GGGGGGGGSSSGGGGGG",
-        5: "G G G G S S G G G",
-        6: "GGGGGGGGSSSGGGGGG",
-    }),
-);
-
-const mixedCompleteFill = damaged(mixedCompleteBrush, [
+const mixedCompleteBrush = golden("mixed-complete", "brush");
+const mixedCompleteFill = erased(mixedCompleteBrush, [
     [3, 3],
     [5, 4],
 ]);
-
-// Mixed incomplete: Grass–Sand and Sand–Water at all eight indexes, 511 combinations.
-
-const mixedIncompleteBrush = golden(
-    "mixed-incomplete",
-    "brush",
-    picture("mixed", {
-        6: "GGGGGGSSSSSGGGGGG",
-        7: "G G G S S S G G G",
-        8: "GGGGGGSSWSSGGGGGG",
-        9: "G G G S S S G G G",
-        10: "GGSSSGSSSSSGGGGGG",
-        11: "G S S G G G G G G",
-        12: "GGSWSGGGGGGGGGGGG",
-        13: "G S S G G G G G G",
-        14: "GGSSSGGGGGGGGGGGG",
-    }),
-);
-
-const mixedIncompleteFullTile = golden(
-    "mixed-incomplete",
-    "full-tile",
-    picture("mixed", {
-        2: "GGSSSSSSSGGGGGGGG",
-        3: "G S S S S G G G G",
-        4: "GGSSWWWSSGGGGGGGG",
-        5: "G S W W S G G G G",
-        6: "GGSSWWWSSGGGGGGGG",
-        7: "G S S S S G G G G",
-        8: "GGSSSSSSSGGGGGGGG",
-    }),
-);
-
-const mixedIncompleteFill = damaged(mixedIncompleteBrush, [
+const mixedIncompleteBrush = golden("mixed-incomplete", "brush");
+const mixedIncompleteFill = erased(mixedIncompleteBrush, [
     [3, 3],
     [1, 5],
 ]);
 
 /** Every map written, in file order of the README. */
 export const TERRAIN_MAPS: readonly TerrainMap[] = [
-    grass("corner-complete", "corner"),
+    grass("corner-complete"),
     cornerCompleteFill,
     cornerCompleteBrush,
-    cornerCompleteFullTile,
-    grass("corner-incomplete", "corner"),
+    golden("corner-complete", "full-tile"),
+    golden("corner-complete", "fill"),
+    grass("corner-incomplete"),
     cornerIncompleteFill,
     cornerIncompleteBrush,
-    cornerIncompleteFullTile,
-    grass("edge-complete", "edge"),
+    golden("corner-incomplete", "full-tile"),
+    golden("corner-incomplete", "fill"),
+    grass("edge-complete"),
     edgeCompleteFill,
     edgeCompleteBrush,
-    edgeCompleteFullTile,
-    grass("edge-incomplete", "edge"),
+    golden("edge-complete", "full-tile"),
+    golden("edge-complete", "fill"),
+    grass("edge-incomplete"),
     edgeIncompleteFill,
     edgeIncompleteBrush,
-    edgeIncompleteFullTile,
-    grass("mixed-complete", "mixed"),
+    golden("edge-incomplete", "full-tile"),
+    golden("edge-incomplete", "fill"),
+    grass("mixed-complete"),
     mixedCompleteFill,
     mixedCompleteBrush,
-    mixedCompleteFullTile,
-    grass("mixed-incomplete", "mixed"),
+    golden("mixed-complete", "full-tile"),
+    golden("mixed-complete", "fill"),
+    grass("mixed-incomplete"),
     mixedIncompleteFill,
     mixedIncompleteBrush,
-    mixedIncompleteFullTile,
+    golden("mixed-incomplete", "full-tile"),
+    golden("mixed-incomplete", "fill"),
 ];
+
+/** Captured shape-fill results on the fill maps (TE-045): GIDs, row by row. */
+export const SHAPE_FILL_CAPTURES = {
+    /** Rectangle Fill over each fill region, by set. */
+    rectangle: Object.fromEntries(
+        TERRAIN_FIXTURES.map((fixture) => [fixture.name, capture(`${fixture.name}-rectangle`)]),
+    ) as Readonly<Record<string, readonly number[]>>,
+    /** Ellipse Fill on each edge-complete fill cell. */
+    edgeCompleteEllipse: capture("edge-complete-ellipse"),
+    /** Rectangle Fill over row 3 of corner-complete with cells (1,3)–(3,3) selected. */
+    cornerCompleteClipped: capture("corner-complete-clipped"),
+};
 
 export const TERRAIN_STROKES: readonly TerrainStroke[] = [
     {
@@ -492,11 +575,6 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "corner", x: 5, y: 5, terrain: SAND },
         ],
         golden: cornerCompleteBrush.file,
-        trace:
-            "Each click makes Sand a hard constraint at one corner of the four cells around the " +
-            "vertex; their other corners want what they had. The tile with exactly those " +
-            "corners exists (penalty 0, the only one), and it agrees with every neighbour, so " +
-            "no correction runs.",
     },
     {
         fixture: "corner-complete",
@@ -506,22 +584,14 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "tile", x: 2, y: 5, terrain: SAND },
             { kind: "tile", x: 5, y: 1, terrain: SAND },
         ],
-        golden: cornerCompleteFullTile.file,
-        trace:
-            "Full tile mode fixes the four corners of the cell and the corners its eight " +
-            "neighbours share with it; every one of the nine cells then has an exact tile.",
+        golden: goldenFile("corner-complete", "full-tile"),
     },
     {
         fixture: "corner-complete",
         name: "fill",
         map: cornerCompleteFill.file,
         steps: [{ kind: "fill", x: 1, y: 3 }],
-        golden: cornerCompleteBrush.file,
-        trace:
-            "The region is the empty strip of row 3. Border seeding gives each of its cells " +
-            "its top corners from row 2 and its bottom corners from row 4 (the strip is one " +
-            "cell high, so every corner is seeded); the exact tile is the only one at penalty " +
-            "0, and the look-ahead (corner sets are never complete to the filler) keeps it.",
+        golden: goldenFile("corner-complete", "fill"),
     },
     {
         fixture: "corner-incomplete",
@@ -532,14 +602,6 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "corner", x: 5, y: 4, terrain: WATER },
         ],
         golden: cornerIncompleteBrush.file,
-        trace:
-            "Water at a corner leaves only Sand–Water tiles; the three corners that want Grass " +
-            "cost 1 each as Sand and 2 as Water, so each of the four cells takes Sand there: " +
-            "the only tile at the lowest penalty (3 for the first cell; the later ones share " +
-            "corners already fixed by it, so 2, 2 and 1). Corrections then reach the edge " +
-            "neighbours whose " +
-            "shared corners became Sand; each takes its exact Grass–Sand tile, and so on to " +
-            "the diagonal cells. The second click turns vertex (5,4) to Water the same way.",
     },
     {
         fixture: "corner-incomplete",
@@ -549,24 +611,14 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "tile", x: 2, y: 2, terrain: WATER },
             { kind: "tile", x: 5, y: 5, terrain: WATER },
         ],
-        golden: cornerIncompleteFullTile.file,
-        trace:
-            "The cell's four corners are Water; its neighbours keep their shared corners Water " +
-            "and take Sand at the corners that wanted Grass (the cheapest, and the only one). " +
-            "Corrections give the next ring its exact Grass–Sand tiles. In the second click " +
-            "cell (4,4) wants Sand, Grass, Grass beside its Water corner and takes Sand at all " +
-            "three (penalty 2, the only one).",
+        golden: goldenFile("corner-incomplete", "full-tile"),
     },
     {
         fixture: "corner-incomplete",
         name: "fill",
         map: cornerIncompleteFill.file,
         steps: [{ kind: "fill", x: 1, y: 4 }],
-        golden: cornerIncompleteBrush.file,
-        trace:
-            "As for the complete set: the one-cell-high strip of row 4 has every corner seeded " +
-            "from rows 3 and 5, its exact tiles exist, and the look-ahead finds a tile for " +
-            "every neighbour.",
+        golden: goldenFile("corner-incomplete", "fill"),
     },
     {
         fixture: "edge-complete",
@@ -578,9 +630,6 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "edge", x: 5, y: 5, side: "left", terrain: SAND },
         ],
         golden: edgeCompleteBrush.file,
-        trace:
-            "Each click fixes one edge in the two cells that share it; their other edges want " +
-            "what they had and the exact tile exists, so nothing else changes.",
     },
     {
         fixture: "edge-complete",
@@ -590,11 +639,7 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "tile", x: 2, y: 5, terrain: SAND },
             { kind: "tile", x: 5, y: 1, terrain: SAND },
         ],
-        golden: edgeCompleteFullTile.file,
-        trace:
-            "Full tile mode on an edge set fixes the cell's four edges and the edge each side " +
-            "neighbour shares with it (diagonal cells are not touched); all five cells have " +
-            "exact tiles.",
+        golden: goldenFile("edge-complete", "full-tile"),
     },
     {
         fixture: "edge-complete",
@@ -604,12 +649,7 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "fill", x: 3, y: 3 },
             { kind: "fill", x: 5, y: 5 },
         ],
-        golden: edgeCompleteBrush.file,
-        trace:
-            "Each region is one empty cell, so border seeding gives all four of its edges from " +
-            "its neighbours and its exact tile is the only one at penalty 0. (A region two " +
-            "cells wide would leave the edge between them without a wish, and Tiled would " +
-            "pick at random.)",
+        golden: goldenFile("edge-complete", "fill"),
     },
     {
         fixture: "edge-incomplete",
@@ -620,23 +660,13 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "edge", x: 3, y: 3, side: "right", terrain: WATER },
         ],
         golden: edgeIncompleteBrush.file,
-        trace:
-            "Water on an edge leaves only Sand–Water tiles for the two cells sharing it; their " +
-            "other edges want Grass and take Sand (penalty 3, the only one). Corrections give " +
-            "the cells beyond those edges their exact Grass–Sand tiles. The second click " +
-            "turns the right edge of cell (3,3) to Water: cell (3,3) has its exact tile, cell " +
-            "(4,3) takes Sand at its three other edges, and its neighbours are corrected.",
     },
     {
         fixture: "edge-incomplete",
         name: "full-tile",
         map: "edge-incomplete.tmj",
         steps: [{ kind: "tile", x: 2, y: 5, terrain: WATER }],
-        golden: edgeIncompleteFullTile.file,
-        trace:
-            "The cell's four edges are Water; each side neighbour keeps its shared edge Water " +
-            "and takes Sand at its three other edges (the only tile at penalty 3); corrections " +
-            "give the cells beyond them their exact Grass–Sand tiles.",
+        golden: goldenFile("edge-incomplete", "full-tile"),
     },
     {
         fixture: "edge-incomplete",
@@ -646,12 +676,7 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "fill", x: 3, y: 2 },
             { kind: "fill", x: 4, y: 3 },
         ],
-        golden: edgeIncompleteBrush.file,
-        trace:
-            "One empty cell per click, so all four edges are seeded and the exact tile is the " +
-            "only one at penalty 0; the look-ahead finds a tile for every neighbour (the " +
-            "other empty cell only meets the filled one at a corner, which an edge set " +
-            "ignores).",
+        golden: goldenFile("edge-incomplete", "fill"),
     },
     {
         fixture: "mixed-complete",
@@ -663,21 +688,13 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "edge", x: 2, y: 6, side: "top", terrain: SAND },
         ],
         golden: mixedCompleteBrush.file,
-        trace:
-            "Both terrains are used at corners and edges, so the brush paints corners and " +
-            "edges (`PaintEdgeAndCorner`). Every combination exists: each painted index lands " +
-            "in exact tiles and nothing else changes.",
     },
     {
         fixture: "mixed-complete",
         name: "full-tile",
         map: "mixed-complete.tmj",
         steps: [{ kind: "tile", x: 4, y: 2, terrain: SAND }],
-        golden: mixedCompleteFullTile.file,
-        trace:
-            "All eight indexes of the cell, plus the edge and two corners each side neighbour " +
-            "shares with it and the corner each diagonal neighbour shares; exact tiles for all " +
-            "nine cells.",
+        golden: goldenFile("mixed-complete", "full-tile"),
     },
     {
         fixture: "mixed-complete",
@@ -687,11 +704,7 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "fill", x: 3, y: 3 },
             { kind: "fill", x: 5, y: 4 },
         ],
-        golden: mixedCompleteBrush.file,
-        trace:
-            "One empty cell per click: its edges are seeded from the side neighbours and its " +
-            "corners from the diagonal ones, so its exact tile is the only one at penalty 0. " +
-            "The set is complete to the filler, so there is no look-ahead.",
+        golden: goldenFile("mixed-complete", "fill"),
     },
     {
         fixture: "mixed-incomplete",
@@ -702,25 +715,13 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "edge", x: 1, y: 6, side: "top", terrain: WATER },
         ],
         golden: mixedIncompleteBrush.file,
-        trace:
-            "Water at one index leaves only Sand–Water tiles, and the seven indexes that want " +
-            "Grass take Sand, the only tile at the lowest penalty, in the four cells around " +
-            "the vertex (7 for the first; 5, 5 and 3 for the others, whose shared indexes the " +
-            "first fixed) and then in the two cells sharing the edge (7, then 5). " +
-            "Corrections give the ring around " +
-            "them their exact Grass–Sand tiles; cell (2,5) keeps the Sand corner it got from " +
-            "the first click.",
     },
     {
         fixture: "mixed-incomplete",
         name: "full-tile",
         map: "mixed-incomplete.tmj",
         steps: [{ kind: "tile", x: 2, y: 2, terrain: WATER }],
-        golden: mixedIncompleteFullTile.file,
-        trace:
-            "All eight indexes of the cell are Water and its eight neighbours keep the indexes " +
-            "they share with it Water; every other index of theirs takes Sand (the only tile " +
-            "at the lowest penalty). Corrections give the next ring its exact Grass–Sand tiles.",
+        golden: goldenFile("mixed-incomplete", "full-tile"),
     },
     {
         fixture: "mixed-incomplete",
@@ -730,29 +731,24 @@ export const TERRAIN_STROKES: readonly TerrainStroke[] = [
             { kind: "fill", x: 3, y: 3 },
             { kind: "fill", x: 1, y: 5 },
         ],
-        golden: mixedIncompleteBrush.file,
-        trace:
-            "One empty cell per click, every index seeded from its eight neighbours (cell " +
-            "(3,3) takes Water at its bottom-right corner from cell (4,4)); the exact tile is " +
-            "the only one at penalty 0 and the look-ahead keeps it.",
+        golden: goldenFile("mixed-incomplete", "fill"),
     },
 ];
 
-// --- Tiled's JSON ---------------------------------------------------------------------------
+// --- JSON text ------------------------------------------------------------------------------
 
 type Json = number | string | boolean | readonly Json[] | { readonly [key: string]: Json };
 
 const INDENT = "    ";
 
 /**
- * Tiled's `escape` (`src/plugins/json/qjsonparser/json.cpp`), one UTF-16 unit at a time. That
- * file's licence allows use without limitation; its notice is in THIRD_PARTY_NOTICES.md.
+ * Ported from qjsonparser's `escape` (`json.cpp`), one UTF-16 unit at a time. Its licence
+ * allows use without limitation; its notice is in THIRD_PARTY_NOTICES.md.
  */
 function escape(text: string): string {
     let out = "";
-    for (let i = 0; i < text.length; i++) {
-        // One UTF-16 unit: a lone surrogate's code point is the unit itself.
-        const char = text[i]!;
+    // `split("")` gives UTF-16 units: a lone surrogate's code point is the unit itself.
+    for (const char of text.split("")) {
         const code = char.codePointAt(0)!;
         if (char === "\b") out += String.raw`\b`;
         else if (char === "\f") out += String.raw`\f`;
@@ -769,8 +765,9 @@ function escape(text: string): string {
 }
 
 /**
- * Tiled's `JsonWriter::stringify` with auto-formatting on: 4-space indent, map keys in
- * `QVariantMap` order, arrays wrapped every `wrap` items (0: never). Integers only.
+ * Ported from qjsonparser's `JsonWriter::stringify` (`json.cpp`; notice in
+ * THIRD_PARTY_NOTICES.md) with auto-formatting on, as in the files Tiled 1.12.2 saves: 4-space
+ * indent, object keys sorted, arrays wrapped every `wrap` items (0: never). Integers only.
  */
 function stringify(value: Json, depth: number, wrap: number): string {
     const indent = INDENT.repeat(depth);
@@ -787,7 +784,7 @@ function stringify(value: Json, depth: number, wrap: number): string {
         const map = value as { readonly [key: string]: Json };
         let out = depth !== 0 ? `\n${indent}{\n` : "{";
         Object.keys(map)
-            // By UTF-16 code unit, as `QVariantMap` orders its keys.
+            // By UTF-16 code unit.
             .sort((a, b) => Number(a > b) - Number(a < b))
             .forEach((key, i) => {
                 if (i !== 0) out += ",\n";
@@ -876,32 +873,6 @@ function mapJson(fixture: string, data: readonly number[]): string {
         0,
         MAP_SIZE,
     );
-}
-
-/** The GIDs of a map (firstgid 1), row by row. */
-export function mapData(map: TerrainMap): number[] {
-    const fixture = TERRAIN_FIXTURES.find((candidate) => candidate.name === map.fixture)!;
-    const tileOf = new Map(fixtureWangIds(fixture).map((wangId, tile) => [wangId.join(), tile]));
-    const indexes = new Set(typeIndexes(fixture.type));
-    const data: number[] = [];
-    for (let y = 0; y < MAP_SIZE; y++) {
-        for (let x = 0; x < MAP_SIZE; x++) {
-            if (map.erased.some(([ex, ey]) => ex === x && ey === y)) {
-                data.push(0);
-                continue;
-            }
-            const wangId = pictureWangId(map.picture, x, y);
-            if (wangId.some((color, index) => indexes.has(index) === (color === 0))) {
-                throw new Error(`${map.file}: cell ${x},${y} has terrain where its type has none.`);
-            }
-            const tile = tileOf.get(wangId.join());
-            if (tile === undefined) {
-                throw new Error(`${map.file}: no tile for cell ${x},${y} (${wangId.join()}).`);
-            }
-            data.push(tile + 1);
-        }
-    }
-    return data;
 }
 
 // --- Tileset images -------------------------------------------------------------------------
@@ -1006,8 +977,11 @@ function readme(): string {
         "Fixtures of the terrain filler (SPEC §5.2): corner, edge and mixed terrain sets, complete and",
         "incomplete, each with exactly one tile per terrain combination it holds, and the strokes the",
         "TE-042 test (`tests/unit/te-042-goldens.test.ts`) paints on them. Every file here is written by",
-        "`node scripts/terrain-fixtures.ts` (definitions in `tests/unit/support/terrainFixtures.ts`) as",
-        "Tiled 1.12.2 writes it; the test checks that the script reproduces them byte for byte.",
+        "`node scripts/terrain-fixtures.ts` (definitions in `tests/unit/support/terrainFixtures.ts`) in",
+        "the layout Tiled 1.12.2 saves; the test checks that the script reproduces them byte for byte.",
+        "",
+        "Every golden was captured from Tiled 1.12.2 on 2026-11-16: the stroke's steps made in Tiled on",
+        "its start map, and the result saved as JSON.",
         "",
         "## Conventions",
         "",
@@ -1016,21 +990,15 @@ function readme(): string {
         "- Terrains: 1 Grass (green), 2 Sand (yellow), 3 Water (blue). A tile is drawn in its",
         "  terrains: corner tiles by quadrant, edge tiles by the triangles between the diagonals,",
         "  mixed tiles in a 3 × 3 grid (corners and edges; the middle is dark grey).",
-        "- `<set>.tmj` is all Grass; `<set>-fill.tmj` is a golden with some cells erased, the regions",
-        "  the fill stroke fills; `<set>-<stroke>.golden.tmj` is the expected result of a stroke.",
-        "- Each step is one click: one run of the filler on the map the steps before it left.",
-        "- The strokes keep Tiled's random choice out: every index of every cell the filler resolves",
-        "  is constrained, so one candidate has the lowest penalty. Fill regions are empty cells",
-        "  enclosed by tiles, one cell high for corner sets and one cell for edge and mixed sets (a",
-        "  wider region leaves the edges inside it without a wish). The test makes a tie fail.",
+        "- `<set>.tmj` is all Grass; `<set>-fill.tmj` is the brush golden with some cells erased, the",
+        "  regions the fill stroke fills; `<set>-<stroke>.golden.tmj` is the captured result of a stroke.",
+        "- Each step is one click, made on the map the steps before it left. Fill regions are empty",
+        "  cells enclosed by tiles: one cell high for corner sets, one cell for edge and mixed sets.",
         "",
-        "## Owner check in Tiled 1.12.2",
+        "## Making a stroke in Tiled 1.12.2",
         "",
-        "For each stroke below: open its map (reopen it without saving between strokes), select the",
-        "terrain set in the Terrain Sets view and, for brush and full-tile strokes, the terrain each",
-        "step names; use the named tool and make each step in order. Then open the golden alongside:",
-        "every cell must show the same tile. Reply `terrain pass`, or",
-        "`terrain fail: <set> <stroke> <cell x,y>`.",
+        "Open the stroke's map, select the terrain set in the Terrain Sets view and, for brush and",
+        "full-tile strokes, the terrain each step names; use the named tool and make each step in order.",
         "",
         "- Keep the Terrain Brush's **Fill Full Tiles** toolbar toggle off: Ctrl inverts it, so with",
         "  it on, brush strokes would paint full tiles and full-tile strokes single indexes.",
@@ -1061,7 +1029,6 @@ function readme(): string {
                 `- Map: \`${stroke.map}\`. Tool: ${TOOL_TEXT[stroke.name]}.`,
                 ...stroke.steps.map((step, i) => `- Step ${i + 1}: ${stepText(step)}.`),
                 `- Golden: \`${stroke.golden}\`.`,
-                `- Trace: ${stroke.trace}`,
             );
         }
     }
@@ -1079,7 +1046,7 @@ export function terrainFixtureFiles(): Map<string, Uint8Array> {
         files.set(`${fixture.name}.png`, tilesetPng(fixture, wangIds));
         files.set(`${fixture.name}.tsj`, text(tilesetJson(fixture, wangIds)));
     }
-    for (const map of TERRAIN_MAPS) files.set(map.file, text(mapJson(map.fixture, mapData(map))));
+    for (const map of TERRAIN_MAPS) files.set(map.file, text(mapJson(map.fixture, map.data)));
     files.set("README.md", text(readme()));
     return files;
 }
