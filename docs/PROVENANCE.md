@@ -575,6 +575,19 @@ Earlier rewrites without a recorded separation:
   comments, tests and specs; a tracked reference doc written from that source; test data traced
   from it; a terrain filler that kept the step structure of a port; notices without versions or
   pointers; none of the records of this document. The fixes followed from `6c7d40a`.
+- 2026-11-16: full audit at `4e0fdf9`: every tracked file that names an upstream, the tests,
+  fixtures, scripts and docs, the built output and a generated export, by four area reviewers;
+  each finding was checked by a separate verifier. They read the permissive upstream files at
+  their registered versions (libtiled's three files, qjsonparser, Zingl, Aseprite's
+  `blend_funcs.cpp`, pixman); Tiled's editor source was not read, so comparison against it was not
+  checked, and the rules marked "to be confirmed by running Tiled" were not run in Tiled. Three
+  items held the release: a comment in `src/core/terrain/wangId.ts`, its libtiled "Used in" line
+  in the notices and a test title in `tests/unit/te-044-brush.test.ts` used terms of the earlier
+  terrain filler that followed Tiled's source. They were reworded in `c64f5c2`; a further reviewer
+  found nothing left in `wangId.ts`, and the notices line and test title were not re-checked
+  (owner, 2026-11-16). Tiled's tool class names left in comments and SPEC §8 are an owner
+  decision (Owner decisions). The other findings did not hold the release and were left to the
+  owner; the classes of "Tiled source named or read" were not changed.
 
 ## Owner decisions
 
@@ -610,3 +623,6 @@ Earlier rewrites without a recorded separation:
   `validateAtlas.ts` (Code taken in part from the sprite editor) are the owner's own code and
   ship under MIT-0 with the rest of the runtime, whose MIT-0 header (BRIEF, Export) names no
   copyright holder.
+- 2026-11-16: the names of Tiled's tool classes left in comments and in SPEC §8 (`StampTool`,
+  `BucketFillTool`, `EraserTool`, `ShapeFillTool`, `WangTool`, `ObjectSelectionTool`,
+  `EditPolygonTool`, `TileSelectionTool`, `MagicWandTool`, `SelectSameTileTool`) are kept.
