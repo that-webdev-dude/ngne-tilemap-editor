@@ -461,3 +461,10 @@ BSD files of `src/libtiled` or qjsonparser (THIRD_PARTY_NOTICES.md) were kept.
 | `tests/unit/te-041-filler.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
 | `tests/unit/te-044-brush.test.ts` | Names, and a claim that the source was read at tag `v1.12.2` | Pending |
 | `tests/unit/te-060-tilesets.test.ts` | Names | Pending |
+
+## Owner decisions
+
+- 2026-11-16: the bundled `@ngne/core` 0.3.1 contains six modules adapted from cluster-renderer,
+  the owner's own earlier repository (owner's statement, 2026-11-15), used in the engine under
+  its MIT licence. The origin, commit and files are recorded in the engine repository's
+  `docs/provenance.md` at `c6e08ab`.
