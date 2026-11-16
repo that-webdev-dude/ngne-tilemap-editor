@@ -102,8 +102,9 @@ qjsonparser is listed with its notices in [third-party notices](THIRD_PARTY_NOTI
 build writes `licences.txt` beside `index.html`: this project's licence, those notices, the
 licence of every npm package the build bundles and the licence of rolldown, the bundler. The
 app shows it in a dialog (View → Open Source Licences…), offline too. The build fails when a
-bundled package is not a runtime dependency, has no licence text or has a licence other than
-MIT, ISC, 0BSD, BSD-2-Clause, BSD-3-Clause or Apache-2.0. This project is not affiliated with
+bundled package is not a runtime dependency, has no licence text, has a licence other than
+MIT, ISC, 0BSD, BSD-2-Clause, BSD-3-Clause or Apache-2.0, or ships a licence file that is not
+the licence it declares, and when the file would not list exactly the packages in the build. This project is not affiliated with
 or endorsed by Tiled or Thorbjørn Lindeijer, nor by Aseprite or Igara Studio S.A.
 
 The `ngne-tilemap.ts` that an export writes is under

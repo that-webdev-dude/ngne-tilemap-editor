@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { matchesGlob } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { ICONS, ICONS_DIR, drawIcon, iconPng, pwaColours } from "../../scripts/icons";
 import {
@@ -22,7 +23,8 @@ import { RELOAD_KEPT_MS, registerAppUpdates } from "../../src/app/pwa/updates";
 import { showUpdateToast, UPDATE_MESSAGE } from "../../src/ui/pwa/updateToast";
 import type { ContainerLike, RegistrationLike, WorkerLike } from "../../src/app/pwa/updates";
 import { createToastService, INFO_TOAST_MS } from "../../src/ui/toast/toast";
-import { manifest } from "../../vite.config";
+import { manifest, precachePatterns } from "../../vite.config";
+import { LICENCES_FILE } from "../../scripts/licences";
 
 // TE-066: the parts of the installable app that run without a browser: the web manifest, the
 // service worker's cache and routing rules, the page's update flow over a fake service worker
@@ -91,6 +93,30 @@ describe("web manifest (vite.config.ts, SUITE §1 and §7)", () => {
     it("links the favicon from index.html", () => {
         const html = readFileSync(new URL("../../index.html", import.meta.url), "utf8");
         expect(html).toContain('<link rel="icon" type="image/png" href="/icons/icon-192.png" />');
+    });
+});
+
+describe("precached files (vite.config.ts)", () => {
+    const precached = (file: string) =>
+        precachePatterns.some((pattern) => matchesGlob(file, pattern));
+
+    it("precaches the licences file, so View → Open Source Licences… works offline", () => {
+        // The build writes it beside index.html (scripts/licences.ts).
+        expect(LICENCES_FILE).toBe("licences.txt");
+        expect(precached(LICENCES_FILE)).toBe(true);
+    });
+
+    it("precaches the shell, the chunks, the web workers, the icons and the manifest", () => {
+        for (const file of [
+            "index.html",
+            "assets/index-abc.js",
+            "assets/importWorker-abc.js",
+            "assets/index-abc.css",
+            "icons/icon-192.png",
+            "manifest.webmanifest",
+        ]) {
+            expect(precached(file), file).toBe(true);
+        }
     });
 });
 

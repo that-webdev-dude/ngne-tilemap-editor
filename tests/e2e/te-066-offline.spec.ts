@@ -1,7 +1,9 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
+import { LICENCES_COMMAND } from "../../src/app/licences/licences.commands";
 import { collectErrors } from "./te-003-support";
+import { menuItem, openMenu } from "./te-007-support";
 import { emptyState, newProject, projectName } from "./te-047-support";
 import {
     buildApp,
@@ -21,7 +23,8 @@ import {
 // - Offline: the page loads the build once while online; once its worker controls it (every
 //   file of the build is in the worker's cache), the preview server is stopped and the page's
 //   context goes offline. The page reloads from the worker's cache alone and works: New Project
-//   creates a project, which needs the background worker's script too.
+//   creates a project, which needs the background worker's script too, and View → Open Source
+//   Licences… shows the licences file.
 // - Update: two builds that differ as two deployments do are served one after the other on the
 //   same port. The app's own check finds the second when the page is shown again (the spec sends
 //   that `visibilitychange`); the new worker waits and the update toast offers Reload; the page
@@ -80,6 +83,16 @@ test("offline: after one load the production build reloads and works with the ne
         await expect(emptyState(page)).toBeVisible();
         await newProject(page, "offline");
         await expect(projectName(page)).toHaveText("offline");
+        // The licences file is in the worker's cache: View → Open Source Licences… shows it.
+        await openMenu(page, "View");
+        await menuItem(page, LICENCES_COMMAND).click();
+        const licences = page.getByRole("dialog", { name: "Open Source Licences" });
+        const text = licences.getByRole("region", { name: "Licence text" });
+        await expect(text).toContainText("NGNE Tilemap Editor: open source licences");
+        await expect(text).toContainText(/npm packages in this build \(\d+\)/);
+        await expect(text).toContainText(/\nreact \S+ \(MIT\)\n/);
+        await page.keyboard.press("Escape");
+        await expect(licences).toHaveCount(0);
         // Still offline, still the worker's page.
         expect(await page.evaluate(() => navigator.onLine)).toBe(false);
         expect(await workerState(page)).toEqual({ controlled: true, waiting: false });

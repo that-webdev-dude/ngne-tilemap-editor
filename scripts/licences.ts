@@ -1,18 +1,28 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join, relative } from "node:path";
 
 // The open-source licences file of the build (`licences.txt` beside `index.html`): this
 // program's licence, THIRD_PARTY_NOTICES.md, and the full licence text of every npm package
 // whose code ends up in the build. vite.config.ts writes it: the build lists the packages of
 // the modules it bundled (the app and its web workers); the development server, which bundles
-// nothing, lists the runtime dependencies of package-lock.json. Both add the bundler
-// (`BUILD_PACKAGES`). The Open Source Licences command opens the file (src/app/licences).
+// nothing, lists the runtime dependencies of package-lock.json. The build adds the bundler
+// packages whose virtual modules it rendered (`VIRTUAL_MODULES`); the development server adds
+// every one of `BUILD_PACKAGES`. The Open Source Licences command opens the file
+// (src/app/licences).
 //
-// Every package listed must carry a licence of `ALLOWED_LICENCES` and a licence file; a
-// package without one fails the build (`LicenceError`). A package that publishes no licence
-// file of its own may have one under scripts/licence-texts/, named after the package
-// (`@scope/name` as `@scope__name.txt`), copied from the package's own repository: the
-// exception is explicit and reviewed, never made up here.
+// Every package listed must carry a licence of `ALLOWED_LICENCES` and a licence file whose
+// text is that licence's (`LICENCE_PHRASES`); a package without them fails the build
+// (`LicenceError`). The build also fails on a rendered module that is neither a file of the
+// program, nor a package's, nor a virtual module of `VIRTUAL_MODULES` (`unknownModules`), and
+// on a written licences file that does not list exactly the build's packages
+// (`licencesFileMismatch`). The service worker, which the PWA plugin builds on its own after
+// the licences file is written, may render the program's own files only, and the bundler's
+// virtual modules when the licences file lists that bundler package.
+//
+// A package that publishes no licence file of its own may have one under
+// scripts/licence-texts/, named after the package (`@scope/name` as `@scope__name.txt`),
+// copied from the package's own repository: the exception is explicit and reviewed, never
+// made up here.
 
 /** The file the build writes, relative to the app's base. */
 export const LICENCES_FILE = "licences.txt";
@@ -35,6 +45,41 @@ export const ALLOWED_LICENCES: readonly string[] = [
  * check leaves them alone, and the runtime dependencies do not include them.
  */
 export const BUILD_PACKAGES: readonly string[] = ["node_modules/rolldown"];
+
+/**
+ * The virtual modules (ids that name no file) a build may render, each with the package of
+ * `BUILD_PACKAGES` whose code it is. A virtual module of another plugin that renders code
+ * fails the build until it is added here, with its package and that package's licence.
+ */
+export const VIRTUAL_MODULES: Readonly<Record<string, string>> = {
+    "\0rolldown/runtime.js": "node_modules/rolldown",
+    "\0vite/modulepreload-polyfill.js": "node_modules/rolldown",
+};
+
+/**
+ * Phrases of the text of each licence of `ALLOWED_LICENCES`. A package's licence files must
+ * hold every phrase of the licence it declares (of one alternative of an OR, of every part of
+ * an AND). They are compared as lower-case words: every run of other characters, line breaks
+ * and comment marks included, reads as one space.
+ */
+export const LICENCE_PHRASES: Readonly<Record<string, readonly string[]>> = {
+    MIT: ["Permission is hereby granted, free of charge, to any person obtaining a copy"],
+    ISC: [
+        "distribute this software for any purpose with or without fee is hereby granted",
+        "provided that the above copyright notice and this permission notice appear in all copies",
+    ],
+    "0BSD": ["distribute this software for any purpose with or without fee is hereby granted"],
+    "BSD-2-Clause": [
+        "Redistributions of source code must retain the above copyright notice",
+        "Redistributions in binary form must reproduce the above copyright notice",
+    ],
+    "BSD-3-Clause": [
+        "Redistributions of source code must retain the above copyright notice",
+        "Redistributions in binary form must reproduce the above copyright notice",
+        "Neither the name of",
+    ],
+    "Apache-2.0": ["Apache License", "Version 2.0"],
+};
 
 /** Licence files, NOTICE and third-party licence files among them, at a package's top. */
 const LICENCE_FILE_NAME = /^(licen[cs]e|copying|notice|third-party-licen[cs]e)([.-].*)?$/i;
@@ -90,6 +135,48 @@ export function packageDirsOf(moduleIds: Iterable<string>): string[] {
     );
 }
 
+/** Where the code of a rendered module comes from. */
+export type ModuleSource =
+    /** A file of the program, under the project and outside `node_modules`. */
+    | { kind: "program" }
+    /** A file of the npm package in `dir`. */
+    | { kind: "package"; dir: string }
+    /** A virtual module of `VIRTUAL_MODULES`: code of the bundler package at `path`. */
+    | { kind: "bundler"; path: string }
+    /** Anything else: a virtual module of another plugin, or a file outside the project. */
+    | { kind: "unknown" };
+
+/** Where the code of the module `moduleId` of a build of the project at `root` comes from. */
+export function moduleSource(moduleId: string, root: string): ModuleSource {
+    const bundler = VIRTUAL_MODULES[moduleId];
+    if (bundler !== undefined) return { kind: "bundler", path: bundler };
+    const dir = packageDirOf(moduleId);
+    if (dir !== null) return { kind: "package", dir };
+    const id = moduleId.startsWith("\0") ? moduleId.slice(1) : moduleId;
+    const query = id.search(/[?#]/);
+    const path = query < 0 ? id : id.slice(0, query);
+    // A file is an absolute path, POSIX or Windows; any other id names no file.
+    if (!/^([a-z]:)?[\\/]/i.test(path)) return { kind: "unknown" };
+    const inside = relative(root, path);
+    if (inside === "" || inside.startsWith("..") || isAbsolute(inside)) return { kind: "unknown" };
+    return { kind: "program" };
+}
+
+/** The modules among `moduleIds` whose code no licence covers (`moduleSource` "unknown"). */
+export function unknownModules(moduleIds: Iterable<string>, root: string): string[] {
+    return [...moduleIds].filter((id) => moduleSource(id, root).kind === "unknown");
+}
+
+/** The packages of `BUILD_PACKAGES` with a virtual module among `moduleIds`, in their order. */
+export function bundlerPackagesOf(moduleIds: Iterable<string>): string[] {
+    const used = new Set<string>();
+    for (const id of moduleIds) {
+        const path = VIRTUAL_MODULES[id];
+        if (path !== undefined) used.add(path);
+    }
+    return BUILD_PACKAGES.filter((path) => used.has(path));
+}
+
 function nameFromDir(dir: string): string {
     return dir.slice(dir.lastIndexOf("/node_modules/") + "/node_modules/".length);
 }
@@ -102,6 +189,40 @@ export function licenceAllowed(
     expression: string,
     allowed: readonly string[] = ALLOWED_LICENCES,
 ): boolean {
+    return satisfies(expression, (id) => allowed.includes(id));
+}
+
+/**
+ * Whether `texts` hold the text of an SPDX expression's licence, by `LICENCE_PHRASES`: of one
+ * alternative of an OR that is in `allowed`, of every part of an AND. A licence without phrases
+ * is never held.
+ */
+export function licenceTextMatches(
+    expression: string,
+    texts: readonly string[],
+    allowed: readonly string[] = ALLOWED_LICENCES,
+): boolean {
+    const words = texts.map(wordsOf).join(" | ");
+    return satisfies(expression, (id) => {
+        const phrases = LICENCE_PHRASES[id];
+        if (!allowed.includes(id) || !phrases?.length) return false;
+        return phrases.every((phrase) => words.includes(wordsOf(phrase)));
+    });
+}
+
+/** Lower-case words, each run of other characters as one space. */
+function wordsOf(text: string): string {
+    return text
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim();
+}
+
+/**
+ * Whether an SPDX expression holds when each identifier holds as `holds` says: an expression
+ * of identifiers with OR (one alternative suffices) and AND (every part must hold).
+ */
+function satisfies(expression: string, holds: (id: string) => boolean): boolean {
     const bare = expression
         .trim()
         .replace(/^\((.*)\)$/, "$1")
@@ -112,11 +233,11 @@ export function licenceAllowed(
     if (alternatives.length > 1) {
         // An operator at an end or two in a row leave an empty operand: not an expression.
         if (alternatives.includes("")) return false;
-        return alternatives.some((part) => licenceAllowed(part, allowed));
+        return alternatives.some((part) => satisfies(part, holds));
     }
     const parts = splitOn(tokens, "AND");
-    if (parts.length > 1) return parts.every((part) => licenceAllowed(part, allowed));
-    return allowed.includes(bare);
+    if (parts.length > 1) return parts.every((part) => satisfies(part, holds));
+    return holds(bare);
 }
 
 /** The operands of `operator` among `tokens`, each joined back with single spaces. */
@@ -171,6 +292,22 @@ export function fallbackFileOf(name: string): string {
     return `${name.replace("/", "__")}.txt`;
 }
 
+/** The `package.json` of the package in `dir`, with its name (or its directory's) and version. */
+function readManifest(dir: string): {
+    manifest: Record<string, unknown>;
+    name: string;
+    version: string;
+} {
+    const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as Record<
+        string,
+        unknown
+    >;
+    const name =
+        typeof manifest.name === "string" ? manifest.name : nameFromDir(dir.replaceAll("\\", "/"));
+    const version = typeof manifest.version === "string" ? manifest.version : "";
+    return { manifest, name, version };
+}
+
 /**
  * Reads the package in `dir`: its name, version and licence from `package.json`, and the text
  * of each licence file at its top (or of its file in `fallbackDir`). Throws `LicenceError` when
@@ -181,13 +318,7 @@ export function readPackageLicence(
     fallbackDir: string,
     allowed: readonly string[] = ALLOWED_LICENCES,
 ): PackageLicence {
-    const manifest = JSON.parse(readFileSync(join(dir, "package.json"), "utf8")) as Record<
-        string,
-        unknown
-    >;
-    const name =
-        typeof manifest.name === "string" ? manifest.name : nameFromDir(dir.replaceAll("\\", "/"));
-    const version = typeof manifest.version === "string" ? manifest.version : "";
+    const { manifest, name, version } = readManifest(dir);
     const licence = licenceOf(manifest);
     if (licence === null) {
         throw new LicenceError(`${name}@${version} states no licence in its package.json.`);
@@ -217,6 +348,18 @@ export function readPackageLicence(
         throw new LicenceError(
             `${name}@${version} (${licence}) has no licence file. Add its licence text, from ` +
                 `the package's repository, as scripts/licence-texts/${fallbackFileOf(name)}.`,
+        );
+    }
+    if (
+        !licenceTextMatches(
+            licence,
+            texts.map(({ text }) => text),
+            allowed,
+        )
+    ) {
+        throw new LicenceError(
+            `${name}@${version} declares ${licence}, but none of its licence files ` +
+                `(${texts.map(({ file }) => file).join(", ")}) holds that licence's text.`,
         );
     }
     return { name, version, licence, texts };
@@ -270,12 +413,16 @@ export function strayPackages(dirs: readonly string[], runtimeDirs: readonly str
 }
 
 /**
- * The directories of `BUILD_PACKAGES` under `root`. Throws `LicenceError` when one is not
- * installed.
+ * The directories under `root` of `paths`, by default every one of `BUILD_PACKAGES` (the build
+ * passes those whose virtual modules it rendered, `bundlerPackagesOf`). Throws `LicenceError`
+ * when one is not installed.
  */
-export function buildPackageDirs(root: string): string[] {
+export function buildPackageDirs(
+    root: string,
+    paths: readonly string[] = BUILD_PACKAGES,
+): string[] {
     const base = root.replaceAll("\\", "/").replace(/\/$/, "");
-    return BUILD_PACKAGES.map((path) => {
+    return paths.map((path) => {
         const dir = `${base}/${path}`;
         if (!existsSync(join(dir, "package.json"))) {
             throw new LicenceError(`${path} is not installed; run npm ci.`);
@@ -360,4 +507,55 @@ export function buildLicencesFile(root: string, dirs: readonly string[], title: 
         notices: readFileSync(join(root, "THIRD_PARTY_NOTICES.md"), "utf8"),
         packages: dirs.map((dir) => readPackageLicence(dir, fallbackDir)),
     });
+}
+
+/**
+ * The packages a licences file lists, as "name version", in its order. Throws `LicenceError`
+ * when the file has no package list or its count is not the number of packages listed.
+ */
+export function listedPackages(text: string): string[] {
+    const heading = /\nnpm packages in this build \((\d+)\)\n={78}\n/.exec(text);
+    if (!heading) throw new LicenceError("The licences file has no list of npm packages.");
+    const start = heading.index + heading[0].length;
+    const end = text.indexOf("\n\n", start);
+    const lines = text.slice(start, end < 0 ? undefined : end).split("\n");
+    const listed = lines
+        .filter((line) => line !== "")
+        .map((line) => {
+            const entry = /^(\S+) (\S*) \(.+\)$/.exec(line);
+            if (!entry) throw new LicenceError(`The licences file lists "${line}", not a package.`);
+            return `${entry[1]} ${entry[2]}`;
+        });
+    if (listed.length !== Number(heading[1])) {
+        throw new LicenceError(
+            `The licences file counts ${heading[1]} npm packages but lists ${listed.length}.`,
+        );
+    }
+    return listed;
+}
+
+/** How the packages a licences file lists differ from a build's. */
+export interface LicencesMismatch {
+    /** Packages of the build the file does not list, as "name version". */
+    missing: string[];
+    /** Packages the file lists that are not the build's, as "name version". */
+    extra: string[];
+}
+
+/**
+ * How the packages a licences file lists (`listedPackages`) differ from the packages in `dirs`,
+ * the build's, read from their `package.json`. Both lists are empty when they agree.
+ */
+export function licencesFileMismatch(text: string, dirs: readonly string[]): LicencesMismatch {
+    const listed = new Set(listedPackages(text));
+    const bundled = new Set(
+        dirs.map((dir) => {
+            const { name, version } = readManifest(dir);
+            return `${name} ${version}`;
+        }),
+    );
+    return {
+        missing: [...bundled].filter((entry) => !listed.has(entry)).sort(byCodeUnit),
+        extra: [...listed].filter((entry) => !bundled.has(entry)).sort(byCodeUnit),
+    };
 }

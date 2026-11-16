@@ -1,23 +1,31 @@
 import { mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join, relative, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { afterAll, describe, expect, it } from "vitest";
 import {
     ALLOWED_LICENCES,
     BUILD_PACKAGES,
     LICENCES_FILE,
+    LICENCE_PHRASES,
     LicenceError,
+    VIRTUAL_MODULES,
     buildLicencesFile,
     buildPackageDirs,
+    bundlerPackagesOf,
     fallbackFileOf,
     licenceAllowed,
+    licenceTextMatches,
+    licencesFileMismatch,
     licencesText,
+    listedPackages,
+    moduleSource,
     packageDirOf,
     packageDirsOf,
     readPackageLicence,
     runtimePackageDirs,
     strayPackages,
+    unknownModules,
 } from "../../scripts/licences";
 import { LICENCES_PATH } from "../../src/app/licences/openLicences";
 
@@ -26,7 +34,19 @@ import { LICENCES_PATH } from "../../src/app/licences/openLicences";
 // a temporary directory; the last tests read the repository's own runtime dependencies.
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
-const MIT = "MIT License\n\nCopyright (c) 2026 Somebody\n\nPermission is hereby granted…\n";
+const MIT =
+    "MIT License\n\nCopyright (c) 2026 Somebody\n\nPermission is hereby granted, free of charge, " +
+    "to any person obtaining a copy…\n";
+const ISC =
+    "ISC License\n\nCopyright (c) 2026 Somebody\n\nPermission to use, copy, modify, and/or " +
+    "distribute this software for any purpose with or without fee is hereby granted, provided " +
+    "that the above copyright notice and this permission notice appear in all copies.\n";
+
+/** A licence's text as its phrases (`LICENCE_PHRASES`), wrapped, commented and with CRLF. */
+function textOf(id: string): string {
+    const phrases = LICENCE_PHRASES[id] ?? [];
+    return ` * ${phrases.join(" …\r\n * ").replaceAll(", ", ",\r\n *   ")}\r\n`;
+}
 
 const temp = mkdtempSync(join(tmpdir(), "licences-"));
 afterAll(() => rmSync(temp, { recursive: true, force: true }));
@@ -121,7 +141,7 @@ describe("readPackageLicence", () => {
         const dir = writePackage(
             "read",
             "@scope/thing",
-            { license: "Apache-2.0" },
+            { license: "MIT" },
             {
                 "LICENSE.txt": `${MIT}\r\n`,
                 NOTICE: "Notice text  \n",
@@ -132,7 +152,7 @@ describe("readPackageLicence", () => {
         expect(readPackageLicence(dir, fallbacks)).toEqual({
             name: "@scope/thing",
             version: "1.0.0",
-            licence: "Apache-2.0",
+            licence: "MIT",
             texts: [
                 { file: "LICENSE.txt", text: MIT },
                 { file: "NOTICE", text: "Notice text\n" },
@@ -154,7 +174,7 @@ describe("readPackageLicence", () => {
             "old-object",
             { license: { type: "ISC" } },
             {
-                COPYING: MIT,
+                COPYING: ISC,
             },
         );
         expect(readPackageLicence(object, fallbacks).licence).toBe("ISC");
@@ -181,6 +201,172 @@ describe("readPackageLicence", () => {
         expect(readPackageLicence(dir, fallbacks).texts).toEqual([
             { file: "scripts/licence-texts/@scope__bare.txt", text: MIT },
         ]);
+    });
+
+    it("refuses a package whose licence files hold another licence's text", () => {
+        const dir = writePackage("read", "mislabelled", { license: "MIT" }, { LICENSE: ISC });
+        expect(() => readPackageLicence(dir, fallbacks)).toThrow(LicenceError);
+        expect(() => readPackageLicence(dir, fallbacks)).toThrow(
+            /mislabelled@1\.0\.0 declares MIT, but none of its licence files \(LICENSE\) holds/,
+        );
+        // A NOTICE beside it is no licence text either.
+        const notice = writePackage(
+            "read",
+            "notice-only",
+            { license: "Apache-2.0" },
+            { NOTICE: "Notice text\n" },
+        );
+        expect(() => readPackageLicence(notice, fallbacks)).toThrow(/declares Apache-2\.0/);
+    });
+
+    it("refuses a fallback text of scripts/licence-texts that is another licence's", () => {
+        const dir = writePackage("read", "@scope/stand-in", { license: "ISC" });
+        writeFileSync(join(fallbacks, "@scope__stand-in.txt"), MIT);
+        expect(() => readPackageLicence(dir, fallbacks)).toThrow(
+            /declares ISC, but none of its licence files \(scripts\/licence-texts\/@scope__stand-in\.txt\)/,
+        );
+    });
+});
+
+describe("licenceTextMatches", () => {
+    it("knows phrases of every licence of the allowlist and of none other", () => {
+        expect(Object.keys(LICENCE_PHRASES).sort()).toEqual([...ALLOWED_LICENCES].sort());
+        for (const licence of ALLOWED_LICENCES) {
+            expect(LICENCE_PHRASES[licence]!.length, licence).toBeGreaterThan(0);
+        }
+    });
+
+    it("finds each licence's phrases across line breaks, comment marks and case", () => {
+        for (const licence of ALLOWED_LICENCES) {
+            expect(licenceTextMatches(licence, [textOf(licence)]), licence).toBe(true);
+            expect(licenceTextMatches(licence, [textOf(licence).toUpperCase()]), licence).toBe(
+                true,
+            );
+        }
+        expect(licenceTextMatches("MIT", [MIT])).toBe(true);
+        expect(licenceTextMatches("ISC", [ISC])).toBe(true);
+    });
+
+    it("refuses a text of another licence, or a part of one", () => {
+        expect(licenceTextMatches("MIT", [ISC])).toBe(false);
+        expect(licenceTextMatches("ISC", [MIT])).toBe(false);
+        expect(licenceTextMatches("Apache-2.0", [MIT, "Notice text\n"])).toBe(false);
+        // BSD-3-Clause adds the endorsement clause to BSD-2-Clause's.
+        expect(licenceTextMatches("BSD-3-Clause", [textOf("BSD-2-Clause")])).toBe(false);
+        // One phrase of two is not the licence.
+        expect(licenceTextMatches("ISC", [LICENCE_PHRASES.ISC![0]!])).toBe(false);
+        expect(licenceTextMatches("MIT", [])).toBe(false);
+        expect(licenceTextMatches("", [MIT])).toBe(false);
+    });
+
+    it("needs the text of one allowed alternative of an OR and of every part of an AND", () => {
+        expect(licenceTextMatches("(MIT OR Apache-2.0)", [textOf("Apache-2.0")])).toBe(true);
+        expect(licenceTextMatches("MIT OR Apache-2.0", [ISC])).toBe(false);
+        // The alternative whose text is there is not allowed.
+        expect(licenceTextMatches("MIT OR ISC", [ISC], ["MIT"])).toBe(false);
+        expect(licenceTextMatches("GPL-3.0 OR MIT", ["GNU GENERAL PUBLIC LICENSE"])).toBe(false);
+        expect(licenceTextMatches("MIT AND ISC", [MIT, ISC])).toBe(true);
+        expect(licenceTextMatches("MIT AND ISC", [MIT])).toBe(false);
+    });
+});
+
+describe("moduleSource", () => {
+    const root = "/app";
+
+    it("places the program's files, the packages' and the bundler's virtual modules", () => {
+        expect(moduleSource("/app/src/main.tsx", root)).toEqual({ kind: "program" });
+        expect(moduleSource("\0/app/src/worker.ts?worker_file&type=module", root)).toEqual({
+            kind: "program",
+        });
+        expect(moduleSource("/app/node_modules/react/index.js", root)).toEqual({
+            kind: "package",
+            dir: "/app/node_modules/react",
+        });
+        expect(moduleSource("\0rolldown/runtime.js", root)).toEqual({
+            kind: "bundler",
+            path: "node_modules/rolldown",
+        });
+        expect(moduleSource("\0vite/modulepreload-polyfill.js", root)).toEqual({
+            kind: "bundler",
+            path: "node_modules/rolldown",
+        });
+    });
+
+    it("knows no other virtual module, and no file outside the project", () => {
+        for (const id of [
+            "\0virtual:probe",
+            "virtual:pwa-register",
+            "\0vite/preload-helper.js",
+            "\0commonjsHelpers.js",
+            "/elsewhere/code.js",
+            "/app",
+        ]) {
+            expect(moduleSource(id, root), id).toEqual({ kind: "unknown" });
+        }
+        expect(
+            unknownModules(["/app/src/a.ts", "\0virtual:probe", "\0rolldown/runtime.js"], root),
+        ).toEqual(["\0virtual:probe"]);
+    });
+
+    it("maps each bundler virtual module to a package of BUILD_PACKAGES", () => {
+        for (const [id, path] of Object.entries(VIRTUAL_MODULES)) {
+            expect(BUILD_PACKAGES, id).toContain(path);
+        }
+        expect(bundlerPackagesOf(["/app/src/a.ts", "\0vite/modulepreload-polyfill.js"])).toEqual([
+            "node_modules/rolldown",
+        ]);
+        expect(bundlerPackagesOf(["/app/src/a.ts", "/app/node_modules/react/index.js"])).toEqual(
+            [],
+        );
+    });
+});
+
+describe("listedPackages and licencesFileMismatch", () => {
+    const packages = [
+        {
+            name: "@alpha/one",
+            version: "1.0.0",
+            licence: "MIT",
+            texts: [{ file: "LICENSE", text: "A\n" }],
+        },
+        {
+            name: "zeta",
+            version: "2.0.0",
+            licence: "(MIT OR Apache-2.0)",
+            texts: [{ file: "LICENSE", text: "Z\n" }],
+        },
+    ];
+    const file = licencesText({
+        title: "Example",
+        licence: "L\n",
+        notices: "# Notices\n\nnpm packages in this build (9)\n",
+        packages,
+    });
+
+    it("reads the packages a licences file lists", () => {
+        expect(listedPackages(file)).toEqual(["@alpha/one 1.0.0", "zeta 2.0.0"]);
+        const none = licencesText({ title: "E", licence: "L\n", notices: "N\n", packages: [] });
+        expect(listedPackages(none)).toEqual([]);
+    });
+
+    it("refuses a file without a package list or with a wrong count", () => {
+        expect(() => listedPackages("Example\n")).toThrow(/no list of npm packages/);
+        expect(() =>
+            listedPackages(
+                file.replace("npm packages in this build (2)", "npm packages in this build (3)"),
+            ),
+        ).toThrow(/counts 3 npm packages but lists 2/);
+    });
+
+    it("names the build's packages the file does not list, and the ones it lists that are not the build's", () => {
+        const one = writePackage("mismatch", "@alpha/one", { license: "MIT" });
+        const other = writePackage("mismatch", "other", { license: "MIT" });
+        expect(licencesFileMismatch(file, [one, other])).toEqual({
+            missing: ["other 1.0.0"],
+            extra: ["zeta 2.0.0"],
+        });
+        const zeta = writePackage("mismatch", "zeta", { license: "MIT", version: "2.0.0" });
+        expect(licencesFileMismatch(file, [zeta, one])).toEqual({ missing: [], extra: [] });
     });
 });
 
@@ -333,6 +519,22 @@ describe("the repository's licences file", () => {
         }
     });
 
+    it("holds, for every package it lists, a licence file with the text of its declared licence", () => {
+        for (const dir of dirs) {
+            const { name, licence, texts } = readPackageLicence(dir, fallbacks);
+            const held = licenceTextMatches(
+                licence,
+                texts.map(({ text }) => text),
+            );
+            expect(held, `${name} ${licence}`).toBe(true);
+        }
+    });
+
+    it("lists exactly the packages it was made for", () => {
+        expect(licencesFileMismatch(text, dirs)).toEqual({ missing: [], extra: [] });
+        expect(listedPackages(text)).toHaveLength(new Set(listedPackages(text)).size);
+    });
+
     it("holds this project's licence and its notices: libtiled, Zingl, Aseprite, pixman, qjsonparser", () => {
         expect(text.startsWith("NGNE Tilemap Editor: open source licences\n")).toBe(true);
         expect(text).toContain(readFileSync(join(ROOT, "LICENSE"), "utf8").split("\n")[2]);
@@ -363,5 +565,39 @@ describe("the repository's licences file", () => {
     it("takes the licence of react-remove-scroll-bar, which ships none, from scripts/licence-texts", () => {
         expect(text).toContain("[scripts/licence-texts/react-remove-scroll-bar.txt]");
         expect(text).toContain("Copyright (c) 2025 Anton Korzunov");
+    });
+});
+
+describe("the service worker's code", () => {
+    /** The specifiers a module imports or exports from, type-only ones included. */
+    function specifiersOf(file: string): string[] {
+        const source = readFileSync(file, "utf8");
+        const pattern = /(?:\bfrom\s*|\bimport\s*\(?\s*)["']([^"']+)["']/g;
+        return [...source.matchAll(pattern)].map((match) => match[1]!);
+    }
+
+    it("imports the program's own modules only: no package reaches sw.js", () => {
+        // The PWA plugin builds src/app/pwa/sw.ts on its own, outside the build that writes the
+        // licences file; vite.config.ts fails that build on any module the file does not cover.
+        const src = join(ROOT, "src");
+        const seen = new Set<string>();
+        const queue = [join(src, "app", "pwa", "sw.ts")];
+        while (queue.length > 0) {
+            const file = queue.pop()!;
+            if (seen.has(file)) continue;
+            seen.add(file);
+            for (const specifier of specifiersOf(file)) {
+                expect(specifier, `${relative(ROOT, file)} imports ${specifier}`).toMatch(
+                    /^\.\.?\//,
+                );
+                const target = resolve(dirname(file), specifier.replace(/(\.ts)?$/, ".ts"));
+                expect(relative(src, target).startsWith(".."), target).toBe(false);
+                queue.push(target);
+            }
+        }
+        expect([...seen].map((file) => relative(src, file).replaceAll("\\", "/")).sort()).toEqual([
+            "app/pwa/precache.ts",
+            "app/pwa/sw.ts",
+        ]);
     });
 });
