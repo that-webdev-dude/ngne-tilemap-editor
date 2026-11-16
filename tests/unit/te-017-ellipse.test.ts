@@ -3,11 +3,11 @@ import { ellipseOutlineCells } from "../../src/core/raster/ellipse";
 import { separatePlacements, stampAnchor, stampOrigin } from "../../src/app/tools/stamp/placement";
 
 // TE-017: the ellipse outline of the stamp brush's Ctrl+Shift+click and the stamp placement
-// along a line or an ellipse. The expected outline cells are captured from Tiled 1.12.2 on
-// 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`): each ellipse drawn with the stamp
-// brush on its own layer and the map saved as JSON, as cells relative to the centre. A saved
-// map shows which cells are painted, not their order or repeats, so these tests compare sets;
-// the TE-017 stamp goldens cover the order of the stamps.
+// along a line or an ellipse. The expected outline cells for nonzero radii are captured from
+// Tiled 1.12.2 on 2026-11-16 (capture folder `ngne-captures/tiled-1.12.2`): each ellipse drawn
+// with the stamp brush on its own layer and the map saved as JSON, as cells relative to the
+// centre. A saved map shows which cells are painted, not their order or repeats, so these tests
+// compare sets; the TE-017 stamp goldens cover the order of the stamps.
 
 const points = (cx: number, cy: number, a: number, b: number) =>
     ellipseOutlineCells({ x: cx, y: cy }, a, b).map((p) => [p.x, p.y]);
@@ -17,6 +17,9 @@ const cellSet = (cells: readonly (readonly number[])[]) =>
     [...new Set(cells.map(([x, y]) => `${x},${y}`))].sort();
 
 describe("ellipseOutlineCells", () => {
+    // Expected points from Alois Zingl's MIT-licensed `plotOptimizedEllipse`, the reference
+    // `ellipse.ts` is ported from (notice in THIRD_PARTY_NOTICES.md): for radii 0, 0 it plots
+    // the centre once per quadrant.
     it("is the centre four times for radii 0, 0", () => {
         expect(points(3, 4, 0, 0)).toEqual([
             [3, 4],
