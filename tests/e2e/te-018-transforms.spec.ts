@@ -33,6 +33,7 @@ const BASE: CellSpec[] = [
  * The stamp under each transform, worked by hand from SPEC §2.3: positions turned or mirrored,
  * orientations through Tiled's rotate tables (`rotateRightMask = [5, 4, 1, 0, 7, 6, 3, 2]`,
  * `rotateLeftMask = [3, 2, 7, 6, 1, 0, 5, 4]`) or with H or V toggled.
+ * The tables are from libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
  */
 const EXPECTED: Record<string, StampState> = {
     // e c a / f d b

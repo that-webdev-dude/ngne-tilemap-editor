@@ -16,10 +16,10 @@ import type { WangIndex } from "./wangId";
 // remove and move terrain sets and terrains, a set's type, a terrain's colour and icon tile, and
 // the terrain of one index, or every index, of a tile. As in Tiled's terrain editing:
 //
-// - A new set is "Unnamed Set" with one terrain; a new terrain takes the next of Tiled's
-//   default colours (`defaultWangColors`, cycled past the 15th where Tiled picks a random one,
-//   so a redo repeats the do). Tiled leaves its name empty; FORMAT §2.4 wants one, so it is
-//   "Terrain n".
+// - A new set is "Unnamed Set" with one terrain. The n-th terrain of a set takes colour n of
+//   Tiled's 15 default colours (`defaultWangColors`); the 16th starts the list again, so the
+//   colour depends on n alone and a redo repeats the do (Tiled picks random colours after its
+//   list). Tiled leaves the name empty; FORMAT §2.4 wants one, so it is "Terrain n".
 // - Removing a terrain clears it from every tile and moves the terrains after it down one. The
 //   last terrain of a set is not removed: a set has 1 to 254 (FORMAT §2.4).
 // - A type change clears, in the same entry, every index the new type does not use (SPEC §5.1).

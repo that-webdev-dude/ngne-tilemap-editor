@@ -10,10 +10,11 @@ NGNE Tilemap Editor is not affiliated with or endorsed by Tiled or Thorbjørn Li
 Aseprite or Igara Studio S.A. "Tiled" and "Aseprite" are used only to name the programs whose
 file formats, behaviour or code this editor follows.
 
-Tiled's editor (`src/tiled` of <https://github.com/mapeditor/tiled>, GPL-2.0-or-later) is not
-copied here: where this editor follows its behaviour, the behaviour was reimplemented from
-using Tiled, its manual and, where the code comments say "checked at v1.12.2", reading its
-source to confirm a detail. Aseprite's application code is not used.
+Where this editor follows the behaviour of Tiled's editor application
+(<https://github.com/mapeditor/tiled>, GPL-2.0-or-later), it does so from using Tiled and its
+manual. Files whose comments, tests or specs named parts of that application's source, or said
+that its source had been read to confirm a detail, are listed in the "Tiled source named or
+read" section of `docs/PROVENANCE.md`. Aseprite's application code is not used.
 
 Other product names used here are trademarks of their respective owners.
 
@@ -23,6 +24,8 @@ Source: `src/libtiled/wangset.h`, `src/libtiled/wangset.cpp` and `src/libtiled/t
 of Tiled (<https://www.mapeditor.org>, <https://github.com/mapeditor/tiled>), tag `v1.12.2`.
 These files of libtiled are released under the BSD 2-clause licence.
 
+Version: Tiled tag `v1.12.2`.
+
 Used in:
 
 - `src/core/terrain/wangId.ts`: the layout of terrain IDs (eight indexes, corners and edges,
@@ -30,8 +33,9 @@ Used in:
 - `src/core/terrain/analysis.ts`: the terrain-set analysis (candidate list, colour distances,
   completeness).
 - `src/core/terrain/terrainCommands.ts`: the default terrain colours (`defaultWangColors`).
-- `src/core/cells/orientation.ts` and `tests/unit/te-004-orientation.test.ts`: the rotation
-  tables of the eight cell orientations.
+- `src/core/cells/orientation.ts`, `tests/unit/te-004-orientation.test.ts`,
+  `tests/e2e/te-018-transforms.spec.ts` and `docs/SPEC.md` (§2.3): the rotation tables of the
+  eight cell orientations.
 
 ```text
 Copyright 2008-2011, Thorbjørn Lindeijer <thorbjorn@lindeijer.nl>
@@ -62,13 +66,15 @@ ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 ## Bresenham curve rasterizing algorithms (MIT)
 
-Source: `plotEllipse` and `plotEllipseRect` of Alois Zingl's
+Source: `plotOptimizedEllipse` and `plotEllipseRect` of `bresenham.c` in Alois Zingl's
 <https://github.com/zingl/Bresenham>, described in his "A Rasterizing Algorithm for Drawing
 Curves" (2012).
 
+Version: commit `ce9002f5aa1d95bdb7d71a39ebdb0987df139db5`.
+
 Used in:
 
-- `src/core/raster/ellipse.ts`: `plotEllipse`, the ellipse outline.
+- `src/core/raster/ellipse.ts`: `plotOptimizedEllipse`, the ellipse outline.
 - `src/core/fill/region.ts` (`ellipseRegion`) and `tests/unit/te-019-fill.test.ts`:
   `plotEllipseRect`, the ellipse inscribed in a rectangle.
 
@@ -101,6 +107,8 @@ SOFTWARE.
 Source: `src/doc/blend_funcs.cpp` of <https://github.com/aseprite/aseprite>. Aseprite's
 application code is distributed under its End-User License Agreement; this file belongs to its
 document library, which is released under the MIT licence (`src/doc/LICENSE.txt`).
+
+Version: Aseprite v1.3.18.6 (commit `331e898ef405d919539c03fd1675691cfa16c3a3`).
 
 Used in:
 
@@ -135,6 +143,8 @@ WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 Source: the `MUL_UN8` and `DIV_UN8` macros of `pixman/pixman-combine32.h` in pixman
 (<https://gitlab.freedesktop.org/pixman/pixman>).
+
+Version: pixman 0.46.4.
 
 Used in:
 
@@ -184,6 +194,8 @@ DEALINGS IN THE SOFTWARE.
 
 Source: `escape` and `JsonWriter::stringify` of `src/plugins/json/qjsonparser/json.cpp` in
 Tiled's JSON plugin (<https://github.com/mapeditor/tiled>).
+
+Version: the copy in Tiled tag `v1.12.2`.
 
 Used in:
 

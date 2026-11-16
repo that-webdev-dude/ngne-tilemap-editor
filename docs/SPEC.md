@@ -133,7 +133,8 @@ terrain tile names a tile of its tileset; export names distinct (FORMAT §2.4); 
 them. Flip horizontal toggles `H`, flip vertical toggles `V` (Tiled's `flip()`, which leaves `D`
 alone); rotate right and left map the 3-bit index `H<<2 | V<<1 | D` through Tiled's tables
 `rotateRightMask = [5, 4, 1, 0, 7, 6, 3, 2]` and `rotateLeftMask = [3, 2, 7, 6, 1, 0, 5, 4]`
-(`src/libtiled/tilelayer.cpp`, tag `v1.12.2`). A unit test checks that each table entry equals
+(`src/libtiled/tilelayer.cpp`, tag `v1.12.2`; BSD 2-clause, notice in THIRD_PARTY_NOTICES.md). A
+unit test checks that each table entry equals
 the matrix product, and that the FORMAT §1.2 table equals Tiled's composition (anti-diagonal,
 then H, then V). Transforming a stamp also moves its cells: flip mirrors positions, a quarter
 turn rotates the stamp's rectangle and swaps its width and height.

@@ -2,11 +2,11 @@ import type { PixelPoint } from "./line";
 
 // Ellipse outlines of cells (SPEC §4.3): the ellipse mode of the stamp brush. The outline of
 // the axis-aligned ellipse around a centre cell with whole radii, after Alois Zingl's
-// `plotEllipse`, github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. Points come in the
+// `plotOptimizedEllipse` (`bresenham.c`), github.com/zingl/Bresenham, MIT licence, (c) 2020 zingl. Points come in the
 // order that algorithm plots them, four mirrored points per step and then the tips of a flat
 // ellipse, repeats included. Pure, integer arithmetic only.
 //
-// Ported from Alois Zingl's MIT-licensed `plotEllipse`; its notice is in
+// Ported from Alois Zingl's MIT-licensed `plotOptimizedEllipse`; its notice is in
 // THIRD_PARTY_NOTICES.md.
 
 /**
