@@ -606,3 +606,7 @@ Earlier rewrites without a recorded separation:
   `@floating-ui/dom` cites above `observeMove` (samthor.au) is accepted as a residual risk.
 - 2026-11-16: smooth-ui (in `aria-hidden`) is listed in the notices with the MIT licence of its
   repository.
+- 2026-11-16: the helpers of the generated `ngne-tilemap.ts` taken from the sprite editor's
+  `validateAtlas.ts` (Code taken in part from the sprite editor) are the owner's own code and
+  ship under MIT-0 with the rest of the runtime, whose MIT-0 header (BRIEF, Export) names no
+  copyright holder.
