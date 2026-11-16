@@ -41,7 +41,7 @@ function anchorOf(from: ResizeMapRequest["from"], values: ResizeMapValues): Pivo
 }
 
 /** The map's thumbnail on a canvas of its own pixels, stretched over the old bounds. */
-function Thumbnail({ preview }: { preview: PixelBuffer }) {
+function Thumbnail({ preview }: Readonly<{ preview: PixelBuffer }>) {
     const canvas = useRef<HTMLCanvasElement>(null);
     useEffect(() => {
         const element = canvas.current;
@@ -69,10 +69,10 @@ function Thumbnail({ preview }: { preview: PixelBuffer }) {
 function ResizePreview({
     request,
     values,
-}: {
+}: Readonly<{
     request: ResizeMapRequest;
     values: ResizeMapValues;
-}) {
+}>) {
     const { from, preview } = request;
     const { tileWidth, tileHeight } = from;
     const newWidth = side(values.width, from.width) * tileWidth;

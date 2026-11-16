@@ -37,28 +37,36 @@ export const commands: CommandSpec[] = [
         title: "New Corner Set",
         enabled: canAddTerrainSet,
         contextMenus: [{ menu: TERRAIN_SET_NEW_MENU, order: 100 }],
-        run: () => void newTerrainSet("corner"),
+        run: () => {
+            newTerrainSet("corner");
+        },
     },
     {
         id: "terrain.newEdgeSet",
         title: "New Edge Set",
         enabled: canAddTerrainSet,
         contextMenus: [{ menu: TERRAIN_SET_NEW_MENU, order: 110 }],
-        run: () => void newTerrainSet("edge"),
+        run: () => {
+            newTerrainSet("edge");
+        },
     },
     {
         id: "terrain.newMixedSet",
         title: "New Mixed Set",
         enabled: canAddTerrainSet,
         contextMenus: [{ menu: TERRAIN_SET_NEW_MENU, order: 120 }],
-        run: () => void newTerrainSet("mixed"),
+        run: () => {
+            newTerrainSet("mixed");
+        },
     },
     {
         id: "terrain.add",
         title: "Add Terrain",
         enabled: canAddTerrain,
         contextMenus: [{ menu: TERRAIN_SET_MENU, order: 100 }],
-        run: () => void addTerrainToSelectedSet(),
+        run: () => {
+            addTerrainToSelectedSet();
+        },
     },
     {
         id: "terrain.renameSet",
@@ -75,21 +83,27 @@ export const commands: CommandSpec[] = [
         title: "Move Terrain Set Up",
         enabled: () => hasSet() && canMoveSelectedSet(-1),
         contextMenus: [{ menu: TERRAIN_SET_MENU, order: 300 }],
-        run: () => void moveSelectedSet(-1),
+        run: () => {
+            moveSelectedSet(-1);
+        },
     },
     {
         id: "terrain.moveSetDown",
         title: "Move Terrain Set Down",
         enabled: () => hasSet() && canMoveSelectedSet(1),
         contextMenus: [{ menu: TERRAIN_SET_MENU, order: 310 }],
-        run: () => void moveSelectedSet(1),
+        run: () => {
+            moveSelectedSet(1);
+        },
     },
     {
         id: "terrain.removeSet",
         title: "Remove Terrain Set",
         enabled: hasSet,
         contextMenus: [{ menu: TERRAIN_SET_MENU, order: 400 }],
-        run: () => void removeSelectedSet(),
+        run: () => {
+            removeSelectedSet();
+        },
     },
     {
         id: "terrain.rename",
@@ -106,21 +120,27 @@ export const commands: CommandSpec[] = [
         title: "Move Terrain Up",
         enabled: () => hasSet() && canMoveSelectedTerrain(-1),
         contextMenus: [{ menu: TERRAIN_MENU, order: 200 }],
-        run: () => void moveSelectedTerrain(-1),
+        run: () => {
+            moveSelectedTerrain(-1);
+        },
     },
     {
         id: "terrain.moveDown",
         title: "Move Terrain Down",
         enabled: () => hasSet() && canMoveSelectedTerrain(1),
         contextMenus: [{ menu: TERRAIN_MENU, order: 210 }],
-        run: () => void moveSelectedTerrain(1),
+        run: () => {
+            moveSelectedTerrain(1);
+        },
     },
     {
         id: "terrain.remove",
         title: "Remove Terrain",
         enabled: () => hasSet() && selectedSet()!.set.colors.length > 1,
         contextMenus: [{ menu: TERRAIN_MENU, order: 300 }],
-        run: () => void removeSelectedTerrain(),
+        run: () => {
+            removeSelectedTerrain();
+        },
     },
 ];
 

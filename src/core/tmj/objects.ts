@@ -89,20 +89,7 @@ function readShape(object: JsonObject, kind: string, what: string): Shape | stri
     const y = num(object, "y", 0, what);
     if (!inRange(x) || !inRange(y)) return "its position is out of range";
     if (kind === "point") return { shape: "point", x, y };
-    if (kind === "polygon" || kind === "polyline") {
-        const points = readPoints(object[kind]);
-        if (points === null) return `its ${kind} points are malformed`;
-        const fewest = kind === "polygon" ? MIN_POLYGON_POINTS : MIN_POLYLINE_POINTS;
-        if (points.length < fewest || points.length > MAX_SHAPE_POINTS) {
-            return `a ${kind} of ${points.length} points`;
-        }
-        if (!points.every(([px, py]) => inRange(x + px) && inRange(y + py))) {
-            return "a point is out of range";
-        }
-        return kind === "polygon"
-            ? { shape: "polygon", x, y, points }
-            : { shape: "polyline", x, y, points };
-    }
+    if (kind === "polygon" || kind === "polyline") return readPointShape(object, kind, x, y);
     const width = num(object, "width", 0, what);
     const height = num(object, "height", 0, what);
     if (width < 0 || height < 0) return "its size is negative";
@@ -110,6 +97,27 @@ function readShape(object: JsonObject, kind: string, what: string): Shape | stri
     return kind === "ellipse"
         ? { shape: "ellipse", x, y, width, height }
         : { shape: "rectangle", x, y, width, height };
+}
+
+/** The polygon or polyline of a marker at `x, y`, or why it cannot be one. */
+function readPointShape(
+    object: JsonObject,
+    kind: "polygon" | "polyline",
+    x: number,
+    y: number,
+): Shape | string {
+    const points = readPoints(object[kind]);
+    if (points === null) return `its ${kind} points are malformed`;
+    const fewest = kind === "polygon" ? MIN_POLYGON_POINTS : MIN_POLYLINE_POINTS;
+    if (points.length < fewest || points.length > MAX_SHAPE_POINTS) {
+        return `a ${kind} of ${points.length} points`;
+    }
+    if (!points.every(([px, py]) => inRange(x + px) && inRange(y + py))) {
+        return "a point is out of range";
+    }
+    return kind === "polygon"
+        ? { shape: "polygon", x, y, points }
+        : { shape: "polyline", x, y, points };
 }
 
 export interface ObjectContext {

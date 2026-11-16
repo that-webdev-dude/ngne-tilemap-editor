@@ -286,7 +286,7 @@ function pathTool(kind: "polygon" | "polyline", spec: Pick<ToolSpec, "id" | "lab
                     return;
                 }
             }
-            const last = points[points.length - 1]!;
+            const last = points.at(-1)!;
             if (at.x !== last.x || at.y !== last.y) points.push(at);
             show();
         },

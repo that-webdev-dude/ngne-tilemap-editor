@@ -85,8 +85,7 @@ export function bucketRegion(
 ): Region {
     const last = known;
     if (
-        last &&
-        last.session === session &&
+        last?.session === session &&
         last.revision === revision &&
         last.mapId === map.id &&
         last.layerId === layerId &&
@@ -107,7 +106,7 @@ export function bucketRegion(
             // As in Tiled, the pressed cell must lie in the region filled.
             if (!selection) region = rectRegion(rect);
             else if (maskHas(selection, cell.x, cell.y)) region = maskSpans(selection);
-        } else if (!stamp || stamp.width !== 1 || stamp.height !== 1 || stamp.cells[0] !== value) {
+        } else if (stamp?.width !== 1 || stamp.height !== 1 || stamp.cells[0] !== value) {
             const flood = floodRegion((x, y) => layer.cells.get(x, y), cell, rect);
             region = selection ? maskSpans(intersectMask(spansMask(flood), selection)) : flood;
         }

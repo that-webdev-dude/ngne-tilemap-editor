@@ -69,7 +69,8 @@ function textToInt(text: string): number | null {
     const trimmed = text.trim();
     if (!INTEGER_TEXT.test(trimmed)) return null;
     const value = Number(trimmed);
-    return Number.isSafeInteger(value) ? (value === 0 ? 0 : value) : null;
+    if (!Number.isSafeInteger(value)) return null;
+    return value === 0 ? 0 : value;
 }
 
 function textToFloat(text: string): number | null {
@@ -85,30 +86,48 @@ function textToColour(text: string): string | null {
     return null;
 }
 
+function boolValue(from: PropertyType, value: Property["value"]): boolean | null {
+    if (from === "int" || from === "float") return value !== 0;
+    if (from === "string") return textToBool(value as string);
+    return null;
+}
+
+function intValue(from: PropertyType, value: Property["value"]): number | null {
+    if (from === "bool") return value ? 1 : 0;
+    if (from === "float") return roundedInt(value as number);
+    if (from === "string") return textToInt(value as string);
+    return null;
+}
+
+function floatValue(from: PropertyType, value: Property["value"]): number | null {
+    if (from === "bool") return value ? 1 : 0;
+    if (from === "int") return value as number;
+    if (from === "string") return textToFloat(value as string);
+    return null;
+}
+
+function stringValue(from: PropertyType, value: Property["value"]): string | null {
+    const text = from === "bool" ? boolText(value) : String(value as number | string);
+    return text.length <= MAX_STRING_PROPERTY_LENGTH ? text : null;
+}
+
+function boolText(value: Property["value"]): string {
+    return value ? "true" : "false";
+}
+
 /** The converted value of `property` as type `type`, or null when it does not convert. */
 function converted(property: Property, type: PropertyType): Property["value"] | null {
     const { type: from, value } = property;
     if (from === type) return value;
     switch (type) {
         case "bool":
-            if (from === "int" || from === "float") return value !== 0;
-            if (from === "string") return textToBool(value as string);
-            return null;
+            return boolValue(from, value);
         case "int":
-            if (from === "bool") return value ? 1 : 0;
-            if (from === "float") return roundedInt(value as number);
-            if (from === "string") return textToInt(value as string);
-            return null;
+            return intValue(from, value);
         case "float":
-            if (from === "bool") return value ? 1 : 0;
-            if (from === "int") return value as number;
-            if (from === "string") return textToFloat(value as string);
-            return null;
-        case "string": {
-            const text =
-                from === "bool" ? (value ? "true" : "false") : String(value as number | string);
-            return text.length <= MAX_STRING_PROPERTY_LENGTH ? text : null;
-        }
+            return floatValue(from, value);
+        case "string":
+            return stringValue(from, value);
         case "color":
             return from === "string" ? textToColour(value as string) : null;
         case "file":
@@ -147,6 +166,11 @@ export function propertyNameProblem(name: string): string | null {
     return null;
 }
 
+/** Whether `value` is a text of at most `max` UTF-16 code units. */
+function isTextUpTo(value: unknown, max: number): boolean {
+    return typeof value === "string" && value.length <= max;
+}
+
 /** Why `property`'s value is not one of its type (FORMAT §1.4); null when it is. */
 export function propertyValueProblem(property: Property): string | null {
     const { type, value } = property;
@@ -160,7 +184,7 @@ export function propertyValueProblem(property: Property): string | null {
         case "float":
             return Number.isFinite(value) ? null : "A float property is a finite number.";
         case "string":
-            return typeof value === "string" && value.length <= MAX_STRING_PROPERTY_LENGTH
+            return isTextUpTo(value, MAX_STRING_PROPERTY_LENGTH)
                 ? null
                 : `A string property has at most ${MAX_STRING_PROPERTY_LENGTH.toLocaleString("en")} characters.`;
         case "color":
@@ -168,7 +192,7 @@ export function propertyValueProblem(property: Property): string | null {
                 ? null
                 : "A color property is #rrggbbaa.";
         case "file":
-            return typeof value === "string" && value.length <= MAX_FILE_PROPERTY_LENGTH
+            return isTextUpTo(value, MAX_FILE_PROPERTY_LENGTH)
                 ? null
                 : `A file property has at most ${MAX_FILE_PROPERTY_LENGTH.toLocaleString("en")} characters.`;
     }

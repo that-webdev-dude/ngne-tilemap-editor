@@ -25,7 +25,7 @@ import {
     tileLabel,
     tileOrigin,
 } from "../../app/tilesets/panel/tileGrid";
-import type { GridLayout, GridPoint, PanelZoom } from "../../app/tilesets/panel/tileGrid";
+import type { GridLayout, GridPoint, GridRect, PanelZoom } from "../../app/tilesets/panel/tileGrid";
 import { installUpdateDrop } from "../../app/tilesets/update/updateDrop";
 import {
     selectionRect,
@@ -35,7 +35,7 @@ import {
     useTilesetPanel,
 } from "../../app/tilesets/panel/tilesetPanel";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import type { Tileset } from "../../core/model";
+import type { Tile, Tileset } from "../../core/model";
 import { contextMenuEntries } from "../commands/contextMenu";
 import { runCommand } from "../commands/runCommand";
 import { useCommands } from "../commands/useCommands";
@@ -93,7 +93,7 @@ const ARROWS: Readonly<Record<string, [number, number]>> = {
 };
 
 /** The in-place rename of a tab (F2): Enter or leaving applies, Escape keeps the old name. */
-function TabRenameField({ text, onEnd }: { text: string; onEnd(): void }) {
+function TabRenameField({ text, onEnd }: Readonly<{ text: string; onEnd(): void }>) {
     return (
         <input
             className="tilesets-panel__rename"
@@ -122,12 +122,26 @@ function TabRenameField({ text, onEnd }: { text: string; onEnd(): void }) {
                 }
             }}
             // Leaving the field keeps what was typed, as Enter does.
-            onBlur={() => void applyTilesetRename()}
+            onBlur={() => {
+                applyTilesetRename();
+            }}
         />
     );
 }
 
-function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown: Tileset | null }) {
+/** The tab key `key` goes to from tab `index` of `count`, before wrapping; null for another key. */
+function tabTarget(key: string, index: number, count: number): number | null {
+    if (key === "ArrowLeft") return index - 1;
+    if (key === "ArrowRight") return index + 1;
+    if (key === "Home") return 0;
+    if (key === "End") return count - 1;
+    return null;
+}
+
+function TilesetTabs({
+    tilesets,
+    shown,
+}: Readonly<{ tilesets: readonly Tileset[]; shown: Tileset | null }>) {
     const list = useRef<HTMLDivElement>(null);
     const commands = useCommands();
     const renaming = useTilesetRename((state) => state.renaming);
@@ -142,16 +156,7 @@ function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown:
     /** The rename ended from the keyboard: the focus goes back to the shown tab. */
     const endRename = () => requestAnimationFrame(() => shown && focusTab(shown.id));
     const onKeyDown = (event: KeyboardEvent<HTMLButtonElement>, index: number) => {
-        const target =
-            event.key === "ArrowLeft"
-                ? index - 1
-                : event.key === "ArrowRight"
-                  ? index + 1
-                  : event.key === "Home"
-                    ? 0
-                    : event.key === "End"
-                      ? tilesets.length - 1
-                      : null;
+        const target = tabTarget(event.key, index, tilesets.length);
         if (target === null) return;
         event.preventDefault();
         const next = tilesets[(target + tilesets.length) % tilesets.length];
@@ -191,7 +196,7 @@ function TilesetTabs({ tilesets, shown }: { tilesets: readonly Tileset[]; shown:
     );
 }
 
-function TileMenuButton({ enabled }: { enabled: boolean }) {
+function TileMenuButton({ enabled }: Readonly<{ enabled: boolean }>) {
     const commands = useCommands();
     const entries = contextMenuEntries(TILE_MENU, commands);
     return (
@@ -249,7 +254,16 @@ function selectionEnd(tileset: Tileset): GridPoint | null {
     };
 }
 
-function TileGrid({ tileset }: { tileset: Tileset }) {
+/** What the grid tells of its selection: its size, else its tile, else that there is none. */
+function selectionText(tileset: Tileset, selection: GridRect | null, endTile: Tile | null): string {
+    if (!selection) return "No tile selected";
+    if (selection.columns * selection.rows > 1) {
+        return `${selection.columns} × ${selection.rows} tiles selected`;
+    }
+    return endTile ? `${tileLabel(tileset, endTile)} selected` : "No tile selected";
+}
+
+function TileGrid({ tileset }: Readonly<{ tileset: Tileset }>) {
     // Only what the grid shows: not the hovered tile, and not the session's `revision`, which
     // also rises with every pan and zoom of the map. `step` rises with each history step.
     const step = useStore(historySteps, (state) => state.step);
@@ -412,13 +426,7 @@ function TileGrid({ tileset }: { tileset: Tileset }) {
 
     const end = selectionEnd(tileset);
     const endTile = end ? shownTile(tileset, layout, end, filter) : null;
-    const described = selection
-        ? selection.columns * selection.rows > 1
-            ? `${selection.columns} × ${selection.rows} tiles selected`
-            : endTile
-              ? `${tileLabel(tileset, endTile)} selected`
-              : "No tile selected"
-        : "No tile selected";
+    const described = selectionText(tileset, selection, endTile);
 
     return (
         <ContextMenu items={entries} disabled={entries.length === 0 || !selection}>

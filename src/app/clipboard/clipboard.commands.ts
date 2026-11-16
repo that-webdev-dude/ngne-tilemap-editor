@@ -7,8 +7,8 @@ import {
     setSelectionCommand,
     tileSelectionOf,
 } from "../../core/selection";
-import { effectiveValues, findLayer } from "../../core/model";
-import type { Region } from "../../core/model";
+import { effectiveValues, findLayer, walkLayers } from "../../core/model";
+import type { Marker, Region } from "../../core/model";
 import { appCommands } from "../commands/appCommands";
 import type { CommandSpec } from "../commands/types";
 import { activeHistory, sessionStore } from "../state/session";
@@ -22,8 +22,6 @@ import { CUT_LABEL, captureStamp } from "../tools/stamp/capture";
 import { setCurrentStamp } from "../tools/stamp/currentStamp";
 import { activeLayer, activeLayerId, activeMap } from "../tools/toolSets";
 import { MarkerEditError, deleteMarkersCommand, pasteMarkersCommand } from "../../core/markers";
-import { walkLayers } from "../../core/model";
-import type { Marker } from "../../core/model";
 import { markerLayerRefusal } from "../markers/markerToolSupport";
 import {
     deleteSelectedMarkersCommand,
@@ -285,7 +283,10 @@ export const commands: CommandSpec[] = [
         title: "Copy",
         shortcut: "Ctrl+C",
         enabled: () => markersOn() || selectedTileCells() !== null,
-        run: () => void (markersOn() ? copyMarkers() : copy()),
+        run: () => {
+            if (markersOn()) copyMarkers();
+            else copy();
+        },
     },
     {
         id: "edit.paste",

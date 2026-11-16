@@ -1,7 +1,7 @@
 import { regionBounds } from "../../../core/fill";
 import { tileSelectionOf } from "../../../core/selection";
 import { fillRects } from "../../overlay/draw";
-import type { OverlayFrame, OverlayLayer } from "../../overlay/types";
+import type { OverlayCursor, OverlayFrame, OverlayLayer } from "../../overlay/types";
 import { sessionStore } from "../../state/session";
 import { toolState } from "../activeTool";
 import { toolPipeline } from "../appPipeline";
@@ -16,6 +16,7 @@ import { bucketPlan, bucketTool, subscribeBucket } from "./bucket.tools";
 import { subscribeBrushTerrain } from "../terrain/brushTerrain";
 import { fillModeOf, selectedPlan } from "./fillPlan";
 import type { FillPlan } from "./fillPlan";
+import type { Tool } from "../types";
 import {
     ellipseFillTool,
     rectangleFillTool,
@@ -58,27 +59,39 @@ function drawPlan(frame: OverlayFrame, plan: FillPlan): void {
     if (inside) fillRects(context, outlineRects(cellDeviceRect(mapping, inside)), theme.accent);
 }
 
+/** The bucket's preview of a press of `tool` on `cell`. */
+function drawBucketPreview(frame: OverlayFrame, tool: Tool, cell: OverlayCursor["cell"]): void {
+    const { map } = frame;
+    const { session } = sessionStore.getState();
+    const options = toolState.options(tool);
+    const whole = heldModifiers().shift || options.wholeSelection === true;
+    const layerId = activeLayerId(session, map);
+    const plan = bucketPlan(map, layerId, cell, whole, fillModeOf(options));
+    if (plan) drawPlan(frame, plan);
+}
+
+/** The shape fill's preview of its drag, the pointer on `cell`. */
+function drawShapeDragPreview(frame: OverlayFrame, cell: OverlayCursor["cell"]): void {
+    const { map } = frame;
+    const plan = shapeDragPlan(map, cell, heldModifiers());
+    const selection = tileSelectionOf(sessionStore.getState().session, map.id);
+    const shown = plan && selection ? selectedPlan(plan, selection) : plan;
+    if (shown) drawPlan(frame, shown);
+}
+
 function drawFillPreview(frame: OverlayFrame): void {
     const tool = toolPipeline.strokeTool ?? toolState.active();
-    const { cursor, map, mapping, context, theme } = frame;
+    const { cursor, mapping, context, theme } = frame;
     if (!cursor || toolPipeline.strokeButton === "secondary") return;
     const pressed = toolPipeline.strokeTool === tool && toolPipeline.strokeButton === "primary";
     if (tool?.id === bucketTool.id) {
         if (pressed || !mapping.contains(cursor.cell)) return;
-        const { session } = sessionStore.getState();
-        const options = toolState.options(tool);
-        const whole = heldModifiers().shift || options.wholeSelection === true;
-        const layerId = activeLayerId(session, map);
-        const plan = bucketPlan(map, layerId, cursor.cell, whole, fillModeOf(options));
-        if (plan) drawPlan(frame, plan);
+        drawBucketPreview(frame, tool, cursor.cell);
         return;
     }
     if (tool?.id !== rectangleFillTool.id && tool?.id !== ellipseFillTool.id) return;
     if (pressed) {
-        const plan = shapeDragPlan(map, cursor.cell, heldModifiers());
-        const selection = tileSelectionOf(sessionStore.getState().session, map.id);
-        const shown = plan && selection ? selectedPlan(plan, selection) : plan;
-        if (shown) drawPlan(frame, shown);
+        drawShapeDragPreview(frame, cursor.cell);
         return;
     }
     if (!mapping.contains(cursor.cell)) return;

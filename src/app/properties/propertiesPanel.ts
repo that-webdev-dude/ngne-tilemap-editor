@@ -547,27 +547,35 @@ function builtinCommand(
             return setLayerValuesCommand(project, target.mapId, [target.layerId], {
                 [key]: value,
             } as Partial<LayerValues>);
-        case "markers": {
-            const ids = target.markerIds;
-            if (key === "name")
-                return renameMarkersCommand(project, target.mapId, ids, value as string);
-            if (key === "class") {
-                return setMarkerClassCommand(project, target.mapId, ids, value as string);
-            }
-            const [marker] = markersOf(project, target);
-            if (!marker) return null;
-            const amount = value as number;
-            if (key === "x" || key === "y") {
-                const dx = key === "x" ? amount - marker.x : 0;
-                const dy = key === "y" ? amount - marker.y : 0;
-                if (dx === 0 && dy === 0) return null;
-                return moveMarkersCommand(project, target.mapId, [marker.id], dx, dy);
-            }
-            const box = shapeBox(marker);
-            if (box[key as "width" | "height"] === amount) return null;
-            return resizeMarkerCommand(project, target.mapId, marker.id, { ...box, [key]: amount });
-        }
+        case "markers":
+            return markerFieldCommand(project, target, key, value);
     }
+}
+
+/** `builtinCommand` for the markers of `target`. */
+function markerFieldCommand(
+    project: Project,
+    target: PropertyTarget & { kind: "markers" },
+    key: string,
+    value: string | number,
+): Command | null {
+    const ids = target.markerIds;
+    if (key === "name") return renameMarkersCommand(project, target.mapId, ids, value as string);
+    if (key === "class") {
+        return setMarkerClassCommand(project, target.mapId, ids, value as string);
+    }
+    const [marker] = markersOf(project, target);
+    if (!marker) return null;
+    const amount = value as number;
+    if (key === "x" || key === "y") {
+        const dx = key === "x" ? amount - marker.x : 0;
+        const dy = key === "y" ? amount - marker.y : 0;
+        if (dx === 0 && dy === 0) return null;
+        return moveMarkersCommand(project, target.mapId, [marker.id], dx, dy);
+    }
+    const box = shapeBox(marker);
+    if (box[key as "width" | "height"] === amount) return null;
+    return resizeMarkerCommand(project, target.mapId, marker.id, { ...box, [key]: amount });
 }
 
 /** Sets built-in field `key` of the shown items to `value`, one undo step. */

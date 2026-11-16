@@ -1,5 +1,9 @@
-import { selectCommand, selectNoneCommand, setSelectionCommand } from "../../../core/selection";
-import { selectionOf } from "../../../core/selection";
+import {
+    selectCommand,
+    selectNoneCommand,
+    selectionOf,
+    setSelectionCommand,
+} from "../../../core/selection";
 import type { SelectionMode } from "../../../core/selection";
 import type { Region } from "../../../core/model";
 import type {

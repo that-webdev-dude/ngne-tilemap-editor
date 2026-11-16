@@ -261,6 +261,24 @@ function sample(context: ToolContext, pointer: ToolPointer): void {
     brushSource.choose(wangId[target.index]!);
 }
 
+/** The step a press on `target` paints: a line from `start` when `line`, else one target. */
+function pressStep(
+    paint: PaintStroke,
+    brush: BrushTerrain,
+    line: boolean,
+    start: PixelPoint | null,
+    target: BrushTarget,
+    modes: { tileMode: boolean; symmetry: boolean },
+) {
+    return paintStep(paint, brush, {
+        tileMode: modes.tileMode,
+        behaviour: line ? "line" : "single",
+        from: line ? start : null,
+        to: target,
+        symmetry: modes.symmetry,
+    });
+}
+
 export const terrainBrushTool: ToolSpec = {
     id: TERRAIN_TOOL_ID,
     label: "Terrain Brush",
@@ -305,13 +323,7 @@ export const terrainBrushTool: ToolSpec = {
         if (line && !start) {
             lineStart = { mapId: paint.mapId, point: target.point };
         } else {
-            const result = paintStep(paint, brush, {
-                tileMode,
-                behaviour: line ? "line" : "single",
-                from: line ? start : null,
-                to: target,
-                symmetry,
-            });
+            const result = pressStep(paint, brush, line, start, target, { tileMode, symmetry });
             stroke.invalid = result.invalid;
             stroke.current = { point: target.point, index: result.index };
             if (!tileMode) stroke.edgeIndex = result.index;

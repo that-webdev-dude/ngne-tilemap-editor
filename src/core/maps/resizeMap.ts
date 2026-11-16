@@ -4,6 +4,7 @@ import { BYTES_PER_CHUNK, MAX_LAYER_OFFSET, MAX_MARKER_COORD, walkLayers } from 
 import type {
     ImageLayer,
     Marker,
+    MarkerLayer,
     Project,
     ProjectMap,
     ProjectSession,
@@ -187,26 +188,37 @@ export function resizeMapProblems(
     ] as const;
     for (const [key, old, size, side] of axes) {
         if (problems[side]) continue;
-        const range = offsetRange(old, size);
-        const value = values[key];
-        const axis = key === "offsetX" ? "X" : "Y";
-        if (!Number.isInteger(value) || value < range.min || value > range.max) {
-            problems[key] =
-                range.min === range.max
-                    ? `The offset ${axis} is 0 while the ${side} stays ${old}.`
-                    : `The offset ${axis} is a whole number of cells from ${range.min} to ${range.max}.`;
-            continue;
-        }
-        const shift = value * ((key === "offsetX" ? source.tileWidth : source.tileHeight) ?? 0);
-        if (reaches(source.markers, axis, shift, MAX_MARKER_COORD)) {
-            problems[key] =
-                `The offset ${axis} would move a marker past ${pixels(MAX_MARKER_COORD)}.`;
-        } else if (reaches(source.images, axis, shift, MAX_LAYER_OFFSET)) {
-            problems[key] =
-                `The offset ${axis} would move an image layer past ${pixels(MAX_LAYER_OFFSET)}.`;
-        }
+        const problem = offsetProblem(source, values, key, old, size, side);
+        if (problem !== null) problems[key] = problem;
     }
     return problems;
+}
+
+/** Why offset `key` of `values` cannot resize `source` (`resizeMapProblems`); null if it can. */
+function offsetProblem(
+    source: Partial<ResizeSource>,
+    values: ResizeMapValues,
+    key: "offsetX" | "offsetY",
+    old: number,
+    size: number,
+    side: "width" | "height",
+): string | null {
+    const range = offsetRange(old, size);
+    const value = values[key];
+    const axis = key === "offsetX" ? "X" : "Y";
+    if (!Number.isInteger(value) || value < range.min || value > range.max) {
+        return range.min === range.max
+            ? `The offset ${axis} is 0 while the ${side} stays ${old}.`
+            : `The offset ${axis} is a whole number of cells from ${range.min} to ${range.max}.`;
+    }
+    const shift = value * ((key === "offsetX" ? source.tileWidth : source.tileHeight) ?? 0);
+    if (reaches(source.markers, axis, shift, MAX_MARKER_COORD)) {
+        return `The offset ${axis} would move a marker past ${pixels(MAX_MARKER_COORD)}.`;
+    }
+    if (reaches(source.images, axis, shift, MAX_LAYER_OFFSET)) {
+        return `The offset ${axis} would move an image layer past ${pixels(MAX_LAYER_OFFSET)}.`;
+    }
+    return null;
 }
 
 /** The cells of `store` moved by `dx, dy`, those outside `width × height` left out. */
@@ -239,6 +251,43 @@ function movedMarker(marker: Marker, dx: number, dy: number): Marker {
 function replaceAll(list: Marker[], items: readonly Marker[]): void {
     list.length = items.length;
     items.forEach((item, index) => (list[index] = item));
+}
+
+/** The markers of `layer` before and after a move by `dx, dy`; throws if one leaves its range. */
+function movedMarkerLayer(
+    layer: MarkerLayer,
+    dx: number,
+    dy: number,
+): { markers: Marker[]; before: Marker[]; after: Marker[] } {
+    const after = layer.markers.map((marker) => movedMarker(marker, dx, dy));
+    const outside = after.find(
+        (marker) => Math.abs(marker.x) > MAX_MARKER_COORD || Math.abs(marker.y) > MAX_MARKER_COORD,
+    );
+    if (outside) {
+        throw new MapEditError(
+            "values",
+            `The offset would move marker ${outside.id} of “${layer.name}” past ` +
+                `${pixels(MAX_MARKER_COORD)}.`,
+        );
+    }
+    return { markers: layer.markers, before: [...layer.markers], after };
+}
+
+/** The offset of `layer` before and after a move by `dx, dy`; throws if it leaves its range. */
+function movedImageLayer(
+    layer: ImageLayer,
+    dx: number,
+    dy: number,
+): { layer: ImageLayer; before: [number, number]; after: [number, number] } {
+    const after: [number, number] = [layer.offsetX + dx, layer.offsetY + dy];
+    if (after.some((offset) => Math.abs(offset) > MAX_LAYER_OFFSET)) {
+        throw new MapEditError(
+            "values",
+            `The offset would move image layer “${layer.name}” past ` +
+                `${pixels(MAX_LAYER_OFFSET)}.`,
+        );
+    }
+    return { layer, before: [layer.offsetX, layer.offsetY], after };
 }
 
 /** Bytes the entry claims for each marker it keeps: an estimate of a marker object. */
@@ -275,29 +324,9 @@ export function resizeMapCommand(
             const after = movedCells(layer.cells, from, values);
             tileLayers.push({ layer, before: layer.cells, after });
         } else if (layer.type === "marker" && (dx !== 0 || dy !== 0)) {
-            const after = layer.markers.map((marker) => movedMarker(marker, dx, dy));
-            const outside = after.find(
-                (marker) =>
-                    Math.abs(marker.x) > MAX_MARKER_COORD || Math.abs(marker.y) > MAX_MARKER_COORD,
-            );
-            if (outside) {
-                throw new MapEditError(
-                    "values",
-                    `The offset would move marker ${outside.id} of “${layer.name}” past ` +
-                        `${pixels(MAX_MARKER_COORD)}.`,
-                );
-            }
-            markerLayers.push({ markers: layer.markers, before: [...layer.markers], after });
+            markerLayers.push(movedMarkerLayer(layer, dx, dy));
         } else if (layer.type === "image" && (dx !== 0 || dy !== 0)) {
-            const after: [number, number] = [layer.offsetX + dx, layer.offsetY + dy];
-            if (after.some((offset) => Math.abs(offset) > MAX_LAYER_OFFSET)) {
-                throw new MapEditError(
-                    "values",
-                    `The offset would move image layer “${layer.name}” past ` +
-                        `${pixels(MAX_LAYER_OFFSET)}.`,
-                );
-            }
-            imageLayers.push({ layer, before: [layer.offsetX, layer.offsetY], after });
+            imageLayers.push(movedImageLayer(layer, dx, dy));
         }
     }
 

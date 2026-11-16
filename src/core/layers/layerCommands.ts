@@ -322,6 +322,15 @@ export function layerValueProblems(
     if (values.opacity !== undefined && !isInt(values.opacity, 0, 255)) {
         problems.opacity = "The opacity is a whole number from 0 to 255.";
     }
+    placementProblems(values, problems);
+    return problems;
+}
+
+/** Adds the problems of `values`' offsets and parallax factors to `problems`. */
+function placementProblems(
+    values: Partial<LayerValues>,
+    problems: Partial<Record<keyof LayerValues, string>>,
+): void {
     for (const key of ["offsetX", "offsetY"] as const) {
         const value = values[key];
         if (value !== undefined && !isInt(value, -MAX_LAYER_OFFSET, MAX_LAYER_OFFSET)) {
@@ -337,7 +346,6 @@ export function layerValueProblems(
                 `A parallax factor is a number from −${MAX_PARALLAX} to ${MAX_PARALLAX}.`;
         }
     }
-    return problems;
 }
 
 /**
@@ -364,34 +372,11 @@ export function checkLayerTree(map: ProjectMap): void {
     let markers = 0;
     let points = 0;
     for (const { layer, ancestors } of entries) {
-        if (layer.type === "group" && ancestors.length + 1 > MAX_GROUP_DEPTH) {
-            throw new LayerEditError(
-                "limit",
-                `Groups nest at most ${MAX_GROUP_DEPTH} levels deep.`,
-            );
-        }
-        const values = effectiveValues(layer, ancestors);
-        if (
-            !isNum(values.offsetX, -MAX_LAYER_OFFSET, MAX_LAYER_OFFSET) ||
-            !isNum(values.offsetY, -MAX_LAYER_OFFSET, MAX_LAYER_OFFSET) ||
-            !isNum(values.parallaxX, -MAX_PARALLAX, MAX_PARALLAX) ||
-            !isNum(values.parallaxY, -MAX_PARALLAX, MAX_PARALLAX)
-        ) {
-            throw new LayerEditError(
-                "range",
-                `${quoted(layer.name)} would be drawn with an offset or parallax out of range: ` +
-                    `offsets add up to at most ±${MAX_LAYER_OFFSET.toLocaleString("en")} px and ` +
-                    `parallax factors multiply to at most ±${MAX_PARALLAX}.`,
-            );
-        }
+        checkLayerEntry(layer, ancestors);
         if (layer.type === "tile") cells += layer.cells.count;
         if (layer.type === "marker") {
             markers += layer.markers.length;
-            for (const marker of layer.markers) {
-                if (marker.shape === "polygon" || marker.shape === "polyline") {
-                    points += marker.points.length;
-                }
-            }
+            points += pointCount(layer.markers);
         }
     }
     if (cells > MAX_CELLS_PER_MAP) {
@@ -407,6 +392,38 @@ export function checkLayerTree(map: ProjectMap): void {
                 `${MAX_MARKER_POINTS.toLocaleString("en")} points.`,
         );
     }
+}
+
+/** Throws `LayerEditError` when `layer` nests too deep or is drawn out of range. */
+function checkLayerEntry(layer: Layer, ancestors: readonly GroupLayer[]): void {
+    if (layer.type === "group" && ancestors.length + 1 > MAX_GROUP_DEPTH) {
+        throw new LayerEditError("limit", `Groups nest at most ${MAX_GROUP_DEPTH} levels deep.`);
+    }
+    const values = effectiveValues(layer, ancestors);
+    if (
+        !isNum(values.offsetX, -MAX_LAYER_OFFSET, MAX_LAYER_OFFSET) ||
+        !isNum(values.offsetY, -MAX_LAYER_OFFSET, MAX_LAYER_OFFSET) ||
+        !isNum(values.parallaxX, -MAX_PARALLAX, MAX_PARALLAX) ||
+        !isNum(values.parallaxY, -MAX_PARALLAX, MAX_PARALLAX)
+    ) {
+        throw new LayerEditError(
+            "range",
+            `${quoted(layer.name)} would be drawn with an offset or parallax out of range: ` +
+                `offsets add up to at most ±${MAX_LAYER_OFFSET.toLocaleString("en")} px and ` +
+                `parallax factors multiply to at most ±${MAX_PARALLAX}.`,
+        );
+    }
+}
+
+/** The points of the polygons and polylines among `markers`. */
+function pointCount(markers: readonly Marker[]): number {
+    let points = 0;
+    for (const marker of markers) {
+        if (marker.shape === "polygon" || marker.shape === "polyline") {
+            points += marker.points.length;
+        }
+    }
+    return points;
 }
 
 // ---------------------------------------------------------------------------------------------
@@ -532,27 +549,30 @@ function takeLayerId(map: ProjectMap): number {
  * bottom of the map). Its name is `newLayerName`.
  */
 export function newLayerCommand(mapId: string, kind: NewLayerKind): Command {
-    const label =
-        kind === "tile"
-            ? LAYER_LABELS.newTile
-            : kind === "marker"
-              ? LAYER_LABELS.newMarker
-              : LAYER_LABELS.newGroup;
-    return treeCommand(label, mapId, (map, mapSession) => {
+    return treeCommand(newLayerLabel(kind), mapId, (map, mapSession) => {
         const entry = findLayer(map, mapSession.activeLayerId);
         const place = entry ? placeOf(map, entry.layer.id) : null;
         const name = newLayerName(map, kind);
         const id = takeLayerId(map);
-        const layer =
-            kind === "tile"
-                ? createTileLayer(id, name)
-                : kind === "marker"
-                  ? createMarkerLayer(id, name)
-                  : createGroupLayer(id, name);
+        const layer = createNewLayer(kind, id, name);
         const list = place ? place.list : map.layers;
         list.splice(place ? place.index + 1 : 0, 0, layer);
         mapSession.activeLayerId = id;
     });
+}
+
+/** The history label of New Layer for a layer of `kind`. */
+function newLayerLabel(kind: NewLayerKind): string {
+    if (kind === "tile") return LAYER_LABELS.newTile;
+    if (kind === "marker") return LAYER_LABELS.newMarker;
+    return LAYER_LABELS.newGroup;
+}
+
+/** A new, empty layer of `kind` with `id` and `name`. */
+function createNewLayer(kind: NewLayerKind, id: number, name: string): Layer {
+    if (kind === "tile") return createTileLayer(id, name);
+    if (kind === "marker") return createMarkerLayer(id, name);
+    return createGroupLayer(id, name);
 }
 
 /**
@@ -639,38 +659,50 @@ export function ungroupCommand(mapId: string, ids: readonly number[]): Command {
         while (todo.length > 0) {
             const layer = todo.shift()!;
             if (!findLayer(map, layer.id)) continue;
-            let group: GroupLayer;
-            let moving: Layer[];
-            if (layer.type === "group") {
-                group = layer;
-                moving = [...layer.layers];
-            } else {
-                const place = placeOf(map, layer.id);
-                if (!place.parent) continue;
-                group = place.parent;
-                moving = [layer];
-            }
+            const ungrouped = ungroupedFrom(map, layer);
+            if (!ungrouped) continue;
+            const { group, moving } = ungrouped;
             const at = placeOf(map, group.id);
             for (const child of moving) group.layers.splice(group.layers.indexOf(child), 1);
             at.list.splice(at.index + 1, 0, ...moving);
             changed = true;
-            if (group.layers.length === 0) {
-                // The group's place now, with its children above it: the neighbour is taken
-                // before the group goes.
-                const place = placeOf(map, group.id);
-                if (mapSession.activeLayerId === group.id) {
-                    mapSession.activeLayerId =
-                        moving.length > 0 ? moving.at(-1)!.id : (neighbourAfterRemoval(place) ?? 0);
-                }
-                place.list.splice(place.index, 1);
-                const index = todo.indexOf(group);
-                if (index >= 0) todo.splice(index, 1);
-            }
+            if (group.layers.length === 0) removeEmptiedGroup(map, mapSession, group, moving, todo);
         }
         if (!changed) {
             throw new LayerEditError("move", "Only a group or a layer inside a group ungroups.");
         }
     });
+}
+
+/** The group `layer` ungroups from and the layers that leave it; null outside any group. */
+function ungroupedFrom(
+    map: ProjectMap,
+    layer: Layer,
+): { group: GroupLayer; moving: Layer[] } | null {
+    if (layer.type === "group") return { group: layer, moving: [...layer.layers] };
+    const place = placeOf(map, layer.id);
+    if (!place.parent) return null;
+    return { group: place.parent, moving: [layer] };
+}
+
+/** Removes `group`, emptied by moving out `moving`, from `map` and from `todo`. */
+function removeEmptiedGroup(
+    map: ProjectMap,
+    mapSession: MapSession,
+    group: GroupLayer,
+    moving: readonly Layer[],
+    todo: Layer[],
+): void {
+    // The group's place now, with its children above it: the neighbour is taken
+    // before the group goes.
+    const place = placeOf(map, group.id);
+    if (mapSession.activeLayerId === group.id) {
+        mapSession.activeLayerId =
+            moving.length > 0 ? moving.at(-1)!.id : (neighbourAfterRemoval(place) ?? 0);
+    }
+    place.list.splice(place.index, 1);
+    const index = todo.indexOf(group);
+    if (index >= 0) todo.splice(index, 1);
 }
 
 /**

@@ -379,7 +379,7 @@ export function pasteMarkersCommand(
             const mapSession = mapSessionOf(session, map);
             if (added) {
                 for (const marker of added) layer.markers.push(structuredClone(marker));
-                map.nextMarkerId = Math.max(map.nextMarkerId, added[added.length - 1]!.id + 1);
+                map.nextMarkerId = Math.max(map.nextMarkerId, added.at(-1)!.id + 1);
                 mapSession.markerSelection = [...selection];
                 return;
             }

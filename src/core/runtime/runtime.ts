@@ -245,8 +245,8 @@ const GID_MASK = 0x0fffffff;
 
 const SLUG = /^[a-z0-9][a-z0-9_-]{0,63}$/;
 const COLOUR = /^#[0-9a-fA-F]{8}$/;
-const DEVICE_NAME = /^(?:con|prn|aux|nul|com[0-9]|lpt[0-9])$/;
-const TILE_ID = /^(?:0|[1-9][0-9]{0,6})$/;
+const DEVICE_NAME = /^(?:con|prn|aux|nul|com\d|lpt\d)$/;
+const TILE_ID = /^(?:0|[1-9]\d{0,6})$/;
 const PROPERTY_TYPES = ["bool", "int", "float", "string", "color", "file"] as const;
 const LAYER_TYPES = ["tile", "marker", "image"] as const;
 const MARKER_SHAPES = ["rectangle", "ellipse", "point", "polygon", "polyline"] as const;
@@ -268,11 +268,8 @@ function shown(value: unknown): string {
 
 /** Throws the error for the member at `path`; `problem` completes the sentence. */
 function fail(code: TilemapErrorCode, path: string, problem: string): never {
-    throw new TilemapError(
-        code,
-        path,
-        `${path === "" ? "The tilemap" : `\`${path}\``} ${problem}.`,
-    );
+    const subject = path === "" ? "The tilemap" : `\`${path}\``;
+    throw new TilemapError(code, path, `${subject} ${problem}.`);
 }
 
 /** The path of the member `key` of the object at `path`. */
@@ -719,11 +716,13 @@ function checkReferences(
         }
         // A chain longer than the number of groups goes round a cycle.
         let parent: number | null = group.parentId;
-        for (let steps = 0; parent !== null; steps += 1) {
+        let steps = 0;
+        while (parent !== null) {
             if (parent === group.id || steps > groups.length) {
                 fail("reference", path, `makes the group ${group.id} its own ancestor`);
             }
             parent = parents.get(parent) ?? null;
+            steps += 1;
         }
     });
     layers.forEach((layer, index) => {
@@ -803,7 +802,19 @@ function checkAtlas(
     const frames = own(atlas, "frames", "");
     const animations = own(atlas, "animations", "");
     if (!isObject(frames) || !isObject(animations)) bad("has no frames or animations object");
+    const present = checkFrames(tileset, frames, own, bad);
+    checkAnimations(frames, animations, own, bad);
+    return present;
+}
 
+/** The frames of `checkAtlas`: 1 per tile ID below `nextTileId` that has its frame. */
+function checkFrames(
+    tileset: TilemapTileset,
+    frames: Json,
+    own: (owner: Json, key: string, where: string) => unknown,
+    bad: (problem: string) => never,
+): Uint8Array {
+    const { name } = tileset;
     const present = new Uint8Array(tileset.nextTileId);
     const prefix = `${name}-`;
     const expected: readonly [string, unknown][] = [
@@ -833,6 +844,16 @@ function checkAtlas(
         }
         present[Number(tile)] = 1;
     }
+    return present;
+}
+
+/** The animations of `checkAtlas`. */
+function checkAnimations(
+    frames: Json,
+    animations: Json,
+    own: (owner: Json, key: string, where: string) => unknown,
+    bad: (problem: string) => never,
+): void {
     for (const id of Object.keys(animations)) {
         const where = `animations[${quoted(id)}]`;
         if (!Object.hasOwn(frames, id)) bad(`has \`${where}\`, which names no tile's frame`);
@@ -853,7 +874,18 @@ function checkAtlas(
             }
         });
     }
-    return present;
+}
+
+/** The index of the last of `starts` (ascending) at or below `gid`; -1 for none. */
+function lastStartAtOrBelow(starts: readonly number[], gid: number): number {
+    let low = 0;
+    let high = starts.length - 1;
+    while (low <= high) {
+        const middle = (low + high) >> 1;
+        if (starts[middle]! <= gid) low = middle + 1;
+        else high = middle - 1;
+    }
+    return high;
 }
 
 /** Step 4 of FORMAT 3.8: atlases, cells and tile data against the tiles that exist. */
@@ -878,13 +910,7 @@ function checkTiles(tilemap: Tilemap, atlases: Readonly<Record<string, unknown>>
             const gid = value & GID_MASK;
             if (gid === 0) fail("field", path, "is an empty cell with a flag set");
             // The last span that starts at or below the GID.
-            let low = 0;
-            let high = starts.length - 1;
-            while (low <= high) {
-                const middle = (low + high) >> 1;
-                if (starts[middle]! <= gid) low = middle + 1;
-                else high = middle - 1;
-            }
+            const high = lastStartAtOrBelow(starts, gid);
             const tilesetIndex = high < 0 ? -1 : order[high]!;
             const tileset = tilesets[tilesetIndex];
             if (tileset === undefined || gid - tileset.firstGid >= tileset.nextTileId) {
@@ -1422,14 +1448,9 @@ export function grid(
     select: string | ((tile: TileInfo) => boolean),
 ): Uint8Array {
     const cache = cacheOf(tilemap, layer);
-    const cached =
-        typeof select === "string" ? cache.grids.get(select) : cache.predicateGrids.get(select);
+    const cached = cachedGrid(cache, select);
     if (cached !== undefined) return cached;
-    const holds =
-        typeof select === "string"
-            ? (tile: TileInfo) =>
-                  isSet(tile.properties.find((property) => property.name === select)?.value)
-            : select;
+    const holds = gridPredicate(select);
     const count = tilemap.width * tilemap.height;
     const result = new Uint8Array(count);
     const verdicts = new Map<number, boolean>();
@@ -1447,6 +1468,24 @@ export function grid(
     if (typeof select === "string") cache.grids.set(select, result);
     else cache.predicateGrids.set(select, result);
     return result;
+}
+
+/** The `grid` of `select` that `cache` holds; undefined when it holds none. */
+function cachedGrid(
+    cache: LayerCache,
+    select: string | ((tile: TileInfo) => boolean),
+): Uint8Array | undefined {
+    return typeof select === "string" ? cache.grids.get(select) : cache.predicateGrids.get(select);
+}
+
+/** Whether a tile is selected by `grid`'s `select`. */
+function gridPredicate(
+    select: string | ((tile: TileInfo) => boolean),
+): (tile: TileInfo) => boolean {
+    return typeof select === "string"
+        ? (tile: TileInfo) =>
+              isSet(tile.properties.find((property) => property.name === select)?.value)
+        : select;
 }
 
 /**
@@ -1597,48 +1636,60 @@ export function collisionRects(tilemap: Tilemap, layer: TileLayerData): readonly
     const runs: GrowingRect[] = [];
     for (let cellY = 0; cellY < tilemap.height; cellY += 1) {
         runs.length = 0;
-        for (let cellX = 0; cellX < tilemap.width; cellX += 1) {
-            const tile = tileOf(tilemap, layer.data[cellY * tilemap.width + cellX] ?? 0);
-            if (tile === null || !isSolid(tile)) continue;
-            const { tileWidth, tileHeight, offsetX, offsetY } = tile.tileset;
-            const width = tile.flipD ? tileHeight : tileWidth;
-            const height = tile.flipD ? tileWidth : tileHeight;
-            const x = cellX * tilemap.tileWidth + offsetX + layer.offsetX;
-            const y = (cellY + 1) * tilemap.tileHeight + offsetY + layer.offsetY - height;
-            const run = runs[runs.length - 1];
-            if (
-                run !== undefined &&
-                run.x + run.width === x &&
-                run.y === y &&
-                run.height === height
-            ) {
-                run.width += width;
-            } else {
-                runs.push({ x, y, width, height });
-            }
-        }
-        const taken = new Map<number, GrowingRect[]>();
-        for (const run of runs) {
-            const candidates = above.get(run.x) ?? [];
-            const index = candidates.findIndex(
-                (rect) => rect.width === run.width && rect.y + rect.height === run.y,
-            );
-            let rect: GrowingRect;
-            if (index >= 0) {
-                rect = candidates.splice(index, 1)[0]!;
-                rect.height += run.height;
-            } else {
-                rect = { ...run };
-                rects.push(rect);
-            }
-            const list = taken.get(rect.x);
-            if (list === undefined) taken.set(rect.x, [rect]);
-            else list.push(rect);
-        }
-        above = taken;
+        rowRuns(tilemap, layer, cellY, runs);
+        above = mergedRuns(runs, above, rects);
     }
     cache.rects = rects;
     return rects;
+}
+
+/** Adds the runs of row `cellY` of `layer` to `runs`, as `collisionRects` makes them. */
+function rowRuns(tilemap: Tilemap, layer: TileLayerData, cellY: number, runs: GrowingRect[]): void {
+    for (let cellX = 0; cellX < tilemap.width; cellX += 1) {
+        const tile = tileOf(tilemap, layer.data[cellY * tilemap.width + cellX] ?? 0);
+        if (tile === null || !isSolid(tile)) continue;
+        const { tileWidth, tileHeight, offsetX, offsetY } = tile.tileset;
+        const width = tile.flipD ? tileHeight : tileWidth;
+        const height = tile.flipD ? tileWidth : tileHeight;
+        const x = cellX * tilemap.tileWidth + offsetX + layer.offsetX;
+        const y = (cellY + 1) * tilemap.tileHeight + offsetY + layer.offsetY - height;
+        const run = runs.at(-1);
+        if (run !== undefined && run.x + run.width === x && run.y === y && run.height === height) {
+            run.width += width;
+        } else {
+            runs.push({ x, y, width, height });
+        }
+    }
+}
+
+/**
+ * Extends the rectangles of `above` with the `runs` of a row, or starts new ones in `rects`;
+ * the rectangles that took a run, by their left edge.
+ */
+function mergedRuns(
+    runs: readonly GrowingRect[],
+    above: Map<number, GrowingRect[]>,
+    rects: GrowingRect[],
+): Map<number, GrowingRect[]> {
+    const taken = new Map<number, GrowingRect[]>();
+    for (const run of runs) {
+        const candidates = above.get(run.x) ?? [];
+        const index = candidates.findIndex(
+            (rect) => rect.width === run.width && rect.y + rect.height === run.y,
+        );
+        let rect: GrowingRect;
+        if (index >= 0) {
+            rect = candidates.splice(index, 1)[0]!;
+            rect.height += run.height;
+        } else {
+            rect = { ...run };
+            rects.push(rect);
+        }
+        const list = taken.get(rect.x);
+        if (list === undefined) taken.set(rect.x, [rect]);
+        else list.push(rect);
+    }
+    return taken;
 }
 
 /**
@@ -1654,17 +1705,26 @@ export function markers(
     for (const layer of tilemap.layers) {
         if (layer.type !== "marker") continue;
         if (filter?.layer !== undefined && layer.name !== filter.layer) continue;
-        for (const marker of layer.markers) {
-            if (filter?.name !== undefined && marker.name !== filter.name) continue;
-            if (filter?.class !== undefined && marker.class !== filter.class) continue;
-            found.push(
-                layer.offsetX === 0 && layer.offsetY === 0
-                    ? marker
-                    : { ...marker, x: marker.x + layer.offsetX, y: marker.y + layer.offsetY },
-            );
-        }
+        addLayerMarkers(layer, filter, found);
     }
     return found;
+}
+
+/** Adds the markers of `layer` that `filter` keeps to `found`, as `markers` gives them. */
+function addLayerMarkers(
+    layer: MarkerLayerData,
+    filter: { readonly name?: string; readonly class?: string } | undefined,
+    found: TilemapMarker[],
+): void {
+    for (const marker of layer.markers) {
+        if (filter?.name !== undefined && marker.name !== filter.name) continue;
+        if (filter?.class !== undefined && marker.class !== filter.class) continue;
+        found.push(
+            layer.offsetX === 0 && layer.offsetY === 0
+                ? marker
+                : { ...marker, x: marker.x + layer.offsetX, y: marker.y + layer.offsetY },
+        );
+    }
 }
 
 /**
@@ -1803,6 +1863,64 @@ function frameUv(
 }
 
 /**
+ * Adds the tile ID and the rectangle of each usable frame of `frames` to `ids` and `uvs`, as
+ * `drawTileset` reads them; the entry of each, by frame ID.
+ */
+function addFrameUvs(
+    tileset: TilemapTileset,
+    frames: Json,
+    width: number,
+    height: number,
+    rect: Float64Array,
+    ids: number[],
+    uvs: number[],
+): Map<string, number> {
+    // Frame IDs are `<name>-<tile ID>` and name tiles below `nextTileId` (checked).
+    const prefix = `${tileset.name}-`;
+    const entryOf = new Map<string, number>();
+    for (const frame of Object.keys(frames)) {
+        const tile = frame.startsWith(prefix) ? frame.slice(prefix.length) : "";
+        if (!TILE_ID.test(tile) || Number(tile) >= tileset.nextTileId) continue;
+        const id = Number(tile);
+        if (!frameUv(frames, frame, width, height, rect, 0)) continue;
+        entryOf.set(frame, ids.length);
+        ids.push(id);
+        uvs.push(rect[0]!, rect[1]!, rect[2]!, rect[3]!);
+    }
+    return entryOf;
+}
+
+/** Adds the usable animations of `animated` to `animations`, as `drawTileset` reads them. */
+function addAnimations(
+    animated: Json,
+    frames: Json,
+    width: number,
+    height: number,
+    entryOf: ReadonlyMap<string, number>,
+    animations: DrawAnimation[],
+): void {
+    for (const frame of Object.keys(animated)) {
+        const entry = entryOf.get(frame);
+        const animation = animated[frame];
+        const list = isObject(animation) ? animation.entries : undefined;
+        if (entry === undefined || !Array.isArray(list) || list.length === 0) continue;
+        const items: readonly unknown[] = list;
+        const ends = new Float64Array(items.length);
+        const rects = new Float64Array(items.length * 4);
+        let end = 0;
+        const usable = items.every((item, index) => {
+            if (!isObject(item) || typeof item.frame !== "string") return false;
+            const { ms } = item;
+            if (typeof ms !== "number" || !(ms > 0) || !Number.isFinite(ms)) return false;
+            end += ms;
+            ends[index] = end;
+            return frameUv(frames, item.frame, width, height, rects, index * 4);
+        });
+        if (usable) animations.push({ entry, ends, rects });
+    }
+}
+
+/**
  * The draw tables of a tileset from its atlas (FORMAT 4): per tile the even rectangle as
  * fractions of the image, and the frames of each animated tile. The atlases are given checked
  * (FORMAT 3.8); a value that is still unusable leaves its tile or animation out rather than
@@ -1825,37 +1943,8 @@ function drawTileset(tilemap: Tilemap, tileset: TilemapTileset, atlas: unknown):
         Number.isFinite(width + height) &&
         isObject(frames)
     ) {
-        // Frame IDs are `<name>-<tile ID>` and name tiles below `nextTileId` (checked).
-        const prefix = `${tileset.name}-`;
-        const entryOf = new Map<string, number>();
-        for (const frame of Object.keys(frames)) {
-            const tile = frame.startsWith(prefix) ? frame.slice(prefix.length) : "";
-            if (!TILE_ID.test(tile) || Number(tile) >= tileset.nextTileId) continue;
-            const id = Number(tile);
-            if (!frameUv(frames, frame, width, height, rect, 0)) continue;
-            entryOf.set(frame, ids.length);
-            ids.push(id);
-            uvs.push(rect[0]!, rect[1]!, rect[2]!, rect[3]!);
-        }
-        for (const frame of Object.keys(animated)) {
-            const entry = entryOf.get(frame);
-            const animation = animated[frame];
-            const list = isObject(animation) ? animation.entries : undefined;
-            if (entry === undefined || !Array.isArray(list) || list.length === 0) continue;
-            const items: readonly unknown[] = list;
-            const ends = new Float64Array(items.length);
-            const rects = new Float64Array(items.length * 4);
-            let end = 0;
-            const usable = items.every((item, index) => {
-                if (!isObject(item) || typeof item.frame !== "string") return false;
-                const { ms } = item;
-                if (typeof ms !== "number" || !(ms > 0) || !Number.isFinite(ms)) return false;
-                end += ms;
-                ends[index] = end;
-                return frameUv(frames, item.frame, width, height, rects, index * 4);
-            });
-            if (usable) animations.push({ entry, ends, rects });
-        }
+        const entryOf = addFrameUvs(tileset, frames, width, height, rect, ids, uvs);
+        addAnimations(animated, frames, width, height, entryOf, animations);
     }
     return {
         name: tileset.name,
@@ -2007,7 +2096,7 @@ function animate(state: DrawState, elapsedMs: number): void {
         const { emit, animations } = tilesets[set]!;
         for (let index = 0; index < animations.length; index += 1) {
             const { entry, ends, rects } = animations[index]!;
-            const pass = ends[ends.length - 1]!;
+            const pass = ends.at(-1)!;
             // A span holds its start and not its end (sprite editor FORMAT 2.4).
             let time = elapsedMs % pass;
             if (time < 0) time += pass;
@@ -2031,7 +2120,7 @@ function cellsOf(
     layer: TileLayerData,
 ): FlatCells {
     let cells = state.cells[index] ?? null;
-    if (cells === null || cells.data !== layer.data) {
+    if (cells?.data !== layer.data) {
         cells = new FlatCells(layer.data, tilemap.width, tilemap.height);
         state.cells[index] = cells;
     }

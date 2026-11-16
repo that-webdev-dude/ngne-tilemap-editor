@@ -184,6 +184,20 @@ function union(a: CellRect | null, b: CellRect): CellRect {
     return { x, y, width: right - x, height: bottom - y };
 }
 
+/** The tool button of a pressed mouse button; null for another button. */
+function toolButtonOf(button: number): ToolButton | null {
+    if (button === LEFT) return "primary";
+    if (button === RIGHT) return "secondary";
+    return null;
+}
+
+/** The cells a sample at `cell` carries after a sample at `last` (`ToolPointer.cells`). */
+function cellsSince(last: PixelPoint | null, cell: PixelPoint): PixelPoint[] {
+    if (last === null) return [cell];
+    if (last.x === cell.x && last.y === cell.y) return [];
+    return pointsOnLine(last, cell).slice(1);
+}
+
 function modifiersOf(input: Omit<KeyInput, "type" | "key" | "repeat">): ToolModifiers {
     return {
         shift: input.shiftKey,
@@ -207,12 +221,7 @@ export function toolPointer(
     const { clientX: x, clientY: y } = input;
     const device = mapping.clientToDevice(x, y);
     const cell = mapping.deviceToCell(device.x, device.y);
-    const cells =
-        last === null
-            ? [cell]
-            : last.x === cell.x && last.y === cell.y
-              ? []
-              : pointsOnLine(last, cell).slice(1);
+    const cells = cellsSince(last, cell);
     return {
         client: { x, y },
         device,
@@ -425,6 +434,43 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         return stroke === current;
     };
 
+    /**
+     * The transaction a stroke of `tool` pressed with `button` paints in: null when it paints
+     * nothing, false when the stroke does not begin.
+     */
+    const openTransaction = (
+        tool: Tool,
+        button: ToolButton,
+        session: ProjectSession,
+        history: SessionState["history"],
+    ): Transaction | null | false => {
+        const paints = typeof tool.paints === "function" ? tool.paints(button) : tool.paints;
+        if (!paints) return null;
+        const target = resolvePaintTarget(session);
+        if (!target) return false;
+        if ("refused" in target) {
+            showFeedback(target.refused);
+            return false;
+        }
+        try {
+            return history.begin(target);
+        } catch (error) {
+            onError(error, tool);
+            return false;
+        }
+    };
+
+    /** The last of `inputs` reaches `onHover` of `current`, between the presses of its gesture. */
+    const hover = (current: Stroke, inputs: readonly PointerInput[]) => {
+        const last = inputs.at(-1);
+        if (!last) return;
+        const mapping = sources.mapping() ?? current.mapping;
+        current.mapping = mapping;
+        const pointer = toolPointer(last, mapping, current.button, null);
+        run(current, () => current.tool.onHover?.(current.context, pointer));
+        if (stroke === current) flush(current);
+    };
+
     /** Begins a stroke of the active tool at `input`; false when none begins. */
     const begin = (input: PointerInput, button: ToolButton): boolean => {
         // A new press over the canvas takes the place of the last refusal's message.
@@ -437,22 +483,8 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         if (!tool || !map || !mapping) return false;
         const layerId = activeLayerId(session, map);
 
-        let transaction: Transaction | null = null;
-        const paints = typeof tool.paints === "function" ? tool.paints(button) : tool.paints;
-        if (paints) {
-            const target = resolvePaintTarget(session);
-            if (!target) return false;
-            if ("refused" in target) {
-                showFeedback(target.refused);
-                return false;
-            }
-            try {
-                transaction = history.begin(target);
-            } catch (error) {
-                onError(error, tool);
-                return false;
-            }
-        }
+        const transaction = openTransaction(tool, button, session, history);
+        if (transaction === false) return false;
         const opened = transaction;
         /** The stroke this context is of, once it is made. */
         let own: Stroke | null = null;
@@ -548,8 +580,7 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
         },
 
         down(input) {
-            const button: ToolButton | null =
-                input.button === LEFT ? "primary" : input.button === RIGHT ? "secondary" : null;
+            const button = toolButtonOf(input.button);
             const current = stroke;
             if (current) {
                 if (!button) return false;
@@ -570,13 +601,7 @@ export function createToolPipeline(sources: PipelineSources): ToolPipeline {
             // Between the presses of a gesture the pointer hovers: only where it is now
             // matters, so the samples of one event reach `onHover` once, as the last of them.
             if (!current.pressed) {
-                const last = inputs[inputs.length - 1];
-                if (!last) return;
-                const mapping = sources.mapping() ?? current.mapping;
-                current.mapping = mapping;
-                const pointer = toolPointer(last, mapping, current.button, null);
-                run(current, () => current.tool.onHover?.(current.context, pointer));
-                if (stroke === current) flush(current);
+                hover(current, inputs);
                 return;
             }
             for (const input of inputs) {

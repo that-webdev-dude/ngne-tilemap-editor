@@ -27,6 +27,62 @@ export function readText(
     return value.slice(0, MAX_TEXT_LENGTH);
 }
 
+/** Reports a property dropped for the reason given; null. */
+type DropProperty = (why: string) => null;
+
+function intProperty(
+    name: string,
+    value: unknown,
+    enumType: string,
+    at: TmjLocation,
+    report: TmjReporter,
+    outOfRange: DropProperty,
+): Property | null {
+    if (typeof value !== "number" || !Number.isSafeInteger(value)) {
+        return outOfRange("its value is not an integer in range");
+    }
+    if (Math.abs(value) > MAX_INT_PROPERTY) return outOfRange("its value is too large");
+    if (enumType) {
+        report.add("enum-properties", `Enum ${enumType} imported as int ${value}`, at);
+    }
+    return { name, type: "int", value };
+}
+
+function floatProperty(name: string, value: unknown, outOfRange: DropProperty): Property | null {
+    if (typeof value !== "number" || !Number.isFinite(value)) {
+        return outOfRange("its value is not a number");
+    }
+    return { name, type: "float", value };
+}
+
+function stringProperty(
+    name: string,
+    value: unknown,
+    enumType: string,
+    at: TmjLocation,
+    report: TmjReporter,
+    outOfRange: DropProperty,
+): Property | null {
+    if (typeof value !== "string") return outOfRange("its value is not text");
+    if (value.length > MAX_STRING_PROPERTY_LENGTH) return outOfRange("its text is too long");
+    if (enumType) {
+        report.add("enum-properties", `Enum ${enumType} imported as string "${value}"`, at);
+    }
+    return { name, type: "string", value };
+}
+
+function colorProperty(name: string, value: unknown, outOfRange: DropProperty): Property | null {
+    const color = typeof value === "string" ? tiledColor(value) : null;
+    if (color === null) return outOfRange("its colour is unset or not a colour");
+    return { name, type: "color", value: formatColor(color) };
+}
+
+function fileProperty(name: string, value: unknown, outOfRange: DropProperty): Property | null {
+    if (typeof value !== "string") return outOfRange("its value is not a path");
+    if (value.length > MAX_FILE_PROPERTY_LENGTH) return outOfRange("its path is too long");
+    return { name, type: "file", value };
+}
+
 function convertOne(raw: JsonObject, where: TmjLocation, report: TmjReporter): Property | null {
     const name = typeof raw.name === "string" ? raw.name : "";
     const at: TmjLocation = { ...where, property: name };
@@ -49,36 +105,15 @@ function convertOne(raw: JsonObject, where: TmjLocation, report: TmjReporter): P
             if (typeof value !== "boolean") return outOfRange("its value is not a bool");
             return { name, type: "bool", value };
         case "int":
-            if (typeof value !== "number" || !Number.isSafeInteger(value)) {
-                return outOfRange("its value is not an integer in range");
-            }
-            if (Math.abs(value) > MAX_INT_PROPERTY) return outOfRange("its value is too large");
-            if (enumType) {
-                report.add("enum-properties", `Enum ${enumType} imported as int ${value}`, at);
-            }
-            return { name, type: "int", value };
+            return intProperty(name, value, enumType, at, report, outOfRange);
         case "float":
-            if (typeof value !== "number" || !Number.isFinite(value)) {
-                return outOfRange("its value is not a number");
-            }
-            return { name, type: "float", value };
+            return floatProperty(name, value, outOfRange);
         case "string":
-            if (typeof value !== "string") return outOfRange("its value is not text");
-            if (value.length > MAX_STRING_PROPERTY_LENGTH)
-                return outOfRange("its text is too long");
-            if (enumType) {
-                report.add("enum-properties", `Enum ${enumType} imported as string "${value}"`, at);
-            }
-            return { name, type: "string", value };
-        case "color": {
-            const color = typeof value === "string" ? tiledColor(value) : null;
-            if (color === null) return outOfRange("its colour is unset or not a colour");
-            return { name, type: "color", value: formatColor(color) };
-        }
+            return stringProperty(name, value, enumType, at, report, outOfRange);
+        case "color":
+            return colorProperty(name, value, outOfRange);
         case "file":
-            if (typeof value !== "string") return outOfRange("its value is not a path");
-            if (value.length > MAX_FILE_PROPERTY_LENGTH) return outOfRange("its path is too long");
-            return { name, type: "file", value };
+            return fileProperty(name, value, outOfRange);
         default:
             return outOfRange(`its type ${String(type)} is unknown`);
     }

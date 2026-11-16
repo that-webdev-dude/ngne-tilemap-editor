@@ -145,11 +145,11 @@ function CollisionEditorBody({
     request,
     tileset,
     shapes,
-}: {
+}: Readonly<{
     request: CollisionEditorRequest;
     tileset: Tileset;
     shapes: readonly Shape[];
-}) {
+}>) {
     const { tileWidth: tw, tileHeight: th } = tileset;
     const margin = marginOf(tileset);
     const [tool, setTool] = useState<CollisionTool>("select");
@@ -157,12 +157,12 @@ function CollisionEditorBody({
     const [zoom, setZoom] = useState<Zoom>(() => defaultZoom(tileset));
     const [chosen, setChosen] = useState<number | null>(null);
     const [vertex, setVertex] = useState<number | null>(null);
-    const [draft, setDraftState] = useState<Shape[] | null>(null);
+    const [draft, setDraft] = useState<Shape[] | null>(null);
     // The newest draft, also for a release handled before the page renders the last move.
     const latest = useRef<Shape[] | null>(null);
-    const setDraft = (next: Shape[] | null) => {
+    const updateDraft = (next: Shape[] | null) => {
         latest.current = next;
-        setDraftState(next);
+        setDraft(next);
     };
     const [polygon, setPolygon] = useState<ShapePoint[] | null>(null);
     const [hover, setHover] = useState<ShapePoint | null>(null);
@@ -220,7 +220,7 @@ function CollisionEditorBody({
             if (stage.current?.hasPointerCapture(active.pointerId)) {
                 stage.current.releasePointerCapture(active.pointerId);
             }
-            setDraft(null);
+            updateDraft(null);
             return true;
         }
         if (polygon) {
@@ -242,6 +242,86 @@ function CollisionEditorBody({
         if (apply([...shapes, polygonShape(points)], "add")) setChosen(shapes.length);
     };
 
+    /** A press of the polygon tool at `raw`, `point` snapped. */
+    const pressPolygon = (raw: ShapePoint, point: ShapePoint) => {
+        const points = polygon ?? [];
+        const first = points[0];
+        if (
+            first &&
+            points.length >= MIN_POLYGON_POINTS &&
+            Math.max(Math.abs(raw[0] - first[0]), Math.abs(raw[1] - first[1])) <= reach
+        ) {
+            closePolygon(points);
+            return;
+        }
+        if (points.length >= MAX_SHAPE_POINTS) {
+            refuse(`A polygon has at most ${MAX_SHAPE_POINTS} points.`);
+            return;
+        }
+        if (points.length === 0 && shapes.length >= MAX_COLLISION_SHAPES) {
+            refuse(`A tile has at most ${MAX_COLLISION_SHAPES} collision shapes.`);
+            return;
+        }
+        setPolygon([...points, point]);
+        setHover(point);
+    };
+
+    /** A press of the select tool at `raw`, `point` snapped; `begin` starts its drag. */
+    const pressSelect = (
+        raw: ShapePoint,
+        point: ShapePoint,
+        pointerId: number,
+        begin: (next: Drag) => void,
+    ) => {
+        if (selectedShape) {
+            const hit = hitBox(shapeBox(selectedShape), { x: raw[0], y: raw[1] }, zoom, 1);
+            if (hit.kind === "handle") {
+                begin({
+                    kind: "resize",
+                    pointerId,
+                    index: selected!,
+                    handle: hit.handle,
+                    shape: selectedShape,
+                });
+                return;
+            }
+        }
+        const index = hitShape(shapes, raw, reach);
+        setChosen(index < 0 ? null : index);
+        setVertex(null);
+        if (index >= 0) {
+            begin({
+                kind: "move",
+                pointerId,
+                start: point,
+                index,
+                shape: shapes[index]!,
+            });
+        }
+    };
+
+    /** A press of the points tool at `raw`; `begin` starts its drag. */
+    const pressPoints = (raw: ShapePoint, pointerId: number, begin: (next: Drag) => void) => {
+        if (selectedShape?.shape === "polygon") {
+            const at = hitVertex(selectedShape, raw, reach);
+            if (at >= 0) {
+                setVertex(at);
+                begin({
+                    kind: "vertex",
+                    pointerId,
+                    index: selected!,
+                    vertex: at,
+                    shape: selectedShape,
+                });
+                return;
+            }
+            if (hitEdge(selectedShape, raw, reach)) return;
+        }
+        const index = hitShape(shapes, raw, reach);
+        setChosen(index < 0 ? null : index);
+        setVertex(null);
+    };
+
     const onPointerDown = (event: PointerEvent<HTMLDivElement>) => {
         if (event.button !== 0 || drag.current) return;
         stage.current?.focus({ preventScroll: true });
@@ -252,29 +332,9 @@ function CollisionEditorBody({
             event.currentTarget.setPointerCapture(event.pointerId);
         };
         switch (tool) {
-            case "polygon": {
-                const points = polygon ?? [];
-                const first = points[0];
-                if (
-                    first &&
-                    points.length >= MIN_POLYGON_POINTS &&
-                    Math.max(Math.abs(raw[0] - first[0]), Math.abs(raw[1] - first[1])) <= reach
-                ) {
-                    closePolygon(points);
-                    return;
-                }
-                if (points.length >= MAX_SHAPE_POINTS) {
-                    refuse(`A polygon has at most ${MAX_SHAPE_POINTS} points.`);
-                    return;
-                }
-                if (points.length === 0 && shapes.length >= MAX_COLLISION_SHAPES) {
-                    refuse(`A tile has at most ${MAX_COLLISION_SHAPES} collision shapes.`);
-                    return;
-                }
-                setPolygon([...points, point]);
-                setHover(point);
+            case "polygon":
+                pressPolygon(raw, point);
                 return;
-            }
             case "rectangle":
             case "ellipse": {
                 if (shapes.length >= MAX_COLLISION_SHAPES) {
@@ -282,59 +342,16 @@ function CollisionEditorBody({
                     return;
                 }
                 begin({ kind: "create", pointerId: event.pointerId, start: point, tool });
-                setDraft([...shapes, boxShape(tool, dragBox(point, point))]);
+                updateDraft([...shapes, boxShape(tool, dragBox(point, point))]);
                 setChosen(shapes.length);
                 return;
             }
-            case "select": {
-                if (selectedShape) {
-                    const hit = hitBox(shapeBox(selectedShape), { x: raw[0], y: raw[1] }, zoom, 1);
-                    if (hit.kind === "handle") {
-                        begin({
-                            kind: "resize",
-                            pointerId: event.pointerId,
-                            index: selected!,
-                            handle: hit.handle,
-                            shape: selectedShape,
-                        });
-                        return;
-                    }
-                }
-                const index = hitShape(shapes, raw, reach);
-                setChosen(index < 0 ? null : index);
-                setVertex(null);
-                if (index >= 0) {
-                    begin({
-                        kind: "move",
-                        pointerId: event.pointerId,
-                        start: point,
-                        index,
-                        shape: shapes[index]!,
-                    });
-                }
+            case "select":
+                pressSelect(raw, point, event.pointerId, begin);
                 return;
-            }
-            case "points": {
-                if (selectedShape?.shape === "polygon") {
-                    const at = hitVertex(selectedShape, raw, reach);
-                    if (at >= 0) {
-                        setVertex(at);
-                        begin({
-                            kind: "vertex",
-                            pointerId: event.pointerId,
-                            index: selected!,
-                            vertex: at,
-                            shape: selectedShape,
-                        });
-                        return;
-                    }
-                    if (hitEdge(selectedShape, raw, reach)) return;
-                }
-                const index = hitShape(shapes, raw, reach);
-                setChosen(index < 0 ? null : index);
-                setVertex(null);
+            case "points":
+                pressPoints(raw, event.pointerId, begin);
                 return;
-            }
         }
     };
 
@@ -374,20 +391,20 @@ function CollisionEditorBody({
                 }
                 break;
         }
-        setDraft(next);
+        updateDraft(next);
     };
 
     const onPointerUp = (event: PointerEvent<HTMLDivElement>) => {
         const active = drag.current;
-        if (!active || active.pointerId !== event.pointerId) return;
+        if (active?.pointerId !== event.pointerId) return;
         drag.current = null;
         const next = latest.current;
-        setDraft(null);
+        updateDraft(null);
         if (!next) return;
         if (active.kind === "create") {
             // A shape with no area blocks nothing: a click, or a drag along one axis, makes
             // none (SPEC §6.4; unlike Tiled's object tools, reference/tiled.md §6).
-            const { width, height } = shapeBox(next[next.length - 1]!);
+            const { width, height } = shapeBox(next.at(-1)!);
             if (width === 0 || height === 0) {
                 setChosen(null);
                 return;
@@ -447,6 +464,11 @@ function CollisionEditorBody({
             return;
         }
         if (ctrl || event.altKey) return;
+        editKey(event, key);
+    };
+
+    /** Enter, Backspace and Delete with no modifier: close or shorten the polygon, or delete. */
+    const editKey = (event: KeyboardEvent<HTMLDivElement>, key: string) => {
         const onButton = event.target instanceof HTMLButtonElement;
         if (key === "Enter" && polygon && !onButton) {
             event.preventDefault();
@@ -549,7 +571,7 @@ function CollisionEditorBody({
                         <IconButton
                             label="Zoom In"
                             tooltipSide="right"
-                            disabled={zoom === ZOOMS[ZOOMS.length - 1]}
+                            disabled={zoom === ZOOMS.at(-1)}
                             onClick={() =>
                                 setZoom(ZOOMS[Math.min(ZOOMS.length - 1, ZOOMS.indexOf(zoom) + 1)]!)
                             }
@@ -699,7 +721,7 @@ function CollisionEditorBody({
     );
 }
 
-function ShapeOutline({ shape, selected }: { shape: Shape; selected: boolean }) {
+function ShapeOutline({ shape, selected }: Readonly<{ shape: Shape; selected: boolean }>) {
     const className = selected
         ? "collision-editor__shape collision-editor__shape--selected"
         : "collision-editor__shape";
@@ -742,11 +764,11 @@ function PolygonDraft({
     points,
     hover,
     zoom,
-}: {
+}: Readonly<{
     points: readonly ShapePoint[];
     hover: ShapePoint | null;
     zoom: number;
-}) {
+}>) {
     const path = hover ? [...points, hover] : points;
     const first = points[0]!;
     const size = HANDLE_SIZE / zoom;
@@ -769,7 +791,7 @@ function PolygonDraft({
     );
 }
 
-function BoxHandles({ box, zoom }: { box: ShapeBox; zoom: number }) {
+function BoxHandles({ box, zoom }: Readonly<{ box: ShapeBox; zoom: number }>) {
     const size = HANDLE_SIZE / zoom;
     return (
         <g>
@@ -793,11 +815,11 @@ function Vertices({
     shape,
     zoom,
     chosen,
-}: {
+}: Readonly<{
     shape: Extract<Shape, { shape: "polygon" }>;
     zoom: number;
     chosen: number | null;
-}) {
+}>) {
     const size = 5 / zoom;
     return (
         <g>

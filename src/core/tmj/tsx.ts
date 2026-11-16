@@ -49,7 +49,8 @@ function propertyValue(element: XmlElement, type: string, what: string): unknown
             return raw.trim() !== "" && Number.isFinite(parsed) ? parsed : raw;
         }
         case "bool":
-            return raw === "true" ? true : raw === "false" ? false : raw;
+            if (raw === "true") return true;
+            return raw === "false" ? false : raw;
         case "class":
             return Object.fromEntries(
                 properties(child(element, "properties"), what).map((property) => [

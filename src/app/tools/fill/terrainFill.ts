@@ -56,8 +56,7 @@ export function terrainFillPlan(
 ): FillPlan | null {
     const last = known;
     if (
-        last &&
-        last.session === session &&
+        last?.session === session &&
         last.revision === revision &&
         last.mapId === map.id &&
         last.layerId === layerId &&

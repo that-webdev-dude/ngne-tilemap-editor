@@ -90,8 +90,7 @@ function readerOf(project: Project, map: ProjectMap): Reader {
     const read = project.tilesets.map(readOf);
     const known = reader;
     if (
-        known &&
-        known.tileWidth === map.tileWidth &&
+        known?.tileWidth === map.tileWidth &&
         known.tileHeight === map.tileHeight &&
         sameRead(known.read, read)
     ) {
@@ -139,7 +138,7 @@ function show(shown: Source): Reader {
 function sourceOf(project: Project, map: ProjectMap, stamp: Stamp): Source {
     const shared = readerOf(project, map);
     const known = source;
-    if (known && known.stamp === stamp && known.reader === shared) return known;
+    if (known?.stamp === stamp && known.reader === shared) return known;
     const layer = known?.stamp === stamp ? known.layer : stampLayer(stamp);
     source = { stamp, layer, reader: shared };
     return source;

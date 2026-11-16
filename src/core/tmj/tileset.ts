@@ -518,34 +518,20 @@ function readCollision(raw: JsonObject, at: TmjLocation, report: TmjReporter, wh
     if (!isObject(group)) throw new TmjError("format", `${what}: "objectgroup" is not an object.`);
     for (const object of objects(group, "objects", what)) {
         const name = str(object, "name", "", what);
-        const here: TmjLocation = {
-            ...at,
-            object: { id: typeof object.id === "number" ? object.id : 0, name },
-        };
+        const here = objectLocation(at, object, name);
         if (object.template !== undefined) {
             report.add("collision-shapes", "Template instance dropped", here);
             continue;
         }
         const kind = objectKind(object);
         if (kind !== "rectangle" && kind !== "ellipse" && kind !== "polygon") {
-            const label = kind === "point" ? "Point" : kind === "polyline" ? "Polyline" : kind;
-            report.add("collision-shapes", `${label} dropped`, here);
+            report.add("collision-shapes", `${droppedObjectLabel(kind)} dropped`, here);
             continue;
         }
-        const x = num(object, "x", 0, what);
-        const y = num(object, "y", 0, what);
-        let shape: Shape;
-        if (kind === "polygon") {
-            const points = readPoints(object.polygon);
-            if (points === null) {
-                report.add("out-of-range", "Shape dropped: its points are malformed", here);
-                continue;
-            }
-            shape = { shape: "polygon", x, y, points };
-        } else {
-            const width = num(object, "width", 0, what);
-            const height = num(object, "height", 0, what);
-            shape = { shape: kind, x, y, width, height };
+        const shape = collisionShape(object, kind, what);
+        if (shape === null) {
+            report.add("out-of-range", "Shape dropped: its points are malformed", here);
+            continue;
         }
         const problem = collisionProblem([shape]);
         if (problem !== null) {
@@ -556,18 +542,62 @@ function readCollision(raw: JsonObject, at: TmjLocation, report: TmjReporter, wh
             report.add("out-of-range", `Shape dropped: more than ${MAX_COLLISION_SHAPES}`, here);
             continue;
         }
-        const rotation = num(object, "rotation", 0, what);
-        if (rotation !== 0) report.add("collision-shapes", `Rotation ${rotation}° dropped`, here);
-        if (name !== "") report.add("collision-shapes", `Name "${name}" dropped`, here);
-        const className = str(object, "type", str(object, "class", "", what), what);
-        if (className !== "") report.add("collision-shapes", `Class "${className}" dropped`, here);
-        const properties = arr(object, "properties", what).length;
-        if (properties > 0) {
-            report.add("collision-shapes", "Properties dropped", here, properties);
-        }
+        reportDroppedShapeData(object, name, here, report, what);
         shapes.push(shape);
     }
     return shapes;
+}
+
+/** Where collision object `object`, named `name`, of the tile at `at` is reported. */
+function objectLocation(at: TmjLocation, object: JsonObject, name: string): TmjLocation {
+    return {
+        ...at,
+        object: { id: typeof object.id === "number" ? object.id : 0, name },
+    };
+}
+
+/** How a report names a dropped collision object of kind `kind`. */
+function droppedObjectLabel(kind: string): string {
+    if (kind === "point") return "Point";
+    if (kind === "polyline") return "Polyline";
+    return kind;
+}
+
+/** The collision shape of `object`, of kind `kind`; null when its points are malformed. */
+function collisionShape(
+    object: JsonObject,
+    kind: "rectangle" | "ellipse" | "polygon",
+    what: string,
+): Shape | null {
+    const x = num(object, "x", 0, what);
+    const y = num(object, "y", 0, what);
+    if (kind === "polygon") {
+        const points = readPoints(object.polygon);
+        if (points === null) return null;
+        return { shape: "polygon", x, y, points };
+    }
+    const width = num(object, "width", 0, what);
+    const height = num(object, "height", 0, what);
+    return { shape: kind, x, y, width, height };
+}
+
+/** Reports what a kept collision shape drops: its rotation, name, class and properties. */
+function reportDroppedShapeData(
+    object: JsonObject,
+    name: string,
+    here: TmjLocation,
+    report: TmjReporter,
+    what: string,
+): void {
+    const rotation = num(object, "rotation", 0, what);
+    if (rotation !== 0) report.add("collision-shapes", `Rotation ${rotation}° dropped`, here);
+    if (name !== "") report.add("collision-shapes", `Name "${name}" dropped`, here);
+    const className = str(object, "type", str(object, "class", "", what), what);
+    if (className !== "") report.add("collision-shapes", `Class "${className}" dropped`, here);
+    const properties = arr(object, "properties", what).length;
+    if (properties > 0) {
+        report.add("collision-shapes", "Properties dropped", here, properties);
+    }
 }
 
 /** A tile's animation (SPEC §13), or null when it names a tile the tileset does not have. */
@@ -655,7 +685,7 @@ function readTileData(tileset: Tileset, source: Source, report: TmjReporter): vo
     }
 }
 
-const WANG_TYPES: readonly string[] = ["corner", "edge", "mixed"];
+const WANG_TYPES: ReadonlySet<string> = new Set(["corner", "edge", "mixed"]);
 
 /** Reports a terrain set's or terrain's class and properties, which are dropped. */
 function reportExtras(raw: JsonObject, at: TmjLocation, label: string, report: TmjReporter): void {
@@ -699,6 +729,13 @@ function readColors(
     });
 }
 
+/** Why a terrain tile is dropped: no such tile, else listed twice, else a bad wang ID. */
+function droppedWangTileReason(known: boolean, repeated: boolean): string {
+    if (!known) return "no such tile";
+    if (repeated) return "listed twice";
+    return "bad wangid";
+}
+
 function readWangTiles(
     raw: JsonObject,
     type: TerrainSetType,
@@ -718,11 +755,7 @@ function readWangTiles(
             wangId.length === 8 &&
             wangId.every((v) => typeof v === "number" && Number.isInteger(v) && v >= 0);
         if (!ids.has(tile) || seen.has(tile) || !valid) {
-            const why = !ids.has(tile)
-                ? "no such tile"
-                : seen.has(tile)
-                  ? "listed twice"
-                  : "bad wangid";
+            const why = droppedWangTileReason(ids.has(tile), seen.has(tile));
             report.add("out-of-range", `Terrain tile dropped: ${why}`, here);
             continue;
         }
@@ -765,7 +798,7 @@ function readTerrainSets(tileset: Tileset, source: Source, report: TmjReporter):
         const at: TmjLocation = { ...where, terrainSet: name };
         if (rawName.trim() === "") report.add("out-of-range", "Blank name replaced", at);
         const type = str(raw, "type", "corner", what);
-        if (!WANG_TYPES.includes(type)) {
+        if (!WANG_TYPES.has(type)) {
             report.add("out-of-range", `Terrain set dropped: type ${type} is unknown`, at);
             continue;
         }
