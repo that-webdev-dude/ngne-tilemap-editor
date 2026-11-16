@@ -97,7 +97,7 @@ Same as the sprite editor:
   handles with a black border; zoom and Fit live in the status bar only.
 
 **Shortcuts:** a command both editors have uses the sprite editor's key. Tiled's keys
-([reference/tiled.md](reference/tiled.md) §3) are used only for commands the sprite editor
+([keyboard shortcuts](https://doc.mapeditor.org/en/stable/manual/keyboard-shortcuts/)) are used only for commands the sprite editor
 lacks; a Tiled key already bound in the sprite editor gets another key. `DESIGN.md` holds the
 full table.
 

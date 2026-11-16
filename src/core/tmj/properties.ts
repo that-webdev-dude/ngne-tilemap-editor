@@ -10,7 +10,7 @@ import { formatColor, isObject, objects, tiledColor } from "./json";
 import type { JsonObject } from "./json";
 import type { TmjLocation, TmjReporter } from "./report";
 
-// Tiled properties (reference/tiled.md §5 Property) as FORMAT §1.4 properties (BRIEF §7):
+// Tiled properties (JSON map format, Property) as FORMAT §1.4 properties (BRIEF §7):
 // `object`, `list` and class-typed properties are dropped; an enum (a string or int property with
 // a `propertytype`) is kept as its value; colours `#AARRGGBB` become `#rrggbbaa`. Whatever is
 // dropped or changed is reported.

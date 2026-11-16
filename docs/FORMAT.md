@@ -10,7 +10,7 @@ The editor also reads formats it does not define:
 | ----- | ---------- | --- |
 | Sprite project `.ngsprite`, version 1 | `..\ngne-sprite-editor\docs\FORMAT.md` §1 | Tileset import and update (SPEC §6.1) |
 | `ngne-sprite-atlas`, version 1 | `..\ngne-sprite-editor\docs\FORMAT.md` §2 | Tileset import and update (SPEC §6.1) |
-| TMJ, TSJ, TSX | Tiled ([reference/tiled.md](reference/tiled.md) §5) | Map import ([BRIEF.md](BRIEF.md) §7) |
+| TMJ, TSJ, TSX | Tiled ([JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/), [TMX map format](https://doc.mapeditor.org/en/stable/reference/tmx-map-format/)) | Map import ([BRIEF.md](BRIEF.md) §7) |
 
 | Format                | File                                     | Version | Section |
 | --------------------- | ---------------------------------------- | ------- | ------- |
@@ -55,8 +55,8 @@ How the sections are written, and nothing more:
 ### 1.2 Cell value
 
 A tile layer stores one cell value per cell: an integer 0..4 294 967 295 (an unsigned 32-bit
-integer), laid out as Tiled lays out a global tile ID ([reference/tiled.md](reference/tiled.md)
-§5).
+integer), laid out as Tiled lays out a global tile ID
+([Global Tile IDs](https://doc.mapeditor.org/en/stable/reference/global-tile-ids/)).
 
 | Bits  | Mask         | Meaning |
 | ----- | ------------ | ------- |
@@ -79,7 +79,8 @@ integer), laid out as Tiled lays out a global tile ID ([reference/tiled.md](refe
   export.
 
 The flags name the 8 orientations of a tile; Tiled's rotate commands move between them
-(rotate right maps `HVD` = `000` to `101`; [reference/tiled.md](reference/tiled.md) §2).
+(rotate right maps `HVD` = `000` to `101`; [SPEC.md](SPEC.md) §2.3, libtiled notice in
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md)).
 
 | `H V D` | Orientation | `fx` | `fy` | `θ` | Texel at tile offset `(a, b)` from the centre lands at |
 | ------- | ----------- | ---- | ---- | --- | ------------------------------------------------------ |
@@ -339,7 +340,8 @@ data for "Update tileset from source", not an integrity check: the zip's CRC-32 
 
 The entries of all animations of a tileset together are at most 65 536 (§4).
 
-**TerrainSet** (Tiled's Wang set, [reference/tiled.md](reference/tiled.md) §2)
+**TerrainSet** (Tiled's Wang set: [JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/),
+[Using Terrains](https://doc.mapeditor.org/en/stable/manual/terrain/))
 
 | Member   | Type   | Constraint | Meaning |
 | -------- | ------ | ---------- | ------- |

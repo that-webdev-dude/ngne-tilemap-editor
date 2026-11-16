@@ -36,7 +36,7 @@ export interface TerrainAnalysis {
     /**
      * libtiled's `WangSet::isComplete()`, which this editor's filler reads (SPEC §5.2). It counts
      * only WangIds with a terrain at all eight indexes after the type mask, so a corner or edge
-     * set is never complete to the filler (reference/tiled.md §4).
+     * set is never complete to the filler.
      */
     readonly fillerComplete: boolean;
     /** `completeSetSize − presentCombinations` for corner and edge sets; null for mixed sets. */

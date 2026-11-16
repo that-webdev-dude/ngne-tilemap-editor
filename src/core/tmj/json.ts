@@ -1,7 +1,7 @@
 import { TmjError } from "./errors";
 
-// Reading Tiled's JSON (reference/tiled.md §5) with its defaults: a member Tiled leaves out
-// takes the value Tiled reads for it; a member of the wrong type refuses the file.
+// Reading Tiled's JSON (its published JSON map format) with its defaults: a member Tiled leaves
+// out takes the value Tiled reads for it; a member of the wrong type refuses the file.
 
 export type JsonObject = Record<string, unknown>;
 
@@ -77,7 +77,7 @@ export function tiledColor(text: string): number | null {
     const digits = match?.[1];
     if (digits === undefined) return null;
     const argb = digits.length === 6 ? `ff${digits}` : digits;
-    return parseInt(argb.slice(2) + argb.slice(0, 2), 16) >>> 0;
+    return Number.parseInt(argb.slice(2) + argb.slice(0, 2), 16) >>> 0;
 }
 
 /** A colour 0xRRGGBBAA as FORMAT §1.1 text, `#rrggbbaa` in lowercase. */

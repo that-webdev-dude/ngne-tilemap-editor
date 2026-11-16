@@ -15,7 +15,7 @@ as ngne-sprite-editor does for sprites.
   [ENGINE.md](ENGINE.md).
 - It is the second tool of the NGNE editor suite: same design system, stack and packaging as
   ngne-sprite-editor: see [SUITE.md](SUITE.md).
-- Tiled behaviour it reproduces is documented in [reference/tiled.md](reference/tiled.md).
+- Tiled behaviour it reproduces is described in Tiled's published [manual](https://doc.mapeditor.org/en/stable/).
 
 It is **not a gameplay level editor**: no entity classes, no object references, no
 scripting, no in-editor playtest.

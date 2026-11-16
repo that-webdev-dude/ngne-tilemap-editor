@@ -4,8 +4,8 @@ import { parseXml } from "./xml";
 import type { XmlElement } from "./xml";
 
 // A TSX tileset (Tiled's XML tileset format) as the JSON object a TSJ of the same tileset holds
-// (reference/tiled.md §5), so that both go through one conversion and convert identically
-// (TE-060). Attributes Tiled leaves out stay out, so the JSON reader's
+// (Tiled's published TMX and JSON map formats), so that both go through one conversion and
+// convert identically (TE-060). Attributes Tiled leaves out stay out, so the JSON reader's
 // defaults apply to both alike.
 
 type Converter = (value: string, what: string) => unknown;

@@ -1,7 +1,7 @@
 import { FLAG_MASK, GID_MASK, MAX_TILE_ID, RESERVED_BIT } from "../cells";
 import type { Orientation } from "../cells";
 
-// Tiled's global tile IDs (reference/tiled.md §5; BRIEF §7 GID flip bits):
+// Tiled's global tile IDs (its published Global Tile IDs page; BRIEF §7 GID flip bits):
 // read with `>>> 0`; bits 31/30/29 (H, V, D) kept, bit 28 cleared (hexagonal 120° rotation,
 // meaningless on orthogonal maps); the tileset is the one with the largest `firstgid` not above
 // the GID, the tile its local ID `gid − firstgid`.

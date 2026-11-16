@@ -401,7 +401,7 @@ key wins.
 ### 10.2 Rule
 
 A command both editors have uses the sprite editor's key. A command only this editor has uses
-Tiled's key ([reference/tiled.md](reference/tiled.md) §3) unless the sprite editor binds that key
+Tiled's key ([keyboard shortcuts](https://doc.mapeditor.org/en/stable/manual/keyboard-shortcuts/)) unless the sprite editor binds that key
 to anything, in which case it gets another key listed here. A command the sprite editor has
 without a key may take Tiled's key when that key is free in both editors. Tool keys follow
 Tiled in being resolved by the active layer's kind (§6): one letter may name a tile tool and a

@@ -2,9 +2,11 @@
 
 What the editor does and how it is built. Scope and decisions: [BRIEF.md](BRIEF.md). Files:
 [FORMAT.md](FORMAT.md). Engine use, viewport tiers and budgets: [ENGINE.md](ENGINE.md). Look,
-layout and keys: `DESIGN.md` and [SUITE.md](SUITE.md). Tiled behaviour cited as "Tiled":
-[reference/tiled.md](reference/tiled.md). If this file and BRIEF disagree, BRIEF wins; on the
-content of a file, FORMAT wins.
+layout and keys: `DESIGN.md` and [SUITE.md](SUITE.md). Tiled behaviour cited as "Tiled": Tiled
+1.12.2 as its [manual](https://doc.mapeditor.org/en/stable/), its
+[JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/) and its
+[TMX map format](https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) describe it. If
+this file and BRIEF disagree, BRIEF wins; on the content of a file, FORMAT wins.
 
 ## 1. Architecture
 
@@ -298,8 +300,7 @@ Shift+click assigns the whole tile. A count of missing combinations for corner a
 
 ### 5.2 Terrain filler
 
-`core/terrain` reproduces the behaviour of Tiled's terrain fill and `WangSet` analysis
-([reference/tiled.md](reference/tiled.md) §4):
+`core/terrain` reproduces the behaviour of Tiled's terrain fill and `WangSet` analysis:
 
 - Per set, computed when it changes: the candidate list (base tiles only; no generated
   variants, since transformations are Later), the colour-distance matrix by fixed-point
@@ -518,10 +519,11 @@ the tile (zoom 1–32) and its own undoable commands in the project history.
   copies the shape list to each (one entry). The editor shows the tile the panel's selection
   ends on (Tiled's current tile); each edit copies that tile's edited list to every selected tile
   the filter shows. A rectangle or ellipse is made only when its drag spans an area: a click,
-  or a drag along one axis, makes nothing (unlike Tiled, [reference/tiled.md](reference/tiled.md)
-  §6), as a shape without area blocks nothing. A new shape is selected; a polygon is stored at
-  its first point. Escape cancels a polygon or a drag first, then closes the dialog; while it is
-  open, Ctrl+Z and Ctrl+Y undo and redo the project history.
+  or a drag along one axis, makes nothing (unlike Tiled's
+  [object tools](https://doc.mapeditor.org/en/stable/manual/objects/)), as a shape without area blocks
+  nothing. A new shape is selected; a polygon is stored at its first point. Escape cancels a
+  polygon or a drag first, then closes the dialog; while it is open, Ctrl+Z and Ctrl+Y undo and
+  redo the project history.
 - **Animation editor**: the frame list of the tile; add tiles by dragging from the tileset grid
   or a button for the tileset selection; default 100 ms; edit durations (one or many); reorder by
   drag; delete; a looping preview at the tile's size. A tile is animated when its list is not
@@ -1008,18 +1010,19 @@ until the user accepts the report.
   Import adds the map in one history entry; Cancel adds nothing.
 - **Fixtures** (`tests/fixtures/tmj/`): authored for this repo, so their licence is the repo's.
   `tests/fixtures/tmj/build.ts` writes them, with generated tile and image PNGs, following
-  [reference/tiled.md](reference/tiled.md) §5 (Tiled's JSON and TSX as Tiled 1.12.2 writes
-  them). At least one file per BRIEF §7 row (isometric and hexagonal maps; infinite; csv, base64
-  uncompressed, zlib, gzip and zstd data; all 8 flip combinations and bit 28 set; image and
-  image-collection tilesets, uniform and mixed; embedded, `.tsj` and `.tsx` tilesets; every
-  object shape, rotated, tile, text and capsule objects; templates; every property type
-  including class, enum, `object` and `list`; tint and blend mode; terrain probabilities and
-  transformations; `transparentcolor`; `tilerendersize`), plus three composite maps of
-  realistic size (a 1000 × 40 side-scroller, a 256 × 256 overworld with groups and parallax, a
-  small dungeon with markers and collision). The folder's README lists which file covers which
-  row. Each fixture's import report is a committed golden file. Once, at the import ticket, the
-  owner opens every fixture in Tiled 1.12.2 and confirms it loads without error and looks as the
-  README describes (manual check card).
+  Tiled's [JSON map format](https://doc.mapeditor.org/en/stable/reference/json-map-format/) and
+  [TMX map format](https://doc.mapeditor.org/en/stable/reference/tmx-map-format/) (Tiled's JSON and TSX as
+  Tiled 1.12.2 writes them). At least one file per BRIEF §7 row (isometric and hexagonal maps;
+  infinite; csv, base64 uncompressed, zlib, gzip and zstd data; all 8 flip combinations and bit
+  28 set; image and image-collection tilesets, uniform and mixed; embedded, `.tsj` and `.tsx`
+  tilesets; every object shape, rotated, tile, text and capsule objects; templates; every
+  property type including class, enum, `object` and `list`; tint and blend mode; terrain
+  probabilities and transformations; `transparentcolor`; `tilerendersize`), plus three
+  composite maps of realistic size (a 1000 × 40 side-scroller, a 256 × 256 overworld with groups
+  and parallax, a small dungeon with markers and collision). The folder's README lists which
+  file covers which row. Each fixture's import report is a committed golden file. Once, at the
+  import ticket, the owner opens every fixture in Tiled 1.12.2 and confirms it loads without
+  error and looks as the README describes (manual check card).
 
 ## 14. Performance
 

@@ -124,7 +124,7 @@ const DRAG_EDITS: Record<Drag["kind"], CollisionEdit> = {
     vertex: "points",
 };
 
-export function CollisionEditor({ request }: { request: CollisionEditorRequest }) {
+export function CollisionEditor({ request }: Readonly<{ request: CollisionEditorRequest }>) {
     useSession((state) => state.revision);
     const edited = editedTile(request);
     // The tileset or the tile went away (an undo of its import): the editor closes.
@@ -403,7 +403,7 @@ function CollisionEditorBody({
         if (!next) return;
         if (active.kind === "create") {
             // A shape with no area blocks nothing: a click, or a drag along one axis, makes
-            // none (SPEC §6.4; unlike Tiled's object tools, reference/tiled.md §6).
+            // none (SPEC §6.4; unlike Tiled's object tools).
             const { width, height } = shapeBox(next.at(-1)!);
             if (width === 0 || height === 0) {
                 setChosen(null);
