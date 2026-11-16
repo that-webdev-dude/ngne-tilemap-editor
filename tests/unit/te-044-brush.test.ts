@@ -329,7 +329,7 @@ describe("TE-044 brush steps", () => {
         expect(map.cells).toEqual(expected);
     });
 
-    it("paints terrain 0 as a wish like any other (erase)", () => {
+    it("paints terrain 0 like any other terrain (erase)", () => {
         // No tile of a corner set has an empty corner and "no terrain" is unreachable from its
         // terrains, so the brush finds no tile for the four cells around the vertex (SPEC §5.2):
         // they are reported and left unchanged.

@@ -30,7 +30,7 @@ Version: Tiled tag `v1.12.2`.
 Used in:
 
 - `src/core/terrain/wangId.ts`: the layout of terrain IDs (eight indexes, corners and edges,
-  "no wish" byte).
+  one byte per index).
 - `src/core/terrain/analysis.ts`: the terrain-set analysis (candidate list, colour distances,
   completeness).
 - `src/core/terrain/terrainCommands.ts`: the default terrain colours (`defaultWangColors`).

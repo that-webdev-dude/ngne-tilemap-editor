@@ -3,13 +3,13 @@ import type { TerrainSetType } from "../model";
 
 // Terrain IDs per index (FORMAT §2.4): Tiled's `WangId` (`src/libtiled/wangset.h`, `.cpp`, tag
 // v1.12.2), eight indexes clockwise from the top, even = edges, odd = corners, 0 = no terrain.
-// A WangId is held as 8 bytes; 0xFF at an index is Tiled's `INDEX_MASK`: in a desired WangId
-// it means "no wish", in a mask it means "this index is a hard constraint".
+// A WangId is held as 8 bytes, one per index; libtiled's `INDEX_MASK` is 0xFF, all the bits of
+// one index.
 // Derived from libtiled (BSD 2-clause licence); its notice is in THIRD_PARTY_NOTICES.md.
 
 /** Indexes per WangId. */
 export const WANG_INDEXES = 8;
-/** `INDEX_MASK`: no wish in a desired WangId, a hard constraint in a mask. */
+/** `INDEX_MASK`: all the bits of one index. */
 export const INDEX_MASK = 0xff;
 
 export const TOP = 0;
