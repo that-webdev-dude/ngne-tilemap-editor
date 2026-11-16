@@ -143,7 +143,7 @@ rows.
 | `src/core/sprite/cels/errors.ts` | `src/core/cels/errors.ts` | verbatim | `ea5c91d` | `e6078acb719093e9fcd1d584f61d8b7fec5fca1644acfb1d6bf620b63f2fb995` | |
 | `src/core/sprite/cels/index.ts` | `src/core/cels/index.ts` | verbatim | `ea5c91d` | `6c3cfcefb0fd14c4c3f3c4a77d081e044158844a2273d983fc55fffc60fac9d4` | |
 | `src/core/sprite/cels/orderedMap.ts` | `src/core/cels/orderedMap.ts` | verbatim | `ea5c91d` | `5ef2a6aa640827dab9656019e50d824cf8c16de525e076573b86cb8414e159f2` | |
-| `src/core/sprite/composite/blend.ts` | `src/core/composite/blend.ts` | verbatim | `ea5c91d` | `215f5c92bce80814d690f44614b67337c50f53dc09a74d733a2def73f4a8868e` | |
+| `src/core/sprite/composite/blend.ts` | `src/core/composite/blend.ts` | verbatim | `3c55bf9` | `893e5538067fd95e8a8bca7f01aa6a07e03403c47ee93e8e9cf20c5180662c41` | |
 | `src/core/sprite/composite/compositeFrame.ts` | `src/core/composite/compositeFrame.ts` | verbatim | `ea5c91d` | `f0b9c66cf3fbaaadc1c82ae767dc764165e88a45d08e965ff443e7414829740e` | |
 | `src/core/sprite/export/atlasFormat.ts` | `src/core/export/atlasFormat.ts` | verbatim | `ea5c91d` | `3804715597a48fa57d5eb5b3948ad0a321ca8f99edc33eb3644e4461a086106a` | |
 | `src/core/sprite/export/errors.ts` | `src/core/export/errors.ts` | verbatim | `ea5c91d` | `2fec68b1cb0e8fc0506ce835a93d05e48549dd5dd85556b84c41d87d0adc864b` | |
