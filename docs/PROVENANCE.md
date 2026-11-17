@@ -591,6 +591,12 @@ Earlier rewrites without a recorded separation:
 - 2026-11-16: release delta check `4e0fdf9..59199cd` before v1.0.1: no new upstream, no
   dependency change, notices wording only; `npm run check` passed. Audited revision: `4e0fdf9`,
   with the delta to `59199cd` checked.
+- 2026-11-17: verification audit of T-3 at `72ab3b1` by an auditor who had not worked on the
+  code or read the earlier reports: the notices line and the test title reworded in `c64f5c2`,
+  and the diff `4e0fdf9..72ab3b1`. T-3 confirmed fixed; the diff adds nothing blocking (the
+  1.0.1 release notes, version strings and records). Tiled's editor source not read; the
+  `docs/SPEC.md` part of the diff not checked (a file of "Tiled source named or read"); no build
+  run. No blocking finding open.
 
 ### Findings
 
@@ -601,7 +607,7 @@ Blocking candidates of the audits above, by the licenses.md §6 format. Minor fi
 | --- | --- | --- | --- | --- |
 | T-1 | 2026-11-15 | Tiled source names and claims in comments, tests and specs; a reference doc written from Tiled's source; test data traced from it; a terrain filler with a port's step structure; notices without versions or pointers; missing records (Audits, 2026-11-15) | Yes | Fixed from `6c7d40a`; re-audited 2026-11-16 |
 | T-2 | 2026-11-16 | `src/core/terrain/wangId.ts`: a comment with terms of the removed port-derived filler | Yes | Fixed in `c64f5c2`; re-checked by a further reviewer |
-| T-3 | 2026-11-16 | `THIRD_PARTY_NOTICES.md` libtiled "Used in" line for `wangId.ts`; a test title in `tests/unit/te-044-brush.test.ts`: the same terms | Yes | Fixed in `c64f5c2`; verification audit pending (not re-checked, owner, 2026-11-16) |
+| T-3 | 2026-11-16 | `THIRD_PARTY_NOTICES.md` libtiled "Used in" line for `wangId.ts`; a test title in `tests/unit/te-044-brush.test.ts`: the same terms | Yes | Fixed in `c64f5c2`; confirmed by the verification audit of 2026-11-17 |
 | T-4 | 2026-11-16 | Tiled tool class names in comments and SPEC §8 | Candidate | Rejected: the names are published in Tiled's scripting API reference, which licenses.md §3 allows (Owner decisions, 2026-11-16) |
 | T-5 | 2026-11-16 | Five further candidates in core, tests and docs | Candidate | Rejected by the verifiers (private report) |
 
