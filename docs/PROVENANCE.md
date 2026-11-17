@@ -588,6 +588,22 @@ Earlier rewrites without a recorded separation:
   (owner, 2026-11-16). Tiled's tool class names left in comments and SPEC §8 are an owner
   decision (Owner decisions). The other findings did not hold the release and were left to the
   owner; the classes of "Tiled source named or read" were not changed.
+- 2026-11-16: release delta check `4e0fdf9..59199cd` before v1.0.1: no new upstream, no
+  dependency change, notices wording only; `npm run check` passed. Audited revision: `4e0fdf9`,
+  with the delta to `59199cd` checked.
+
+### Findings
+
+Blocking candidates of the audits above, by the licenses.md §6 format. Minor findings of the
+2026-11-16 audit were not recorded (owner instruction at the time).
+
+| ID | Audit | Files | Blocking | Disposition |
+| --- | --- | --- | --- | --- |
+| T-1 | 2026-11-15 | Tiled source names and claims in comments, tests and specs; a reference doc written from Tiled's source; test data traced from it; a terrain filler with a port's step structure; notices without versions or pointers; missing records (Audits, 2026-11-15) | Yes | Fixed from `6c7d40a`; re-audited 2026-11-16 |
+| T-2 | 2026-11-16 | `src/core/terrain/wangId.ts`: a comment with terms of the removed port-derived filler | Yes | Fixed in `c64f5c2`; re-checked by a further reviewer |
+| T-3 | 2026-11-16 | `THIRD_PARTY_NOTICES.md` libtiled "Used in" line for `wangId.ts`; a test title in `tests/unit/te-044-brush.test.ts`: the same terms | Yes | Fixed in `c64f5c2`; verification audit pending (not re-checked, owner, 2026-11-16) |
+| T-4 | 2026-11-16 | Tiled tool class names in comments and SPEC §8 | Candidate | Rejected: the names are published in Tiled's scripting API reference, which licenses.md §3 allows (Owner decisions, 2026-11-16) |
+| T-5 | 2026-11-16 | Five further candidates in core, tests and docs | Candidate | Rejected by the verifiers (private report) |
 
 ## Owner decisions
 
