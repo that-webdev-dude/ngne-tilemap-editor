@@ -1,65 +1,38 @@
 import type { Frame, Sprite } from "@ngne/core";
-import { MAX_IMAGE_SIDE, walkLayers } from "../../core/model";
+import { walkLayers } from "../../core/model";
 import type { ImageLayer, PixelBuffer, Project, ProjectMap } from "../../core/model";
 import { toDevice } from "./geometry";
 import type { Camera2D, DeviceSize, MapRect, PixelRect } from "./geometry";
-import type { BitmapFn, TextureTarget } from "./textures";
+import type { BitmapFn, TextureSampling, TextureTarget } from "./textures";
 
 // Image layers in the viewport (ENGINE §3, §4): one texture per image layer, `ed:img:<layerId>`,
-// uploaded while the map shows and released with it; the layer draws its image with its top-left
-// corner at the layer's shift (FORMAT §3.4), and a repeated axis as a grid of quads covering the
-// area drawn. So that a small image repeated over a large view does not take a quad per copy, the
-// texture of a repeated axis holds several copies side by side (at least `MIN_REPEAT_SPAN` px,
-// at most 8192 px): the same pixels, fewer quads. No NGNE value import: the renderer is reached
-// through `TextureTarget`.
+// holding the layer's image once, uploaded while the map shows and released with it. The layer
+// draws its image with its top-left corner at the layer's shift (FORMAT §3.4) as one quad. A
+// layer that repeats on either axis has its texture sampled with repeat addressing, and its quad
+// covers the area drawn along each repeated axis, its UVs carrying the copies it spans and where
+// in a copy the area starts. No NGNE value import: the renderer is reached through
+// `TextureTarget`.
 
 /** The texture ID of an image layer (ENGINE §3). */
 export function imageTextureId(layerId: number): string {
     return `ed:img:${layerId}`;
 }
 
-/** A repeated axis's texture spans at least this many pixels, when 8192 px allow it. */
-export const MIN_REPEAT_SPAN = 512;
+/** The sampling of a repeated image layer's texture: UVs outside 0–1 tile the image. */
+export const REPEAT_SAMPLING: TextureSampling = { address: "repeat" };
 
-/** Copies of the image side by side in the texture along an axis of `side` px. */
-export function repeatCopies(side: number, repeat: boolean): number {
-    if (!repeat) return 1;
-    return Math.max(
-        1,
-        Math.min(Math.floor(MAX_IMAGE_SIDE / side), Math.ceil(MIN_REPEAT_SPAN / side)),
-    );
-}
-
-/** `copiesX × copiesY` copies of `pixels`, side by side. */
-export function repeatedPixels(pixels: PixelBuffer, copiesX: number, copiesY: number): PixelBuffer {
-    if (copiesX === 1 && copiesY === 1) return pixels;
-    const { width, height, data } = pixels;
-    const out = new Uint8ClampedArray(width * copiesX * height * copiesY * 4);
-    const row = width * 4;
-    const stride = row * copiesX;
-    for (let y = 0; y < height; y += 1) {
-        const source = data.subarray(y * row, (y + 1) * row);
-        const first = y * stride;
-        for (let k = 0; k < copiesX; k += 1) out.set(source, first + k * row);
-    }
-    const block = stride * height;
-    for (let k = 1; k < copiesY; k += 1) out.copyWithin(k * block, 0, block);
-    return { width: width * copiesX, height: height * copiesY, data: out };
-}
-
-/** What a layer's texture holds: the image's pixels (by identity) and the copies of each axis. */
+/** What a layer's texture holds: the image's pixels (by identity), and how they are sampled. */
 interface Content {
     pixels: PixelBuffer;
-    copiesX: number;
-    copiesY: number;
+    repeat: boolean;
 }
 
 /** An image layer's texture, ready to draw. */
 export interface ReadyImage {
     texture: string;
-    /** The span of one quad in map pixels: the image times its copies. */
-    spanX: number;
-    spanY: number;
+    /** The image's size in map pixels. */
+    width: number;
+    height: number;
 }
 
 interface Entry {
@@ -75,21 +48,31 @@ export interface ImageTextureHooks {
 }
 
 function sameContent(a: Content, b: Content): boolean {
-    return a.pixels === b.pixels && a.copiesX === b.copiesX && a.copiesY === b.copiesY;
+    return a.pixels === b.pixels && a.repeat === b.repeat;
 }
 
 function contentOf(layer: ImageLayer, pixels: PixelBuffer): Content {
-    return {
-        pixels,
-        copiesX: repeatCopies(pixels.width, layer.repeatX),
-        copiesY: repeatCopies(pixels.height, layer.repeatY),
-    };
+    return { pixels, repeat: layer.repeatX || layer.repeatY };
+}
+
+/** The content of each image layer of `map` whose image exists, by layer ID. */
+function wantedContent(project: Project, map: ProjectMap): Map<number, Content> {
+    const wanted = new Map<number, Content>();
+    let images: Map<string, PixelBuffer> | null = null;
+    for (const { layer } of walkLayers(map.layers)) {
+        if (layer.type !== "image") continue;
+        images ??= new Map(project.images.map((image) => [image.id, image.pixels]));
+        const pixels = images.get(layer.imageId);
+        if (pixels) wanted.set(layer.id, contentOf(layer, pixels));
+    }
+    return wanted;
 }
 
 /**
  * The image layer textures of a viewport. `use` names the shown map: each of its image layers
- * gets a texture of its image (uploaded again when the image or its repeat changes), every other
- * one is released. A texture is drawn only while it holds the layer's current content.
+ * gets a texture of its image (uploaded again when the image changes, or when the layer starts
+ * or stops repeating), every other one is released. A texture is drawn only while it holds the
+ * layer's current content.
  */
 export class ImageLayerTextures {
     readonly #target: TextureTarget;
@@ -107,16 +90,7 @@ export class ImageLayerTextures {
     /** Makes the image layers of `map` (none when null) the ones with a texture. */
     use(project: Project | null, map: ProjectMap | null): void {
         if (this.#disposed) return;
-        const wanted = new Map<number, Content>();
-        if (project && map) {
-            let images: Map<string, PixelBuffer> | null = null;
-            for (const { layer } of walkLayers(map.layers)) {
-                if (layer.type !== "image") continue;
-                images ??= new Map(project.images.map((image) => [image.id, image.pixels]));
-                const pixels = images.get(layer.imageId);
-                if (pixels) wanted.set(layer.id, contentOf(layer, pixels));
-            }
-        }
+        const wanted = project && map ? wantedContent(project, map) : new Map<number, Content>();
         for (const [id, entry] of this.#entries) {
             if (wanted.has(id)) continue;
             entry.abort?.abort();
@@ -155,22 +129,18 @@ export class ImageLayerTextures {
         entry.abort = abort;
         const own = entry;
         const texture = imageTextureId(id);
+        const sampling = content.repeat ? REPEAT_SAMPLING : undefined;
         void (async () => {
-            const { pixels, copiesX, copiesY } = content;
-            const bitmap = await this.#bitmap(repeatedPixels(pixels, copiesX, copiesY));
+            const { pixels } = content;
+            const bitmap = await this.#bitmap(pixels);
             try {
                 if (abort.signal.aborted) return;
-                await this.#target.texture(texture, bitmap, abort.signal);
+                await this.#target.texture(texture, bitmap, abort.signal, sampling);
             } finally {
                 bitmap.close();
             }
             if (abort.signal.aborted || own.wanted !== content) return;
-            own.ready = {
-                ...content,
-                texture,
-                spanX: pixels.width * copiesX,
-                spanY: pixels.height * copiesY,
-            };
+            own.ready = { ...content, texture, width: pixels.width, height: pixels.height };
             own.abort = null;
             this.#hooks.onChange();
         })().catch((error: unknown) => {
@@ -181,18 +151,33 @@ export class ImageLayerTextures {
     }
 }
 
-/** The first and last copy index of an axis that a span `[from, from + length)` meets. */
-function copies(
+/** One axis of an image layer's quad, in map pixels and in UV (one unit per copy). */
+interface Axis {
+    start: number;
+    length: number;
+    uv: number;
+    copies: number;
+}
+
+/**
+ * An axis of the quad that draws an image of `side` px placed at `shift` over the span
+ * `[from, from + length)`: on a repeated axis the span, starting `uv` into a copy; otherwise the
+ * image, when it meets the span. Null when nothing is drawn.
+ */
+function axis(
     from: number,
     length: number,
     shift: number,
-    span: number,
+    side: number,
     repeat: boolean,
-): [number, number] | null {
-    if (!repeat) return shift < from + length && shift + span > from ? [0, 0] : null;
-    const first = Math.floor((from - shift) / span);
-    const last = Math.ceil((from + length - shift) / span) - 1;
-    return last >= first ? [first, last] : null;
+): Axis | null {
+    if (!repeat) {
+        const meets = shift < from + length && shift + side > from;
+        return meets ? { start: shift, length: side, uv: 0, copies: 1 } : null;
+    }
+    if (length <= 0) return null;
+    const at = (from - shift) / side;
+    return { start: from, length, uv: at - Math.floor(at), copies: length / side };
 }
 
 /** Where and how an image layer is drawn. */
@@ -206,9 +191,9 @@ export interface ImageDraw {
 }
 
 /**
- * Emits the quads of an image layer that meet `area` (map pixels): one, or a grid along each
- * repeated axis. With `clip` (device pixels), each quad has it as its sprite clip. Returns the
- * quads emitted.
+ * Emits the quad of an image layer when it meets `area` (map pixels): the image, stretched to the
+ * area along each repeated axis with UVs that tile it. With `clip` (device pixels), the quad has
+ * it as its sprite clip. Returns the quads emitted.
  */
 export function emitImageLayer(
     frame: Frame,
@@ -219,42 +204,29 @@ export function emitImageLayer(
     place: { layer: number; depth: number; clip?: PixelRect | null },
 ): number {
     const { layer, ready, opacity, shift } = draw;
-    const xs = copies(area.x, area.width, shift.x, ready.spanX, layer.repeatX);
-    const ys = copies(area.y, area.height, shift.y, ready.spanY, layer.repeatY);
+    const xs = axis(area.x, area.width, shift.x, ready.width, layer.repeatX);
+    const ys = axis(area.y, area.height, shift.y, ready.height, layer.repeatY);
     if (!xs || !ys) return 0;
-    const width = ready.spanX * camera.scale;
-    const height = ready.spanY * camera.scale;
+    const at = toDevice(camera, size, xs.start, ys.start);
+    const width = xs.length * camera.scale;
+    const height = ys.length * camera.scale;
     const quad: Sprite = {
-        x: 0,
-        y: 0,
+        x: at.x + width / 2,
+        y: at.y + height / 2,
         width,
         height,
         rotation: 0,
         texture: ready.texture,
-        u: 0,
-        v: 0,
-        uw: 1,
-        vh: 1,
+        u: xs.uv,
+        v: ys.uv,
+        uw: xs.copies,
+        vh: ys.copies,
         alpha: opacity / 255,
         color: 0xffffffff,
         layer: place.layer,
         depth: place.depth,
     };
     if (place.clip) quad.clip = place.clip;
-    let count = 0;
-    for (let ky = ys[0]; ky <= ys[1]; ky += 1) {
-        for (let kx = xs[0]; kx <= xs[1]; kx += 1) {
-            const at = toDevice(
-                camera,
-                size,
-                shift.x + kx * ready.spanX,
-                shift.y + ky * ready.spanY,
-            );
-            quad.x = at.x + width / 2;
-            quad.y = at.y + height / 2;
-            frame.sprite(quad);
-            count += 1;
-        }
-    }
-    return count;
+    frame.sprite(quad);
+    return 1;
 }

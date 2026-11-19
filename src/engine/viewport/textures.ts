@@ -1,9 +1,13 @@
+import type { TextureSampling } from "@ngne/core";
 import type { PixelBuffer, Tileset } from "../../core/model";
 import type { PackedTileset, TileUvTable } from "../../core/pack";
 
 // The textures of the viewport (ENGINE §3): `ed:ts:<tilesetId>` for every tileset an open map
 // uses, `ed:checker`. A texture is uploaded once, replaced when its source changes, released
-// when nothing uses it. No NGNE import: the renderer is reached through `TextureTarget`.
+// when nothing uses it. No NGNE value import: the renderer is reached through `TextureTarget`.
+
+/** How a texture is sampled (NGNE's); absent is nearest and clamp. */
+export type { TextureSampling };
 
 /** The texture ID of a tileset's packed atlas. */
 export function tilesetTextureId(tilesetId: string): string {
@@ -14,7 +18,12 @@ export const CHECKER_TEXTURE_ID = "ed:checker";
 
 /** What the renderer offers for textures; `WebGPURenderer` has this shape. */
 export interface TextureTarget {
-    texture(id: string, source: ImageBitmap, signal?: AbortSignal): Promise<void>;
+    texture(
+        id: string,
+        source: ImageBitmap,
+        signal?: AbortSignal,
+        sampling?: TextureSampling,
+    ): Promise<void>;
     releaseTexture(id: string): void;
 }
 

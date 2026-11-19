@@ -129,7 +129,8 @@ export class Viewport {
         // their centres (ENGINE §4).
         this.#camera.pixelSnap = false;
         const target: TextureTarget = {
-            texture: (id, source, signal) => renderer.texture(id, source, signal),
+            texture: (id, source, signal, sampling) =>
+                renderer.texture(id, source, signal, sampling),
             // Releasing throws once the renderer failed; the textures are gone with it.
             releaseTexture: (id) => {
                 try {

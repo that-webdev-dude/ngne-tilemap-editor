@@ -41,7 +41,8 @@ No polling of status or sprite counters, no renderer re-creation on resize.
 | --- | --- | --- | --- |
 | Tileset atlas: the export's packed atlas from `core/pack` (even rectangles, 1 px extrusion; SPEC §10.2), never the stored grid, so viewport, preview and runtime share one emitter and UV table and no fractional zoom or DPR samples a neighbour tile | `ed:ts:<tilesetId>` | `renderer.texture(id, source)` (transactional whole-image replace) | Uploaded when a map using it opens; replaced on "Update tileset from source"; `releaseTexture` when no open map uses it |
 | Overview chunk | `ed:chunk:<layerId>:<cx>:<cy>` | `createTexture(id, w, h)` once, then `updateTexture(id, pixels, region)` per dirty rectangle, with the compositor's raw RGBA8 pixels | Created when the chunk tier first needs it; released on eviction (a change leaves it showing nothing, or a new plan drops it or changes T), map close or layer delete |
-| Checkerboard, image layers | `ed:checker`, `ed:img:<layerId>` | `texture()` | As the map |
+| Checkerboard | `ed:checker` | `texture()` | As the map |
+| Image layer: its image once, as decoded. A layer that repeats on either axis has it sampled with repeat addressing (`{ address: "repeat" }`, both axes); others with the default nearest and clamp | `ed:img:<layerId>` | `texture(id, source, signal, sampling)` | As the map; uploaded again when the image changes or the layer starts or stops repeating |
 
 Editable texture rules (`createTexture` / `updateTexture`):
 
@@ -126,9 +127,12 @@ Editable texture rules (`createTexture` / `updateTexture`):
   frames. Either outcome settles a wait: a lost device resolves the pending waits, disposal and
   terminal failure reject them. A wait also covers the texture uploads submitted before it.
 - **Layer opacity** maps to sprite alpha. Tint and blend modes are not drawn (Later / Out).
-- **Image layers:** one texture each, ≤ 8192 px per side; repeat is drawn as a quad grid. The
-  texture of a repeated axis holds copies of the image side by side, enough to span 512 px
-  where 8192 px allow, so a small image covers the view with few quads.
+- **Image layers:** one texture each, holding the image once (≤ 8192 px per side, w × h × 4
+  bytes of GPU memory), and one quad each. The quad has its top-left corner at the layer's
+  shift (FORMAT §3.4); along a repeated axis it covers the area drawn instead (the view, or a
+  pending patch with its clip), and its UVs run from where in a copy the area starts (`u`,
+  `v` in 0–1) over the copies it spans (`uw`, `vh`), which repeat addressing tiles. Parallax and
+  the layer offset move the UVs of a repeated axis, not the quad.
 
 ## 5. Game preview
 
@@ -273,7 +277,7 @@ written "surface" below) and drawing with it on a WebGPU canvas
 | CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 9.0 / 9.1 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 302 / 347 ms rebuild after a layer change, a 0.40 / 0.42 s initial build | Still applicable: 0.4.0 changes no step of a tilemap frame's preparation (ngne#57 and ngne#58 are open). `te-011-emit` and `te-013-pan` |
 | Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime | Not measured ungrouped. Grouped, the reference map draws in 17 draw calls (4,664 and 66,992 sprites; runtime p95 1.1 / 1.2 ms and 10.6 / 10.4 ms) | Still applicable; a sprite clip also splits a draw. GPU: "batching still joins only consecutive quads of the same texture" |
 | No camera zoom | Scale quad positions and sizes; runtime takes a render-scale option | editor, runtime | Not measured: the scaling is part of the quad emission above | Resolved: `Camera.zoom`; the workaround is kept. GPU: "camera zoom 2 draws as the editor's scaling of positions and sizes does" |
-| Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; repeat quads not measured | Partly resolved: `TextureSampling` per texture. Repeat tiles a whole texture, not an atlas rectangle; linear filtering bleeds across an atlas rectangle's edge and has no mipmaps, so the chunk tier and the integer-scale limit stay. The workarounds are kept. GPU: "repeat addressing tiles a whole texture; the default stays clamp", "linear filtering blends texels, and bleeds across an atlas sub-rectangle's edge" |
+| Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; runtime image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; runtime repeat quads not measured | Partly resolved: `TextureSampling` per texture. The viewport draws a repeated image layer as one quad with repeat addressing (§4). Repeat tiles a whole texture, not an atlas rectangle; linear filtering bleeds across an atlas rectangle's edge and has no mipmaps, so the chunk tier and the integer-scale limit stay. The runtime's quad grid is kept. GPU: "repeat addressing tiles a whole texture; the default stays clamp", "linear filtering blends texels, and bleeds across an atlas sub-rectangle's edge" |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime | None in time; features left out (tint, blend modes) | Still applicable. Surface: "Sprite has no blend mode and no additive tint: colour and alpha only" |
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 30.9 / 35.2 ms p95 after a paint (32.9 / 33.6 ms for a 16 × 16 stamp); the composite is part of the 302 / 347 ms rebuild | Still applicable. Surface: "WebGPURenderer has no texture readback and does not expose its GPU device" |
 | The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 20.9 / 19.0 ms against 16 ms (§6; the build's own slices ≤ 6.4 / 7.9 ms). With canvas uploads on 0.3.0 the same machine measured 30.0–37.5 / 37.1–48.6 ms on 2026-11-15 (three runs each) | Still applicable: with 0.4.0 the task is still over 16 ms on the reference hardware. `te-015-chunk` |

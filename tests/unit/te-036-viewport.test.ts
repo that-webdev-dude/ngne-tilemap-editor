@@ -4,24 +4,18 @@ import { createImageLayer } from "../../src/core/model";
 import type { ImageLayer, PixelBuffer, Project } from "../../src/core/model";
 import { packTileset } from "../../src/core/pack";
 import { checkerSpec } from "../../src/engine/viewport/checker";
-import {
-    ImageLayerTextures,
-    MIN_REPEAT_SPAN,
-    emitImageLayer,
-    imageTextureId,
-    repeatCopies,
-    repeatedPixels,
-} from "../../src/engine/viewport/imageLayers";
+import { ImageLayerTextures, imageTextureId } from "../../src/engine/viewport/imageLayers";
 import type { ReadyImage } from "../../src/engine/viewport/imageLayers";
 import { EmitterCache, LAYER, buildLiveFrame } from "../../src/engine/viewport/liveTier";
 import type { ViewportScene } from "../../src/engine/viewport/liveTier";
 import { tilesetTextureId } from "../../src/engine/viewport/textures";
+import { QUAD_CLIP, emitQuads } from "../support/imageLayerQuads";
 import { createViewportSceneProject } from "../support/viewportScene";
 
 // TE-036: image layers in the viewport (ENGINE §3, §4): one texture per image layer
-// (`ed:img:<layerId>`), drawn at the layer's shift and opacity, a repeated axis as a grid of
-// quads over the area drawn; the texture of a repeated axis holds several copies so a small
-// image does not take a quad per copy. What NGNE draws from the frame is the E2E readback's
+// (`ed:img:<layerId>`) holding the image once, drawn at the layer's shift and opacity as one quad
+// that a repeated axis stretches over the area drawn, its UVs tiling the image with repeat
+// addressing (repeat-image-layers.test.ts). What NGNE draws from the frame is the E2E readback's
 // (te-036-image-layer.spec.ts).
 
 interface Recorded {
@@ -59,59 +53,59 @@ function image(width: number, height: number): PixelBuffer {
 }
 
 describe("textures of repeated axes", () => {
-    it("hold enough copies to span 512 px, within 8192 px", () => {
-        expect(repeatCopies(16, false)).toBe(1);
-        expect(repeatCopies(16, true)).toBe(MIN_REPEAT_SPAN / 16);
-        expect(repeatCopies(300, true)).toBe(2);
-        expect(repeatCopies(1, true)).toBe(512);
-        expect(repeatCopies(5000, true)).toBe(1);
-        expect(repeatCopies(8192, true)).toBe(1);
+    /** Uploads the image layer of an image of `width × height` with each repeat setting. */
+    async function uploads(width: number, height: number): Promise<PixelBuffer[]> {
+        const sources: PixelBuffer[] = [];
+        const project = createViewportSceneProject({ background: null });
+        project.images.push({ id: "i", name: "i", exportName: "i", pixels: image(width, height) });
+        const map = project.maps[0]!;
+        const layer = createImageLayer(90, "Image", "i");
+        map.layers.push(layer);
+        for (const [repeatX, repeatY] of [
+            [false, false],
+            [true, false],
+            [false, true],
+            [true, true],
+        ] as const) {
+            const textures = new ImageLayerTextures(
+                { texture: async () => {}, releaseTexture: () => {} },
+                async (pixels) => {
+                    sources.push(pixels);
+                    return { width: pixels.width, height: pixels.height, close() {} } as never;
+                },
+                { onChange: () => {}, onError: (error) => void error },
+            );
+            Object.assign(layer, { repeatX, repeatY });
+            textures.use(project, map);
+            await flush();
+        }
+        return sources;
+    }
+
+    it("hold the image once, whatever its size and repeat", async () => {
+        for (const [width, height] of [
+            [16, 16],
+            [300, 1],
+            [1, 5000],
+            [8192, 2],
+        ] as const) {
+            const sides = (await uploads(width, height)).map((s) => [s.width, s.height]);
+            expect(sides).toEqual(Array.from({ length: 4 }, () => [width, height]));
+        }
     });
 
-    it("copy the image side by side, pixel for pixel", () => {
-        const source = image(3, 2);
-        expect(repeatedPixels(source, 1, 1)).toBe(source);
-        const out = repeatedPixels(source, 3, 2);
-        expect([out.width, out.height]).toEqual([9, 4]);
-        for (let y = 0; y < out.height; y += 1) {
-            for (let x = 0; x < out.width; x += 1) {
-                const at = (y * out.width + x) * 4;
-                const from = ((y % 2) * 3 + (x % 3)) * 4;
-                expect([...out.data.subarray(at, at + 4)]).toEqual([
-                    ...source.data.subarray(from, from + 4),
-                ]);
-            }
-        }
+    it("hold the image's own pixels, pixel for pixel", async () => {
+        const sources = await uploads(3, 2);
+        expect(sources).toHaveLength(4);
+        const [first, ...rest] = sources;
+        for (const source of rest) expect(source).toBe(first);
+        expect([...first!.data]).toEqual([...image(3, 2).data]);
     });
 });
 
 describe("quads of an image layer", () => {
-    const camera = { centreX: 50, centreY: 25, scale: 2 };
-    const size = { width: 200, height: 100 };
-    const area = { x: 0, y: 0, width: 100, height: 50 };
-    const ready: ReadyImage = { texture: "ed:img:7", spanX: 16, spanY: 8 };
-    const CLIP = { x: 0, y: 0, width: 40, height: 30 };
-
-    function emit(repeatX: boolean, repeatY: boolean, shift = { x: 10, y: 5 }, clip = false) {
-        const frame = new RecordingFrame();
-        const layer = { ...createImageLayer(7, "Sky", "img"), repeatX, repeatY };
-        const count = emitImageLayer(
-            frame as unknown as Frame,
-            camera,
-            size,
-            { layer, ready, opacity: 128, shift },
-            area,
-            {
-                layer: LAYER.tiles,
-                depth: 3,
-                clip: clip ? CLIP : null,
-            },
-        );
-        return { count, sprites: frame.sprites };
-    }
-
     it("draws one quad with its top-left corner at the shift, at the layer's opacity", () => {
-        const { count, sprites } = emit(false, false);
+        const { count, sprites } = emitQuads(false, false);
         expect(count).toBe(1);
         expect(sprites).toEqual([
             expect.objectContaining({
@@ -131,30 +125,38 @@ describe("quads of an image layer", () => {
             }),
         ]);
         // Outside the area: nothing.
-        expect(emit(false, false, { x: 200, y: 5 }).count).toBe(0);
+        expect(emitQuads(false, false, { x: 200, y: 5 }).count).toBe(0);
     });
 
-    it("covers the area with a grid along each repeated axis", () => {
-        // x: copies −1 .. 5 cover 0 .. 100 from 10 in steps of 16; y: one row.
-        const x = emit(true, false);
-        expect(x.count).toBe(7);
-        expect(x.sprites.map((s) => (s.x - 16) / 2)).toEqual([-6, 10, 26, 42, 58, 74, 90]);
-        // y: copies −1 .. 5 cover 0 .. 50 from 5 in steps of 8.
-        const y = emit(false, true);
-        expect(y.count).toBe(7);
-        expect(y.sprites.map((s) => (s.y - 8) / 2)).toEqual([-3, 5, 13, 21, 29, 37, 45]);
-        expect(emit(true, true).count).toBe(49);
-        // Far away on a repeated axis, the grid still covers the area.
-        expect(emit(true, false, { x: -1000, y: 5 }).count).toBe(7);
+    it("covers the area with one quad along each repeated axis", () => {
+        // x: the quad spans 0 .. 100 (device 0 .. 200), starting 6 px into the copy at −6
+        // (copies at 10 in steps of 16); y: one image high, at 5.
+        const x = emitQuads(true, false);
+        expect(x.count).toBe(1);
+        expect(x.sprites.map((s) => [s.x, s.width, s.u, s.uw, s.y, s.height, s.v, s.vh])).toEqual([
+            [100, 200, 6 / 16, 100 / 16, 18, 16, 0, 1],
+        ]);
+        // y: the quad spans 0 .. 50, starting 3 px into the copy at −3 (copies at 5 in steps
+        // of 8); x: one image wide, at 10.
+        const y = emitQuads(false, true);
+        expect(y.count).toBe(1);
+        expect(y.sprites.map((s) => [s.x, s.width, s.u, s.uw, s.y, s.height, s.v, s.vh])).toEqual([
+            [36, 32, 0, 1, 50, 100, 3 / 8, 50 / 8],
+        ]);
+        expect(emitQuads(true, true).count).toBe(1);
+        // Far away on a repeated axis, the quad still covers the area.
+        expect(emitQuads(true, false, { x: -1000, y: 5 }).sprites).toEqual([
+            expect.objectContaining({ x: 100, width: 200, u: 0.5, uw: 100 / 16 }),
+        ]);
     });
 
-    it("draws each quad uncut, with the clip rectangle as its sprite clip", () => {
-        const { sprites } = emit(true, false, { x: 10, y: 5 }, true);
-        const whole = emit(true, false, { x: 10, y: 5 }).sprites;
-        // The quads of the area, copies −1 .. 5, each whole and clipped by the GPU.
-        expect(whole).toHaveLength(7);
-        expect(sprites).toEqual(whole.map((s) => ({ ...s, clip: CLIP })));
-        for (const s of sprites) expect(s).toMatchObject({ width: 32, u: 0, uw: 1 });
+    it("draws the quad uncut, with the clip rectangle as its sprite clip", () => {
+        const { sprites } = emitQuads(true, false, { x: 10, y: 5 }, true);
+        const whole = emitQuads(true, false, { x: 10, y: 5 }).sprites;
+        // The quad of the area, whole and clipped by the GPU.
+        expect(whole).toHaveLength(1);
+        expect(sprites).toEqual(whole.map((s) => ({ ...s, clip: QUAD_CLIP })));
+        for (const s of sprites) expect(s).toMatchObject({ width: 200, u: 6 / 16, uw: 100 / 16 });
     });
 });
 
@@ -211,11 +213,10 @@ describe("image layer textures", () => {
         expect(changes()).toBe(1);
         expect(textures.ready(sky, project.images[0]!.pixels)).toEqual({
             texture: "ed:img:90",
-            spanX: 4,
-            spanY: 2,
+            width: 4,
+            height: 2,
             pixels: project.images[0]!.pixels,
-            copiesX: 1,
-            copiesY: 1,
+            repeat: false,
         });
         // A frame that changes nothing uploads nothing.
         textures.use(project, map);
@@ -231,8 +232,9 @@ describe("image layer textures", () => {
         uploads[2]!.resolve();
         await flush();
         expect(textures.ready(sky, project.images[0]!.pixels)).toMatchObject({
-            spanX: 4 * (MIN_REPEAT_SPAN / 4),
-            spanY: 2,
+            width: 4,
+            height: 2,
+            repeat: true,
         });
 
         // Another image: the old texture is not drawn for it.
@@ -270,7 +272,7 @@ describe("the live tier", () => {
             })),
         );
         const ready = (layer: ImageLayer): ReadyImage | null =>
-            layer.id === sky.id ? { texture: "ed:img:90", spanX: 4, spanY: 2 } : null;
+            layer.id === sky.id ? { texture: "ed:img:90", width: 4, height: 2 } : null;
         const counts = buildLiveFrame(frame as unknown as Frame, {
             scene,
             size: { width: 400, height: 240 },
