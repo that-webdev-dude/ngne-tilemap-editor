@@ -2,11 +2,11 @@
     "id": "te-055-runtime-1920x1080-intel-uhd",
     "ticket": "TE-055",
     "measurement": "Game runtime: the fixture game drawing the exported reference project (8 full layers, 2 tilesets, parallax, animated tiles) at 1920 × 1080 ×1 with a stacked HUD scene, pixelSnap on, panning; game.stats.renderMs; Intel UHD, window 1920 × 1080, DPR 1",
-    "statistic": "p95 of 1101 frames over 10 s after 2 s",
-    "resultMs": 9.399999976158142,
+    "statistic": "p95 of 1032 frames over 10 s after 2 s",
+    "resultMs": 10.600000023841858,
     "details": {
         "adapter": "intel gen-12lp",
-        "frames": 1101,
+        "frames": 1032,
         "canvas": [
             1920,
             1080
@@ -14,12 +14,12 @@
         "sprites": 66992,
         "drawCalls": 17,
         "renderMs": {
-            "median": 8.800000011920929,
-            "p95": 9.399999976158142,
-            "p99": 9.699999988079071,
-            "max": 13.599999964237213
+            "median": 9.100000023841858,
+            "p95": 10.600000023841858,
+            "p99": 16.19999998807907,
+            "max": 19.399999976158142
         },
-        "frameMsP95": 9.400000035762787
+        "frameMsP95": 10.699999988079071
     },
     "benchmarkId": "te-055-runtime-1920x1080",
     "environment": {
@@ -28,7 +28,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:03:50.384Z"
+    "date": "2026-11-19T08:41:03.548Z"
 }

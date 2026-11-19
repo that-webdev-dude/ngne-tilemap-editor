@@ -10,7 +10,7 @@ import type {
     loadTilemap,
 } from "../../../src/core/runtime/runtime";
 
-// TE-055: the fixture NGNE game of SPEC §10.3 (`@ngne/core` 0.3.1, or the newest release in the
+// TE-055: the fixture NGNE game of SPEC §10.3 (`@ngne/core` 0.4.0, or the newest release in the
 // weekly `latest` job, SPEC §11.4). A game as a user of an export writes it: it loads a map
 // with the exported `ngne-tilemap.ts`, lists its textures with `assetsFor`, and draws it with
 // `drawTilemap` in `scene.render`, with the scene camera's `pixelSnap` on. It uses nothing but

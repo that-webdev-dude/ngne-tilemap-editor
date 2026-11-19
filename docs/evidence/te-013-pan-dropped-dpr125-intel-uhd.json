@@ -8,7 +8,7 @@
     "resultMs": 0,
     "details": {
         "adapter": "intel gen-12lp",
-        "intervals": 546,
+        "intervals": 516,
         "fraction": 0
     },
     "benchmarkId": "te-013-pan-dropped-dpr125",
@@ -19,7 +19,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -27,5 +27,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T19:59:47.359Z"
+    "date": "2026-11-19T08:37:09.863Z"
 }

@@ -20,14 +20,14 @@ import { COMPAT_TABLES } from "../tests/runtime-compat/tables.ts";
 //
 // Without folders it checks the pinned ones: `ngne` 0.1.0 (the tarball games vendor, from NGNE
 // revision a127e59, stored unpacked; 0.1.0/vendor/engine.json lists its files' SHA-256),
-// `@ngne/core` 0.2.2 and 0.3.0, each installed
+// `@ngne/core` 0.2.2, 0.3.0 and 0.4.0, each installed
 // from its own lockfile (`npm ci`). `latest` installs the newest published `@ngne/core` without
 // a lockfile and needs the network; the weekly workflow runs it, report-only. Vite loads the
 // generator, as it reads the runtime sources through `?raw` imports.
 
 const ROOT = fileURLToPath(new URL("../", import.meta.url));
 const FOLDERS = join(ROOT, "tests/runtime-compat");
-const PINNED = ["0.1.0", "0.2.2", "0.3.0"];
+const PINNED = ["0.1.0", "0.2.2", "0.3.0", "0.4.0"];
 const TSC = join(ROOT, "node_modules/typescript/bin/tsc");
 const GAME = readFileSync(join(FOLDERS, "game.ts"), "utf8");
 
@@ -102,7 +102,7 @@ function contractBreak(folder: string, name: string): string | null {
                 "changed shape; update tests/runtime-compat/contract.ts."
             );
         }
-        const slash = (path: string) => path.replace(/\\/g, "/");
+        const slash = (path: string) => path.replaceAll("\\", "/");
         const config = {
             extends: slash(join(folder, "tsconfig.json")),
             compilerOptions: { paths: { [name]: [slash(join(copy, types.entry))] } },

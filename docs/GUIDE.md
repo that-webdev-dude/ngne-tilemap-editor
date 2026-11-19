@@ -257,7 +257,7 @@ await app.start(await app.game.prepare(await overworld(), { key: "overworld" }))
 
 <!-- guide-example:end -->
 
-`npm test` compiles this example against `@ngne/core` 0.3.1 and a generated runtime. Pass
+`npm test` compiles this example against `@ngne/core` 0.4.0 and a generated runtime. Pass
 `options.scale` for a render scale (world units are then map pixels × scale; tiles meet without
 seams at whole-number scales), `options.layers` to choose layers, and `options.report` to receive
 the warning for a tileset missing from the scene's assets; `drawTilemap` itself never throws.

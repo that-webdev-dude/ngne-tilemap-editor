@@ -5,7 +5,7 @@ import { createReferenceProject, REFERENCE } from "../../support/referenceProjec
 
 // TE-064 benchmark page module (tests/perf/te-064-idle.perf.ts): the idle editor. The reference
 // map opens as a map opens; the view is set through the app's commands; once the editor has
-// settled, windows with nothing done count every frame the page submits. NGNE 0.3.1 keeps its
+// settled, windows with nothing done count every frame the page submits. NGNE (0.4.0) keeps its
 // device private, so the module wraps `GPUQueue.prototype.submit` (as TE-068's does) and counts
 // the submits of every queue of the page (viewport and preview). It also counts the app's
 // animation-frame callbacks, and the page's own animation frames with a loop of its own, which

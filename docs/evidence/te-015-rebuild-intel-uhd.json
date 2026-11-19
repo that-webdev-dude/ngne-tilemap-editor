@@ -4,7 +4,7 @@
     "measurement": "Overview rebuild after a layer opacity change of the reference map; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "one rebuild, change to tier ready",
     "budgetMs": 500,
-    "resultMs": 320.2999999523163,
+    "resultMs": 283.4000000357628,
     "details": {
         "adapter": "intel gen-12lp",
         "canvas": [
@@ -13,11 +13,11 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 287.2999999523163,
-        "maxSliceMs": 3.600000023841858,
-        "maxGapMs": 112,
+        "chunkBuildMs": 269.80000001192093,
+        "maxSliceMs": 4.400000035762787,
+        "maxGapMs": 99.40000003576279,
         "liveFrames": 1,
-        "longestLiveFrameMs": 110.39999997615814
+        "longestLiveFrameMs": 98
     },
     "benchmarkId": "te-015-rebuild",
     "pass": true,
@@ -27,7 +27,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:00:01.380Z"
+    "date": "2026-11-19T08:37:22.206Z"
 }

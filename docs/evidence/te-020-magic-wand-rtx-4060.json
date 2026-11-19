@@ -4,13 +4,13 @@
     "measurement": "Magic wand of a 65536-cell region on the reference map at 100%, the region found after the press, press to the overlay frame showing the selection; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "p95 of 35 presses after 5 warm-up presses",
     "budgetMs": 100,
-    "resultMs": 10.200000047683716,
+    "resultMs": 9.799999952316284,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 5.5,
-        "maxMs": 14.900000035762787,
-        "shapeAloneMs": 7.100000023841858,
-        "handledMedianMs": 3.599999964237213,
+        "medianMs": 6.100000023841858,
+        "maxMs": 11.300000011920929,
+        "shapeAloneMs": 5.300000011920929,
+        "handledMedianMs": 3.800000011920929,
         "entries": 79,
         "layerId": 7
     },
@@ -22,7 +22,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -30,5 +30,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:12:25.492Z"
+    "date": "2026-11-19T08:49:02.705Z"
 }

@@ -4,7 +4,7 @@
     "measurement": "Overview rebuild after a layer opacity change, longest build task; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "longest composite-and-submit slice of the rebuild",
     "budgetMs": 16,
-    "resultMs": 3.900000035762787,
+    "resultMs": 4.100000023841858,
     "details": {
         "adapter": "nvidia lovelace",
         "canvas": [
@@ -13,11 +13,11 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 309.5,
-        "maxSliceMs": 3.900000035762787,
-        "maxGapMs": 123.5,
+        "chunkBuildMs": 294.39999997615814,
+        "maxSliceMs": 4.100000023841858,
+        "maxGapMs": 112.19999998807907,
         "liveFrames": 1,
-        "longestLiveFrameMs": 121.80000001192093
+        "longestLiveFrameMs": 110.60000002384186
     },
     "benchmarkId": "te-015-rebuild-task",
     "pass": true,
@@ -27,7 +27,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:07:54.212Z"
+    "date": "2026-11-19T08:44:55.527Z"
 }

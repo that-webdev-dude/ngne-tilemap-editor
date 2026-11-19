@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Uses `@ngne/core` 0.4.0. The editor draws maps as before.
+- The generated `ngne-tilemap.ts` is unchanged and compiles against `@ngne/core` 0.4.0 as well
+  as `ngne` 0.1.0 and `@ngne/core` 0.2.2 and 0.3.0. In a game on `@ngne/core` 0.4.0, maps
+  drawn at a whole-number render scale look the same as before; at other scales a tile edge can
+  land up to one pixel away from where earlier engines drew it.
+
 ## 1.0.1 – 2026-11-16
 
 - Uses `@ngne/core` 0.3.1.
