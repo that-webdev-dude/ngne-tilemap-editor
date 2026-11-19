@@ -25,6 +25,11 @@ const entry = program.getSourceFile(ENTRY)!;
 const moduleSymbol = checker.getSymbolAtLocation(entry)!;
 const exports = new Map(checker.getExportsOfModule(moduleSymbol).map((s) => [s.name, s]));
 
+/** A list of names written as one string, separated by ", ". */
+function names(list: string): string[] {
+    return list.split(", ");
+}
+
 /** The names of the module's exports. */
 function exported(): string[] {
     return [...exports.keys()].sort();
@@ -66,92 +71,42 @@ describe("the pinned engine", () => {
 
 describe("ENGINE §7 rows that 0.4.0 leaves open, from its declarations", () => {
     it("Frame has no line, ellipse or polygon primitive: sprites and rects only", () => {
-        expect(members("Frame")).toEqual([
-            "count",
-            "data",
-            "order",
-            "rect",
-            "reset",
-            "scene",
-            "sort",
-            "sprite",
-            "textures",
-        ]);
+        expect(members("Frame")).toEqual(
+            names("count, data, order, rect, reset, scene, sort, sprite, textures"),
+        );
     });
 
     it("Sprite has no blend mode and no additive tint: colour and alpha only", () => {
-        expect(members("Sprite")).toEqual([
-            "alpha",
-            "clip",
-            "color",
-            "depth",
-            "height",
-            "layer",
-            "rotation",
-            "screen",
-            "texture",
-            "u",
-            "uw",
-            "v",
-            "vh",
-            "width",
-            "x",
-            "y",
-        ]);
+        expect(members("Sprite")).toEqual(
+            names(
+                "alpha, clip, color, depth, height, layer, rotation, screen, texture, u, uw, v, vh, width, x, y",
+            ),
+        );
     });
 
     it("WebGPURenderer has no texture readback and does not expose its GPU device", () => {
-        expect(members("WebGPURenderer")).toEqual([
-            "canvas",
-            "createTexture",
-            "dispose",
-            "drawCalls",
-            "height",
-            "inspect",
-            "onLifecycle",
-            "ready",
-            "releaseTexture",
-            "render",
-            "resize",
-            "sprites",
-            "static create",
-            "status",
-            "submittedWorkDone",
-            "texture",
-            "updateTexture",
-            "width",
-        ]);
+        expect(members("WebGPURenderer")).toEqual(
+            names(
+                "canvas, createTexture, dispose, drawCalls, height, inspect, onLifecycle, ready, releaseTexture, render, resize, sprites, static create, status, submittedWorkDone, texture, updateTexture, width",
+            ),
+        );
     });
 
     it("BrowserGame has no in-scene upload and no resize: its logical size is fixed", () => {
-        expect(members("BrowserGame")).toEqual([
-            "audio",
-            "dispose",
-            "frame",
-            "game",
-            "height",
-            "input",
-            "renderer",
-            "start",
-            "stats",
-            "stop",
-            "width",
-        ]);
+        expect(members("BrowserGame")).toEqual(
+            names(
+                "audio, dispose, frame, game, height, input, renderer, start, stats, stop, width",
+            ),
+        );
     });
 
     it("exports no tilemap or atlas schema, no tileset discovery and no sprite animation", () => {
-        const names = exported();
-        for (const name of names) expect(name).not.toMatch(/tile|atlas|anim/i);
+        for (const name of exported()) expect(name).not.toMatch(/tile|atlas|anim/i);
     });
 
     it("ImageAsset gains only sampling: no references to follow from one asset to another", () => {
-        expect(members("ImageAsset")).toEqual([
-            "dispose",
-            "estimateBytes",
-            "id",
-            "kind",
-            "load",
-            "sampling",
-        ]);
+        expect(members("ImageAsset")).toEqual(
+            names("dispose, estimateBytes, id, kind, load, sampling"),
+        );
     });
 });
