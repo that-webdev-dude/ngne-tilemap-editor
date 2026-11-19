@@ -7,7 +7,7 @@ import { generateRuntime } from "../../src/core/runtime/generate";
 
 // TE-067: the game example of docs/GUIDE.md ("Use `ngne-tilemap.ts` in a game") compiles as a
 // game's `src/game.ts` beside an export folder `src/maps/` holding the map it loads, against the
-// app's `@ngne/core` 0.3.1, under the strict settings the runtime compile matrix uses
+// app's `@ngne/core` 0.4.0, under the strict settings the runtime compile matrix uses
 // (tests/runtime-compat/tsconfig.base.json). The folder lies under .test-output/ in the
 // repository, so `@ngne/core` resolves from its node_modules.
 
@@ -37,7 +37,7 @@ describe("the user guide's game example", () => {
         rmSync(folder, { recursive: true, force: true });
     });
 
-    it("compiles against @ngne/core 0.3.1 and the generated runtime", () => {
+    it("compiles against @ngne/core 0.4.0 and the generated runtime", () => {
         mkdirSync(join(folder, "src/maps"), { recursive: true });
         const game = join(folder, "src/game.ts");
         writeFileSync(game, guideExample());

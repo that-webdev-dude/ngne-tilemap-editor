@@ -4,36 +4,36 @@
     "measurement": "Open of the reference project from a file in memory, from the empty state: the call to the frame that draws the map with both tileset textures uploaded; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784",
     "statistic": "max of 10 opens, 1500 ms apart, after 2 warm-up opens",
     "budgetMs": 3000,
-    "resultMs": 390,
+    "resultMs": 387.10000002384186,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 360.39999997615814,
-        "firstFrameMaxMs": 317.30000001192093,
-        "firstFrameMedianMs": 310.5,
-        "longestTaskMaxMs": 126.20000004768372,
+        "medianMs": 359.80000001192093,
+        "firstFrameMaxMs": 311,
+        "firstFrameMedianMs": 299.0999999642372,
+        "longestTaskMaxMs": 130.5,
         "drawnMs": [
-            390,
-            374.89999997615814,
-            368.60000002384186,
-            357,
-            369.89999997615814,
-            354.89999997615814,
-            360.39999997615814,
-            357.69999998807907,
-            349.19999998807907,
-            342.19999998807907
+            387.10000002384186,
+            363.89999997615814,
+            347.4000000357628,
+            344.60000002384186,
+            347.5999999642372,
+            360.69999998807907,
+            369.30000001192093,
+            339.89999997615814,
+            333.89999997615814,
+            359.80000001192093
         ],
         "firstFrameMs": [
-            310.5,
-            317.30000001192093,
-            310.5,
-            302.89999997615814,
-            310.5999999642372,
-            310.89999997615814,
-            310.80000001192093,
-            310.39999997615814,
-            304.19999998807907,
-            297.19999998807907
+            307,
+            310.0999999642372,
+            296.9000000357628,
+            291.80000001192093,
+            299.0999999642372,
+            311,
+            302.0999999642372,
+            288.5999999642372,
+            291.5,
+            295.39999997615814
         ]
     },
     "benchmarkId": "te-047-open",
@@ -44,7 +44,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -52,5 +52,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:13:43.089Z"
+    "date": "2026-11-19T08:50:15.561Z"
 }

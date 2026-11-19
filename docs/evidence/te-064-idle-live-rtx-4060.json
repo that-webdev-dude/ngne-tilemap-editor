@@ -9,22 +9,22 @@
     "details": {
         "adapter": "nvidia lovelace",
         "outside": {
-            "seconds": 10.007,
+            "seconds": 10.004700000047684,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1438,
+            "pageAnimationFrames": 1434,
             "tier": "live"
         },
         "resting": {
-            "seconds": 10.005600000023842,
+            "seconds": 10.00569999998808,
             "submits": 0,
             "viewportFrames": 0,
             "appAnimationFrames": 0,
-            "pageAnimationFrames": 1440,
+            "pageAnimationFrames": 1441,
             "tier": "live"
         },
-        "submitsWhileOpening": 6,
+        "submitsWhileOpening": 8,
         "submitsAfterViewChange": 1,
         "zoom": 1
     },
@@ -36,7 +36,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -44,5 +44,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:10:38.837Z"
+    "date": "2026-11-19T08:47:34.553Z"
 }

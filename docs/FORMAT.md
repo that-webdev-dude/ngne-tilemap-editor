@@ -118,9 +118,9 @@ tile alignment, including its correction for a swapped box under `D`.
 
 **Odd sizes.** The atlas rectangle of a tile is `w × h` = `tw × th` rounded up to even (§4),
 with the extra column on the right and the extra row at the bottom, transparent. A renderer
-that rounds sprite centres, as NGNE does with `pixelSnap`, draws the whole rectangle so the
-quad's edges fall on pixels, and moves the quad so the tile's content stays on `centre`. With
-`pw = w − tw` and `ph = h − th` (each 0 or 1):
+that rounds sprite centres, as NGNE before 0.4.0 does with `pixelSnap`, draws the whole
+rectangle so the quad's edges fall on pixels, and moves the quad so the tile's content stays on
+`centre`. With `pw = w − tw` and `ph = h − th` (each 0 or 1):
 
 ```text
 quad centre = centre + (θ = 0 ? (fx·pw/2, fy·ph/2) : (−fy·ph/2, fx·pw/2))

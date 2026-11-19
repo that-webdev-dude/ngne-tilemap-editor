@@ -841,7 +841,7 @@ Export is accepted when, for the reference project and the FORMAT fixtures:
    `validateTilemap` against them.
 2. Round trip: export → `readTilemap` → cells, flags, properties, collision and markers equal the
    project's.
-3. A fixture NGNE game (`tests/fixtures/game`, `@ngne/core` 0.3.1) imports the exported
+3. A fixture NGNE game (`tests/fixtures/game`, `@ngne/core` 0.4.0) imports the exported
    `ngne-tilemap.ts`, draws every map at scale 1 and 3 with `pixelSnap` on, and its canvas readback
    equals the `core/compositor` reference pixel for pixel, for all 8 orientations of odd and even
    tile sizes, a tile larger than the grid, a tile offset, a parallax layer and an opacity layer
@@ -958,10 +958,11 @@ emitter (`core/runtime/emit.ts`), and its budget is ENGINE §6.
 
 The runtime declares structural types for what it uses (`SpriteSink` with
 `sprite(s: SpriteLike): void`, `SpriteLike` with NGNE's sprite fields). `Sprite`, `Frame.sprite`,
-`imageAsset(id, url)` and the setup `assets` map have the same shape in all three versions.
+`imageAsset(id, url)` and the setup `assets` map have the same shape in all four versions
+(0.4.0 adds only optional fields and arguments).
 `loadTilemap` uses `fetch`, `URL` and `import.meta.url`, which every NGNE game's settings allow
 (`module` `ESNext`, the `DOM` library). A compile test builds a fixture game against `ngne`
-0.1.0, `@ngne/core` 0.2.2 and 0.3.0 (the versions games use), each installed in its own fixture
+0.1.0, `@ngne/core` 0.2.2, 0.3.0 and 0.4.0 (the versions games use), each installed in its own fixture
 folder (`tests/runtime-compat/<version>/`, own lockfile; not dependencies of the app),
 under the settings of BRIEF §6 plus `strict`, `exactOptionalPropertyTypes`, `noUnusedLocals` and
 `noUnusedParameters`.
@@ -974,7 +975,10 @@ on this, which is all a new NGNE release has to keep:
   `depth`, drawn in scene → layer → depth → insertion order;
 - a texture named by the ID of the image asset that loaded it;
 - an asset map with `has(id)`, and an `imageAsset(id, url)` factory, both handed in by the game;
-- nearest sampling and centre pixel snapping as in 0.3.0 (FORMAT §1.3 placement).
+- nearest sampling, and pixel snapping that places an even-sized quad on whole pixels
+  (FORMAT §1.3 placement). Every quad the runtime draws is even-sized at a whole-number scale:
+  engines before 0.4.0 round its centre and 0.4.0 its corner, which place it on the same
+  pixels. At other scales the two can differ by up to one pixel.
 
 `tests/runtime-compat/latest/` installs the newest published `@ngne/core` when it runs (no
 lockfile) and runs the compile test and the conformance draw of §10.3 against it. It runs before
@@ -1067,22 +1071,26 @@ until the user accepts the report.
 
 The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes its row's
 benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
-Two ENGINE §6 rows are over budget and accepted by the owner for v1.0.1 (2026-11-15): the
-initial overview build after a map opens (longest task 28.6 / 23.2 ms on Intel UHD / RTX 4060,
-against 16 ms) and GPU frames in flight during the pan at the live-tier threshold (4 / 4,
-against 2). Feature budgets ENGINE does not list, measured the same way on the reference map:
+Four ENGINE §6 rows are over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060): the
+initial overview build after a map opens (longest task 25.4 / 18.5 ms, against 16 ms), GPU
+frames in flight during the pan at the live-tier threshold (4 / 3, against 2), the pan at DPR 1
+on Intel UHD (p95 11.4 ms, against 10 ms) and GPU frames in flight during a paint stroke on
+Intel UHD (3, against 2). The owner accepted the first two for v1.0.1 (2026-11-15), measured on
+0.3.1 at 28.6 / 23.2 ms and 4 / 4, and the last two for the next release (2026-11-19); an A/B
+measured them alike on 0.3.1 and 0.4.0 (ENGINE §6). Feature budgets ENGINE does not list,
+measured the same way on the reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 27.5 / 28.1 ms (median 23.2 / 23.6 ms; flood alone 3.2 / 5.2 ms). Magic wand: 17.4 / 10.2 ms (median 5.6 / 5.5 ms; flood alone 3.7 / 7.1 ms) |
-| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 10.9 / 11.3 ms (overlay redraws ≤ 9.5 / 9.8 ms) |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 8.4 / 11.9 ms (median 7.7 / 8.3 ms, max 10.4 / 15.7 ms) |
-| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 8.9 / 7.3 ms (median 5.8 / 5.9 ms); total 345.6 / 371.9 ms (median 307.9 / 350.9 ms) |
-| Open of the reference project to first frame | ≤ 3 s | 352.4 / 390.0 ms (median 329.0 / 360.4 ms) |
-| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 10.6 / 11.0 ms (median 3.9 / 4.3 ms) |
-| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | task max 7.9 / 7.2 ms (median 6.8 / 5.0 ms); total 69.5 / 70.0 ms (median 64.9 / 63.3 ms) |
-| Update tileset from source, 1,024 tiles | ≤ 1 s | 189.6 / 200.4 ms (median 164.0 / 179.5 ms; to the history entry, median 119.5 / 134.9 ms) |
-| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | 8.9 / 9.8 ms (overlay 0.2 / 0.2 ms); 0 / 0 frames; names shown at zoom 1.25: 3.9 / 3.9 ms, 0 / 0 frames |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 29.6 / 26.9 ms (median 23.6 / 23.3 ms; flood alone 3.8 / 4.5 ms). Magic wand: 14.6 / 9.8 ms (median 6.0 / 6.1 ms; flood alone 4.6 / 5.3 ms) |
+| Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 11.0 / 11.8 ms (overlay redraws ≤ 9.6 / 9.9 ms) |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 11.8 / 10.3 ms (median 8.4 / 8.2 ms, max 14.2 / 14.4 ms) |
+| Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 6.2 / 7.6 ms (median 4.5 / 6.4 ms); total 324.6 / 372.5 ms (median 307.8 / 342.3 ms) |
+| Open of the reference project to first frame | ≤ 3 s | 367.6 / 387.1 ms (median 346.1 / 359.8 ms) |
+| Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 12.0 / 6.1 ms (median 4.0 / 4.1 ms) |
+| Export of the reference project (2 tilesets, 1 map) | ≤ 3 s; main-thread task max ≤ 16 ms | task max 9.2 / 8.0 ms (median 5.9 / 6.5 ms); total 69.0 / 73.2 ms (median 65.3 / 64.7 ms) |
+| Update tileset from source, 1,024 tiles | ≤ 1 s | 189.3 / 187.5 ms (median 166.9 / 183.7 ms; to the history entry, median 115.9 / 126.0 ms) |
+| 2,000 markers on the reference map (SPEC §8): pan at the live-tier threshold, animation-frame callback start → overlay redrawn after the submit, p95; frames more than 25 ms apart | ≤ 10 ms; ≤ 1% | 9.5 / 9.6 ms (overlay 0.2 / 0.2 ms); 0 / 0 frames; names shown at zoom 1.25: 4.2 / 3.9 ms, 0 / 0 frames |
 
 All rows: TE-064, with the machine, Chrome, power plan, panel and window of ENGINE §6 (each
 record holds them). Raw data: `<benchmark id>-intel-uhd.json` and `<benchmark id>-rtx-4060.json`
@@ -1104,20 +1112,20 @@ map with its two tilesets, a file of 1,419,753 bytes) saved and opened through t
 with the worker's writer and reader, to and from a file in memory; 10 runs after 2 warm-up runs.
 Save: the task max is the longest gap of a message loop from the call to the bytes written.
 Open: from the empty state, as at launch, from the call to the frame that draws the map with
-both tileset textures uploaded; its longest task is 121.4 / 126.2 ms (no budget).
+both tileset textures uploaded; its longest task is 133.1 / 130.5 ms (no budget).
 
 Autosave row (`te-048-autosave`): the reference project opened afresh in the app, one cell
 edited and the first snapshot (every map entry and both tilesets' pixels) stored, then another
 cell edited and the next snapshot (that map's entry) stored; 5 runs of both after 1 warm-up run.
 The task max is the longest gap of a message loop from 300 ms before the 2 s delay ends to the
-snapshot stored. Taking the project is at most 3.9 / 7.0 ms and a map thumbnail 9.8 / 10.2 ms,
-each a task of its own; the snapshot is stored 74.6 / 72.2 ms after the delay ends at most.
+snapshot stored. Taking the project is at most 4.0 / 3.8 ms and a map thumbnail 11.1 / 4.1 ms,
+each a task of its own; the snapshot is stored 71.2 / 75.6 ms after the delay ends at most.
 
 Export row (`te-053-export`): the reference project (524,288 cells, 2 tilesets, 1 map; 7 files)
 exported through the app's export pipeline and the worker into an empty folder in memory, 10 runs
 after 2 warm-up runs, each with a new pipeline. The task max is the longest gap of a message loop
 from the call to the last file written. A re-export into the same folder, every file unchanged,
-has a task max of 7.1 / 7.5 ms and a total of 65.3 / 71.7 ms.
+has a task max of 7.7 / 7.6 ms and a total of 68.5 / 69.5 ms.
 
 Update from source row (`te-028-update`): a tileset of 1,024 tiles of 16 px used by the reference
 map, updated at once from a grid PNG with 64 tiles changed and 2 moved; timed from the call with
@@ -1129,13 +1137,13 @@ marker layer of 2,000 markers (rectangles, ellipses, points, polygons of 6 point
 all named) that stays in view through the pan; the overlay is redrawn in the same callback after
 the viewport's submit. The overlay copies each marker layer from a picture painted once per
 history step, zoom and colour, so its redraw takes 0.2 ms; the rest is the live tier's own frame
-(submit p95 8.8 / 9.7 ms). This row and ENGINE §6's pan time rows at the live-tier threshold are
-within their 10 ms budget.
+(submit p95 9.4 / 9.5 ms). This row is within its 10 ms budget; ENGINE §6's pan at the
+live-tier threshold is not at DPR 1 on Intel UHD (11.4 ms).
 
 Stamp preview row (`te-017-stamp-preview`): the map's overview built first. The task max is the
 longest gap of a message loop, so one gap can hold a task and the frame drawn after it. The
-paste is not in the row: its task holds the Paste command itself (18.5–18.8 / 21.5–22.0 ms
-alone; 45.7–46.5 / 52.0–52.7 ms with the preview).
+paste is not in the row: its task holds the Paste command itself (19.0–20.6 / 21.0 ms
+alone; 46.5–49.4 / 48.8–51.1 ms with the preview).
 
 ## 15. Quality
 
@@ -1143,7 +1151,7 @@ alone; 45.7–46.5 / 52.0–52.7 ms with the preview).
 | ----- | -------------- |
 | Unit (Node, Vitest) | Model invariants; do/undo symmetry of every command; cell store and orientation algebra (all 64 compositions against Tiled's tables); flood fill and shape regions against golden regions; terrain filler against Tiled fixtures; codecs: `.ngtilemap` round trip and byte stability, every reader rejection of FORMAT §2.9 and §3.8, fast-check properties for cell values and GID conversion; packer options and packability limit; `.ngsprite` import against the sprite editor's atlas export of the same fixtures; runtime `readTilemap`, placement and collision functions; TMJ conversion against golden reports |
 | E2E (Playwright, installed Chrome) | Paint-undo-redo per tool; selection and clipboard; terrain brush; tileset import and update-from-source dialog; collision and animation editors; markers; layers and groups; save/open/recover; export with conformance (§10.3); TMJ import of every fixture; preview; viewport readback against the compositor at DPR 1 and 1.25 in both tiers |
-| Compile | Runtime against `ngne` 0.1.0, `@ngne/core` 0.2.2 and 0.3.0 (§11.4) |
+| Compile | Runtime against `ngne` 0.1.0, `@ngne/core` 0.2.2, 0.3.0 and 0.4.0 (§11.4) |
 | Performance | ENGINE §6 and §14 on reference hardware; report-only in CI |
 | Manual | Interface against DESIGN.md on reference hardware at 1280 × 720 and 125% zoom |
 

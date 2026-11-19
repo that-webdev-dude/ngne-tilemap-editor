@@ -108,7 +108,7 @@ version is the only difference; `gifenc` is not included because this editor exp
 
 | Runtime dependency | Version |
 | --- | --- |
-| `@ngne/core` | 0.3.1 |
+| `@ngne/core` | 0.4.0 |
 | `react`, `react-dom` | 19.3.0 |
 | `zustand` | 5.0.15 |
 | `radix-ui` | 1.7.0 |

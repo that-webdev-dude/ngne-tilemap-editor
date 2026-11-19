@@ -4,7 +4,7 @@
     "measurement": "Game runtime: the fixture game drawing the exported reference project (8 full layers, 2 tilesets, parallax, animated tiles) at 480 × 270 shown ×3 with a stacked HUD scene, pixelSnap on, panning; game.stats.renderMs; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "p95 of 1440 frames over 10 s after 2 s",
     "budgetMs": 8,
-    "resultMs": 1.0999999642372131,
+    "resultMs": 1.199999988079071,
     "details": {
         "adapter": "nvidia lovelace",
         "frames": 1440,
@@ -15,12 +15,12 @@
         "sprites": 4664,
         "drawCalls": 17,
         "renderMs": {
-            "median": 0.800000011920929,
-            "p95": 1.0999999642372131,
-            "p99": 1.2000000476837158,
+            "median": 0.9000000357627869,
+            "p95": 1.199999988079071,
+            "p99": 1.300000011920929,
             "max": 1.399999976158142
         },
-        "frameMsP95": 1.100000023841858
+        "frameMsP95": 1.199999988079071
     },
     "benchmarkId": "te-055-runtime-480x270",
     "pass": true,
@@ -30,7 +30,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -38,5 +38,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:11:44.358Z"
+    "date": "2026-11-19T08:48:31.182Z"
 }

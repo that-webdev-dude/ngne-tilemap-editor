@@ -2,20 +2,20 @@
     "id": "te-037-markers-pan-threshold-rtx-4060",
     "ticket": "TE-037",
     "measurement": "Pan of the reference map (66640 sprites) with 2,000 markers in view: frame callback start to the overlay's redraw after the submit; RTX 4060, window 1920 × 1080, DPR 1, canvas 1612 × 784, zoom 0.776",
-    "statistic": "p95 of 508 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 509 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
-    "resultMs": 9.800000011920929,
+    "resultMs": 9.599999964237213,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 8.900000035762787,
-        "maxMs": 14.199999988079071,
+        "medianMs": 8.899999976158142,
+        "maxMs": 14.800000011920929,
         "overlayP95Ms": 0.19999998807907104,
         "overlayMedianMs": 0.10000002384185791,
-        "submitP95Ms": 9.700000047683716,
-        "frames": 508,
+        "submitP95Ms": 9.5,
+        "frames": 509,
         "droppedFrames": 0,
         "droppedBudget": 5,
-        "intervals": 507,
+        "intervals": 508,
         "rasterPaints": 0,
         "zoom": 0.7762928669222557,
         "names": false
@@ -28,7 +28,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.78",
+        "chrome": "157.0.8103.79",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -36,5 +36,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-15T20:15:31.162Z"
+    "date": "2026-11-19T08:52:00.778Z"
 }
