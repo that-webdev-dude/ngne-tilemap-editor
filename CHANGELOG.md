@@ -3,6 +3,10 @@
 ## Unreleased
 
 - Uses `@ngne/core` 0.4.0. The editor draws maps as before.
+- The viewport keeps at most 2 frames waiting on the GPU, where a pan at the live-tier threshold
+  kept up to 4 and a paint stroke up to 3. While the GPU is behind, a pan or a paint stroke waits
+  for it instead of sending a frame at every display refresh, and the next frame shows the map as
+  it is by then.
 - The generated `ngne-tilemap.ts` is unchanged and compiles against `@ngne/core` 0.4.0 as well
   as `ngne` 0.1.0 and `@ngne/core` 0.2.2 and 0.3.0. In a game on `@ngne/core` 0.4.0, maps
   drawn at a whole-number render scale look the same as before; at other scales a tile edge can

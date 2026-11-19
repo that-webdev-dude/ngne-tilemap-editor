@@ -19,9 +19,13 @@ import type { BitmapFn, PackFn, TextureTarget } from "./textures";
 // The main viewport's renderer (ENGINE §2): one direct `WebGPURenderer` on one canvas, created
 // with an abort signal, resized without being created again, observed through its lifecycle and
 // torn down in order. Frames are submitted only when something asked for one (ENGINE §4,
-// redraw on demand).
+// redraw on demand), and a redraw waits while the GPU has not finished `FRAMES_IN_FLIGHT` of
+// them (ENGINE §4, frames in flight).
 
 export type ViewportStatus = RendererStatus;
+
+/** Submitted frames the GPU may have unfinished before a redraw waits (ENGINE §6). */
+export const FRAMES_IN_FLIGHT = 2;
 
 export interface ViewportOptions {
     canvas: HTMLCanvasElement;
@@ -65,6 +69,8 @@ export interface ViewportStats {
     tileQuads: number;
     /** Quads of image layers in the last frame. */
     imageQuads: number;
+    /** Submitted frames whose `submittedWorkDone()` wait has not settled yet. */
+    framesInFlight: number;
 }
 
 let creations = 0;
@@ -98,12 +104,15 @@ export class Viewport {
         chunkQuads: 0,
         tileQuads: 0,
         imageQuads: 0,
+        framesInFlight: 0,
     };
     readonly #chunks: ChunkTier;
     /** Test seam: `updateTexture` calls of chunks still to reject, and how. */
     #chunkFaults = { count: 0, drop: false };
     #size: DeviceSize;
     #raf = 0;
+    /** A redraw was asked for while `FRAMES_IN_FLIGHT` frames were unfinished. */
+    #owed = false;
     #waitingForReady = false;
     #checkerReady: string | null = null;
     #checkerPending: string | null = null;
@@ -265,19 +274,30 @@ export class Viewport {
         this.#resizeToWanted();
     }
 
-    /** Asks for a frame at the next animation frame; any number of calls make one. */
+    /**
+     * Asks for a frame at the next animation frame; any number of calls make one. While
+     * `FRAMES_IN_FLIGHT` frames are unfinished the redraw is owed instead, and asked for again
+     * when one of them finishes; it draws the state of that moment, so no frame is queued.
+     */
     requestRedraw(): void {
         if (this.#disposed || this.#raf !== 0) return;
+        if (this.#stats.framesInFlight >= FRAMES_IN_FLIGHT) {
+            this.#owed = true;
+            return;
+        }
         this.#raf = requestAnimationFrame(() => {
             this.#raf = 0;
-            this.renderNow();
+            // A frame submitted directly since the request can have reached the budget.
+            if (this.#stats.framesInFlight >= FRAMES_IN_FLIGHT) this.#owed = true;
+            else this.renderNow();
         });
     }
 
     /**
-     * Builds and submits a frame now. Returns false when nothing was submitted: the renderer
-     * is not ready. A WebGPU canvas holds its image only until the frame is presented, so a
-     * test reads the canvas in the task that called this.
+     * Builds and submits a frame now, whatever the frames in flight (`requestRedraw` holds to
+     * the budget; benchmarks and readback tests call this). Returns false when nothing was
+     * submitted: the renderer is not ready. A WebGPU canvas holds its image only until the
+     * frame is presented, so a test reads the canvas in the task that called this.
      */
     renderNow(): boolean {
         const renderer = this.#renderer;
@@ -326,6 +346,7 @@ export class Viewport {
         }
         const built = performance.now();
         renderer.render(this.#frame, this.#options.workspace());
+        this.#awaitFrame(renderer);
         this.#stats.frames += 1;
         this.#stats.lastBuildMs = built - started;
         this.#stats.sprites = renderer.sprites;
@@ -351,6 +372,23 @@ export class Viewport {
         } catch (error) {
             this.#options.onError(error);
         }
+    }
+
+    /**
+     * Counts the frame just submitted until the GPU has finished it. Either outcome of the wait
+     * settles it: a lost device resolves pending waits, disposal and terminal failure reject
+     * them. An owed redraw is asked for then.
+     */
+    #awaitFrame(renderer: WebGPURenderer): void {
+        const stats = this.#stats;
+        stats.framesInFlight += 1;
+        const settle = () => {
+            stats.framesInFlight -= 1;
+            if (!this.#owed || this.#disposed) return;
+            this.#owed = false;
+            this.requestRedraw();
+        };
+        void renderer.submittedWorkDone().then(settle, settle);
     }
 
     #resizeToWanted(): void {

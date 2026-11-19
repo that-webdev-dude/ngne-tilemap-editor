@@ -4,7 +4,7 @@
     "measurement": "Overview rebuild after a layer opacity change of the reference map; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "one rebuild, change to tier ready",
     "budgetMs": 500,
-    "resultMs": 326.5,
+    "resultMs": 347.30000000004657,
     "details": {
         "adapter": "nvidia lovelace",
         "canvas": [
@@ -13,11 +13,11 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 294.39999997615814,
-        "maxSliceMs": 4.100000023841858,
-        "maxGapMs": 112.19999998807907,
+        "chunkBuildMs": 313.70000000018626,
+        "maxSliceMs": 4.199999999953434,
+        "maxGapMs": 124.30000000004657,
         "liveFrames": 1,
-        "longestLiveFrameMs": 110.60000002384186
+        "longestLiveFrameMs": 122.5999999998603
     },
     "benchmarkId": "te-015-rebuild",
     "pass": true,
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:44:55.525Z"
+    "date": "2026-11-19T12:51:43.915Z"
 }

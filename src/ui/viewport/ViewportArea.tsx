@@ -140,7 +140,7 @@ export function ViewportArea() {
         };
 
         const observer = new ResizeObserver((entries) => {
-            const entry = entries[entries.length - 1];
+            const entry = entries.at(-1);
             if (!entry) return;
             size = deviceSizeOf(entry);
             // A host that is hidden (the window-too-small notice) measures 0 × 0: the canvases
@@ -198,6 +198,7 @@ export function ViewportArea() {
                         return created.stats;
                     },
                     renderNow: () => created.renderNow(),
+                    requestRedraw: () => created.requestRedraw(),
                     textureIds: () => created.textureIds(),
                     chunkStats: () => created.chunkStats,
                     chunkLiveCells: () => created.chunkLiveCells(),

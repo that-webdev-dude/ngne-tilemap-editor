@@ -10,7 +10,9 @@ import { record } from "./record";
 // TE-068 and ENGINE §6: GPU frames in flight, max ≤ 2, during three scenarios on the reference
 // map, 1920 × 1080 at DPR 1, each in a Chrome of its own:
 //
-// - pan: the TE-013 scripted pan at the live-tier threshold (5 s after 1 s warm-up);
+// - pan: the TE-013 scripted pan just inside the live-tier threshold (zoom × 1.01, so the view
+//   stays in the live tier once the chunk tier is ready; 5 s after 1 s warm-up), each step
+//   asking the viewport for a frame as input does, so its frames-in-flight hold applies;
 // - overview: the same pan with the whole map in view, in the chunk tier (TE-015's overview);
 // - paint: the TE-017 stroke of the stamp brush (one press and 200 drag moves, sent as input).
 //
@@ -29,6 +31,8 @@ const FLIGHT_BUDGET = 2;
 const PAN_MS = 5000;
 const WARMUP_MS = 1000;
 const MOVES = 200;
+/** The pan's zoom as a multiple of the threshold zoom: about 2% fewer cells than 65,536. */
+const INSIDE = 1.01;
 
 function percentile(values: number[], fraction: number): number {
     const sorted = [...values].sort((a, b) => a - b);
@@ -88,18 +92,24 @@ describeBrowser("te-068 frames in flight", () => {
             const flight = caller(run, "te-068-frames-in-flight");
             const pan = caller(run, "te-013-pan");
             await flight("install");
-            const prepared = await pan<Prepared>("prepare");
-            await pan<PanRecord>("pan", WARMUP_MS);
+            const prepared = await pan<Prepared>("prepare", INSIDE);
+            await pan<PanRecord>("pan", WARMUP_MS, true);
             await flight("start");
-            const panned = await pan<PanRecord>("pan", PAN_MS);
+            const panned = await pan<PanRecord>("pan", PAN_MS, true);
             const flown = await flight<FlightRecord>("stop");
             expect(flown.tiers).toEqual(["live"]);
-            recordFlight("pan", "the TE-013 scripted pan at the live-tier threshold", run, flown, {
-                canvas: prepared.canvas,
-                sprites: prepared.sprites,
-                durationMs: PAN_MS,
-                callbackMedianMs: percentile(panned.submitMs, 0.5),
-            });
+            recordFlight(
+                "pan",
+                "the TE-013 scripted pan just inside the live-tier threshold",
+                run,
+                flown,
+                {
+                    canvas: prepared.canvas,
+                    sprites: prepared.sprites,
+                    durationMs: PAN_MS,
+                    drawMedianMs: percentile(panned.submitMs, 0.5),
+                },
+            );
         } finally {
             await run.close();
         }
@@ -112,16 +122,16 @@ describeBrowser("te-068 frames in flight", () => {
             const pan = caller(run, "te-013-pan");
             await flight("install");
             const opened = await caller(run, "te-015-chunk")<Built>("openReference");
-            await pan<PanRecord>("pan", WARMUP_MS);
+            await pan<PanRecord>("pan", WARMUP_MS, true);
             await flight("start");
-            const panned = await pan<PanRecord>("pan", PAN_MS);
+            const panned = await pan<PanRecord>("pan", PAN_MS, true);
             const flown = await flight<FlightRecord>("stop");
             expect(flown.tiers).toEqual(["chunk"]);
             recordFlight("overview", "the same pan with the whole map in view", run, flown, {
                 canvas: opened.canvas,
                 chunks: opened.chunks,
                 durationMs: PAN_MS,
-                callbackMedianMs: percentile(panned.submitMs, 0.5),
+                drawMedianMs: percentile(panned.submitMs, 0.5),
             });
         } finally {
             await run.close();

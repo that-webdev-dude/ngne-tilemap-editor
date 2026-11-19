@@ -4,7 +4,7 @@
     "measurement": "Overview rebuild after a layer opacity change, longest build task; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "longest composite-and-submit slice of the rebuild",
     "budgetMs": 16,
-    "resultMs": 4.400000035762787,
+    "resultMs": 3.8999999999068677,
     "details": {
         "adapter": "intel gen-12lp",
         "canvas": [
@@ -13,11 +13,11 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 269.80000001192093,
-        "maxSliceMs": 4.400000035762787,
-        "maxGapMs": 99.40000003576279,
+        "chunkBuildMs": 288,
+        "maxSliceMs": 3.8999999999068677,
+        "maxGapMs": 113.10000000009313,
         "liveFrames": 1,
-        "longestLiveFrameMs": 98
+        "longestLiveFrameMs": 111.29999999981374
     },
     "benchmarkId": "te-015-rebuild-task",
     "pass": true,
@@ -35,5 +35,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:37:22.208Z"
+    "date": "2026-11-19T12:47:40.067Z"
 }

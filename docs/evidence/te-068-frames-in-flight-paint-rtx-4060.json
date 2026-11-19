@@ -10,19 +10,19 @@
         "adapter": "nvidia lovelace",
         "p95": 2,
         "median": 1,
-        "lastSubmitToIdleMs": 4.899999976158142,
+        "lastSubmitToIdleMs": 2.4000000001396984,
         "frames": 377,
         "tiers": [
             "live"
         ],
         "previewSubmits": 203,
-        "previewMaxInFlight": 1,
+        "previewMaxInFlight": 2,
         "canvas": [
             1612,
             784
         ],
         "events": 201,
-        "eventToFrameMedianMs": 8.200000047683716
+        "eventToFrameMedianMs": 8.100000000093132
     },
     "benchmarkId": "te-068-frames-in-flight-paint",
     "pass": true,
@@ -40,5 +40,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:47:07.271Z"
+    "date": "2026-11-19T12:54:00.402Z"
 }

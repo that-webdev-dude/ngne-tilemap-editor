@@ -1071,20 +1071,17 @@ until the user accepts the report.
 
 The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes its row's
 benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
-Four ENGINE §6 rows are over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060): the
-initial overview build after a map opens (longest task 25.4 / 18.5 ms, against 16 ms), GPU
-frames in flight during the pan at the live-tier threshold (4 / 3, against 2), the pan at DPR 1
-on Intel UHD (p95 11.4 ms, against 10 ms) and GPU frames in flight during a paint stroke on
-Intel UHD (3, against 2). The owner accepted the first two for v1.0.1 (2026-11-15), measured on
-0.3.1 at 28.6 / 23.2 ms and 4 / 4, and the last two for the next release (2026-11-19); an A/B
-measured them alike on 0.3.1 and 0.4.0 (ENGINE §6). Feature budgets ENGINE does not list,
-measured the same way on the reference map:
+One ENGINE §6 row is over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060): the initial
+overview build after a map opens (longest task 20.9 / 19.0 ms, against 16 ms). The owner
+accepted it for v1.0.1 (2026-11-15), measured on 0.3.1 at 28.6 / 23.2 ms, and for the next
+release (2026-11-19). Feature budgets ENGINE does not list, measured the same way on the
+reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |
-| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 29.6 / 26.9 ms (median 23.6 / 23.3 ms; flood alone 3.8 / 4.5 ms). Magic wand: 14.6 / 9.8 ms (median 6.0 / 6.1 ms; flood alone 4.6 / 5.3 ms) |
+| Bucket fill / magic wand of a 65,536-cell region, press → frame submitted, the region found after the press, p95 | ≤ 100 ms | Bucket: 27.8 / 27.9 ms (median 22.7 / 22.8 ms; flood alone 3.7 / 4.2 ms). Magic wand: 11.1 / 10.8 ms (median 5.7 / 5.8 ms; flood alone 4.7 / 4.6 ms) |
 | Stamp preview of a 256 × 256 stamp (a layer copied and pasted), Rotate Stamp Right and 40 one-cell pointer moves, with 16 and 32 px cells, main-thread task max | ≤ 16 ms | 11.0 / 11.8 ms (overlay redraws ≤ 9.6 / 9.9 ms) |
-| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 11.8 / 10.3 ms (median 8.4 / 8.2 ms, max 14.2 / 14.4 ms) |
+| Terrain brush step on a complete 4-terrain corner set, pointer event → frame submitted, p95 | ≤ 33 ms | 8.4 / 8.6 ms (median 7.9 / 7.9 ms, max 10.8 / 14.2 ms) |
 | Save of the reference project (worker), main-thread task max | ≤ 16 ms; total ≤ 3 s | 6.2 / 7.6 ms (median 4.5 / 6.4 ms); total 324.6 / 372.5 ms (median 307.8 / 342.3 ms) |
 | Open of the reference project to first frame | ≤ 3 s | 367.6 / 387.1 ms (median 346.1 / 359.8 ms) |
 | Autosave of the reference project after a cell edit (worker, IndexedDB), main-thread task max | ≤ 16 ms | 12.0 / 6.1 ms (median 4.0 / 4.1 ms) |
@@ -1137,8 +1134,8 @@ marker layer of 2,000 markers (rectangles, ellipses, points, polygons of 6 point
 all named) that stays in view through the pan; the overlay is redrawn in the same callback after
 the viewport's submit. The overlay copies each marker layer from a picture painted once per
 history step, zoom and colour, so its redraw takes 0.2 ms; the rest is the live tier's own frame
-(submit p95 9.4 / 9.5 ms). This row is within its 10 ms budget; ENGINE §6's pan at the
-live-tier threshold is not at DPR 1 on Intel UHD (11.4 ms).
+(submit p95 9.4 / 9.5 ms). This row and ENGINE §6's pan at the live-tier threshold (9.0 / 9.1 ms
+at DPR 1) are both within their 10 ms budget.
 
 Stamp preview row (`te-017-stamp-preview`): the map's overview built first. The task max is the
 longest gap of a message loop, so one gap can hold a task and the frame drawn after it. The

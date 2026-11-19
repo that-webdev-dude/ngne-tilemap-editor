@@ -14,8 +14,8 @@
         ],
         "texelsPerCell": 8,
         "chunks": 128,
-        "chunkBuildMs": 404.5,
-        "maxSliceMs": 6.899999976158142
+        "chunkBuildMs": 402.10000000009313,
+        "maxSliceMs": 6.400000000139698
     },
     "benchmarkId": "te-015-memory",
     "pass": true,
@@ -33,5 +33,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:37:21.906Z"
+    "date": "2026-11-19T12:47:39.755Z"
 }

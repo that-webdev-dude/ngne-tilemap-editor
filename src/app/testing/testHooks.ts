@@ -29,6 +29,8 @@ export interface ViewportProbe {
         tileQuads: number;
         /** Quads of image layers (TE-036). */
         imageQuads: number;
+        /** Submitted frames the GPU has not finished yet (ENGINE §4, frames in flight). */
+        framesInFlight: number;
     }>;
     /** What the chunk tier reports (TE-015). */
     chunkStats(): Readonly<{
@@ -57,6 +59,8 @@ export interface ViewportProbe {
      * only until the frame is presented.
      */
     renderNow(): boolean;
+    /** Asks for a frame as the app does: held while 2 frames are in flight (ENGINE §4). */
+    requestRedraw(): void;
     /** IDs of the manual textures the renderer holds. */
     textureIds(): string[];
     /** Renderers this page has created. */

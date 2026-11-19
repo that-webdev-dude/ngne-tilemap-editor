@@ -1,17 +1,17 @@
 {
     "id": "te-068-frames-in-flight-pan-rtx-4060",
     "ticket": "TE-068",
-    "measurement": "GPU frames in flight right after each submit, that frame included, during the TE-013 scripted pan at the live-tier threshold; RTX 4060, window 1920 × 1080, DPR 1",
-    "statistic": "max of 522 submitted frames",
+    "measurement": "GPU frames in flight right after each submit, that frame included, during the TE-013 scripted pan just inside the live-tier threshold; RTX 4060, window 1920 × 1080, DPR 1",
+    "statistic": "max of 444 submitted frames",
     "unit": "count",
     "budgetMs": 2,
-    "resultMs": 3,
+    "resultMs": 2,
     "details": {
         "adapter": "nvidia lovelace",
-        "p95": 3,
-        "median": 3,
-        "lastSubmitToIdleMs": 3.699999988079071,
-        "frames": 522,
+        "p95": 2,
+        "median": 2,
+        "lastSubmitToIdleMs": 2.9000000001396984,
+        "frames": 444,
         "tiers": [
             "live"
         ],
@@ -23,10 +23,10 @@
         ],
         "sprites": 66640,
         "durationMs": 5000,
-        "callbackMedianMs": 8.800000011920929
+        "drawMedianMs": 8.300000000046566
     },
     "benchmarkId": "te-068-frames-in-flight-pan",
-    "pass": false,
+    "pass": true,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
@@ -41,5 +41,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:46:51.477Z"
+    "date": "2026-11-19T12:53:42.803Z"
 }
