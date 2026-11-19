@@ -22,10 +22,9 @@ import {
 import type { Tier } from "../../src/engine/viewport/chunkPlan";
 import { ChunkTier, chunkTextureId } from "../../src/engine/viewport/chunkTier";
 import type { ChunkRegion, ChunkTarget } from "../../src/engine/viewport/chunkTier";
-import { clipQuad } from "../../src/engine/viewport/clipQuad";
-import type { DeviceRect } from "../../src/engine/viewport/clipQuad";
-import { toDevice } from "../../src/engine/viewport/geometry";
-import { EmitterCache, sceneCamera } from "../../src/engine/viewport/liveTier";
+import { deviceClip, toDevice } from "../../src/engine/viewport/geometry";
+import type { PixelRect } from "../../src/engine/viewport/geometry";
+import { EmitterCache, emitLiveLayer, sceneCamera } from "../../src/engine/viewport/liveTier";
 import type { ViewportScene } from "../../src/engine/viewport/liveTier";
 import { tilesetTextureId } from "../../src/engine/viewport/textures";
 import { createReferenceProject } from "../support/referenceProject";
@@ -1086,8 +1085,16 @@ describe("compositor fast path", () => {
     });
 });
 
+/** A rectangle of device pixels, from `x0, y0` to `x1, y1`. */
+interface Box {
+    x0: number;
+    y0: number;
+    x1: number;
+    y1: number;
+}
+
 /** The axis-aligned box a quad covers on screen, as NGNE places its corners. */
-function quadBox(s: SpriteLike): DeviceRect {
+function quadBox(s: SpriteLike): Box {
     const c = Math.cos(s.rotation);
     const n = Math.sin(s.rotation);
     const ix = c * s.width;
@@ -1101,114 +1108,111 @@ function quadBox(s: SpriteLike): DeviceRect {
     return { x0: Math.min(...xs), y0: Math.min(...ys), x1: Math.max(...xs), y1: Math.max(...ys) };
 }
 
-/** Where a device point falls in a quad: its texture coordinates, or null outside it. */
-function sampleQuad(s: SpriteLike, px: number, py: number): { u: number; v: number } | null {
-    const c = Math.cos(s.rotation);
-    const n = Math.sin(s.rotation);
-    const ix = c * s.width;
-    const iy = n * s.width;
-    const jx = -n * s.height;
-    const jy = c * s.height;
-    const ox = s.x - (ix + jx) / 2;
-    const oy = s.y - (iy + jy) / 2;
-    const det = ix * jy - iy * jx;
-    const a = ((px - ox) * jy - (py - oy) * jx) / det;
-    const b = ((py - oy) * ix - (px - ox) * iy) / det;
-    if (a < 0 || a > 1 || b < 0 || b > 1) return null;
-    return { u: s.u + a * s.uw, v: s.v + b * s.vh };
+/** A quad as the frame receives it: the emitter's fields and, over a patch, a sprite clip. */
+type Drawn = SpriteLike & { clip?: PixelRect };
+
+/** A frame that keeps a copy of each sprite it is given. */
+function recordingFrame(): { frame: Frame; sprites: Drawn[] } {
+    const sprites: Drawn[] = [];
+    const frame = {
+        sprite: (s: Drawn) => sprites.push({ ...s }),
+        rect: () => undefined,
+    };
+    return { frame: frame as unknown as Frame, sprites };
 }
 
 describe("live quads over a patch (ENGINE §4)", () => {
-    const sprite = fc.record({
-        x: fc.integer({ min: -40, max: 40 }),
-        y: fc.integer({ min: -40, max: 40 }),
-        width: fc.integer({ min: 1, max: 30 }).chain((w) => fc.constantFrom(w, -w)),
-        height: fc.integer({ min: 1, max: 30 }).chain((h) => fc.constantFrom(h, -h)),
-        rotation: fc.constantFrom(0, Math.PI / 2),
-        u: fc.double({ min: 0, max: 0.5, noNaN: true }),
-        v: fc.double({ min: 0, max: 0.5, noNaN: true }),
-        uw: fc.double({ min: 0.01, max: 0.5, noNaN: true }),
-        vh: fc.double({ min: 0.01, max: 0.5, noNaN: true }),
+    const coordinate = fc.double({ min: -50, max: 50, noNaN: true });
+    const extent = fc.double({ min: 0, max: 60, noNaN: true });
+    const area = fc.record({ x: coordinate, y: coordinate, width: extent, height: extent });
+    const view = fc.record({
+        centreX: coordinate,
+        centreY: coordinate,
+        scale: fc.double({ min: 0.05, max: 8, noNaN: true }),
     });
-    const rect = fc
-        .record({
-            x: fc.integer({ min: -50, max: 50 }),
-            y: fc.integer({ min: -50, max: 50 }),
-            w: fc.integer({ min: 1, max: 60 }),
-            h: fc.integer({ min: 1, max: 60 }),
-        })
-        .map(({ x, y, w, h }) => ({ x0: x / 2, y0: y / 2, x1: (x + w) / 2, y1: (y + h) / 2 }));
+    const canvas = fc.record({
+        width: fc.integer({ min: 1, max: 400 }),
+        height: fc.integer({ min: 1, max: 400 }),
+    });
 
-    it("a cut quad covers what the quad covers inside the rectangle, with the same texels", () => {
+    it("a patch's clip holds the device pixels whose centres the patch holds, as a quad over it covers them", () => {
         fc.assert(
-            fc.property(sprite, rect, (fields, clip) => {
-                const s: SpriteLike = {
-                    ...fields,
-                    texture: "t",
-                    alpha: 0.5,
-                    color: 0xffffff,
-                    layer: 3,
-                    depth: 7,
-                };
-                const out = { ...s };
-                const inside = clipQuad(s, clip, out);
-                const box = quadBox(s);
-                const overlapX = Math.min(box.x1, clip.x1) - Math.max(box.x0, clip.x0);
-                const overlapY = Math.min(box.y1, clip.y1) - Math.max(box.y0, clip.y0);
-                // Edges that only touch (cos(π/2) is not quite 0) may count either way.
-                if (overlapX > 1e-9 && overlapY > 1e-9) expect(inside).toBe(true);
-                if (overlapX < -1e-9 || overlapY < -1e-9) expect(inside).toBe(false);
-                if (!inside) return;
-                expect(out).toMatchObject({ texture: "t", alpha: 0.5, layer: 3, depth: 7 });
-                const cut = quadBox(out);
-                expect(cut.x0).toBeGreaterThanOrEqual(clip.x0 - 1e-9);
-                expect(cut.y0).toBeGreaterThanOrEqual(clip.y0 - 1e-9);
-                expect(cut.x1).toBeLessThanOrEqual(clip.x1 + 1e-9);
-                expect(cut.y1).toBeLessThanOrEqual(clip.y1 + 1e-9);
-                // Points on an eighth-pixel grid, off every edge: inside both, the same texel.
-                for (let py = Math.floor(box.y0) - 1; py <= box.y1 + 1; py += 0.25) {
-                    for (let px = Math.floor(box.x0) - 1; px <= box.x1 + 1; px += 0.25) {
-                        const qx = px + 0.125;
-                        const qy = py + 0.125;
-                        const within = qx > clip.x0 && qx < clip.x1 && qy > clip.y0 && qy < clip.y1;
-                        const whole = sampleQuad(s, qx, qy);
-                        const part = sampleQuad(out, qx, qy);
-                        if (!within) {
-                            expect(part).toBeNull();
-                            continue;
-                        }
-                        expect(part === null).toBe(whole === null);
-                        if (whole && part) {
-                            expect(part.u).toBeCloseTo(whole.u, 9);
-                            expect(part.v).toBeCloseTo(whole.v, 9);
-                        }
+            fc.property(view, canvas, area, (camera, size, rect) => {
+                const clip = deviceClip(camera, size, rect);
+                for (const value of [clip.x, clip.y, clip.width, clip.height]) {
+                    expect(Number.isSafeInteger(value)).toBe(true);
+                }
+                expect(clip.width).toBeGreaterThanOrEqual(0);
+                expect(clip.height).toBeGreaterThanOrEqual(0);
+                const from = toDevice(camera, size, rect.x, rect.y);
+                const axes = [
+                    [from.x, from.x + rect.width * camera.scale, clip.x, clip.width],
+                    [from.y, from.y + rect.height * camera.scale, clip.y, clip.height],
+                ] as const;
+                for (const [lo, hi, start, length] of axes) {
+                    for (let pixel = Math.floor(lo) - 2; pixel <= Math.ceil(hi) + 2; pixel += 1) {
+                        const centre = pixel + 0.5;
+                        // A centre on an edge may count either way.
+                        if (Math.abs(centre - lo) < 1e-9 || Math.abs(centre - hi) < 1e-9) continue;
+                        const clipped = pixel >= start && pixel < start + length;
+                        expect(clipped).toBe(centre > lo && centre < hi);
                     }
                 }
             }),
-            { numRuns: 300 },
+            { numRuns: 500 },
         );
     });
 
-    it("a quad inside the rectangle is drawn as it is", () => {
-        const s: SpriteLike = {
-            x: 10.3,
-            y: 7.1,
-            width: -4,
-            height: 6,
-            rotation: Math.PI / 2,
-            texture: "t",
-            u: 0.1,
-            v: 0.2,
-            uw: 0.3,
-            vh: 0.4,
-            alpha: 1,
-            color: 0xffffff,
-            layer: 1,
-            depth: 2,
+    it("live quads over a patch are the live tier's quads, uncut, with the patch's clip", () => {
+        const project = filledProject(16, 2);
+        const tileset = project.tilesets[0]!;
+        tileset.offsetX = 3;
+        tileset.offsetY = -1;
+        const map = project.maps[0]!;
+        const scene: ViewportScene = {
+            project,
+            map,
+            view: { centreX: 13.3, centreY: 9.7, zoom: 1.3 },
+            dpr: 1.25,
+            checker: { a: 0x3a3a3a, b: 0x4a4a4a, size: 8 },
         };
-        const out = { ...s, x: 0 };
-        expect(clipQuad(s, { x0: 0, y0: 0, x1: 20, y1: 20 }, out)).toBe(true);
-        expect(out).toEqual(s);
+        const size = { width: 301, height: 203 };
+        const camera = sceneCamera(scene);
+        const emitter = new EmitterCache().emitter(
+            project.tilesets.map((t) => ({
+                tileset: t,
+                texture: tilesetTextureId(t.id),
+                uvTable: packTileset(t).uvTable,
+                version: 1,
+            })),
+        );
+        const inputs = { scene, size, camera: {} as Camera, emitter, checkerReady: null };
+        // Cells (5, 4) to (8, 6), whose edges fall between device pixels at this scale.
+        const area = {
+            x: 5 * map.tileWidth,
+            y: 4 * map.tileHeight,
+            width: 3 * map.tileWidth,
+            height: 2 * map.tileHeight,
+        };
+        const from = toDevice(camera, size, area.x, area.y);
+        expect(from.x % 1).not.toBe(0);
+        expect(from.y % 1).not.toBe(0);
+        const clip = deviceClip(camera, size, area);
+        for (const layer of map.layers as TileLayer[]) {
+            const whole = recordingFrame();
+            const patched = recordingFrame();
+            const counts = { tileQuads: 0, checkerQuads: 0 };
+            emitLiveLayer(whole.frame, inputs, camera, layer, area, { depth: 2, counts });
+            emitLiveLayer(patched.frame, inputs, camera, layer, area, {
+                depth: 2,
+                counts,
+                clip: true,
+            });
+            expect(whole.sprites.length).toBeGreaterThan(0);
+            expect(whole.sprites.every((s) => s.clip === undefined)).toBe(true);
+            expect(patched.sprites).toEqual(whole.sprites.map((s) => ({ ...s, clip })));
+            expect(counts.tileQuads).toBe(2 * whole.sprites.length);
+        }
     });
 
     it("live quads over a pending patch stay inside it: offset tiles and a lower set of its own parallax", async () => {
@@ -1248,43 +1252,39 @@ describe("live quads over a patch (ENGINE §4)", () => {
                 version: 1,
             })),
         );
-        const sprites: SpriteLike[] = [];
-        const frame = {
-            sprite: (s: SpriteLike) => sprites.push({ ...s }),
-            rect: () => undefined,
-        };
+        const { frame, sprites } = recordingFrame();
         const counts = { tileQuads: 0, checkerQuads: 0 };
         tier.draw(
-            frame as unknown as Frame,
+            frame,
             { scene, size, camera: {} as Camera, emitter, checkerReady: null },
             camera,
             counts,
             0x202020,
         );
-        // The top set is not shifted: its patch areas are its cells, in device pixels.
-        const areas = live.map(({ set, cells }) => {
+        // The top set is not shifted: its patch areas are its cells; their clips, device pixels.
+        const clips = live.map(({ set, cells }) => {
             expect(set).toBe(1);
-            const at = toDevice(camera, size, cells.x * map.tileWidth, cells.y * map.tileHeight);
-            return {
-                x0: at.x,
-                y0: at.y,
-                x1: at.x + cells.width * map.tileWidth * camera.scale,
-                y1: at.y + cells.height * map.tileHeight * camera.scale,
-            };
+            return deviceClip(camera, size, {
+                x: cells.x * map.tileWidth,
+                y: cells.y * map.tileHeight,
+                width: cells.width * map.tileWidth,
+                height: cells.height * map.tileHeight,
+            });
         });
         const quads = sprites.filter((s) => s.texture === tilesetTextureId(tileset.id));
         expect(quads.length).toBeGreaterThan(0);
         expect(renderer.textures.size).toBeGreaterThan(0);
+        // Each quad draws only inside a patch: it carries the patch's clip and reaches into it.
         for (const quad of quads) {
+            expect(clips).toContainEqual(quad.clip);
             const box = quadBox(quad);
-            const inside = areas.some(
-                (area) =>
-                    box.x0 >= area.x0 - 1e-6 &&
-                    box.y0 >= area.y0 - 1e-6 &&
-                    box.x1 <= area.x1 + 1e-6 &&
-                    box.y1 <= area.y1 + 1e-6,
-            );
-            expect(inside, JSON.stringify(box)).toBe(true);
+            const clip = quad.clip!;
+            const meets =
+                box.x1 > clip.x &&
+                box.x0 < clip.x + clip.width &&
+                box.y1 > clip.y &&
+                box.y0 < clip.y + clip.height;
+            expect(meets, JSON.stringify(box)).toBe(true);
         }
     });
 });

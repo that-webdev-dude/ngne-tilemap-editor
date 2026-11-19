@@ -347,12 +347,15 @@ export function sweep(centres: { x: number; y: number }[], scale: number): Sampl
     });
 }
 
-/** The cell `(x, y)` of the base layer set to `value` by a command, as a tool stroke does. */
-export function paintCell(x: number, y: number, value: number): void {
+/**
+ * The cell `(x, y)` of layer `index` (the base layer by default) set to `value` by a command, as a
+ * tool stroke does.
+ */
+export function paintCell(x: number, y: number, value: number, index = 0): void {
     const hooks = window.__ngneTest!;
     const { session, history } = hooks.session.getState();
     const map = session.project.maps[0]!;
-    const layer = map.layers[0] as TileLayer;
+    const layer = map.layers[index] as TileLayer;
     const before = layer.cells.get(x, y);
     const rect: CellRect = { x, y, width: 1, height: 1 };
     history.execute(
@@ -372,10 +375,10 @@ export function tileValue(slot: number, tile: number, orientation: number): numb
     return cellValue(slot, tile, orientation as Orientation);
 }
 
-/** The value of cell `(x, y)` of the base layer. */
-export function cellAt(x: number, y: number): number {
+/** The value of cell `(x, y)` of layer `index` (the base layer by default). */
+export function cellAt(x: number, y: number, index = 0): number {
     const map = window.__ngneTest!.session.getState().session.project.maps[0]!;
-    return (map.layers[0] as TileLayer).cells.get(x, y);
+    return (map.layers[index] as TileLayer).cells.get(x, y);
 }
 
 /**
@@ -399,12 +402,22 @@ export interface PaintResult {
     /** Chunk tier state right after the frame: patches still pending. */
     live: number;
     pending: number;
+    /** Draw calls of the next frame, and an FNV-1a hash of its canvas bytes. */
+    drawCalls: number;
+    hash: string;
+}
+
+/** FNV-1a of `bytes`, as 8 hex digits. */
+function fnv1a(bytes: Uint8ClampedArray): string {
+    let hash = 0x811c9dc5;
+    for (const byte of bytes) hash = Math.imul(hash ^ byte, 0x01000193);
+    return (hash >>> 0).toString(16).padStart(8, "0");
 }
 
 /**
- * Submits a frame, paints cell `(x, y)` of the base layer with a command and, in the same task,
- * compares the next submitted frame with the reference of the changed document: the patch has
- * not settled, so the change shows through live quads.
+ * Submits a frame, paints cell `(x, y)` of layer `index` (the base layer by default) with a
+ * command and, in the same task, compares the next submitted frame with the reference of the
+ * changed document: the patch has not settled, so the change shows through live quads.
  */
 export function paintAndCompare(
     x: number,
@@ -412,6 +425,7 @@ export function paintAndCompare(
     value: number,
     geometry: Geometry,
     tolerance: number,
+    index = 0,
 ): PaintResult {
     const viewport = probe();
     const map = window.__ngneTest!.session.getState().session.project.maps[0]!;
@@ -430,15 +444,23 @@ export function paintAndCompare(
     };
     if (!viewport.renderNow()) throw new Error("te-015: the renderer did not submit a frame");
     const before = block(readCanvas(viewport.canvas));
-    paintCell(x, y, value);
+    paintCell(x, y, value, index);
     const comparison = compare(geometry, tolerance);
-    const after = block(readCanvas(viewport.canvas));
+    const image = readCanvas(viewport.canvas);
+    const after = block(image);
     let changed = 0;
     for (let at = 0; at < before.length; at += 4) {
         if ([0, 1, 2].some((c) => before[at + c] !== after[at + c])) changed += 1;
     }
     const chunks = viewport.chunkStats();
-    return { comparison, changed, live: chunks.live, pending: chunks.pending };
+    return {
+        comparison,
+        changed,
+        live: chunks.live,
+        pending: chunks.pending,
+        drawCalls: viewport.stats.drawCalls,
+        hash: fnv1a(image.data),
+    };
 }
 
 /** Undoes the last step and compares the next submitted frame, in the same task. */

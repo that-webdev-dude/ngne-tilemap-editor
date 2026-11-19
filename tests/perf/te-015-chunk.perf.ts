@@ -116,6 +116,8 @@ describeBrowser("te-015 chunk tier", () => {
                         medianMs: percentile(painted.settleMs, 0.5),
                         maxMs: Math.max(...painted.settleMs),
                         frameP95Ms: percentile(painted.frameMs, 0.95),
+                        drawCallsMedian: percentile(painted.drawCalls, 0.5),
+                        drawCallsMax: Math.max(...painted.drawCalls),
                     },
                 });
             }

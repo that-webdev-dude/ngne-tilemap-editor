@@ -167,6 +167,8 @@ export interface PaintRecord {
     settleMs: number[];
     /** Milliseconds from the command to the next frame submitted, per paint. */
     frameMs: number[];
+    /** Draw calls of that frame, per paint. */
+    drawCalls: number[];
     tier: string;
 }
 
@@ -179,7 +181,12 @@ export async function paint(count: number, side: number): Promise<PaintRecord> {
     const hooks = window.__ngneTest!;
     const probe = viewport();
     const next = generator(0x7e015 + side);
-    const record: PaintRecord = { settleMs: [], frameMs: [], tier: probe.stats.tier };
+    const record: PaintRecord = {
+        settleMs: [],
+        frameMs: [],
+        drawCalls: [],
+        tier: probe.stats.tier,
+    };
     for (let n = 0; n < count; n += 1) {
         const { session, history } = hooks.session.getState();
         const map = session.project.maps[0]!;
@@ -209,6 +216,7 @@ export async function paint(count: number, side: number): Promise<PaintRecord> {
         );
         probe.renderNow();
         record.frameMs.push(performance.now() - start);
+        record.drawCalls.push(probe.stats.drawCalls);
         await until(() => probe.chunkStats().pending === 0);
         record.settleMs.push(performance.now() - start);
         // Let the editor's own frame of the settled patch go by before the next paint.

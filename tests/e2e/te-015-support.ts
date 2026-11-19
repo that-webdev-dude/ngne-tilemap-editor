@@ -28,7 +28,8 @@ export function pageCall<T>(page: Page, name: string, ...args: unknown[]): Promi
 
 /**
  * Starts Chrome at device pixel ratio `ratio` with the configured launch arguments (the scale
- * factor replaced), opens the editor and waits for its renderer. `devicePixelContentBoxSize`,
+ * factor replaced), in a window of `window` CSS pixels (`WINDOW` by default), opens the editor
+ * and waits for its renderer. `devicePixelContentBoxSize`,
  * which sizes the canvas, follows the browser's own scale factor, so a ratio needs its own
  * browser (as in te-013-readback-dpr125.spec.ts).
  */
@@ -37,6 +38,7 @@ export async function openAtRatio(
     launchOptions: LaunchOptions,
     baseURL: string | undefined,
     ratio: number,
+    window: { width: number; height: number } = WINDOW,
 ): Promise<{ page: Page; browser: Browser }> {
     const kept = (launchOptions.args ?? []).filter(
         (argument) => !argument.startsWith("--force-device-scale-factor"),
@@ -48,7 +50,7 @@ export async function openAtRatio(
     });
     const context = await browser.newContext({
         baseURL,
-        viewport: WINDOW,
+        viewport: window,
         deviceScaleFactor: ratio,
     });
     const page = await context.newPage();
@@ -81,6 +83,19 @@ export function chunkStats(page: Page) {
 
 export function compare(page: Page, geometry: Geometry, tolerance: number): Promise<Comparison> {
     return pageCall<Comparison>(page, "compare", geometry, tolerance);
+}
+
+/**
+ * A value for cell `(x, y)` of layer `index` (the base layer by default) other than the one it
+ * holds: an opaque-edged tile of tileset 1.
+ */
+export async function newValue(page: Page, x: number, y: number, index = 0): Promise<number> {
+    const current = await pageCall<number>(page, "cellAt", x, y, index);
+    for (const orientation of [5, 2, 0]) {
+        const value = await pageCall<number>(page, "tileValue", 1, 3, orientation);
+        if (value !== current) return value;
+    }
+    throw new Error("no other value");
 }
 
 export { expect };

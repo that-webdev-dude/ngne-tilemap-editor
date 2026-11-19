@@ -1,4 +1,4 @@
-import type { Camera, Frame } from "@ngne/core";
+import type { Camera, Frame, Sprite } from "@ngne/core";
 import type {
     GroupLayer,
     ImageLayer,
@@ -13,12 +13,10 @@ import { drawnOpacity, effectiveValues, findLayer, walkLayers } from "../../core
 import { QuadEmitter } from "../../core/runtime/emit";
 import type { EmitTileset, SpriteLike } from "../../core/runtime/emit";
 import { checkerBlockSize, checkerMean, checkerSpec, type ViewportChecker } from "./checker";
-import { deviceScale, intersect, layerShift, toDevice, visibleRect } from "./geometry";
+import { deviceClip, deviceScale, intersect, layerShift, toDevice, visibleRect } from "./geometry";
 import type { Camera2D, DeviceSize, MapRect } from "./geometry";
 import { CHECKER_TEXTURE_ID } from "./textures";
 import type { ReadyTileset } from "./textures";
-import { clipQuad } from "./clipQuad";
-import type { DeviceRect } from "./clipQuad";
 import { emitImageLayer } from "./imageLayers";
 import type { ReadyImage } from "./imageLayers";
 
@@ -150,8 +148,8 @@ export function buildLiveFrame(frame: Frame, inputs: LiveInputs): LiveCounts {
 
 /**
  * Emits the quads of an image layer that meet `area` (map pixels) at the layer's effective
- * opacity, parallax and offset, once its texture holds its image. With `clip`, each quad is cut
- * to `area` (over a chunk tier patch).
+ * opacity, parallax and offset, once its texture holds its image. With `clip`, each quad has
+ * `area` as its sprite clip (over a chunk tier patch).
  */
 export function emitLiveImageLayer(
     frame: Frame,
@@ -177,21 +175,11 @@ export function emitLiveImageLayer(
     const image = scene.project.images.find((each) => each.id === layer.imageId);
     const ready = image ? inputs.images.ready(layer, image.pixels) : null;
     if (!ready) return;
-    let clip: DeviceRect | null = null;
-    if (at.clip) {
-        const from = toDevice(camera, size, area.x, area.y);
-        clip = {
-            x0: from.x,
-            y0: from.y,
-            x1: from.x + area.width * camera.scale,
-            y1: from.y + area.height * camera.scale,
-        };
-    }
     const shift = layerShift(map, camera, values);
     const quads = emitImageLayer(frame, camera, size, { layer, ready, opacity, shift }, area, {
         layer: at.layer ?? LAYER.tiles,
         depth: at.depth,
-        clip,
+        clip: at.clip ? deviceClip(camera, size, area) : null,
     });
     if (quads > 0) at.counts.imageQuads = (at.counts.imageQuads ?? 0) + quads;
 }
@@ -282,8 +270,8 @@ function fillRect(
 /**
  * Emits the quads of one tile layer whose tiles overlap `area`, a rectangle in map pixels
  * (the visible part of the map, or cells to draw over a chunk), at the layer's effective
- * opacity, parallax and offset. With `clip`, each quad is cut to `area`: over a chunk, a tile
- * that reaches past the area would draw again what the chunk holds around it.
+ * opacity, parallax and offset. With `clip`, each quad has `area` as its sprite clip: over a
+ * chunk, a tile that reaches past the area would draw again what the chunk holds around it.
  */
 export function emitLiveLayer(
     frame: Frame,
@@ -309,26 +297,14 @@ export function emitLiveLayer(
     const visible = visibleRect(camera, inputs.size);
     const shift = layerShift(map, camera, values);
     const { counts } = at;
-    let clip: DeviceRect | null = null;
-    if (at.clip) {
-        const from = toDevice(camera, inputs.size, area.x, area.y);
-        clip = {
-            x0: from.x,
-            y0: from.y,
-            x1: from.x + area.width * scale,
-            y1: from.y + area.height * scale,
-        };
-    }
-    const cut: SpriteLike = { ...inputs.emitter.sprite };
+    // The emitter's own sprite object is reused for every quad and never has a clip: NGNE keeps
+    // unclipped sprites on its fast path. A clipped quad is a copy that carries the clip.
+    const clipped: Sprite | null = at.clip
+        ? { ...inputs.emitter.sprite, clip: deviceClip(camera, inputs.size, area) }
+        : null;
     const sink = {
         sprite(s: SpriteLike): void {
-            if (clip === null) {
-                frame.sprite(s);
-            } else if (clipQuad(s, clip, cut)) {
-                frame.sprite(cut);
-            } else {
-                return;
-            }
+            frame.sprite(clipped === null ? s : Object.assign(clipped, s));
             counts.tileQuads += 1;
         },
     };

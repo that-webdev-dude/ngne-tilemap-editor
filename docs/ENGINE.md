@@ -108,7 +108,12 @@ Editable texture rules (`createTexture` / `updateTexture`):
     a layer visibility, opacity, parallax or offset change.
   - **Painting at overview:** painted cells draw as live quads over their chunk on the next
     frame; the chunk's dirty rectangle is patched with one `updateTexture` in flight per
-    chunk (later edits coalesce), and the live quads are dropped when it settles. A chunk that
+    chunk (later edits coalesce), and the live quads are dropped when it settles. The live
+    quads are emitted whole, with the patch as their `Sprite.clip`: each edge of the patch
+    rounded to the nearest device pixel, so the clip holds the pixels whose centres lie in the
+    patch, which the patch's checkerboard and background cover too. A tile that reaches past the
+    patch therefore does not draw again, translucent layers included, over what the chunk holds
+    around it. The quads of a patch share its clip and batch with each other. A chunk that
     shows something after a change gets a texture, and one that shows nothing is released. A new
     chunk that would take chunk memory past 64 MB is not created: the tier is planned again
     (Resolution) and rebuilt, and the live tier draws meanwhile.
@@ -273,7 +278,6 @@ written "surface" below) and drawing with it on a WebGPU canvas
 | No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 30.9 / 35.2 ms p95 after a paint (32.9 / 33.6 ms for a 16 × 16 stamp); the composite is part of the 302 / 347 ms rebuild | Still applicable. Surface: "WebGPURenderer has no texture readback and does not expose its GPU device" |
 | The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 20.9 / 19.0 ms against 16 ms (§6; the build's own slices ≤ 6.4 / 7.9 ms). With canvas uploads on 0.3.0 the same machine measured 30.0–37.5 / 37.1–48.6 ms on 2026-11-15 (three runs each) | Still applicable: with 0.4.0 the task is still over 16 ms on the reference hardware. `te-015-chunk` |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime | Not measured: one extra transparent column or row per odd tile in the atlas | Resolved: `pixelSnap` rounds a quad's corner. The workarounds are kept; the runtime also supports engines before 0.4.0 (SPEC §11.4). GPU: "pixel snapping places odd-sized and flipped quads on whole pixels, texel for pixel" |
-| No per-sprite clipping | Live quads over a chunk with a pending patch are cut to the patch on the CPU (`clipQuad`, quarter turns only) | editor | Not measured | Resolved: `Sprite.clip`; the workaround is kept. GPU: "a sprite clip draws only the clip rectangle" |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 9.5 / 9.6 ms p95 (budget 10 ms) | Still applicable. Surface: "Frame has no line, ellipse or polygon primitive: sprites and rects only" |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor | None in time; `once` animations loop | Still applicable. Surface: "exports no tilemap or atlas schema, no tileset discovery and no sprite animation" |
 | Assets checked by object identity; no reference following; unlisted texture throws in render | Runtime caches one definition per ID, namespaces IDs, exposes `assetsFor(tilemap)`, skips unlisted tilesets | runtime | Not measured | Still applicable. Surface: "ImageAsset gains only sampling: no references to follow from one asset to another" |

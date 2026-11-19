@@ -37,6 +37,7 @@ interface Recorded {
     alpha?: number;
     layer?: number;
     depth?: number;
+    clip?: { x: number; y: number; width: number; height: number };
 }
 
 class RecordingFrame {
@@ -89,6 +90,7 @@ describe("quads of an image layer", () => {
     const size = { width: 200, height: 100 };
     const area = { x: 0, y: 0, width: 100, height: 50 };
     const ready: ReadyImage = { texture: "ed:img:7", spanX: 16, spanY: 8 };
+    const CLIP = { x: 0, y: 0, width: 40, height: 30 };
 
     function emit(repeatX: boolean, repeatY: boolean, shift = { x: 10, y: 5 }, clip = false) {
         const frame = new RecordingFrame();
@@ -102,7 +104,7 @@ describe("quads of an image layer", () => {
             {
                 layer: LAYER.tiles,
                 depth: 3,
-                clip: clip ? { x0: 0, y0: 0, x1: 40, y1: 30 } : null,
+                clip: clip ? CLIP : null,
             },
         );
         return { count, sprites: frame.sprites };
@@ -146,16 +148,13 @@ describe("quads of an image layer", () => {
         expect(emit(true, false, { x: -1000, y: 5 }).count).toBe(7);
     });
 
-    it("cuts each quad to a clip rectangle", () => {
+    it("draws each quad uncut, with the clip rectangle as its sprite clip", () => {
         const { sprites } = emit(true, false, { x: 10, y: 5 }, true);
-        for (const s of sprites) {
-            expect(s.x - s.width / 2).toBeGreaterThanOrEqual(0);
-            expect(s.x + s.width / 2).toBeLessThanOrEqual(40);
-            expect(s.y + s.height / 2).toBeLessThanOrEqual(30);
-        }
-        // Copies −1 and 0 meet device x 0 .. 40 (device 20 + 32k, 32 wide).
-        expect(sprites.length).toBe(2);
-        expect(sprites[0]).toMatchObject({ u: 6 / 16, uw: 10 / 16 });
+        const whole = emit(true, false, { x: 10, y: 5 }).sprites;
+        // The quads of the area, copies −1 .. 5, each whole and clipped by the GPU.
+        expect(whole).toHaveLength(7);
+        expect(sprites).toEqual(whole.map((s) => ({ ...s, clip: CLIP })));
+        for (const s of sprites) expect(s).toMatchObject({ width: 32, u: 0, uw: 1 });
     });
 });
 

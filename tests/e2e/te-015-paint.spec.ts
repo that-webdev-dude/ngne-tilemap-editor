@@ -1,7 +1,15 @@
 import { test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import type { Comparison, Geometry } from "./te-015-support";
-import { chunkStats, chunksReady, compare, expect, loadScene, pageCall } from "./te-015-support";
+import {
+    chunkStats,
+    chunksReady,
+    compare,
+    expect,
+    loadScene,
+    newValue,
+    pageCall,
+} from "./te-015-support";
 import type { PaintResult } from "./harness/te-015-page";
 import { openEditor } from "./te-013-support";
 
@@ -32,16 +40,6 @@ async function open(page: Page): Promise<Geometry> {
     expect(settled.tier).toBe("chunk");
     expect(settled.mismatches).toBe(0);
     return geometry;
-}
-
-/** A value for cell `(x, y)` other than the one it holds: an opaque-edged tile of tileset 1. */
-async function newValue(page: Page, x: number, y: number): Promise<number> {
-    const current = await pageCall<number>(page, "cellAt", x, y);
-    for (const orientation of [5, 2, 0]) {
-        const value = await pageCall<number>(page, "tileValue", 1, 3, orientation);
-        if (value !== current) return value;
-    }
-    throw new Error("no other value");
 }
 
 async function paint(page: Page, geometry: Geometry, x: number, y: number) {

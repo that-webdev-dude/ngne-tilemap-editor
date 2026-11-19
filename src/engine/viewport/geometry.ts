@@ -16,6 +16,17 @@ export interface MapRect {
     height: number;
 }
 
+/**
+ * A rectangle of whole device pixels (the canvas's backing pixels), from `x, y` to the
+ * exclusive edges `x + width, y + height`: the shape of NGNE's sprite clip.
+ */
+export interface PixelRect {
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+}
+
 /** What the camera needs: the view centre in map pixels and the device pixels per map pixel. */
 export interface Camera2D {
     centreX: number;
@@ -74,6 +85,23 @@ export function toDevice(
     return {
         x: (x - camera.centreX) * camera.scale + size.width / 2,
         y: (y - camera.centreY) * camera.scale + size.height / 2,
+    };
+}
+
+/**
+ * The device pixels `area` (map pixels) covers, as a sprite clip: each edge rounded to the
+ * nearest pixel edge, so the clip holds the pixels whose centres lie inside the area, the
+ * pixels a quad over the area covers (ENGINE §4, "Painting at overview").
+ */
+export function deviceClip(camera: Camera2D, size: DeviceSize, area: MapRect): PixelRect {
+    const from = toDevice(camera, size, area.x, area.y);
+    const x = Math.round(from.x);
+    const y = Math.round(from.y);
+    return {
+        x,
+        y,
+        width: Math.round(from.x + area.width * camera.scale) - x,
+        height: Math.round(from.y + area.height * camera.scale) - y,
     };
 }
 

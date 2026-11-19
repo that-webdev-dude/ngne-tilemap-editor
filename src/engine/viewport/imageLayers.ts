@@ -1,11 +1,8 @@
-import type { Frame } from "@ngne/core";
+import type { Frame, Sprite } from "@ngne/core";
 import { MAX_IMAGE_SIDE, walkLayers } from "../../core/model";
 import type { ImageLayer, PixelBuffer, Project, ProjectMap } from "../../core/model";
-import type { SpriteLike } from "../../core/runtime/emit";
-import { clipQuad } from "./clipQuad";
-import type { DeviceRect } from "./clipQuad";
 import { toDevice } from "./geometry";
-import type { Camera2D, DeviceSize, MapRect } from "./geometry";
+import type { Camera2D, DeviceSize, MapRect, PixelRect } from "./geometry";
 import type { BitmapFn, TextureTarget } from "./textures";
 
 // Image layers in the viewport (ENGINE §3, §4): one texture per image layer, `ed:img:<layerId>`,
@@ -210,7 +207,8 @@ export interface ImageDraw {
 
 /**
  * Emits the quads of an image layer that meet `area` (map pixels): one, or a grid along each
- * repeated axis. With `clip`, each quad is cut to it (device pixels). Returns the quads emitted.
+ * repeated axis. With `clip` (device pixels), each quad has it as its sprite clip. Returns the
+ * quads emitted.
  */
 export function emitImageLayer(
     frame: Frame,
@@ -218,7 +216,7 @@ export function emitImageLayer(
     size: DeviceSize,
     draw: ImageDraw,
     area: MapRect,
-    place: { layer: number; depth: number; clip?: DeviceRect | null },
+    place: { layer: number; depth: number; clip?: PixelRect | null },
 ): number {
     const { layer, ready, opacity, shift } = draw;
     const xs = copies(area.x, area.width, shift.x, ready.spanX, layer.repeatX);
@@ -226,7 +224,7 @@ export function emitImageLayer(
     if (!xs || !ys) return 0;
     const width = ready.spanX * camera.scale;
     const height = ready.spanY * camera.scale;
-    const quad: SpriteLike = {
+    const quad: Sprite = {
         x: 0,
         y: 0,
         width,
@@ -242,7 +240,7 @@ export function emitImageLayer(
         layer: place.layer,
         depth: place.depth,
     };
-    const cut: SpriteLike = { ...quad };
+    if (place.clip) quad.clip = place.clip;
     let count = 0;
     for (let ky = ys[0]; ky <= ys[1]; ky += 1) {
         for (let kx = xs[0]; kx <= xs[1]; kx += 1) {
@@ -254,12 +252,7 @@ export function emitImageLayer(
             );
             quad.x = at.x + width / 2;
             quad.y = at.y + height / 2;
-            if (place.clip) {
-                if (!clipQuad(quad, place.clip, cut)) continue;
-                frame.sprite(cut);
-            } else {
-                frame.sprite(quad);
-            }
+            frame.sprite(quad);
             count += 1;
         }
     }
