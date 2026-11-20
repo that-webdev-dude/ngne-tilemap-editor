@@ -13,7 +13,14 @@ import { drawnOpacity, effectiveValues, findLayer, walkLayers } from "../../core
 import { QuadEmitter } from "../../core/runtime/emit";
 import type { EmitTileset, SpriteLike } from "../../core/runtime/emit";
 import { checkerBlockSize, checkerMean, checkerSpec, type ViewportChecker } from "./checker";
-import { deviceClip, deviceScale, intersect, layerShift, toDevice, visibleRect } from "./geometry";
+import {
+    deviceClip,
+    deviceScale,
+    intersect,
+    layerShift,
+    viewOrigin,
+    visibleRect,
+} from "./geometry";
 import type { Camera2D, DeviceSize, MapRect } from "./geometry";
 import { CHECKER_TEXTURE_ID } from "./textures";
 import type { ReadyTileset } from "./textures";
@@ -22,7 +29,8 @@ import type { ReadyImage } from "./imageLayers";
 
 // The live tier (ENGINE §4): one quad per visible cell, layer by layer, grouped by tileset, one
 // depth per layer, so the frame arrives already ordered; an image layer draws its texture at its
-// depth (imageLayers.ts). This file builds a `Frame`; the viewport submits it.
+// depth (imageLayers.ts). Quads are in map pixels; the NGNE camera carries the view
+// (`placeCamera`). This file builds a `Frame`; the viewport submits it.
 
 /** What the viewport shows (read at each draw, so it is never stale). */
 export interface ViewportScene {
@@ -97,7 +105,10 @@ function emitTileset({ tileset, texture, uvTable }: ReadyTileset): EmitTileset {
 export interface LiveInputs {
     scene: ViewportScene;
     size: DeviceSize;
-    /** The NGNE camera of the frame; it stays at the origin with `pixelSnap` off. */
+    /**
+     * The NGNE camera of the frame, `pixelSnap` off; `drawMapBase` places it on the view
+     * (`placeCamera`).
+     */
     camera: Camera;
     emitter: QuadEmitter;
     /** The checker spec `ed:checker` holds now; null while it is not uploaded. */
@@ -176,7 +187,7 @@ export function emitLiveImageLayer(
     const ready = image ? inputs.images.ready(layer, image.pixels) : null;
     if (!ready) return;
     const shift = layerShift(map, camera, values);
-    const quads = emitImageLayer(frame, camera, size, { layer, ready, opacity, shift }, area, {
+    const quads = emitImageLayer(frame, { layer, ready, opacity, shift }, area, {
         layer: at.layer ?? LAYER.tiles,
         depth: at.depth,
         clip: at.clip ? deviceClip(camera, size, area) : null,
@@ -195,11 +206,23 @@ export function sceneCamera(scene: ViewportScene): Camera2D {
 }
 
 /**
- * Resets `frame` and draws what lies under every tile layer: the checkerboard and the
- * background colour of the visible part of the map. Returns the scene's camera.
+ * Puts NGNE's camera on the view: at the map pixel of the canvas's top-left corner, with the
+ * device pixels per map pixel as its zoom. Previous and current values are set together, so a
+ * frame drawn at any alpha shows exactly them.
+ */
+export function placeCamera(target: Camera, camera: Camera2D, size: DeviceSize): void {
+    const origin = viewOrigin(camera, size);
+    target.cut(origin.x, origin.y, camera.scale);
+}
+
+/**
+ * Resets `frame`, places its camera on the view and draws what lies under every tile layer: the
+ * checkerboard and the background colour of the visible part of the map. Returns the scene's
+ * camera.
  */
 export function drawMapBase(frame: Frame, inputs: LiveInputs, counts: LiveCounts): Camera2D {
     const camera = sceneCamera(inputs.scene);
+    placeCamera(inputs.camera, camera, inputs.size);
     frame.reset();
     frame.scene(inputs.camera, 1);
     drawUnderTiles(frame, inputs, camera, visibleRect(camera, inputs.size), counts);
@@ -226,7 +249,7 @@ export function drawUnderTiles(
     at?: Placement & { workspace: number },
 ): void {
     const { map } = inputs.scene;
-    if (at) fillRect(frame, inputs, camera, area, at.workspace, 1, at);
+    if (at) fillRect(frame, area, at.workspace, 1, at);
     const mapRect = intersect(
         { x: 0, y: 0, width: map.width * map.tileWidth, height: map.height * map.tileHeight },
         area,
@@ -235,35 +258,25 @@ export function drawUnderTiles(
     drawChecker(frame, inputs, camera, mapRect, counts, at);
     const background = map.backgroundColor;
     if (background !== null && (background & 255) !== 0) {
-        fillRect(frame, inputs, camera, mapRect, background >>> 8, (background & 255) / 255, at);
+        fillRect(frame, mapRect, background >>> 8, (background & 255) / 255, at);
     }
 }
 
 /** One rectangle of a colour, under the tiles or at `at`. */
 function fillRect(
     frame: Frame,
-    inputs: LiveInputs,
-    camera: Camera2D,
     rect: MapRect,
     color: number,
     alpha: number,
     at: Placement | undefined,
 ): void {
-    const from = toDevice(camera, inputs.size, rect.x, rect.y);
-    const w = rect.width * camera.scale;
-    const h = rect.height * camera.scale;
+    const { width, height } = rect;
+    const x = rect.x + width / 2;
+    const y = rect.y + height / 2;
     if (at) {
-        frame.sprite({
-            x: from.x + w / 2,
-            y: from.y + h / 2,
-            width: w,
-            height: h,
-            color,
-            alpha,
-            ...at,
-        });
+        frame.sprite({ x, y, width, height, color, alpha, ...at });
     } else {
-        frame.rect(from.x + w / 2, from.y + h / 2, w, h, color, alpha, LAYER.map);
+        frame.rect(x, y, width, height, color, alpha, LAYER.map);
     }
 }
 
@@ -293,8 +306,6 @@ export function emitLiveLayer(
     const values = effectiveValues(layer, entry.ancestors);
     const opacity = drawnOpacity(layer, entry.ancestors, values, inputs.scene.highlight);
     if (!values.visible || opacity === 0) return;
-    const { scale } = camera;
-    const visible = visibleRect(camera, inputs.size);
     const shift = layerShift(map, camera, values);
     const { counts } = at;
     // The emitter's own sprite object is reused for every quad and never has a clip: NGNE keeps
@@ -317,9 +328,10 @@ export function emitLiveLayer(
         viewY: area.y - shift.y,
         viewWidth: area.width,
         viewHeight: area.height,
-        translateX: shift.x - visible.x,
-        translateY: shift.y - visible.y,
-        scale,
+        translateX: shift.x,
+        translateY: shift.y,
+        // Map pixels: the camera's zoom scales them.
+        scale: 1,
         alpha: opacity / 255,
         color: WHITE,
         layer: at.layer ?? LAYER.tiles,
@@ -340,11 +352,10 @@ function drawChecker(
     counts: LiveCounts,
     place?: Placement,
 ): void {
-    const { size, checkerReady } = inputs;
+    const { checkerReady } = inputs;
     const { checker } = inputs.scene;
-    const { scale } = camera;
-    if (checker.size * scale < MIN_CHECKER_SQUARE || checkerReady !== checkerSpec(checker)) {
-        fillRect(frame, inputs, camera, rect, checkerMean(checker), 1, place);
+    if (checker.size * camera.scale < MIN_CHECKER_SQUARE || checkerReady !== checkerSpec(checker)) {
+        fillRect(frame, rect, checkerMean(checker), 1, place);
         counts.checkerQuads += 1;
         return;
     }
@@ -360,14 +371,11 @@ function drawChecker(
                 rect,
             );
             if (!cut) continue;
-            const at = toDevice(camera, size, cut.x, cut.y);
-            const w = cut.width * scale;
-            const h = cut.height * scale;
             frame.sprite({
-                x: at.x + w / 2,
-                y: at.y + h / 2,
-                width: w,
-                height: h,
+                x: cut.x + cut.width / 2,
+                y: cut.y + cut.height / 2,
+                width: cut.width,
+                height: cut.height,
                 texture: CHECKER_TEXTURE_ID,
                 u: (cut.x - bx * block) / block,
                 v: (cut.y - by * block) / block,

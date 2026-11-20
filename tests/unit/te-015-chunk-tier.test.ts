@@ -1,4 +1,5 @@
-import type { Camera, Frame } from "@ngne/core";
+import { Camera } from "@ngne/core";
+import type { Frame } from "@ngne/core";
 import fc from "fast-check";
 import { describe, expect, it } from "vitest";
 import { CHUNK_SIZE, CellStore, cellValue } from "../../src/core/cells";
@@ -24,9 +25,15 @@ import { ChunkTier, chunkTextureId } from "../../src/engine/viewport/chunkTier";
 import type { ChunkRegion, ChunkTarget } from "../../src/engine/viewport/chunkTier";
 import { deviceClip, toDevice } from "../../src/engine/viewport/geometry";
 import type { PixelRect } from "../../src/engine/viewport/geometry";
-import { EmitterCache, emitLiveLayer, sceneCamera } from "../../src/engine/viewport/liveTier";
+import {
+    EmitterCache,
+    emitLiveLayer,
+    placeCamera,
+    sceneCamera,
+} from "../../src/engine/viewport/liveTier";
 import type { ViewportScene } from "../../src/engine/viewport/liveTier";
 import { tilesetTextureId } from "../../src/engine/viewport/textures";
+import { onScreen } from "../support/ngneScreen";
 import { createReferenceProject } from "../support/referenceProject";
 import { mapOf, projectOf, tilesetOf } from "./te-012-support";
 
@@ -384,7 +391,7 @@ describe("chunk tier against a fake renderer", () => {
         expect(renderer.created).toEqual([]);
         const step = async () => {
             await flush();
-            expect(slices.jobs.length).toBe(1);
+            expect(slices.jobs).toHaveLength(1);
             slices.jobs.shift()!();
             return [renderer.created.length, renderer.updates.length];
         };
@@ -394,7 +401,7 @@ describe("chunk tier against a fake renderer", () => {
         expect(await step()).toEqual([2, 1]);
         expect(await step()).toEqual([2, 2]);
         await flush();
-        expect(slices.jobs.length).toBe(0);
+        expect(slices.jobs).toHaveLength(0);
         renderer.updates[0]!.settle();
         expect(await step()).toEqual([3, 1]);
 
@@ -415,7 +422,7 @@ describe("chunk tier against a fake renderer", () => {
             await flush();
             slices.jobs.shift()!();
         }
-        expect(renderer.updates.length).toBe(2);
+        expect(renderer.updates).toHaveLength(2);
         const side = CHUNK_SIZE * tier.stats.texelsPerCell;
         expect(renderer.updates.map((update) => update.region)).toMatchObject([
             { width: side, height: side },
@@ -449,7 +456,7 @@ describe("chunk tier against a fake renderer", () => {
         expect(tier.stats.live).toBe(1);
         await flush();
         slices.jobs.shift()!();
-        expect(renderer.updates.length).toBe(1);
+        expect(renderer.updates).toHaveLength(1);
 
         // Two more edits of the same chunk while its update is in flight: nothing more is sent.
         layer.cells.set(10, 4, cellValue(1, 0));
@@ -457,15 +464,15 @@ describe("chunk tier against a fake renderer", () => {
         layer.cells.set(5, 20, 0);
         touch({ x: 5, y: 20, width: 1, height: 1 });
         await flush();
-        expect(slices.jobs.length).toBe(0);
-        expect(renderer.updates.length).toBe(1);
+        expect(slices.jobs).toHaveLength(0);
+        expect(renderer.updates).toHaveLength(1);
 
         // Once it settles, one update covers both later edits.
         renderer.updates[0]!.settle();
         await flush();
         expect(tier.stats.live).toBe(1);
         slices.jobs.shift()!();
-        expect(renderer.updates.length).toBe(1);
+        expect(renderer.updates).toHaveLength(1);
         const texels = tier.stats.texelsPerCell;
         expect(renderer.updates[0]!.region).toEqual({
             sourceX: 0,
@@ -551,7 +558,7 @@ describe("chunk tier against a fake renderer", () => {
         // Until it is back, the whole chunk is drawn as live quads.
         expect(tier.stats.live).toBe(1);
         await settleAll();
-        expect(renderer.created.length).toBe(createdBefore + 1);
+        expect(renderer.created).toHaveLength(createdBefore + 1);
         expect(renderer.created.at(-1)).toBe(id);
         expect(tier.stats.live).toBe(0);
         expect(tier.ready).toBe(true);
@@ -577,8 +584,8 @@ describe("chunk tier against a fake renderer", () => {
             renderer.updates[0]!.settle(false);
         }
         await flush();
-        expect(changes.errors.length).toBe(1);
-        expect(slices.jobs.length).toBe(0);
+        expect(changes.errors).toHaveLength(1);
+        expect(slices.jobs).toHaveLength(0);
         expect(tier.stats.live).toBe(1);
     });
 
@@ -689,7 +696,7 @@ describe("chunk tier review follow-ups", () => {
         slices.jobs.shift()!();
         await flush();
         slices.jobs.shift()!();
-        expect(renderer.updates.length).toBe(1);
+        expect(renderer.updates).toHaveLength(1);
         const layer = map.layers[0] as TileLayer;
         layer.cells.set(2, 2, cellValue(1, 3, 1));
         tier.noteTouched({
@@ -743,7 +750,7 @@ describe("chunk tier review follow-ups", () => {
             update.settle(!lost);
         }
         expect(rejected).toBe(3);
-        expect(changes.errors.length).toBe(1);
+        expect(changes.errors).toHaveLength(1);
         expect(tier.ready).toBe(true);
         expect(tier.liveCells()).toEqual([
             { set: 0, cells: { x: 0, y: 0, width: 32, height: 32 } },
@@ -869,7 +876,7 @@ describe("chunk tier review follow-ups", () => {
         slices.jobs.shift()!();
         await flush();
         slices.jobs.shift()!();
-        expect(renderer.updates.length).toBe(1);
+        expect(renderer.updates).toHaveLength(1);
         tier.clear();
         await settleAll();
         expect(renderer.textures.size).toBe(0);
@@ -949,7 +956,7 @@ describe("chunk tier review follow-ups", () => {
         touchCells(tier, map, map.layers[3] as TileLayer, { x: 0, y: 5, width: 1, height: 1 });
         expect(tier.stats.chunks).toBe(16);
         await settleAll();
-        expect(renderer.created.length).toBe(created);
+        expect(renderer.created).toHaveLength(created);
         expect(tier.stats.live).toBe(0);
         expectChunksEqualReference(project, renderer.textures, tier.stats.texelsPerCell);
     });
@@ -1186,7 +1193,7 @@ describe("live quads over a patch (ENGINE §4)", () => {
                 version: 1,
             })),
         );
-        const inputs = { scene, size, camera: {} as Camera, emitter, checkerReady: null };
+        const inputs = { scene, size, camera: new Camera(), emitter, checkerReady: null };
         // Cells (5, 4) to (8, 6), whose edges fall between device pixels at this scale.
         const area = {
             x: 5 * map.tileWidth,
@@ -1256,11 +1263,15 @@ describe("live quads over a patch (ENGINE §4)", () => {
         const counts = { tileQuads: 0, checkerQuads: 0 };
         tier.draw(
             frame,
-            { scene, size, camera: {} as Camera, emitter, checkerReady: null },
+            { scene, size, camera: new Camera(), emitter, checkerReady: null },
             camera,
             counts,
             0x202020,
         );
+        // The quads in device pixels, under the camera the viewport places on the view.
+        const engine = new Camera();
+        placeCamera(engine, camera, size);
+        const view = engine.view(1);
         // The top set is not shifted: its patch areas are its cells; their clips, device pixels.
         const clips = live.map(({ set, cells }) => {
             expect(set).toBe(1);
@@ -1271,7 +1282,9 @@ describe("live quads over a patch (ENGINE §4)", () => {
                 height: cells.height * map.tileHeight,
             });
         });
-        const quads = sprites.filter((s) => s.texture === tilesetTextureId(tileset.id));
+        const quads = sprites
+            .filter((s) => s.texture === tilesetTextureId(tileset.id))
+            .map((s) => onScreen(s, view));
         expect(quads.length).toBeGreaterThan(0);
         expect(renderer.textures.size).toBeGreaterThan(0);
         // Each quad draws only inside a patch: it carries the patch's clip and reaches into it.

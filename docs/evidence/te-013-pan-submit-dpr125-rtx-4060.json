@@ -2,15 +2,15 @@
     "id": "te-013-pan-submit-dpr125-rtx-4060",
     "ticket": "TE-013",
     "measurement": "Pan at the live-tier threshold (66640 sprites), frame callback start to submit; RTX 4060, window 1920 × 1080, DPR 1.25, canvas 2015 × 980",
-    "statistic": "p95 of 523 frames of a 5 s pan after 1 s warm-up",
+    "statistic": "p95 of 551 frames of a 5 s pan after 1 s warm-up",
     "budgetMs": 10,
-    "resultMs": 9.399999999906868,
+    "resultMs": 8.800000011920929,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 8.799999999813735,
-        "medianBuildMs": 6.300000000046566,
-        "maxMs": 15.5,
-        "frames": 523,
+        "medianMs": 8.299999997019768,
+        "medianBuildMs": 5.9000000059604645,
+        "maxMs": 14.299999997019768,
+        "frames": 551,
         "zoom": 0.7762928669222557
     },
     "benchmarkId": "te-013-pan-submit-dpr125",
@@ -21,7 +21,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.79",
+        "chrome": "157.0.8103.80",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -29,5 +29,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T12:51:29.376Z"
+    "date": "2026-11-20T07:38:54.569Z"
 }

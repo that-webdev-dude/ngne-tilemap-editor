@@ -1,4 +1,5 @@
-import type { Camera, Frame } from "@ngne/core";
+import { Camera } from "@ngne/core";
+import type { Frame } from "@ngne/core";
 import { describe, expect, it } from "vitest";
 import { createImageLayer } from "../../src/core/model";
 import type { ImageLayer, PixelBuffer, Project } from "../../src/core/model";
@@ -276,7 +277,7 @@ describe("the live tier", () => {
         const counts = buildLiveFrame(frame as unknown as Frame, {
             scene,
             size: { width: 400, height: 240 },
-            camera: {} as Camera,
+            camera: new Camera(),
             emitter,
             checkerReady: checkerSpec(scene.checker),
             images: { ready },

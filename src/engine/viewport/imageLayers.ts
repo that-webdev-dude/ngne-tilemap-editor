@@ -1,8 +1,7 @@
 import type { Frame, Sprite } from "@ngne/core";
 import { walkLayers } from "../../core/model";
 import type { ImageLayer, PixelBuffer, Project, ProjectMap } from "../../core/model";
-import { toDevice } from "./geometry";
-import type { Camera2D, DeviceSize, MapRect, PixelRect } from "./geometry";
+import type { MapRect, PixelRect } from "./geometry";
 import type { BitmapFn, TextureSampling, TextureTarget } from "./textures";
 
 // Image layers in the viewport (ENGINE §3, §4): one texture per image layer, `ed:img:<layerId>`,
@@ -191,14 +190,12 @@ export interface ImageDraw {
 }
 
 /**
- * Emits the quad of an image layer when it meets `area` (map pixels): the image, stretched to the
- * area along each repeated axis with UVs that tile it. With `clip` (device pixels), the quad has
- * it as its sprite clip. Returns the quads emitted.
+ * Emits the quad of an image layer when it meets `area` (map pixels): the image, in map pixels,
+ * stretched to the area along each repeated axis with UVs that tile it. With `clip` (device
+ * pixels), the quad has it as its sprite clip. Returns the quads emitted.
  */
 export function emitImageLayer(
     frame: Frame,
-    camera: Camera2D,
-    size: DeviceSize,
     draw: ImageDraw,
     area: MapRect,
     place: { layer: number; depth: number; clip?: PixelRect | null },
@@ -207,14 +204,11 @@ export function emitImageLayer(
     const xs = axis(area.x, area.width, shift.x, ready.width, layer.repeatX);
     const ys = axis(area.y, area.height, shift.y, ready.height, layer.repeatY);
     if (!xs || !ys) return 0;
-    const at = toDevice(camera, size, xs.start, ys.start);
-    const width = xs.length * camera.scale;
-    const height = ys.length * camera.scale;
     const quad: Sprite = {
-        x: at.x + width / 2,
-        y: at.y + height / 2,
-        width,
-        height,
+        x: xs.start + xs.length / 2,
+        y: ys.start + ys.length / 2,
+        width: xs.length,
+        height: ys.length,
         rotation: 0,
         texture: ready.texture,
         u: xs.uv,

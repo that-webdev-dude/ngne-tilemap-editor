@@ -4,12 +4,14 @@
     "measurement": "Chunk patch settled after painting one cell at overview, command to patch settled; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "p95 of 100 paints",
     "budgetMs": 100,
-    "resultMs": 30.899999999906868,
+    "resultMs": 32,
     "details": {
         "adapter": "intel gen-12lp",
         "medianMs": 21.5,
-        "maxMs": 51.60000000009313,
-        "frameP95Ms": 14.700000000186265
+        "maxMs": 53.20000000298023,
+        "frameP95Ms": 15,
+        "drawCallsMedian": 118,
+        "drawCallsMax": 121
     },
     "benchmarkId": "te-015-patch-settle-cell",
     "pass": true,
@@ -19,7 +21,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.79",
+        "chrome": "157.0.8103.80",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -27,5 +29,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T12:47:43.024Z"
+    "date": "2026-11-20T07:39:23.171Z"
 }

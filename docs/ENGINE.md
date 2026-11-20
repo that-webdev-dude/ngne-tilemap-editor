@@ -77,9 +77,13 @@ Editable texture rules (`createTexture` / `updateTexture`):
  grid, selection, stamp preview, markers, collision outlines, terrain hints, handles
 ```
 
-- **Camera:** the editor does not use NGNE's camera zoom. It keeps the camera at zoom 1 and
-  scales quad positions and sizes into device pixels, `pixelSnap = false`, as the sprite editor
-  does. Overlay and hit-testing use the same transform.
+- **Camera:** every tier emits its quads in map pixels, and NGNE's camera carries the view: its
+  position is the map pixel at the canvas's top-left corner, its zoom the device pixels per map
+  pixel (view zoom × device pixel ratio), both set with `cut` so a frame draws them without
+  interpolation, and `pixelSnap = false`. A map point lands at `(point − camera) × zoom` device
+  pixels; the overlay, hit-testing and sprite clips (device pixels) use the same mapping.
+  Culling stays in the editor, as NGNE does none: the visible area is the canvas size divided
+  by the zoom.
 - **Live tier** (≤ 65,536 non-empty visible cells across visible layers, from S1): each
   visible cell becomes one sprite, with flips as negative size and quarter turns as
   rotation. Emission is layer by layer, grouped by tileset inside a layer, one depth per
@@ -163,22 +167,24 @@ feature wrote it).
 
 | Metric | Budget | Measured |
 | --- | --- | --- |
-| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | DPR 1: 9.0 / 9.1 ms; DPR 1.25: 9.3 / 9.4 ms (median 8.4 / 8.6 ms at DPR 1, 8.7 / 8.8 ms at DPR 1.25) |
-| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | DPR 1 and 1.25: 0% / 0% (0 / 0 frames of 519–542) |
+| Pan at the live-tier threshold, 1920×1080 at DPR 1 and 1.25: animation-frame callback start → submit, p95 | ≤ 10 ms | DPR 1: 8.8 / 8.8 ms; DPR 1.25: 9.0 / 8.8 ms (median 8.1 / 8.2 ms at DPR 1, 8.4 / 8.3 ms at DPR 1.25) |
+| Dropped frames (interval > 25 ms) over a 5 s scripted pan | ≤ 1% | DPR 1 and 1.25: 0% / 0% (0 / 0 frames of 543–557) |
 | Paint: pointer event → frame containing it submitted, p95 | ≤ 33 ms | 9.3 / 9.8 ms (median 8.1 / 7.9 ms, max 15.5 / 11.2 ms) |
-| Paint at overview: painted cells visible | next frame | the frame after the command (live quads); command → that frame submitted p95 14.7 / 16.7 ms (16×16 stamp: 15.6 / 17.1 ms) |
-| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 30.9 / 35.2 ms (16×16 stamp: 32.9 / 33.6 ms) |
+| Paint at overview: painted cells visible | next frame | the frame after the command (live quads); command → that frame submitted p95 15.0 / 15.2 ms (16×16 stamp: 15.7 / 15.9 ms) |
+| Overview chunk patch settled after a paint, p95 | ≤ 100 ms | 32.0 / 30.5 ms (16×16 stamp: 33.0 / 32.0 ms) |
 | Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | 32 / 32 MB (T = 8, 128 chunks) |
-| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 302 / 347 ms; longest build slice 3.9 / 4.2 ms; the live-tier frame drawn meanwhile 111 / 123 ms (§4) |
-| Initial overview build after a map opens (background) | no task > 16 ms | 0.40 / 0.42 s total, longest task 20.9 / 19.0 ms, **over budget** (build slices ≤ 6.4 / 7.9 ms) |
+| Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 298 / 313 ms; longest build slice 3.7 / 3.7 ms; the live-tier frame drawn meanwhile 112 / 108 ms (§4) |
+| Initial overview build after a map opens (background) | no task > 16 ms | 0.39 / 0.40 s total, longest task 20.1 / 18.0 ms, **over budget** (build slices ≤ 7.3 / 7.5 ms) |
 | Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 86.4 / 83.2 ms (median 80.2 / 80.2 ms); 100% view 27.8 / 24.2 ms (median 23.8 / 21.7 ms) |
 | GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 2 / 2 (p95 2 / 2); overview pan 2 / 2 (p95 1 / 1); paint 2 / 2 (p95 2 / 2); last submit → GPU idle 2.4–7.1 ms |
 | Idle editor: frames submitted per second | 0 | 0 / 0 (live tier at 100% and chunk tier fitted; pointer outside the viewport and resting on the canvas) |
 | Cold load to interactive (production build, local) | ≤ 2 s | 260 / 940 ms (median 236 / 926 ms) |
 
-All rows: 2026-11-19, `@ngne/core` 0.4.0, Chrome 157.0.8103.79, i7-12650H, Balanced power plan with the Best
-performance power mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless
-the row says otherwise; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
+All rows: `@ngne/core` 0.4.0, i7-12650H, Balanced power plan with the Best performance power
+mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless the row says
+otherwise; the pan, dropped-frame and chunk-tier rows (paint at overview, patch, memory, rebuild,
+initial build) on 2026-11-20 with Chrome 157.0.8103.80, the others on 2026-11-19 with Chrome
+157.0.8103.79; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
 and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
 `tests/perf/te-064-record-all.ts`.
 
@@ -274,13 +280,13 @@ written "surface" below) and drawing with it on a WebGPU canvas
 
 | Gap | Workaround | Where | Cost (measured) | Status with 0.4.0 |
 | --- | --- | --- | --- | --- |
-| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 9.0 / 9.1 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 302 / 347 ms rebuild after a layer change, a 0.40 / 0.42 s initial build | Still applicable: 0.4.0 changes no step of a tilemap frame's preparation (ngne#57 and ngne#58 are open). `te-011-emit` and `te-013-pan` |
+| CPU cost per quad; sort fast path only for 32,768–262,144 quads | Two-tier viewport (§4) | editor | ~0.12 µs of main-thread time per quad (S1), so the live tier stops at 65,536 visible cells: its pan takes 8.8 / 8.8 ms p95 per frame at ~66,600 quads, against a 10 ms budget. A zoomed-out reference map (~524,000 quads) needs the chunk tier: 32 / 32 MB of GPU memory (as much again on the CPU), a 298 / 313 ms rebuild after a layer change, a 0.39 / 0.40 s initial build | Still applicable: 0.4.0 changes no step of a tilemap frame's preparation (ngne#57 and ngne#58 are open). `te-011-emit` and `te-013-pan` |
 | Batching joins only consecutive quads with the same texture | Emit layer by layer, grouped by tileset | editor, runtime | Not measured ungrouped. Grouped, the reference map draws in 17 draw calls (4,664 and 66,992 sprites; runtime p95 1.1 / 1.2 ms and 10.6 / 10.4 ms) | Still applicable; a sprite clip also splits a draw. GPU: "batching still joins only consecutive quads of the same texture" |
-| No camera zoom | Scale quad positions and sizes; runtime takes a render-scale option | editor, runtime | Not measured: the scaling is part of the quad emission above | Resolved: `Camera.zoom`; the workaround is kept. GPU: "camera zoom 2 draws as the editor's scaling of positions and sizes does" |
+| No camera zoom | Runtime takes a render-scale option and scales quad positions and sizes | runtime | Not measured: the scaling is part of the runtime's quad emission | Resolved: `Camera.zoom`. The viewport uses it (§4); the runtime's render-scale option is kept. GPU: "camera zoom 2 draws as the editor's scaling of positions and sizes does" |
 | Nearest/clamp sampler only (no linear, no repeat) | Chunk tier for overview; runtime image-layer repeat as a quad grid; runtime seam-free only at integer scales | editor, runtime | The chunk tier of the first row; runtime repeat quads not measured | Partly resolved: `TextureSampling` per texture. The viewport draws a repeated image layer as one quad with repeat addressing (§4). Repeat tiles a whole texture, not an atlas rectangle; linear filtering bleeds across an atlas rectangle's edge and has no mipmaps, so the chunk tier and the integer-scale limit stay. The runtime's quad grid is kept. GPU: "repeat addressing tiles a whole texture; the default stays clamp", "linear filtering blends texels, and bleeds across an atlas sub-rectangle's edge" |
 | Source-over blending only; multiplicative tint | Opacity via alpha; tint Later; blend modes Out | editor, runtime | None in time; features left out (tint, blend modes) | Still applicable. Surface: "Sprite has no blend mode and no additive tint: colour and alpha only" |
-| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 30.9 / 35.2 ms p95 after a paint (32.9 / 33.6 ms for a 16 × 16 stamp); the composite is part of the 302 / 347 ms rebuild | Still applicable. Surface: "WebGPURenderer has no texture readback and does not expose its GPU device" |
-| The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 20.9 / 19.0 ms against 16 ms (§6; the build's own slices ≤ 6.4 / 7.9 ms). With canvas uploads on 0.3.0 the same machine measured 30.0–37.5 / 37.1–48.6 ms on 2026-11-15 (three runs each) | Still applicable: with 0.4.0 the task is still over 16 ms on the reference hardware. `te-015-chunk` |
+| No texture readback | CPU compositor in `core/` for chunks, thumbnails and test references | editor | Overview chunk patch settled 32.0 / 30.5 ms p95 after a paint (33.0 / 32.0 ms for a 16 × 16 stamp); the composite is part of the 298 / 313 ms rebuild | Still applicable. Surface: "WebGPURenderer has no texture readback and does not expose its GPU device" |
+| The initial overview build still has a main-thread task over 16 ms (§6). Chunk uploads pass raw pixels and no longer read a canvas back; the cause of the remaining task is not identified | None yet: the initial overview build misses its 16 ms task budget; later updates stay within it | editor | Longest task of the initial overview build 20.1 / 18.0 ms against 16 ms (§6; the build's own slices ≤ 7.3 / 7.5 ms). With canvas uploads on 0.3.0 the same machine measured 30.0–37.5 / 37.1–48.6 ms on 2026-11-15 (three runs each) | Still applicable: with 0.4.0 the task is still over 16 ms on the reference hardware. `te-015-chunk` |
 | Centre pixel snapping misplaces odd sizes | Editor: `pixelSnap = false`. Runtime: placement table for the 8 orientations with integer centre corrections; atlases padded to even rectangles, exported images to even sides | editor, runtime | Not measured: one extra transparent column or row per odd tile in the atlas | Resolved: `pixelSnap` rounds a quad's corner. The workarounds are kept; the runtime also supports engines before 0.4.0 (SPEC §11.4). GPU: "pixel snapping places odd-sized and flipped quads on whole pixels, texel for pixel" |
 | No line, ellipse or polygon primitives | Markers and collision shapes on the Canvas2D overlay (they ignore tile-layer order and opacity) | editor | Overlay redraw 0.2 / 0.2 ms with 2,000 markers; the pan with them takes 9.5 / 9.6 ms p95 (budget 10 ms) | Still applicable. Surface: "Frame has no line, ellipse or polygon primitive: sprites and rects only" |
 | No animation repeat count or direction | Tile animations loop; `once` atlas animations imported as looping | editor | None in time; `once` animations loop | Still applicable. Surface: "exports no tilemap or atlas schema, no tileset discovery and no sprite animation" |

@@ -26,8 +26,8 @@ import {
     LIVE_LIMIT,
 } from "./chunkPlan";
 import type { ChunkSetPlan, Reach } from "./chunkPlan";
-import type { Camera2D, DeviceSize } from "./geometry";
-import { intersect, layerShift, toDevice, visibleRect } from "./geometry";
+import type { Camera2D, DeviceSize, MapRect } from "./geometry";
+import { intersect, layerShift, visibleRect } from "./geometry";
 import { LAYER, drawUnderTiles, emitLiveImageLayer, emitLiveLayer } from "./liveTier";
 import type { LiveCounts, LiveInputs } from "./liveTier";
 
@@ -390,11 +390,7 @@ export class ChunkTier {
         const map = this.#map;
         if (map === null) return 0;
         let chunkQuads = 0;
-        const { size } = inputs;
-        const visible = visibleRect(camera, size);
-        const { scale } = camera;
-        const chunkWidth = CHUNK_SIZE * map.tileWidth;
-        const chunkHeight = CHUNK_SIZE * map.tileHeight;
+        const visible = visibleRect(camera, inputs.size);
         const drawn: DrawItem[] = [];
         let depth = 0;
         for (const item of this.#drawOrder(map, inputs.scene.highlight ?? null)) {
@@ -404,71 +400,108 @@ export class ChunkTier {
                 drawn.push(item);
                 continue;
             }
-            const { set } = item;
             drawn.push(item);
             depth += 1;
-            const shift = layerShift(map, camera, set.plan.placement);
+            const shift = layerShift(map, camera, item.set.plan.placement);
             const live: CellRect[] = [];
-            for (const chunk of set.chunks) {
-                if (chunk.live !== null) live.push(chunk.live);
-                if (!chunk.populated || !chunk.registered) continue;
-                const area = {
-                    x: chunk.cx * chunkWidth + shift.x,
-                    y: chunk.cy * chunkHeight + shift.y,
-                    width: chunkWidth,
-                    height: chunkHeight,
-                };
-                if (!intersect(area, visible)) continue;
-                const at = toDevice(camera, size, area.x, area.y);
-                const w = chunkWidth * scale;
-                const h = chunkHeight * scale;
-                frame.sprite({
-                    x: at.x + w / 2,
-                    y: at.y + h / 2,
-                    width: w,
-                    height: h,
-                    texture: chunk.id,
-                    u: 0,
-                    v: 0,
-                    uw: 1,
-                    vh: 1,
-                    layer: LAYER.tiles,
-                    depth,
-                });
-                chunkQuads += 1;
-            }
+            chunkQuads += this.#drawChunks(frame, map, item.set, { shift, visible, depth, live });
             depth += 1;
-            for (const cells of live) {
-                const area = {
-                    x: cells.x * map.tileWidth + shift.x,
-                    y: cells.y * map.tileHeight + shift.y,
-                    width: cells.width * map.tileWidth,
-                    height: cells.height * map.tileHeight,
-                };
-                const shown = intersect(area, visible);
-                if (!shown) continue;
-                const place = { layer: LAYER.tiles, depth };
-                drawUnderTiles(frame, inputs, camera, shown, counts, { ...place, workspace });
-                for (const below of drawn) {
-                    if (below.kind === "image") {
-                        emitLiveImageLayer(frame, inputs, camera, below.layer, shown, {
-                            depth,
-                            counts,
-                            clip: true,
-                        });
-                        continue;
-                    }
-                    for (const layer of below.set.layers) {
-                        emitLiveLayer(frame, inputs, camera, layer, shown, {
-                            depth,
-                            counts,
-                            clip: true,
-                        });
-                    }
-                }
-            }
+            const patch = { map, shift, visible, drawn, depth, workspace };
+            for (const cells of live) this.#drawPatch(frame, inputs, camera, counts, cells, patch);
         }
         return chunkQuads;
+    }
+
+    /**
+     * The quads of the populated, registered chunks of `set` that meet `at.visible`, at
+     * `at.depth`; collects the cells each chunk still draws as live quads into `at.live`.
+     * Returns the quads emitted.
+     */
+    #drawChunks(
+        frame: Frame,
+        map: ProjectMap,
+        set: ChunkSet,
+        at: { shift: { x: number; y: number }; visible: MapRect; depth: number; live: CellRect[] },
+    ): number {
+        const { shift, visible, depth, live } = at;
+        const chunkWidth = CHUNK_SIZE * map.tileWidth;
+        const chunkHeight = CHUNK_SIZE * map.tileHeight;
+        let quads = 0;
+        for (const chunk of set.chunks) {
+            if (chunk.live !== null) live.push(chunk.live);
+            if (!chunk.populated || !chunk.registered) continue;
+            const area = {
+                x: chunk.cx * chunkWidth + shift.x,
+                y: chunk.cy * chunkHeight + shift.y,
+                width: chunkWidth,
+                height: chunkHeight,
+            };
+            if (!intersect(area, visible)) continue;
+            frame.sprite({
+                x: area.x + chunkWidth / 2,
+                y: area.y + chunkHeight / 2,
+                width: chunkWidth,
+                height: chunkHeight,
+                texture: chunk.id,
+                u: 0,
+                v: 0,
+                uw: 1,
+                vh: 1,
+                layer: LAYER.tiles,
+                depth,
+            });
+            quads += 1;
+        }
+        return quads;
+    }
+
+    /**
+     * Over the visible part of `cells` (a set's cells its chunks do not show yet), at
+     * `patch.depth`: the checkerboard and background (`patch.workspace` outside the map), then
+     * every item drawn so far as live quads clipped to the patch.
+     */
+    #drawPatch(
+        frame: Frame,
+        inputs: LiveInputs,
+        camera: Camera2D,
+        counts: LiveCounts,
+        cells: CellRect,
+        patch: {
+            map: ProjectMap;
+            shift: { x: number; y: number };
+            visible: MapRect;
+            drawn: readonly DrawItem[];
+            depth: number;
+            workspace: number;
+        },
+    ): void {
+        const { map, shift, depth } = patch;
+        const area = {
+            x: cells.x * map.tileWidth + shift.x,
+            y: cells.y * map.tileHeight + shift.y,
+            width: cells.width * map.tileWidth,
+            height: cells.height * map.tileHeight,
+        };
+        const shown = intersect(area, patch.visible);
+        if (!shown) return;
+        const place = { layer: LAYER.tiles, depth };
+        drawUnderTiles(frame, inputs, camera, shown, counts, {
+            ...place,
+            workspace: patch.workspace,
+        });
+        for (const below of patch.drawn) {
+            if (below.kind === "image") {
+                emitLiveImageLayer(frame, inputs, camera, below.layer, shown, {
+                    depth,
+                    counts,
+                    clip: true,
+                });
+                continue;
+            }
+            for (const layer of below.set.layers) {
+                emitLiveLayer(frame, inputs, camera, layer, shown, { depth, counts, clip: true });
+            }
+        }
     }
 
     /**
@@ -636,55 +669,57 @@ export class ChunkTier {
      * tier again (ENGINE §4, resolution). A chunk that shows nothing any more is released.
      */
     #patch(set: ChunkSet, rect: CellRect): void {
-        const map = this.#map!;
         const area = grow(rect, this.#reach);
         const cx0 = Math.floor(area.x / CHUNK_SIZE);
         const cy0 = Math.floor(area.y / CHUNK_SIZE);
         const cx1 = Math.floor((area.x + area.width - 1) / CHUNK_SIZE);
         const cy1 = Math.floor((area.y + area.height - 1) / CHUNK_SIZE);
-        const texels = this.#texels;
         for (let cy = cy0; cy <= cy1; cy += 1) {
-            for (let cx = cx0; cx <= cx1; cx += 1) {
-                const cells = intersect(area, {
-                    x: cx * CHUNK_SIZE,
-                    y: cy * CHUNK_SIZE,
-                    width: CHUNK_SIZE,
-                    height: CHUNK_SIZE,
-                });
-                if (!cells) continue;
-                let chunk = this.#chunks.get(chunkTextureId(set.plan.key, cx, cy));
-                const shows = chunkShows(map, set.layers, this.#reach, cx, cy);
-                if (!chunk) {
-                    // A chunk that showed nothing: it gets a texture now, if it shows something.
-                    if (!shows) continue;
-                    if (chunkBytes(this.#chunks.size + 1, texels) > CHUNK_MEMORY_LIMIT) {
-                        // Past the budget: T is chosen anew, and the live tier draws while the
-                        // tier builds again.
-                        this.#signature = "";
-                        continue;
-                    }
-                    chunk = this.#chunk(set, cx, cy);
-                    set.chunks.push(chunk);
-                    chunk.dirty = this.#fullRect();
-                } else if (!shows) {
-                    this.#evict(chunk);
-                    continue;
-                }
-                chunk.failed = false;
-                chunk.failures = 0;
-                // A chunk not populated yet (its first composite may be in flight) is
-                // composited whole: only a whole composite populates it.
-                if (!chunk.populated) chunk.dirty = this.#fullRect();
-                chunk.dirty = union(chunk.dirty, {
-                    x: (cells.x - cx * CHUNK_SIZE) * texels,
-                    y: (cells.y - cy * CHUNK_SIZE) * texels,
-                    width: cells.width * texels,
-                    height: cells.height * texels,
-                });
-                chunk.live = union(chunk.live, cells);
-                this.#kick(chunk);
-            }
+            for (let cx = cx0; cx <= cx1; cx += 1) this.#patchChunk(set, area, cx, cy);
         }
+    }
+
+    /** `#patch` for chunk `(cx, cy)` of `set`, which `area` (cells, grown by the reach) may meet. */
+    #patchChunk(set: ChunkSet, area: CellRect, cx: number, cy: number): void {
+        const cells = intersect(area, {
+            x: cx * CHUNK_SIZE,
+            y: cy * CHUNK_SIZE,
+            width: CHUNK_SIZE,
+            height: CHUNK_SIZE,
+        });
+        if (!cells) return;
+        const texels = this.#texels;
+        let chunk = this.#chunks.get(chunkTextureId(set.plan.key, cx, cy));
+        const shows = chunkShows(this.#map!, set.layers, this.#reach, cx, cy);
+        if (!chunk) {
+            // A chunk that showed nothing: it gets a texture now, if it shows something.
+            if (!shows) return;
+            if (chunkBytes(this.#chunks.size + 1, texels) > CHUNK_MEMORY_LIMIT) {
+                // Past the budget: T is chosen anew, and the live tier draws while the tier
+                // builds again.
+                this.#signature = "";
+                return;
+            }
+            chunk = this.#chunk(set, cx, cy);
+            set.chunks.push(chunk);
+            chunk.dirty = this.#fullRect();
+        } else if (!shows) {
+            this.#evict(chunk);
+            return;
+        }
+        chunk.failed = false;
+        chunk.failures = 0;
+        // A chunk not populated yet (its first composite may be in flight) is composited whole:
+        // only a whole composite populates it.
+        if (!chunk.populated) chunk.dirty = this.#fullRect();
+        chunk.dirty = union(chunk.dirty, {
+            x: (cells.x - cx * CHUNK_SIZE) * texels,
+            y: (cells.y - cy * CHUNK_SIZE) * texels,
+            width: cells.width * texels,
+            height: cells.height * texels,
+        });
+        chunk.live = union(chunk.live, cells);
+        this.#kick(chunk);
     }
 
     /**
@@ -865,7 +900,7 @@ export class ChunkTier {
         chunk.failures += 1;
         if (chunk.failures >= MAX_FAILURES) {
             chunk.failed = true;
-            if (chunk.live === null) chunk.live = this.#cellsOf(chunk);
+            chunk.live ??= this.#cellsOf(chunk);
             this.#hooks.onError(error);
             // The build does not wait for it: its cells are drawn as live quads.
             this.#endBuildIfDone();

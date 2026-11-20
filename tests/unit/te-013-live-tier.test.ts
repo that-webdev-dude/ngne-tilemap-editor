@@ -1,4 +1,5 @@
-import type { Camera, Frame } from "@ngne/core";
+import { Camera } from "@ngne/core";
+import type { Frame } from "@ngne/core";
 import { describe, expect, it } from "vitest";
 import { cellValue } from "../../src/core/cells";
 import { createTileLayer, createGroupLayer } from "../../src/core/model";
@@ -14,11 +15,14 @@ import {
 import type { ViewportScene } from "../../src/engine/viewport/liveTier";
 import { CHECKER_TEXTURE_ID, tilesetTextureId } from "../../src/engine/viewport/textures";
 import type { ReadyTileset } from "../../src/engine/viewport/textures";
+import { onScreen } from "../support/ngneScreen";
+import type { CameraView } from "../support/ngneScreen";
 import { SCENE, createViewportSceneProject } from "../support/viewportScene";
 
 // TE-013: the frame the live tier builds (ENGINE §4): layer order, depth, alpha, shifts,
-// culling and the checkerboard. A recording frame stands in for NGNE's; what NGNE draws from it
-// is the E2E readback's.
+// culling and the checkerboard. A recording frame stands in for NGNE's and places each quad in
+// device pixels under the scene's camera as NGNE does (`ngneScreen`); what NGNE draws from it is
+// the E2E readback's.
 
 interface Recorded {
     x: number;
@@ -50,19 +54,21 @@ class RecordingFrame {
     scenes = 0;
     sprites: Recorded[] = [];
     rects: RecordedRect[] = [];
+    #view: CameraView = { x: 0, y: 0, zoom: 1 };
     reset() {
         this.resets += 1;
         this.sprites = [];
         this.rects = [];
     }
-    scene() {
+    scene(camera: Camera, alpha: number) {
         this.scenes += 1;
+        this.#view = camera.view(alpha);
     }
     sprite(s: Recorded) {
-        this.sprites.push({ ...s });
+        this.sprites.push(onScreen(s, this.#view));
     }
     rect(x: number, y: number, width: number, height: number, color: number, alpha = 1, layer = 0) {
-        this.rects.push({ x, y, width, height, color, alpha, layer });
+        this.rects.push(onScreen({ x, y, width, height, color, alpha, layer }, this.#view));
     }
 }
 
@@ -105,7 +111,7 @@ function build(
     const counts = buildLiveFrame(frame as unknown as Frame, {
         scene,
         size,
-        camera: {} as Camera,
+        camera: new Camera(),
         emitter,
         checkerReady,
     });
@@ -182,7 +188,7 @@ describe("layers", () => {
         buildLiveFrame(frame as unknown as Frame, {
             scene: set.scene,
             size: { width: 400, height: 240 },
-            camera: {} as Camera,
+            camera: new Camera(),
             emitter: new EmitterCache().emitter(ready),
             checkerReady: checkerSpec(CHECKER),
         });

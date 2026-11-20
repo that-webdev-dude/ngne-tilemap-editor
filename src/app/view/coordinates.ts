@@ -1,5 +1,5 @@
 import type { MapView } from "../../core/model";
-import { toDevice } from "../../engine/viewport/geometry";
+import { toDevice, toMap } from "../../engine/viewport/geometry";
 import type { DeviceSize } from "../../engine/viewport/geometry";
 
 // Coordinate mapping of the viewport (TE-014), shared by the tools and the overlay. Pure: no
@@ -12,8 +12,8 @@ import type { DeviceSize } from "../../engine/viewport/geometry";
 //   cell    whole cells: `floor(map / tile size)`, also outside the map
 //
 // The transform is the viewport's own (`engine/viewport/geometry`): the view centre in the
-// middle of the canvas and `zoom × dpr` device pixels per map pixel, so a position mapped here
-// lands where NGNE draws it.
+// middle of the canvas and `zoom × dpr` device pixels per map pixel, as NGNE's camera maps a
+// map position, `(point − camera) × zoom`, so a position mapped here lands where NGNE draws it.
 
 export interface Point {
     x: number;
@@ -54,9 +54,9 @@ function settle(value: number): number {
 }
 
 /**
- * A map position within float noise of a whole map pixel is that pixel: `centre + (x − half) /
- * scale` lands a few ulps below a pixel edge that the view puts exactly on a device pixel, and
- * `floor` would take the pixel before it.
+ * A map position within float noise of a whole map pixel is that pixel: `origin + x / scale`
+ * lands a few ulps below a pixel edge that the view puts exactly on a device pixel, and `floor`
+ * would take the pixel before it.
  */
 function settleMap(value: number): number {
     const whole = Math.round(value);
@@ -117,10 +117,10 @@ export function createViewMapping(frame: ViewFrame): ViewMapping {
         y: (deviceTop + y) / dpr,
     });
     const mapToDevice = (x: number, y: number): Point => toDevice(camera, size, x, y);
-    const deviceToMap = (x: number, y: number): Point => ({
-        x: settleMap(centreX + (x - size.width / 2) / scale),
-        y: settleMap(centreY + (y - size.height / 2) / scale),
-    });
+    const deviceToMap = (x: number, y: number): Point => {
+        const at = toMap(camera, size, x, y);
+        return { x: settleMap(at.x), y: settleMap(at.y) };
+    };
     const deviceToCell = (x: number, y: number): Point => {
         const at = deviceToMap(x, y);
         // `+ 0`: never a negative zero.

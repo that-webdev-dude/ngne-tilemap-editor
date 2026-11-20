@@ -1,6 +1,7 @@
-// The viewport's camera (ENGINE §4): NGNE has no camera zoom, so quad positions and sizes are
-// scaled into device pixels here and the NGNE camera stays at the origin. Pure arithmetic: no
-// DOM and no NGNE.
+// The viewport's camera (ENGINE §4): quads are placed in map pixels and NGNE's camera carries the
+// view, its top-left at `viewOrigin` and the device pixels per map pixel as its zoom, so a map
+// point lands at `(point − origin) × scale` device pixels. The overlay, hit-testing and sprite
+// clips use the same mapping. Pure arithmetic: no DOM and no NGNE.
 
 /** A size in device pixels. */
 export interface DeviceSize {
@@ -44,13 +45,22 @@ export function deviceScale(zoom: number, dpr: number): number {
 
 /** The map pixels the canvas shows: the view centre in the middle of the canvas. */
 export function visibleRect(camera: Camera2D, size: DeviceSize): MapRect {
-    const width = size.width / camera.scale;
-    const height = size.height / camera.scale;
+    const origin = viewOrigin(camera, size);
     return {
-        x: camera.centreX - width / 2,
-        y: camera.centreY - height / 2,
-        width,
-        height,
+        ...origin,
+        width: size.width / camera.scale,
+        height: size.height / camera.scale,
+    };
+}
+
+/**
+ * The map pixel at the canvas's top-left corner: the position of NGNE's camera, whose zoom is
+ * `camera.scale`.
+ */
+export function viewOrigin(camera: Camera2D, size: DeviceSize): { x: number; y: number } {
+    return {
+        x: camera.centreX - size.width / camera.scale / 2,
+        y: camera.centreY - size.height / camera.scale / 2,
     };
 }
 
@@ -75,17 +85,26 @@ export function layerShift(
     };
 }
 
-/** A map pixel position on the canvas, in device pixels. */
+/** A map pixel position on the canvas, in device pixels, as NGNE's camera maps it. */
 export function toDevice(
     camera: Camera2D,
     size: DeviceSize,
     x: number,
     y: number,
 ): { x: number; y: number } {
-    return {
-        x: (x - camera.centreX) * camera.scale + size.width / 2,
-        y: (y - camera.centreY) * camera.scale + size.height / 2,
-    };
+    const origin = viewOrigin(camera, size);
+    return { x: (x - origin.x) * camera.scale, y: (y - origin.y) * camera.scale };
+}
+
+/** The map pixel position of a device pixel position: the inverse of `toDevice`. */
+export function toMap(
+    camera: Camera2D,
+    size: DeviceSize,
+    x: number,
+    y: number,
+): { x: number; y: number } {
+    const origin = viewOrigin(camera, size);
+    return { x: origin.x + x / camera.scale, y: origin.y + y / camera.scale };
 }
 
 /**

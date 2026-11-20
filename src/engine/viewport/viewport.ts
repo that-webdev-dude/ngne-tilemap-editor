@@ -125,8 +125,8 @@ export class Viewport {
         this.#options = options;
         this.#size = options.size;
         this.#bitmap = options.bitmap ?? bitmapFromPixels;
-        // Quads are placed in device pixels from fractional positions; snapping would round
-        // their centres (ENGINE §4).
+        // The camera's zoom puts quads on fractional device pixels; snapping would round their
+        // corners (ENGINE §4).
         this.#camera.pixelSnap = false;
         const target: TextureTarget = {
             texture: (id, source, signal, sampling) =>
