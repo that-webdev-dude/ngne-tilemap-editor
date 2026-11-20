@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.1.0 – 2026-11-20
 
 - Uses `@ngne/core` 0.4.0. The editor draws maps as before.
 - The viewport keeps at most 2 frames waiting on the GPU, where a pan at the live-tier threshold
@@ -11,6 +11,27 @@
   as `ngne` 0.1.0 and `@ngne/core` 0.2.2 and 0.3.0. In a game on `@ngne/core` 0.4.0, maps
   drawn at a whole-number render scale look the same as before; at other scales a tile edge can
   land up to one pixel away from where earlier engines drew it.
+- Files the editor writes name `ngne-tilemap-editor 1.1.0` as their generator, so the first
+  export after the update rewrites the JSON files and `ngne-tilemap.ts` of an export folder once.
+
+### Known limitations
+
+- Desktop Chrome or Edge with WebGPU only; other browsers are unverified. The viewport is not
+  operable by screen reader.
+- The initial overview build after a map opens has one main-thread task of 20.1 / 18.0 ms
+  (Intel UHD / RTX 4060) against its 16 ms budget, accepted by the owner for 1.1.0
+  ([ENGINE.md §6](docs/ENGINE.md#6-budgets-and-spikes), [SPEC.md §14](docs/SPEC.md#14-performance));
+  its cause is not identified.
+- Paste of a full 256 × 256 layer runs as one main-thread task of 19.0–21.0 ms; no budget
+  covers it.
+- Markers and collision shapes are drawn above all tile layers, ignoring layer order and opacity
+  (`@ngne/core` 0.4.0 has no line or polygon primitives).
+- Maps beyond 65,536 cells per layer, 16 layers or 2,000 markers open with a warning and are not
+  held to the budgets. Orthogonal maps only.
+- Not in 1.1.0: layer tint and blend modes, terrain and tile probabilities, automapping, tile
+  objects, TMX import and TMJ export, map PNG export, marker rotation.
+- The engine gaps the editor works around are listed with their measured costs in
+  [ENGINE.md §7](docs/ENGINE.md#7-engine-gaps).
 
 ## 1.0.1 – 2026-11-16
 

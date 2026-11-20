@@ -144,7 +144,7 @@ describe("byte stability", () => {
         });
         expect(strFromU8(files["manifest.json"]!)).toBe(
             '{\n    "format": "ngne-tilemap-project",\n    "version": 1,\n' +
-                '    "generator": "ngne-tilemap-editor 1.0.1"\n}\n',
+                '    "generator": "ngne-tilemap-editor 1.1.0"\n}\n',
         );
         const dungeon = strFromU8(files["maps/map-dungeon.json"]!);
         expect(dungeon.endsWith("}\n")).toBe(true);

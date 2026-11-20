@@ -1073,9 +1073,9 @@ The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes i
 benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
 One ENGINE §6 row is over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060): the initial
 overview build after a map opens (longest task 20.1 / 18.0 ms, against 16 ms). The owner
-accepted it for v1.0.1 (2026-11-15), measured on 0.3.1 at 28.6 / 23.2 ms, and for the next
-release (2026-11-19). Feature budgets ENGINE does not list, measured the same way on the
-reference map:
+accepted it for v1.0.1 (2026-11-15), measured on 0.3.1 at 28.6 / 23.2 ms, and for v1.1.0
+(2026-11-19), measured on 0.4.0 at 20.9 / 19.0 ms. Feature budgets ENGINE does not list,
+measured the same way on the reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |
 | ------ | ------ | ------------------------------- |

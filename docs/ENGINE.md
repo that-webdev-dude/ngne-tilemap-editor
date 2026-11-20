@@ -202,7 +202,7 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   an opacity change at overview, where the editor draws the change in the live tier until the
   chunks are composited again (§4). Owner: the initial build's longest task (§7) is accepted
   for v1.0.0 (2026-11-12), at 28.6 / 23.2 ms on 0.3.1 for v1.0.1 (2026-11-15) and, at
-  20.9 / 19.0 ms on 0.4.0, for the next release (2026-11-19).
+  20.9 / 19.0 ms on 0.4.0, for v1.1.0 (2026-11-19).
 - Tab switch: `te-031-tab-switch-{fit,100}`. Two open tabs each hold the reference map; a switch
   is timed from the call that shows the other map to the return of the first frame submitted
   after it, 40 switches 1 s apart after 4 warm-up switches. At the fitted view the first frame is

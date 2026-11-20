@@ -45,7 +45,7 @@ rows.
 | `LICENSE` | `LICENSE` | verbatim | `ea5c91d` | `4d21bde6e4b9d15aafd5e507b3222205aa1ed73c3546650c524a3bf75685305a` | |
 | `eslint.config.js` | `eslint.config.js` | adapt | `ea5c91d` | | `src/core/sprite` imports only itself, `fflate` and `fast-png`; only `src/core` imports `src/core/sprite` (DESIGN §3.1) |
 | `index.html` | `index.html` | adapt | `ea5c91d` | | Title and description (SUITE §1); favicon `icons/icon-192.png` (TE-066) |
-| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `1.0.1` (TE-067), description; dependencies of SUITE §5 (`@ngne/core` 0.4.0, no `gifenc`); `drift` script |
+| `package.json` | `package.json` | adapt | `ea5c91d` | | Name, version `1.1.0` (TE-067), description; dependencies of SUITE §5 (`@ngne/core` 0.4.0, no `gifenc`); `drift` script |
 | `playwright.config.ts` | `playwright.config.ts` | verbatim | `ea5c91d` | `c54d185e32b18fb3e05cee6fd7c72f924ec93eaaf51d5f36ceaf32d84b03b7a6` | |
 | `scripts/check-links.mjs` | `scripts/check-links.mjs` | adapt | `ea5c91d` | | Leaves out the vendored engine packages of the runtime compile matrix (`tests/runtime-compat/*/vendor/`); reads the tracked paths from the git index file (versions 2–4) instead of running `git ls-files`; HTML tags and links in headings, closing hashes, code fences, reference definitions and link labels read by linear scans instead of backtracking regular expressions, with the same results; `check` and `destination` split into helpers |
 | `scripts/icons.ts` | `scripts/icons.ts` | adapt | `ea5c91d` | | The mark is a 2 × 2 tile grid (its lines, the top-left tile painted) instead of "N" (SUITE §1); the drift test is `te-066-pwa.test.ts` |
@@ -597,6 +597,11 @@ Earlier rewrites without a recorded separation:
   1.0.1 release notes, version strings and records). Tiled's editor source not read; the
   `docs/SPEC.md` part of the diff not checked (a file of "Tiled source named or read"); no build
   run. No blocking finding open.
+- 2026-11-20: release delta check `72ab3b1..b9478f0` before v1.1.0, with the release's version
+  strings: no new upstream and no new derivation; one dependency change, `@ngne/core` 0.3.1 →
+  0.4.0 (the owner's own, MIT, no dependencies of its own, so no notices entry); the notices
+  file unchanged; `npm run check` passed. Audited revision: `4e0fdf9`, with the delta to
+  `b9478f0` checked.
 
 ### Findings
 

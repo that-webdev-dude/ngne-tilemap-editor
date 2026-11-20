@@ -10,11 +10,11 @@ import { generateRuntime } from "../../src/core/runtime/generate";
 import { tilemapFor } from "../../src/core/tilemap";
 import { meadowProject } from "./te-049-support";
 
-// TE-067: release 1.0.1. The package's version is 1.0.1, and every file the editor writes names
-// `ngne-tilemap-editor 1.0.1` as its generator (SUITE §1): the project file's manifest, each
+// TE-067: release 1.1.0. The package's version is 1.1.0, and every file the editor writes names
+// `ngne-tilemap-editor 1.1.0` as its generator (SUITE §1): the project file's manifest, each
 // exported tilemap, atlas and folder marker, and the header of the generated runtime.
 
-const RELEASE = "ngne-tilemap-editor 1.0.1";
+const RELEASE = "ngne-tilemap-editor 1.1.0";
 
 function packageJson(): { name: string; version: string } {
     return JSON.parse(readFileSync(new URL("../../package.json", import.meta.url), "utf8"));
@@ -24,14 +24,14 @@ function json(bytes: Uint8Array): { generator?: unknown } {
     return JSON.parse(new TextDecoder().decode(bytes));
 }
 
-describe("release 1.0.1 generator strings", () => {
-    it("package.json and its lockfile are at version 1.0.1", () => {
-        expect(packageJson()).toMatchObject({ name: "ngne-tilemap-editor", version: "1.0.1" });
+describe("release 1.1.0 generator strings", () => {
+    it("package.json and its lockfile are at version 1.1.0", () => {
+        expect(packageJson()).toMatchObject({ name: "ngne-tilemap-editor", version: "1.1.0" });
         const lock = JSON.parse(
             readFileSync(new URL("../../package-lock.json", import.meta.url), "utf8"),
         );
-        expect(lock.version).toBe("1.0.1");
-        expect(lock.packages[""].version).toBe("1.0.1");
+        expect(lock.version).toBe("1.1.0");
+        expect(lock.packages[""].version).toBe("1.1.0");
     });
 
     it("the generator follows package.json", () => {
