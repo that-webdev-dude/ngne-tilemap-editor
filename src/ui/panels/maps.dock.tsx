@@ -1,4 +1,4 @@
-import type { DockPanel } from "../dock/registry";
+import type { DockPanel } from "../registryTypes";
 import { MapsPanel, NewMapButton } from "../maps/MapsPanel";
 
 /** The maps of the project (DESIGN §8.1; TE-032). */

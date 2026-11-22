@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import { chordKey, chordModifiers } from "../../src/app/commands/chord";
+import { chordKey, chordModifiers } from "@ngne/editor-ui/commands";
 import { region } from "./te-003-support";
 import { CHROME_RESERVED_CHORDS, readDesignKeyTable } from "./te-007-design-keys";
 import type { DesignBinding } from "./te-007-design-keys";

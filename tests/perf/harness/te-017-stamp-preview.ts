@@ -1,7 +1,6 @@
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../../src/app/testing/testHooks";
-import { appCommands } from "../../../src/app/commands/appCommands";
-import { overlayLayers } from "../../../src/app/overlay/overlayLayers";
+import { appCommands, overlayLayers } from "../../../src/app/editorUi";
 import { toolState } from "../../../src/app/tools/activeTool";
 import { currentStamp } from "../../../src/app/tools/stamp/currentStamp";
 import { currentViewMapping } from "../../../src/app/view/viewNavigation";

@@ -1,5 +1,5 @@
 import { fileWorkflows } from "../file/workflows";
-import { notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { preferences } from "../preferences/preferences";
 import { sessionStore } from "../state/session";
 import { mapTabsStore } from "../tabs/tabs";

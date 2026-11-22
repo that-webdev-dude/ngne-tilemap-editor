@@ -256,8 +256,8 @@ test("reopening a project restores its tabs, active map, views and active layers
     const shown = () =>
         page.evaluate(() => {
             const { session } = window.__ngneTest!.session.getState();
-            const tabs = [...document.querySelectorAll("[data-map-tab]")].map(
-                (tab) => (tab as HTMLElement).dataset.mapTab,
+            const tabs = [...document.querySelectorAll("[data-tab]")].map(
+                (tab) => (tab as HTMLElement).dataset.tab,
             );
             return {
                 tabs,

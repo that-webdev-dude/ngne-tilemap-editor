@@ -1,6 +1,6 @@
 import { MAX_MAPS } from "../../core/model";
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { sessionStore } from "../state/session";
 import { editMapProperties, newMapFromDialog, resizeMapFromDialog } from "./mapDialogs";
 import { activeMap, canMoveMap, deleteMap, duplicateMap, mapsIdle, moveMap } from "./maps";

@@ -1,5 +1,5 @@
 import type { AnimationEditorRequest } from "../../../app/tilesets/animation/animationEditor";
-import { commandDialog } from "../../dialogs/registry";
+import { commandDialog } from "@ngne/editor-ui/messages";
 import { AnimationEditor } from "./AnimationEditor";
 
 /** The Animation Editor (TE-030), shown by the dialog host. */

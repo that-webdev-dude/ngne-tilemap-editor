@@ -1,5 +1,5 @@
-import type { Hsv } from "../../core/color";
-import { hsvToRgb, packRgba } from "../../core/color";
+import type { Hsv } from "@ngne/editor-ui/colour";
+import { hsvToRgb, packRgba } from "@ngne/editor-ui/colour";
 import { alphaAfterKey, fractionAlong, hueAfterKey, svAfterKey } from "./pickerMath";
 
 // What the controls of the colour panel (DESIGN §5.3) do to the colour it edits, for a pointer

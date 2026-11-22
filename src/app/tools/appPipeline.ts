@@ -1,5 +1,5 @@
 import { setKeyContext } from "../keymap/contextState";
-import { notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../state/session";
 import { statusStore } from "../state/status";
 import type { ViewMapping } from "../view/coordinates";

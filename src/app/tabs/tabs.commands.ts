@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { sessionStore } from "../state/session";
 import { activateMap, closeMapTab, mapTabsStore, neighbourTab, tabsAvailable } from "./tabs";
 

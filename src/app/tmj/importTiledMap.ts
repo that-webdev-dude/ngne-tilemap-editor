@@ -1,6 +1,6 @@
-import { commandDialogs } from "../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { fileWorkflows } from "../file/workflows";
-import { notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import type { PickedFile } from "../tilesets/import/importSources";
 import { runTilesetWorkflow, tilesetWorkflowBusy } from "../tilesets/tilesetWorkflow";
 import { backgroundWorker } from "../worker/client";

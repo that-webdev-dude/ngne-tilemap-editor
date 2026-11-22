@@ -4,7 +4,7 @@ import type { History, Touched } from "../../core/history";
 import { randomId } from "../../core/model";
 import type { PixelBuffer, Project } from "../../core/model";
 import { PROJECT_VERSION, projectToWire, wireBuffers } from "../../core/project";
-import type { Notices } from "../notices/notices";
+import type { Notices } from "@ngne/editor-ui/messages";
 import type { PreferenceStore } from "../preferences/preferences";
 import type { SessionState } from "../state/session";
 import type { SnapshotBackend } from "./backend";

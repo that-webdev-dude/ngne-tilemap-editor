@@ -3,9 +3,9 @@ import type { NewProjectRequest, NewProjectValues } from "../../app/file/dialogs
 import type { NewMapValues } from "../../core/maps";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import { NewMapFields } from "../maps/NewMapDialog";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import "../primitives/field.css";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+
 import "../maps/mapDialogs.css";
 import "./file.css";
 

@@ -4,8 +4,8 @@ import { pickImageFile } from "../../app/images/pickImageFile";
 import type { PickedFile } from "../../app/tilesets/import/importSources";
 import { choiceImageId } from "../../core/images";
 import type { ImageChoice } from "../../core/images";
-import { Button } from "../primitives/Button";
-import { Select } from "../primitives/Select";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Select } from "@ngne/editor-ui/primitives";
 import "./images.css";
 
 // The image of an image layer (SPEC §7.2): one of the project's images, or a PNG picked with

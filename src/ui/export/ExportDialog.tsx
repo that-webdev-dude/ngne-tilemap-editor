@@ -6,11 +6,11 @@ import { useSession } from "../../app/state/session";
 import { EXPORT_FILE_GROUPS, exportFileGroup } from "../../core/export";
 import type { ExportFileGroup, ExportPreview } from "../../core/export";
 import { MAX_SLUG_LENGTH } from "../../core/model";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { Toggle } from "../primitives/Toggle";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { Toggle } from "@ngne/editor-ui/primitives";
 import { AtlasThumbnail } from "./AtlasThumbnail";
-import "../primitives/field.css";
+
 import "./export.css";
 
 const GROUP_LABELS: Record<ExportFileGroup, string> = {

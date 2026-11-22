@@ -1,20 +1,19 @@
 import { describe, expect, it } from "vitest";
-import { createCommandRegistry } from "../../src/app/commands/registry";
-import type { CommandRegistry } from "../../src/app/commands/registry";
-import { KEY_CONTEXTS, MENU_BAR } from "../../src/app/commands/types";
-import type { CommandSpec, KeyContext } from "../../src/app/commands/types";
+import { createCommandRegistry } from "@ngne/editor-ui/commands";
+import type { CommandRegistry } from "@ngne/editor-ui/commands";
+import { KEY_CONTEXTS, MENU_BAR, PANEL_SELECTOR } from "../../src/app/commands/commandTypes";
+import type { CommandSpec, KeyContext } from "../../src/app/commands/commandTypes";
 import {
     isTextField,
     nativeKeysOf,
     OVERLAY_SELECTOR,
-    PANEL_SELECTOR,
     readKeyEnvironment,
     VIEWPORT_FOCUS_ATTRIBUTE,
-} from "../../src/app/keymap/environment";
-import type { FocusedElement, KeymapDocument } from "../../src/app/keymap/environment";
-import { installKeymap } from "../../src/app/keymap/install";
-import { applicableContexts, resolveKey } from "../../src/app/keymap/resolve";
-import type { KeyEnvironment } from "../../src/app/keymap/resolve";
+} from "@ngne/editor-ui/commands";
+import type { FocusedElement, KeymapDocument } from "@ngne/editor-ui/commands";
+import { installKeymap } from "@ngne/editor-ui/commands";
+import { applicableContexts, resolveKey } from "@ngne/editor-ui/commands";
+import type { KeyEnvironment } from "@ngne/editor-ui/commands";
 
 // TE-007: the keymap contexts of DESIGN §10.1, their resolution and the keyboard listener.
 // Adapted from the sprite editor's se-007-keymap.test.ts: `markers` and `panel` take the

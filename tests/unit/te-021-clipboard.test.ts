@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { clipboardContent, clipboardStore } from "../../src/app/clipboard/clipboard";
-import { appCommands } from "../../src/app/commands/appCommands";
+import { appCommands } from "../../src/app/editorUi";
 import { sessionStore } from "../../src/app/state/session";
 import { currentStamp, setCurrentStamp } from "../../src/app/tools/stamp/currentStamp";
 import { CellStore, cellValue } from "../../src/core/cells";

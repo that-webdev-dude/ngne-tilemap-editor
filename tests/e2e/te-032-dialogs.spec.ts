@@ -189,7 +189,7 @@ test("New Map adds the map at the end and opens it; the next one starts from its
     });
     expect(state).toMatchObject({ active: island.id, undo: 1, undoLabel: "New Map" });
     expect(state.open).toEqual([overworld, island.id]);
-    await expect(page.locator(`[data-map-tab="${island.id}"]`)).toHaveAttribute(
+    await expect(page.locator(`[data-tab="${island.id}"]`)).toHaveAttribute(
         "aria-selected",
         "true",
     );

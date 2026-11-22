@@ -3,7 +3,7 @@ import { findLayer } from "../../core/model";
 import type { ProjectMap } from "../../core/model";
 import { viewScale } from "../../app/view/coordinates";
 import { activeView } from "../../app/view/viewNavigation";
-import type { StatusField, StatusFieldInput } from "./statusFields";
+import type { StatusField, StatusFieldInput } from "./statusInput";
 
 // The status fields of the viewport (DESIGN §8.7): the cell and the tile under the pointer, the
 // zoom with Fit, and the size of the map.

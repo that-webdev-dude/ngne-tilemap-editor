@@ -1,15 +1,15 @@
 import { useId, useState } from "react";
 import type { MapPropertiesRequest } from "../../app/maps/mapDialogs";
-import { formatHex } from "../../core/color";
+import { formatHex } from "@ngne/editor-ui/colour";
 import type { MapFields } from "../../core/maps";
 import { MAX_PARALLAX_ORIGIN, MAX_SLUG_LENGTH, MAX_TEXT_LENGTH } from "../../core/model";
 import { ColourPicker } from "../colour/ColourPicker";
 import { cssColour } from "../colour/pickerMath";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
-import { Popover } from "../primitives/Popover";
-import "../primitives/field.css";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { Popover } from "@ngne/editor-ui/primitives";
+
 import "./mapDialogs.css";
 
 /** The colour the picker starts from while the map has none: opaque black, as Tiled's. */

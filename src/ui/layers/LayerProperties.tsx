@@ -11,11 +11,10 @@ import type { LayerPropertiesDraft } from "../../app/layers/layersPanel";
 import { useSession } from "../../app/state/session";
 import { MAX_LAYER_OFFSET, MAX_PARALLAX, MAX_TEXT_LENGTH, findLayer } from "../../core/model";
 import type { Layer } from "../../core/model";
-import { NumberField } from "../primitives/NumberField";
-import { Slider } from "../primitives/Slider";
-import { useClosingPopover } from "../timeline/useClosingPopover";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { Slider } from "@ngne/editor-ui/primitives";
+import { useClosingPopover } from "@ngne/editor-ui/primitives";
 import { extraCommands, layerFields } from "./layerFields";
-import "../primitives/popover.css";
 
 // The layer properties popover (DESIGN §8.2; TE-035; pattern of the sprite editor's
 // `ui/timeline/LayerProperties.tsx`): name, class, opacity slider, offset X/Y and parallax X/Y,

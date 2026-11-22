@@ -23,7 +23,7 @@ const snapshot = (page: Page) => call<Snapshot>(page, "snapshot");
 const panel = (page: Page) => page.locator("[data-maps-panel]");
 const rows = (page: Page) => panel(page).locator("[data-map-row]");
 const row = (page: Page, id: string) => page.locator(`[data-map-row="${id}"]`);
-const tab = (page: Page, id: string) => page.locator(`[data-map-tab="${id}"]`);
+const tab = (page: Page, id: string) => page.locator(`[data-tab="${id}"]`);
 const renameField = (page: Page) => panel(page).locator("[data-map-rename]");
 
 /** Opens the editor on the test project; returns the IDs of Overworld, Cave and Dungeon. */

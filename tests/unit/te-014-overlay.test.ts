@@ -1,7 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import { createOverlayController } from "../../src/app/overlay/overlayController";
 import type { OverlaySources } from "../../src/app/overlay/overlayController";
-import { OverlayLayerError, collectOverlayLayers } from "../../src/app/overlay/overlayLayers";
+import {
+    RegistrationError as OverlayLayerError,
+    collectOverlayLayers,
+} from "@ngne/editor-ui/overlay";
 import type { OverlayFrame, OverlayLayer } from "../../src/app/overlay/types";
 import { createSessionStore } from "../../src/app/state/session";
 import { createViewMapping } from "../../src/app/view/coordinates";
@@ -205,7 +208,7 @@ describe("overlay layer registry", () => {
     });
 
     it("finds the cell grid in the app's own registry, at order 300", async () => {
-        const { overlayLayers } = await import("../../src/app/overlay/overlayLayers");
+        const { overlayLayers } = await import("../../src/app/editorUi");
         expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([
             ["cell-grid", 300],
             ["collision-outlines", 400],

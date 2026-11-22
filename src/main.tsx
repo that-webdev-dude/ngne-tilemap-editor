@@ -1,9 +1,11 @@
+// The package's stylesheet first: the editor's own stylesheets, which its modules import, come
+// after it in the page.
+import "@ngne/editor-ui/styles.css";
+import { registerAppUpdates, showUpdateToast, UPDATE_CHECK_MS } from "@ngne/editor-ui/pwa";
 import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
-import { STARTED } from "./app/pwa/precache";
-import { registerAppUpdates, UPDATE_CHECK_MS } from "./app/pwa/updates";
+import { editorUi } from "./app/editorUi";
 import { App } from "./ui/App";
-import { showUpdateToast } from "./ui/pwa/updateToast";
 
 const root = document.getElementById("root");
 if (!root) throw new Error("Missing #root element");
@@ -30,10 +32,10 @@ createRoot(root).render(
 // The worker is registered once the page has loaded, so its download of the whole build does
 // not compete with the page's own start.
 function startServiceWorker(container: ServiceWorkerContainer): void {
-    // The worker that served this page learns that it runs its deployment: older caches can
-    // go once no window runs an older one (sw.ts).
-    container.controller?.postMessage({ type: STARTED });
+    // The worker that served this page also learns that the page runs its deployment: older
+    // caches can go once no window runs an older one (sw.ts).
     const updates = registerAppUpdates({
+        id: editorUi.config.id,
         container,
         url: `${import.meta.env.BASE_URL}sw.js`,
         scope: import.meta.env.BASE_URL,

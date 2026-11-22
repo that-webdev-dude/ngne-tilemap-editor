@@ -1,4 +1,4 @@
-import { OVERLAY_SELECTOR } from "../../keymap/environment";
+import { OVERLAY_SELECTOR } from "@ngne/editor-ui/commands";
 import type { PickedFile } from "../import/importSources";
 import { pickedFile } from "../import/pickTilesetFiles";
 import type { DropTarget } from "../import/tilesetDrop";

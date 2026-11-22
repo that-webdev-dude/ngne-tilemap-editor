@@ -1,7 +1,7 @@
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { LICENCES_COMMAND } from "../../src/app/licences/licences.commands";
+import { LICENCES_COMMAND } from "@ngne/editor-ui/licences";
 import { collectErrors } from "./te-003-support";
 import { menuItem, openMenu } from "./te-007-support";
 import { emptyState, newProject, projectName } from "./te-047-support";

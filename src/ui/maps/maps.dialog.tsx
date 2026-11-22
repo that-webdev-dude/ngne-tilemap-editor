@@ -3,7 +3,7 @@ import type {
     NewMapRequest,
     ResizeMapRequest,
 } from "../../app/maps/mapDialogs";
-import { commandDialog } from "../dialogs/registry";
+import { commandDialog } from "@ngne/editor-ui/messages";
 import { MapPropertiesDialog } from "./MapPropertiesDialog";
 import { NewMapDialog } from "./NewMapDialog";
 import { ResizeMapDialog } from "./ResizeMapDialog";

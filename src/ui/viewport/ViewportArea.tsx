@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { VIEWPORT_FOCUS_ATTRIBUTE } from "../../app/keymap/environment";
-import { REGION_FOCUS_ATTRIBUTE } from "../../app/keymap/regions";
-import { notices } from "../../app/notices/notices";
+import { VIEWPORT_FOCUS_ATTRIBUTE } from "@ngne/editor-ui/commands";
+import { REGION_FOCUS_ATTRIBUTE } from "@ngne/editor-ui/shell";
+import { notices } from "@ngne/editor-ui/messages";
+import { editorUiInstance } from "../../app/editorUiHub";
 import { mountOverlay } from "../../app/overlay/mountOverlay";
 import type { MountedOverlay } from "../../app/overlay/mountOverlay";
 import { DEFAULT_OVERLAY_THEME } from "../../app/overlay/types";
@@ -20,10 +21,10 @@ import type { ThemeChecker } from "../../app/viewport/scene";
 import { bindViewport } from "../../app/viewport/viewportBinding";
 import { Viewport, rendererCreations } from "../../engine/viewport";
 import type { ViewportStatus } from "../../engine/viewport";
-import { parseHexColour } from "../preferences/hexColour";
-import { Button } from "../primitives";
-import { themeStore, useTheme } from "../theme/theme";
-import type { Theme } from "../theme/theme";
+import { parseHexColour } from "@ngne/editor-ui/colour";
+import { Button } from "@ngne/editor-ui/primitives";
+import { useTheme } from "@ngne/editor-ui";
+import type { Theme } from "@ngne/editor-ui";
 import "./viewportArea.css";
 
 /** Grid ink of DESIGN §4: white lines in the dark theme, black lines in the light one. */
@@ -117,7 +118,7 @@ export function ViewportArea() {
         host.append(overlayCanvas);
         const mounted = mountOverlay(overlayCanvas, host);
         overlay.current = mounted;
-        mounted.setTheme(overlayTheme(themeStore.getState().theme));
+        mounted.setTheme(overlayTheme(editorUiInstance().theme.getState().theme));
         const detachNavigation = attachViewNavigation(host);
         // The tools take the overlay's presses (SPEC §4.1), mapped as the map is on screen.
         const detachTools = attachToolPointer(overlayCanvas, host, () => mounted.mapping());

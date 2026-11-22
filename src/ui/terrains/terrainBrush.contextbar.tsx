@@ -2,8 +2,8 @@ import { useSyncExternalStore } from "react";
 import { toolState } from "../../app/tools/activeTool";
 import { heldModifiers, subscribeHeldModifiers } from "../../app/tools/heldModifiers";
 import { TERRAIN_TOOL_ID } from "../../app/tools/terrain/terrainBrush.tools";
-import { Toggle } from "../primitives/Toggle";
-import type { ContextBarContent } from "../tools/contextBarRegistry";
+import { Toggle } from "@ngne/editor-ui/primitives";
+import type { ContextBarContent } from "../registryTypes";
 import { TerrainPickers } from "./TerrainPickers";
 
 // The terrain brush's context bar (DESIGN §7; TE-044): the terrain set and terrain pickers

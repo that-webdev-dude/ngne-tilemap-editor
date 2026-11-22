@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { fileWorkflows } from "../file/workflows";
 import { exportPipeline } from "./exportProject";
 

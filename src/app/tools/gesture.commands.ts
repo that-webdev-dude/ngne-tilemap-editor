@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { toolPipeline } from "./appPipeline";
 
 // The `gesture` context of DESIGN §10.1: while a tool's gesture of several presses is open

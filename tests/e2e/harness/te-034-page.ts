@@ -8,7 +8,7 @@ import {
     setLayerValues,
     ungroup,
 } from "../../../src/app/layers/layers";
-import { notices } from "../../../src/app/notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { viewPreferences } from "../../../src/app/view/viewPreferences";
 import type { LayerValues } from "../../../src/core/layers";
 import type { Layer } from "../../../src/core/model";

@@ -1,6 +1,6 @@
 import { MarkerEditError, moveMarkersCommand, resizeMarkerCommand } from "../../core/markers";
 import type { ShapeBox } from "../../core/model";
-import { notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../state/session";
 import { toolPipeline } from "../tools/appPipeline";
 import { activeMap } from "../tools/toolSets";

@@ -1,9 +1,8 @@
 import { createMapSession, findLayer } from "../../core/model";
 import type { Layer, ProjectMap, ProjectSession } from "../../core/model";
 import { plannedTools } from "./planned.tools";
-import { railGroups, slotOf } from "./registry";
-import type { ToolRegistry } from "./registry";
-import type { RailSlot, Tool, ToolLayerKind } from "./types";
+import { railGroups, slotOf } from "@ngne/editor-ui/shell";
+import type { RailSlot, Tool, ToolLayerKind, ToolRegistry } from "./types";
 
 // The tool sets of the rail (DESIGN §6): the rail shows the set of the active layer's kind, as
 // Tiled enables tools per layer type, and the navigate group in every set. Pure: no store.

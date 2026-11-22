@@ -3,11 +3,11 @@ import { NEW_MAP_SIZE_PRESETS } from "../../app/maps/mapDialogs";
 import type { NewMapRequest } from "../../app/maps/mapDialogs";
 import type { NewMapValues } from "../../core/maps";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
-import { SegmentedControl } from "../primitives/SegmentedControl";
-import "../primitives/field.css";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { SegmentedControl } from "@ngne/editor-ui/primitives";
+
 import "./mapDialogs.css";
 
 const presetValue = (width: number, height: number) => `${width}x${height}`;

@@ -10,7 +10,7 @@ import { newImageLayerCommand } from "../../core/layers";
 import { randomId } from "../../core/model";
 import type { Project } from "../../core/model";
 import { readPngSize } from "../../core/tileset/pngSize";
-import { commandDialogs } from "../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { activeMap, canAddLayer } from "../layers/layers";
 import { sessionStore } from "../state/session";
 import type { PickedFile } from "../tilesets/import/importSources";

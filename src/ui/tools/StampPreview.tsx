@@ -1,13 +1,13 @@
+import { Tooltip } from "@ngne/editor-ui/primitives";
+import { useToolState } from "@ngne/editor-ui/shell";
 import { useLayoutEffect, useRef, useSyncExternalStore } from "react";
 import { useStore } from "zustand";
 import { sessionStore } from "../../app/state/session";
 import { currentStampStore } from "../../app/tools/stamp/currentStamp";
 import { stampTool } from "../../app/tools/stamp/stamp.tools";
 import { stampThumbnail } from "../../app/tools/stamp/stampImage";
+import { toolState } from "../../app/tools/activeTool";
 import { activeMap } from "../../app/tools/toolSets";
-import { Tooltip } from "../primitives/Tooltip";
-import { useToolState } from "./useToolState";
-import "./toolRail.css";
 
 /** The side of the stamp preview in CSS pixels (DESIGN §2: up to 28 × 28). */
 export const STAMP_PREVIEW_SIZE = 28;
@@ -18,7 +18,8 @@ export const STAMP_PREVIEW_SIZE = 28;
  * click selects the stamp brush, which a tile layer's tool set holds.
  */
 export function StampPreview() {
-    const tools = useToolState();
+    useToolState(toolState);
+    const tools = toolState;
     const stamp = useSyncExternalStore(
         currentStampStore.subscribe,
         () => currentStampStore.getState().stamp,

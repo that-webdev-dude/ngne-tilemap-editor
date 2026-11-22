@@ -23,7 +23,7 @@ import {
     takeSnapshot,
 } from "../../src/app/worker/autosave/snapshotProject";
 import { imagePixels, tilesetPixels } from "../../src/app/worker/autosave/snapshotStorage";
-import { createDialogRequests } from "../../src/app/dialogs/dialogRequests";
+import { createDialogRequests } from "@ngne/editor-ui/messages";
 import { createPreferenceStore } from "../../src/app/preferences/preferences";
 import type { PreferenceStore } from "../../src/app/preferences/preferences";
 import { createSessionStore } from "../../src/app/state/session";

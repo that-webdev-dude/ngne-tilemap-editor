@@ -1,6 +1,6 @@
 import type { SaveChangesRequest } from "../../app/file/dialogs";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
 
 /** What happens to the project, said after "“name” has unsaved changes." */
 function consequence({ action, file }: SaveChangesRequest): string {

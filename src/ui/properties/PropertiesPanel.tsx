@@ -22,7 +22,7 @@ import {
 import type { BuiltinField } from "../../app/properties/propertiesPanel";
 import { useShownSession } from "../../app/state/shownSession";
 import { tilesetPanelStore } from "../../app/tilesets/panel/tilesetPanel";
-import { formatHex, parseHex } from "../../core/color";
+import { formatHex, parseHex } from "@ngne/editor-ui/colour";
 import {
     MAX_FILE_PROPERTY_LENGTH,
     MAX_INT_PROPERTY,
@@ -34,9 +34,9 @@ import { PROPERTY_TYPES } from "../../core/properties";
 import type { CommonProperty } from "../../core/properties";
 import { cssColour } from "../colour/pickerMath";
 import { ColourPicker } from "../colour/ColourPicker";
-import { contextMenuEntries } from "../commands/contextMenu";
-import { useCommands } from "../commands/useCommands";
-import { Button, Icon, IconButton, NumberField, Popover, Select } from "../primitives";
+import { contextMenuEntries } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import { Button, Icon, IconButton, NumberField, Popover, Select } from "@ngne/editor-ui/primitives";
 import "./properties.css";
 
 // The Properties dock section (SPEC §9, DESIGN §8.3; TE-040). The header names what is shown

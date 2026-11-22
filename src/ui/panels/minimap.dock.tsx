@@ -1,4 +1,4 @@
-import type { DockPanel } from "../dock/registry";
+import type { DockPanel } from "../registryTypes";
 import { MinimapPanel } from "../minimap/MinimapPanel";
 
 /** The whole map with the viewport's rectangle (DESIGN §8.8; TE-057). */

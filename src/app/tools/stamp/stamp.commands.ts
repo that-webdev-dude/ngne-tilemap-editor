@@ -1,7 +1,7 @@
 import { transformStamp } from "../../../core/cells";
 import type { StampTransform } from "../../../core/cells";
-import { appCommands } from "../../commands/appCommands";
-import type { CommandSpec } from "../../commands/types";
+import { appCommands } from "../../editorUiHub";
+import type { CommandSpec } from "../../commands/commandTypes";
 import { toolState } from "../activeTool";
 import { currentStamp, currentStampStore, setCurrentStamp } from "./currentStamp";
 

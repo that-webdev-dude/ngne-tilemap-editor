@@ -10,7 +10,7 @@ import {
 } from "../../core/maps";
 import type { MapFields, NewMapValues, ResizeMapValues } from "../../core/maps";
 import type { PixelBuffer } from "../../core/model";
-import { commandDialogs } from "../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../state/session";
 import { activeMap, mapsIdle, newMap, newMapDefaults } from "./maps";
 

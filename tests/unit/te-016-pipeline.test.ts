@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
 import type { StoreApi } from "zustand/vanilla";
-import { notices } from "../../src/app/notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { createToolState } from "../../src/app/tools/activeTool";
 import { reportStrokeError } from "../../src/app/tools/appPipeline";
 import { REFUSALS } from "../../src/app/tools/paintTarget";
 import { createToolPipeline } from "../../src/app/tools/pipeline";
 import type { PointerInput } from "../../src/app/tools/pipeline";
-import { createToolRegistry } from "../../src/app/tools/registry";
-import type { ToolRegistry } from "../../src/app/tools/registry";
+import { createToolRegistry } from "@ngne/editor-ui/shell";
+import type { ToolRegistry } from "@ngne/editor-ui/shell";
 import { railToolSet } from "../../src/app/tools/toolSets";
 import type { ToolLayerKind, ToolSpec } from "../../src/app/tools/types";
 import { createSessionStore } from "../../src/app/state/session";

@@ -73,7 +73,7 @@ test("new project, edit, save, reload and open give the same project; the marker
     await expect(empty.getByRole("button", { name: "Open" })).toBeEnabled();
     await expect(empty.getByRole("button", { name: "Import Tiled Map" })).toBeEnabled();
     // Nothing of a project shows, and its commands are disabled.
-    await expect(region(page, "menu-bar").locator("[data-map-tabs]")).toHaveCount(0);
+    await expect(region(page, "menu-bar").locator("[data-tab-strip]")).toHaveCount(0);
     await expect(region(page, "dock")).not.toContainText("Layers");
     await openMenu(page, "File");
     await expect(menuItem(page, "file.save")).toHaveAttribute("aria-disabled", "true");

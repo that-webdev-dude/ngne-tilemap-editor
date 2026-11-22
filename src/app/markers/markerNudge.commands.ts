@@ -1,6 +1,6 @@
 import { MarkerEditError, moveMarkersCommand } from "../../core/markers";
 import type { Command } from "../../core/history";
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { activeHistory, sessionStore } from "../state/session";
 import { toolPipeline } from "../tools/appPipeline";
 import { activeMap } from "../tools/toolSets";

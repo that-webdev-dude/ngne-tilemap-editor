@@ -4,7 +4,7 @@ import {
     shownTileset,
     tilesetPanelStore,
 } from "../../app/tilesets/panel/tilesetPanel";
-import type { StatusField, StatusFieldInput } from "../status/statusFields";
+import type { StatusField, StatusFieldInput } from "../status/statusInput";
 
 // The Tilesets panel's status field (SPEC §6.2, DESIGN §8.7): the tile under the pointer in the
 // panel as `tileset#id` with its class, else the selected tile; a selection of several tiles

@@ -1,7 +1,7 @@
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../../src/app/testing/testHooks";
 import { markerRasterPaints } from "../../../src/app/markers/markerDrawing";
-import { overlayLayers } from "../../../src/app/overlay/overlayLayers";
+import { overlayLayers } from "../../../src/app/editorUi";
 import { DEFAULT_OVERLAY_THEME } from "../../../src/app/overlay/types";
 import type { OverlayFrame } from "../../../src/app/overlay/types";
 import { currentViewMapping } from "../../../src/app/view/viewNavigation";

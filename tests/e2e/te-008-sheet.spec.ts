@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import { formatChord } from "../../src/app/commands/chord";
+import { formatChord } from "@ngne/editor-ui/commands";
 import { boxOf, collectErrors } from "./te-003-support";
 import type { Box } from "./te-003-support";
 import {

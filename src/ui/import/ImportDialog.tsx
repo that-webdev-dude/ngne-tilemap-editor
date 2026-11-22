@@ -6,12 +6,12 @@ import { canImportState } from "../../app/tilesets/import/importSession";
 import type { ImportSessionState } from "../../app/tilesets/import/importSession";
 import { MAX_SOURCE_MARGIN, MAX_TEXT_LENGTH } from "../../core/model";
 import type { TilesetImportWarning } from "../../core/tileset";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
-import { Select } from "../primitives/Select";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { Select } from "@ngne/editor-ui/primitives";
 import { SourcePane } from "./SourcePane";
-import "../primitives/field.css";
+
 import "./import.css";
 
 /** Tile sizes the fields take: above 256 is typed, then refused by the plan (SPEC §6.1). */

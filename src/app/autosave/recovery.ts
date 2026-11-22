@@ -1,7 +1,7 @@
 import type { StoreApi } from "zustand/vanilla";
 import { createProjectSession, randomId } from "../../core/model";
 import { reason } from "../worker/errorReason";
-import type { Notices } from "../notices/notices";
+import type { Notices } from "@ngne/editor-ui/messages";
 import type { SessionState } from "../state/session";
 import type { Autosave } from "./autosave";
 import type { SnapshotBackend } from "./backend";

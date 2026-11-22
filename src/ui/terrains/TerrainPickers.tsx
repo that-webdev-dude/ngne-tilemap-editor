@@ -5,7 +5,7 @@ import {
     chooseBrushTerrain,
     subscribeBrushTerrain,
 } from "../../app/tools/terrain/brushTerrain";
-import { Select } from "../primitives/Select";
+import { Select } from "@ngne/editor-ui/primitives";
 import "./terrainBrush.css";
 
 // The terrain set and terrain pickers of the terrain brush (DESIGN §7): a select of the active

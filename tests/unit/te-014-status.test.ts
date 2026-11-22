@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { createStatusStore } from "../../src/app/state/status";
-import { StatusFieldError, collectStatusFields } from "../../src/ui/status/statusFields";
-import type { StatusField, StatusFieldInput } from "../../src/ui/status/statusFields";
+import { RegistrationError as StatusFieldError, collectStatusFields } from "@ngne/editor-ui/shell";
+import type { StatusField, StatusFieldInput } from "../../src/ui/status/statusInput";
 import { tileUnderCursor } from "../../src/ui/status/view.status";
 import { newSession, tile, tileLayer } from "./te-006-support";
 
@@ -35,7 +35,7 @@ describe("status field registry", () => {
     });
 
     it("finds the fields of this ticket in the app's own registry", async () => {
-        const { statusFields } = await import("../../src/ui/status/statusFields");
+        const { statusFields } = await import("../../src/app/editorUi");
         expect(statusFields.map((each) => each.id)).toEqual([
             "cell",
             "tile",

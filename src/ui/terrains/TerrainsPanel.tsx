@@ -40,17 +40,24 @@ import {
 } from "../../app/tilesets/panel/tileGrid";
 import type { GridLayout } from "../../app/tilesets/panel/tileGrid";
 import { useTilesetPanel } from "../../app/tilesets/panel/tilesetPanel";
-import { formatHex, parseHex } from "../../core/color";
+import { formatHex, parseHex } from "@ngne/editor-ui/colour";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import type { TerrainSet, TerrainSetType, Tileset } from "../../core/model";
 import { missingCombinations, terrainAnalysis } from "../../core/terrain";
 import { ColourPicker } from "../colour/ColourPicker";
 import { cssColour } from "../colour/pickerMath";
-import { contextMenuEntries } from "../commands/contextMenu";
-import { useCommands } from "../commands/useCommands";
-import { ContextMenu, Icon, IconButton, Popover, Select, Tooltip } from "../primitives";
-import type { ContextMenuEntry } from "../primitives";
-import { useTheme } from "../theme/theme";
+import { contextMenuEntries } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import {
+    ContextMenu,
+    Icon,
+    IconButton,
+    Popover,
+    Select,
+    Tooltip,
+} from "@ngne/editor-ui/primitives";
+import type { ContextMenuEntry } from "@ngne/editor-ui/primitives";
+import { useTheme } from "@ngne/editor-ui";
 import { readColours } from "../tilesets/TilesetsPanel";
 import { paintTileGrid } from "../tilesets/paintTileGrid";
 import type { GridColours } from "../tilesets/paintTileGrid";

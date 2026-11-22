@@ -1,7 +1,8 @@
 import { GripVertical, Trash2 } from "lucide-react";
+import { editorUiInstance } from "../../../app/editorUiHub";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
-import { isTextField } from "../../../app/keymap/environment";
+import { isTextField } from "@ngne/editor-ui/commands";
 import { usePreference } from "../../../app/preferences/preferences";
 import { useSession } from "../../../app/state/session";
 import {
@@ -32,10 +33,10 @@ import {
 } from "../../../core/model";
 import type { AnimationFrame, Tileset } from "../../../core/model";
 import type { AnimationEdit } from "../../../core/tileset";
-import { runCommand } from "../../commands/runCommand";
+import { runCommand } from "@ngne/editor-ui/commands";
 import { PixelCanvas } from "../../import/PixelCanvas";
-import { Button, Dialog, Icon, IconButton, NumberField, Select } from "../../primitives";
-import { useTheme } from "../../theme/theme";
+import { Button, Dialog, Icon, IconButton, NumberField, Select } from "@ngne/editor-ui/primitives";
+import { useTheme } from "@ngne/editor-ui";
 import { paintTileGrid } from "../paintTileGrid";
 import { readColours } from "../TilesetsPanel";
 import { tilePixelsById } from "../tilePixels";
@@ -267,7 +268,7 @@ function AnimationEditorBody({
             event.preventDefault();
             if (drag.current) return;
             const redo = key.toLowerCase() === "y" || event.shiftKey;
-            if (!runCommand(redo ? "edit.redo" : "edit.undo")) return;
+            if (!runCommand(editorUiInstance().commands, redo ? "edit.redo" : "edit.undo")) return;
             setMessage(null);
             // The list is replaced: no frame stays selected (Tiled resets its frame list).
             select([], null);

@@ -1,5 +1,5 @@
 import { markersSelected, selectedMarkerIds } from "../../app/markers/markerSelection";
-import type { StatusField, StatusFieldInput } from "./statusFields";
+import type { StatusField, StatusFieldInput } from "./statusInput";
 
 // The selection field of the status bar (DESIGN §8.7): the bounding box of the active map's tile
 // selection as `w × h` (TE-020); while a marker layer is active and markers are selected, their

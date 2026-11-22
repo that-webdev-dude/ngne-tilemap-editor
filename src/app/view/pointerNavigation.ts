@@ -11,7 +11,7 @@ import {
     zoomBy,
 } from "./viewNavigation";
 import { viewportSize } from "./viewportSize";
-import { createWheelPan, createWheelZoom, wheelPixels } from "./wheel";
+import { createWheelPan, createWheelZoom, wheelPixels } from "@ngne/editor-ui/overlay";
 
 // Pointer navigation of the viewport (SPEC §4.1, TE-014): the wheel zooms about the cursor
 // (Ctrl+wheel the same), Shift+wheel pans horizontally, a middle drag or a primary-button drag

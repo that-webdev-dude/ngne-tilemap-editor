@@ -2,17 +2,12 @@ import { useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { PREFERENCE_RANGES, preferences, usePreference } from "../../app/preferences/preferences";
 import type { CheckerboardPreference, GridPreference } from "../../app/preferences/preferences";
-import { surfaces } from "../../app/surfaces/surfaces";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
-import { SegmentedControl } from "../primitives/SegmentedControl";
-import type { SegmentedControlProps, SegmentedOption } from "../primitives/SegmentedControl";
-import { Toggle } from "../primitives/Toggle";
-import { DEFAULT_THEME, setTheme, useTheme } from "../theme/theme";
-import type { Theme } from "../theme/theme";
-import { formatHexColour, parseHexColour } from "./hexColour";
-import "../primitives/field.css";
+import { editorUiInstance } from "../../app/editorUiHub";
+import { setTheme, useEditorUi, useTheme } from "@ngne/editor-ui";
+import type { Theme } from "@ngne/editor-ui";
+import { formatHexColour, parseHexColour } from "@ngne/editor-ui/colour";
+import { Button, Dialog, NumberField, SegmentedControl, Toggle } from "@ngne/editor-ui/primitives";
+import type { SegmentedControlProps, SegmentedOption } from "@ngne/editor-ui/primitives";
 import "./preferences.css";
 
 type CheckerColours = Exclude<CheckerboardPreference["colors"], "theme">;
@@ -26,7 +21,13 @@ const COLOUR_SOURCES: readonly SegmentedOption<"theme" | "custom">[] = [
     { value: "custom", label: "Custom" },
 ];
 
-const close = () => surfaces.close("preferences");
+const close = () => editorUiInstance().surfaces.close("preferences");
+
+/**
+ * The theme Restore defaults returns to: the package's default (DESIGN §3), which it does not
+ * export (@ngne/editor-ui findings, gap 8).
+ */
+const DEFAULT_THEME: Theme = "dark";
 
 /** A colour token of the current theme as 0xRRGGBB. */
 function themeColour(name: string): number {
@@ -271,14 +272,15 @@ function AutosaveSection() {
  * store (theme, checkerboard, grid colour and opacity, highlight-layer opacity, autosave). A
  * change applies at once: it is written to its store, which tells its subscribers and persists
  * it. There is nothing to confirm, so the dialog has Close, and Restore defaults to go back.
- * The theme belongs to the theme store (ui/theme), the rest to the preference store. Every
+ * The theme belongs to the editor UI instance, the rest to the preference store. Every
  * on/off setting is a text toggle (`aria-pressed`), the one idiom of SUITE §4.
  */
 export function PreferencesDialog() {
+    const editorUi = useEditorUi();
     const theme = useTheme();
     const restoreDefaults = () => {
         preferences.reset();
-        setTheme(DEFAULT_THEME);
+        setTheme(editorUi, DEFAULT_THEME);
     };
     return (
         <Dialog
@@ -302,7 +304,7 @@ export function PreferencesDialog() {
                         <SegmentedControl
                             label="Theme"
                             value={theme}
-                            onChange={setTheme}
+                            onChange={(next) => setTheme(editorUi, next)}
                             options={THEMES}
                         />
                     </Row>

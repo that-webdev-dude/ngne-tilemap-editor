@@ -1,3 +1,4 @@
+import { editorUiInstance } from "../../app/editorUiHub";
 import {
     ChevronDown,
     ChevronRight,
@@ -37,9 +38,9 @@ import type { DropZone, LayerRow } from "../../app/layers/layerTree";
 import { useShownSession } from "../../app/state/shownSession";
 import { activeLayerId } from "../../app/tools/toolSets";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import { runCommand } from "../commands/runCommand";
-import { useCommands } from "../commands/useCommands";
-import { Icon, IconButton, Toggle } from "../primitives";
+import { runCommand } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import { Icon, IconButton, Toggle } from "@ngne/editor-ui/primitives";
 import { LayerPropertiesHost } from "./LayerProperties";
 import "./layers.css";
 
@@ -460,7 +461,7 @@ export function LayersHeader() {
                 shortcut="Shift+N"
                 disabled={!enabled("layer.newTile")}
                 data-new-layer=""
-                onClick={() => runCommand("layer.newTile")}
+                onClick={() => runCommand(editorUiInstance().commands, "layer.newTile")}
             >
                 <Icon icon={Plus} />
             </IconButton>
@@ -483,7 +484,7 @@ export function LayersHeader() {
                                 className="ui-menu__item"
                                 disabled={!command.enabled()}
                                 data-new-layer-kind={command.id}
-                                onSelect={() => runCommand(command.id)}
+                                onSelect={() => runCommand(editorUiInstance().commands, command.id)}
                             >
                                 {command.title()}
                             </DropdownMenu.Item>
@@ -495,7 +496,7 @@ export function LayersHeader() {
                 label="Delete Layer"
                 disabled={!enabled("layer.delete")}
                 data-delete-layer=""
-                onClick={() => runCommand("layer.delete")}
+                onClick={() => runCommand(editorUiInstance().commands, "layer.delete")}
             >
                 <Icon icon={Trash2} />
             </IconButton>

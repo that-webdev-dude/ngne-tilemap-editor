@@ -1,5 +1,5 @@
 import type { ExportDialogRequest, ExportOverwriteRequest } from "../../app/export/dialogs";
-import { commandDialog } from "../dialogs/registry";
+import { commandDialog } from "@ngne/editor-ui/messages";
 import { ExportDialog } from "./ExportDialog";
 import { ExportOverwriteDialog } from "./ExportOverwriteDialog";
 

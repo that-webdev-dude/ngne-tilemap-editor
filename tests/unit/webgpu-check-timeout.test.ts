@@ -1,10 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { NavigatorLike, WebGpuSupport } from "../../src/ui/platform/webgpu";
-import {
-    ADAPTER_TIMED_OUT,
-    ADAPTER_TIMEOUT_MS,
-    checkWebGpu,
-} from "../../src/ui/startup/webGpuCheck";
+import type { NavigatorLike, WebGpuSupport } from "@ngne/editor-ui/platform";
+import { ADAPTER_TIMED_OUT, ADAPTER_TIMEOUT_MS, checkWebGpu } from "@ngne/editor-ui/platform";
 
 // The time limit on the editor's WebGPU check (DESIGN §9, WebGPU required): 5 s per adapter
 // request, one retry, then the notice instead of a blank window.

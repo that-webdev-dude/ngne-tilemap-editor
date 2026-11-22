@@ -1,7 +1,7 @@
 import type { StoreApi } from "zustand/vanilla";
 import type { ExportPreview } from "../../core/export";
-import { commandDialogs, createDialogRequests, dialogView } from "../dialogs/dialogRequests";
-import type { DialogRequestBase, DialogRequests, DialogView } from "../dialogs/dialogRequests";
+import { commandDialogs, createDialogRequests, dialogView } from "@ngne/editor-ui/messages";
+import type { DialogRequestBase, DialogRequests, DialogView } from "@ngne/editor-ui/messages";
 
 /**
  * The dialogs of the export (SPEC §10.2, DESIGN §9; the sprite editor's `app/export/dialogs.ts`):

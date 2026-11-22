@@ -1,17 +1,17 @@
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
-import { chordKey, normalizeChord } from "../commands/chord";
+import { chordKey, normalizeChord } from "@ngne/editor-ui/commands";
 import { sessionStore } from "../state/session";
 import type { SessionState } from "../state/session";
 import { statusStore } from "../state/status";
 import type { StatusState } from "../state/status";
 import { optionValues } from "./options";
 import type { ToolOptions } from "./options";
-import { slotOf } from "./registry";
-import type { ToolRegistry } from "./registry";
+import { slotOf } from "@ngne/editor-ui/shell";
+import { toolKey } from "./toolKeys";
 import { toolRegistry } from "./toolRegistry";
 import { activeLayerKind, offersTool } from "./toolSets";
-import type { RailSlot, Tool, ToolLayerKind, ToolOptionValue } from "./types";
+import type { RailSlot, Tool, ToolLayerKind, ToolOptionValue, ToolRegistry } from "./types";
 
 // Which tool acts (DESIGN §6). The user selects a tool from the rail or with its key; the
 // active-tool store keeps that choice per layer kind, so switching the active layer between
@@ -90,7 +90,8 @@ export interface ToolState {
 
 /** The key of a tool's chord without its modifiers ("U" for Shift+U); null without a key. */
 function keyOf(tool: Tool | undefined): string | null {
-    return tool?.shortcut === undefined ? null : chordKey(normalizeChord(tool.shortcut));
+    const key = tool && toolKey(tool);
+    return key === undefined ? null : chordKey(normalizeChord(key));
 }
 
 /** The tool state of a session store and a registry. The app has one: `toolState`. */
@@ -175,8 +176,11 @@ export function createToolState(
             return group[(index + 1) % group.length] ?? null;
         },
         shownInSlot(slot) {
-            const active = registry.get(activeId());
-            if (active && slot.variants.includes(active)) return active;
+            // By id: the slot may come from the editor UI instance's registry, whose tools are
+            // other objects of the same modules (`toolRegistry.ts`).
+            const active = activeId();
+            const shown = slot.variants.find((variant) => variant.id === active);
+            if (shown) return shown;
             const last = lastInSlot.get(slot.id);
             const remembered = slot.variants.find((variant) => variant.id === last);
             return remembered ?? slot.tool;

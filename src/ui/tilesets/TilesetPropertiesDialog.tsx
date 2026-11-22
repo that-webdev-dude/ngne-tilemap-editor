@@ -6,10 +6,10 @@ import type {
 import { MAX_SLUG_LENGTH, MAX_TEXT_LENGTH, MAX_TILE_OFFSET } from "../../core/model";
 import type { TilesetSourceKind } from "../../core/model";
 import type { TilesetFields } from "../../core/tileset";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
-import "../primitives/field.css";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { NumberField } from "@ngne/editor-ui/primitives";
+
 import "./tilesetProperties.css";
 
 const OFFSET = { min: -MAX_TILE_OFFSET, max: MAX_TILE_OFFSET };

@@ -1,4 +1,5 @@
 import { Ellipsis, Plus } from "lucide-react";
+import { editorUiInstance } from "../../app/editorUiHub";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
@@ -36,11 +37,11 @@ import {
 } from "../../app/tilesets/panel/tilesetPanel";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import type { Tile, Tileset } from "../../core/model";
-import { contextMenuEntries } from "../commands/contextMenu";
-import { runCommand } from "../commands/runCommand";
-import { useCommands } from "../commands/useCommands";
-import { ContextMenu, Icon, IconButton, Select } from "../primitives";
-import { useTheme } from "../theme/theme";
+import { contextMenuEntries } from "@ngne/editor-ui/commands";
+import { runCommand } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import { ContextMenu, Icon, IconButton, Select } from "@ngne/editor-ui/primitives";
+import { useTheme } from "@ngne/editor-ui";
 import { paintTileGrid } from "./paintTileGrid";
 import type { GridColours } from "./paintTileGrid";
 import { useDevicePixelRatio } from "./useDevicePixelRatio";
@@ -446,7 +447,9 @@ function TileGrid({ tileset }: Readonly<{ tileset: Tileset }>) {
                 onPointerCancel={endDrag}
                 onLostPointerCapture={endDrag}
                 onPointerLeave={() => tilesetPanel.setHovered(null)}
-                onDoubleClick={() => runCommand("tileset.editCollision")}
+                onDoubleClick={() =>
+                    runCommand(editorUiInstance().commands, "tileset.editCollision")
+                }
             >
                 <div
                     ref={sizer}
@@ -501,7 +504,7 @@ export function TilesetsPanel() {
                 <IconButton
                     label="New Tileset"
                     data-new-tileset=""
-                    onClick={() => runCommand("file.importTileset")}
+                    onClick={() => runCommand(editorUiInstance().commands, "file.importTileset")}
                 >
                     <Icon icon={Plus} />
                 </IconButton>

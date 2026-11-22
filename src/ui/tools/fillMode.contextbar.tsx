@@ -1,14 +1,14 @@
+import type { ContextBarContent } from "@ngne/editor-ui/shell";
+import { slotOf, useToolState } from "@ngne/editor-ui/shell";
 import { Fragment } from "react";
+import type { ComponentType } from "react";
 import { toolState } from "../../app/tools/activeTool";
 import { bucketTool } from "../../app/tools/fill/bucket.tools";
 import { fillModeOf } from "../../app/tools/fill/fillPlan";
 import { ellipseFillTool, rectangleFillTool } from "../../app/tools/fill/shapeFill.tools";
-import { slotOf } from "../../app/tools/registry";
 import type { Tool, ToolOptionValue } from "../../app/tools/types";
 import { TerrainPickers } from "../terrains/TerrainPickers";
-import type { ContextBarContent } from "./contextBarRegistry";
 import { Actions, OptionControl, Readout, VariantChoice } from "./toolControls";
-import { useToolState } from "./useToolState";
 import "./fillMode.css";
 
 // The context bar of the bucket and the shape fill (DESIGN §7): the tool's options as the
@@ -17,7 +17,7 @@ import "./fillMode.css";
 // the readouts, with the controls of `toolControls.tsx`. The fill mode is one per tool, as Tiled keeps it per tool: the Rectangle and Ellipse
 // variants of the shape fill are one tool in Tiled (`ShapeFillTool`), so an option set here is
 // set for every variant of the rail slot that has it. Registered as context bar content so it
-// takes the options' place while a fill tool is active (contextBarRegistry.ts).
+// takes the options' place while a fill tool is active (`*.contextbar.tsx`, src/app/editorUi.ts).
 
 const FILL_TOOLS: readonly string[] = [bucketTool.id, rectangleFillTool.id, ellipseFillTool.id];
 
@@ -33,7 +33,8 @@ function setSlotOption(tool: Tool, key: string, value: ToolOptionValue): void {
 }
 
 function FillBar() {
-    const tools = useToolState();
+    useToolState(toolState);
+    const tools = toolState;
     const tool = tools.active();
     if (!tool) return null;
     const values = tools.options(tool);
@@ -59,7 +60,7 @@ function FillBar() {
     );
 }
 
-export const contextBarContent: ContextBarContent = {
+export const contextBarContent: ContextBarContent<ComponentType> = {
     id: "fill",
     order: 61,
     shown: () => toolState.kind() === "tile" && FILL_TOOLS.includes(toolState.activeId()),

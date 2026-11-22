@@ -1,5 +1,5 @@
-import { commandDialogs } from "../../dialogs/dialogRequests";
-import { notices } from "../../notices/notices";
+import { commandDialogs } from "@ngne/editor-ui/messages";
+import { notices } from "@ngne/editor-ui/messages";
 import { backgroundWorker } from "../../worker/client";
 import type { WorkerClient } from "../../worker/client";
 import { runTilesetWorkflow, tilesetWorkflowBusy } from "../tilesetWorkflow";

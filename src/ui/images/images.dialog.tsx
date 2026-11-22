@@ -1,5 +1,5 @@
 import type { NewImageLayerRequest } from "../../app/images/imageLayers";
-import { commandDialog } from "../dialogs/registry";
+import { commandDialog } from "@ngne/editor-ui/messages";
 import { NewImageLayerDialog } from "./NewImageLayerDialog";
 
 /** New Image Layer (TE-036). */

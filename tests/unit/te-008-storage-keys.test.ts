@@ -2,11 +2,8 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import {
-    createRecentCommandsStore,
-    RECENT_COMMANDS_STORAGE_KEY,
-} from "../../src/app/commandPalette/recentCommands";
-import type { KeyValueStorage } from "../../src/app/platform/storage";
+import { createRecentCommandsStore, RECENT_COMMANDS_STORAGE_KEY } from "@ngne/editor-ui/commands";
+import type { KeyValueStorage } from "@ngne/editor-ui/platform";
 import {
     createPreferenceStore,
     PREFERENCES_STORAGE_KEY,
@@ -15,8 +12,8 @@ import {
     createViewPreferenceStore,
     VIEW_PREFERENCES_STORAGE_KEY,
 } from "../../src/app/view/viewPreferences";
-import { createLayoutStore, LAYOUT_STORAGE_KEY } from "../../src/ui/shell/layoutStore";
-import { createThemeStore, THEME_STORAGE_KEY } from "../../src/ui/theme/theme";
+import { createLayoutStore, LAYOUT_STORAGE_KEY } from "@ngne/editor-ui/shell";
+import { createThemeStore, THEME_STORAGE_KEY } from "@ngne/editor-ui";
 
 // TE-008: every localStorage key the app writes starts with `ngne-tilemap-editor.` (SUITE §7:
 // both apps of the suite share one origin). Three checks: every store writes prefixed keys

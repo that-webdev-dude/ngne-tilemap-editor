@@ -1,22 +1,37 @@
+import "@ngne/editor-ui/styles.css";
+import { createEditorUi, UiRoot } from "@ngne/editor-ui";
+import {
+    activeKeyContexts,
+    createCommandRegistry,
+    installKeymap,
+    VIEWPORT_FOCUS_ATTRIBUTE,
+} from "@ngne/editor-ui/commands";
+import { Button, Dialog, Select } from "@ngne/editor-ui/primitives";
+import { AppShell } from "@ngne/editor-ui/shell";
+import type { ToolBase, ToolStateSource } from "@ngne/editor-ui/shell";
 import { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { createCommandRegistry } from "../../../src/app/commands/registry";
-import type { KeyContext } from "../../../src/app/commands/types";
-import { setKeyContext } from "../../../src/app/keymap/contextState";
-import { VIEWPORT_FOCUS_ATTRIBUTE } from "../../../src/app/keymap/environment";
-import { installKeymap } from "../../../src/app/keymap/install";
-import { Button } from "../../../src/ui/primitives/Button";
-import { Dialog } from "../../../src/ui/primitives/Dialog";
-import { Select } from "../../../src/ui/primitives/Select";
-import { AppShell } from "../../../src/ui/shell/AppShell";
-import { UiRoot } from "../../../src/ui/UiRoot";
+import {
+    EDITOR_CONTEXTS,
+    MENU_BAR,
+    PANEL_SELECTOR,
+    STATE_CONTEXTS,
+} from "../../../src/app/commands/commandTypes";
+import type {
+    EditorContext,
+    KeyContext,
+    MenuBarMenu,
+} from "../../../src/app/commands/commandTypes";
+import { keyContextStore, setKeyContext } from "../../../src/app/keymap/contextState";
 import { parseDesignKeyTable } from "./te-007-design-keys";
 
 // TE-007 chord harness: the real shell and the real keymap on a registry that holds nothing
 // but probe commands, which the spec registers from the key table of DESIGN §10.3. The regions
 // carry what the keymap contexts need: a viewport focus element, a cell of the bottom panel, a
 // text field. Opened by hand for the owner check: `?probe` registers the table's chords and
-// lists each one received. Adapted from the sprite editor's se-007-keymap.tsx.
+// lists each one received. Adapted from the sprite editor's se-007-keymap.tsx. The shell is the
+// package's, on an instance of its own with the editor's menus, contexts and bottom panel; its
+// keymap is off, and the page's keymap runs the probe registry with the editor's contexts.
 
 /** One probe command: a chord of the table in one context (tests/e2e/te-007-design-keys.ts). */
 interface ProbeBinding {
@@ -57,7 +72,10 @@ declare global {
     }
 }
 
-const registry = createCommandRegistry();
+const registry = createCommandRegistry<MenuBarMenu, EditorContext>({
+    menus: MENU_BAR,
+    contexts: EDITOR_CONTEXTS,
+});
 /** Listeners of the page's own list of received chords. */
 const received = new Set<(chord: string) => void>();
 
@@ -103,7 +121,16 @@ const harness: ChordHarness = {
 };
 window.te007 = harness;
 
-installKeymap({ registry });
+const CONTEXTS = {
+    order: EDITOR_CONTEXTS,
+    state: STATE_CONTEXTS,
+    focus: { panel: PANEL_SELECTOR },
+};
+
+installKeymap({
+    registry,
+    activeContexts: () => activeKeyContexts(document, CONTEXTS, keyContextStore.getState()),
+});
 // Registered after the keymap's listener, so each event is recorded as the keymap left it.
 for (const type of ["keydown", "keyup"]) {
     window.addEventListener(type, (event) => {
@@ -138,47 +165,85 @@ function Received() {
     );
 }
 
-function Page() {
-    const [dialogOpen, setDialogOpen] = useState(false);
+/** The one tool of the page: the context bar shows the page's controls after its name. */
+const PROBE_TOOL: ToolBase = { id: "probe", label: "Probe" };
+
+const probeTools: ToolStateSource = {
+    activeId: () => PROBE_TOOL.id,
+    select: () => undefined,
+    options: () => ({}),
+    setOption: () => undefined,
+    subscribe: () => () => undefined,
+    version: () => 0,
+};
+
+const shellUi = createEditorUi<MenuBarMenu, EditorContext>({
+    id: "te-007-chords",
+    productName: "TE-007 chord harness",
+    about: {
+        packageName: "te-007-chords",
+        version: "0.0.0",
+        licence: "MIT",
+        engine: { packageName: "@ngne/core", version: "0.0.0" },
+        repositoryUrl: "https://example.invalid/",
+        changelogUrl: "https://example.invalid/",
+    },
+    menus: MENU_BAR,
+    keyContexts: CONTEXTS,
+    bottomRegion: { id: "bottom-panel", label: "Bottom Panel" },
+    modules: {
+        dock: {
+            "harness/received.dock.tsx": {
+                dockPanel: { id: "received", title: "Received", order: 10, Body: Received },
+            },
+        },
+        tools: { "harness/probe.tools.ts": { tools: [PROBE_TOOL] } },
+    },
+});
+
+function ContextControls({ openDialog }: { openDialog(): void }) {
     const [choice, setChoice] = useState("one");
     return (
-        <UiRoot>
+        <>
+            <input aria-label="Name" data-testid="text-field" />
+            <Button data-testid="plain-button">Plain button</Button>
+            <Select
+                label="Choice"
+                hideLabel
+                value={choice}
+                onChange={setChoice}
+                options={CHOICES}
+            />
+            <Button onClick={openDialog}>Open dialog</Button>
+        </>
+    );
+}
+
+function Page() {
+    const [dialogOpen, setDialogOpen] = useState(false);
+    return (
+        <UiRoot editorUi={shellUi} keymap={false}>
             <AppShell
-                regions={{
-                    "context-bar": (
-                        <>
-                            <input aria-label="Name" data-testid="text-field" />
-                            <Button data-testid="plain-button">Plain button</Button>
-                            <Select
-                                label="Choice"
-                                hideLabel
-                                value={choice}
-                                onChange={setChoice}
-                                options={CHOICES}
-                            />
-                            <Button onClick={() => setDialogOpen(true)}>Open dialog</Button>
-                        </>
-                    ),
-                    viewport: (
-                        <div
-                            tabIndex={0}
-                            data-testid="viewport-focus"
-                            style={{ width: "100%", height: "100%" }}
-                            {...{ [VIEWPORT_FOCUS_ATTRIBUTE]: "" }}
-                        />
-                    ),
-                    "bottom-panel": (
-                        <>
-                            <div tabIndex={0} data-testid="panel-cell">
-                                Tile
-                            </div>
-                            <button type="button" data-testid="panel-button">
-                                Panel button
-                            </button>
-                        </>
-                    ),
-                    dock: <Received />,
-                }}
+                tools={probeTools}
+                contextReadouts={<ContextControls openDialog={() => setDialogOpen(true)} />}
+                viewport={
+                    <div
+                        tabIndex={0}
+                        data-testid="viewport-focus"
+                        style={{ width: "100%", height: "100%" }}
+                        {...{ [VIEWPORT_FOCUS_ATTRIBUTE]: "" }}
+                    />
+                }
+                bottom={
+                    <>
+                        <div tabIndex={0} data-testid="panel-cell">
+                            Tile
+                        </div>
+                        <button type="button" data-testid="panel-button">
+                            Panel button
+                        </button>
+                    </>
+                }
             />
             <Dialog
                 open={dialogOpen}

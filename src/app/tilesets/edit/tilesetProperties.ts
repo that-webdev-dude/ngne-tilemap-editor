@@ -1,7 +1,7 @@
 import type { TilesetSourceKind } from "../../../core/model";
 import { tilesetFieldProblems, tilesetPropertiesCommand } from "../../../core/tileset";
 import type { TilesetFields } from "../../../core/tileset";
-import { commandDialogs } from "../../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../../state/session";
 import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 import { currentTileset, historyIdle, runTilesetCommand } from "./tilesetEdit";

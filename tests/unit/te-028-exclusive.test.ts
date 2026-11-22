@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { appCommands } from "../../src/app/commands/appCommands";
-import { commandDialogs } from "../../src/app/dialogs/dialogRequests";
-import { notices } from "../../src/app/notices/notices";
+import { appCommands } from "../../src/app/editorUi";
+import { commandDialogs } from "@ngne/editor-ui/messages";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../../src/app/state/session";
 import { importTilesetFiles, importingTileset } from "../../src/app/tilesets/import/importTileset";
 import type { PickedFile } from "../../src/app/tilesets/import/importSources";

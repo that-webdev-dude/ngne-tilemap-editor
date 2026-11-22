@@ -1,0 +1,88 @@
+/*
+ * This editor's own rules for the content it puts in the package shell's slots (SPEC §8 of
+ * @ngne/editor-ui): the context bar's command buttons, the stamp preview of the rail footer and
+ * the tabs of the bottom panel. Everything else of the shell is styled by the package.
+ */
+
+/* TE-018: the active tool's command buttons (the stamp transforms), one group. */
+.context-actions {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+}
+
+/* TE-017: the stamp preview at the bottom of the rail (DESIGN §2), 28 × 28 px. */
+.tool-rail__stamp {
+    display: block;
+    width: 28px;
+    height: 28px;
+    padding: 0;
+    border: var(--border-width) solid var(--border);
+    border-radius: var(--radius-control);
+    box-sizing: border-box;
+    background: var(--bg-panel);
+    cursor: pointer;
+}
+
+.tool-rail__stamp:disabled {
+    cursor: default;
+    opacity: 0.5;
+}
+
+.tool-rail__stamp canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+    image-rendering: pixelated;
+}
+
+/*
+ * Bottom panel tabs (DESIGN §2): a strip of 24 px tabs over the selected tab's panel, selected
+ * as the sprite editor's document tabs (active background, primary text, accent line inside
+ * the bottom edge, no change of weight).
+ */
+.bottom-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.bottom-panel__tabs {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: var(--space-2);
+    height: 32px;
+    padding: 0 var(--space-8);
+}
+
+.bottom-panel__tab {
+    height: var(--control-height);
+    padding: 0 var(--space-8);
+    border-radius: var(--radius-control);
+    color: var(--text-muted);
+    white-space: nowrap;
+    transition:
+        background-color var(--motion-fast) var(--motion-ease),
+        color var(--motion-fast) var(--motion-ease);
+}
+
+.bottom-panel__tab:hover {
+    background: var(--bg-raised);
+    color: var(--text);
+}
+
+.bottom-panel__tab[aria-selected="true"] {
+    background: var(--bg-active);
+    box-shadow: inset 0 -2px 0 var(--accent);
+    color: var(--text);
+}
+
+.bottom-panel__body {
+    flex: 1;
+    min-height: 0;
+}
+
+.bottom-panel__body[hidden] {
+    display: none;
+}

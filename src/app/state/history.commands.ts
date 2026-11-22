@@ -1,5 +1,5 @@
 import type { History } from "../../core/history";
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { showMapOfStep } from "../tabs/tabs";
 import { toolPipeline } from "../tools/appPipeline";
 import { activeHistory } from "./session";

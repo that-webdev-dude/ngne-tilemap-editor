@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { canImportTiledMap, importTiledMap } from "./importTiledMap";
 
 // File → Import Tiled Map… (SPEC §13, DESIGN §5; TE-061). It takes the menu item planned for its

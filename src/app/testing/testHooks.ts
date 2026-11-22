@@ -1,11 +1,12 @@
 import { assertInvariants, createProject, createProjectSession } from "../../core/model";
-import { recentCommands } from "../commandPalette/recentCommands";
-import { appCommands } from "../commands/appCommands";
-import type { CommandRegistry } from "../commands/registry";
+import type { RecentCommandsState } from "@ngne/editor-ui";
+import type { CommandRegistry } from "@ngne/editor-ui/commands";
+import type { BottomRegionState } from "@ngne/editor-ui/shell";
+import type { StoreApi } from "zustand/vanilla";
+import type { TilemapEditorUi } from "../editorUiHub";
 import { keyContextStore } from "../keymap/contextState";
 import { preferences } from "../preferences/preferences";
 import type { PreferenceStore } from "../preferences/preferences";
-import { bottomPanelStore } from "../shell/bottomPanel";
 import { sessionStore } from "../state/session";
 import { viewPreferences } from "../view/viewPreferences";
 
@@ -74,11 +75,12 @@ export interface ViewportProbe {
 export interface EditorTestHooks {
     readonly session: typeof sessionStore;
     readonly keyContexts: typeof keyContextStore;
-    readonly bottomPanel: typeof bottomPanelStore;
+    /** The bottom panel's visibility: the editor UI instance's bottom region. */
+    readonly bottomPanel: StoreApi<BottomRegionState>;
     readonly commands: CommandRegistry;
     readonly preferences: PreferenceStore;
     readonly viewPreferences: typeof viewPreferences;
-    readonly recentCommands: typeof recentCommands;
+    readonly recentCommands: StoreApi<RecentCommandsState>;
     /** Set by the viewport host while it is mounted. */
     viewport: ViewportProbe | null;
     /** Throws when the project violates an invariant of SPEC §2.1. */
@@ -96,16 +98,19 @@ declare global {
     }
 }
 
-/** Puts the hooks on `target.__ngneTest` and returns them. */
-export function installTestHooks(target: Window = window): EditorTestHooks {
+/** Puts the hooks of `editorUi`, the app's instance, on `target.__ngneTest` and returns them. */
+export function installTestHooks(
+    editorUi: TilemapEditorUi,
+    target: Window = window,
+): EditorTestHooks {
     const hooks: EditorTestHooks = {
         session: sessionStore,
         keyContexts: keyContextStore,
-        bottomPanel: bottomPanelStore,
-        commands: appCommands,
+        bottomPanel: editorUi.bottomRegion,
+        commands: editorUi.commands as unknown as CommandRegistry,
         preferences,
         viewPreferences,
-        recentCommands,
+        recentCommands: editorUi.recentCommands,
         viewport: null,
         assertInvariants: () => assertInvariants(sessionStore.getState().session.project),
         newProject: () => sessionStore.getState().replace(createProjectSession(createProject())),

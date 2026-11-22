@@ -1,8 +1,8 @@
 import { useState } from "react";
 import type { NewImageLayerRequest } from "../../app/images/imageLayers";
 import type { ImageChoice } from "../../core/images";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
 import { ImageChooser } from "./ImageChooser";
 
 /**

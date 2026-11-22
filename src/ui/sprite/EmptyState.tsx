@@ -1,8 +1,9 @@
 import { useStore } from "zustand";
+import { editorUiInstance } from "../../app/editorUiHub";
 import { openRecentId, recentFiles } from "../../app/file/recentFiles";
-import { runCommand } from "../commands/runCommand";
-import { useCommands } from "../commands/useCommands";
-import { Button } from "../primitives/Button";
+import { runCommand } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import { Button } from "@ngne/editor-ui/primitives";
 import "./emptyState.css";
 
 /** The actions of the empty state, each the command of the same name (DESIGN §3.3). */
@@ -27,7 +28,11 @@ export function EmptyState() {
     return (
         <div className="empty-state" data-empty-state="">
             {ACTIONS.map(([id, label]) => (
-                <Button key={id} disabled={!enabled(id)} onClick={() => runCommand(id)}>
+                <Button
+                    key={id}
+                    disabled={!enabled(id)}
+                    onClick={() => runCommand(editorUiInstance().commands, id)}
+                >
                     {label}
                 </Button>
             ))}
@@ -42,7 +47,9 @@ export function EmptyState() {
                                 <Button
                                     data-recent-file={entry.name}
                                     title={entry.name}
-                                    onClick={() => runCommand(openRecentId(entry))}
+                                    onClick={() =>
+                                        runCommand(editorUiInstance().commands, openRecentId(entry))
+                                    }
                                 >
                                     <span className="empty-state__recent-name">{entry.name}</span>
                                 </Button>

@@ -1,5 +1,5 @@
 import type { UpdateTilesetRequest } from "../../../app/tilesets/update/updateFromSource";
-import { commandDialog } from "../../dialogs/registry";
+import { commandDialog } from "@ngne/editor-ui/messages";
 import { UpdateDialog } from "./UpdateDialog";
 
 /** The Update Tileset from Source dialog (TE-028), shown by the dialog host. */

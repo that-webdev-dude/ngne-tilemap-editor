@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { viewPreferences } from "../view/viewPreferences";
 import { followMarkerContext } from "./markerSelection";
 

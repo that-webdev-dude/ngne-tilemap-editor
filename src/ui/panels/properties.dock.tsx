@@ -1,4 +1,4 @@
-import type { DockPanel } from "../dock/registry";
+import type { DockPanel } from "../registryTypes";
 import { PropertiesHeader, PropertiesPanel } from "../properties/PropertiesPanel";
 import { showsActiveMap } from "./showsActiveMap";
 

@@ -1,6 +1,18 @@
+import { useEditorUi } from "@ngne/editor-ui";
+import { runCommand, useCommands } from "@ngne/editor-ui/commands";
+import {
+    Button,
+    Icon,
+    IconButton,
+    NumberField,
+    SegmentedControl,
+    Select,
+    Toggle,
+    Tooltip,
+} from "@ngne/editor-ui/primitives";
+import { slotOf } from "@ngne/editor-ui/shell";
 import { useSyncExternalStore } from "react";
 import type { ToolState } from "../../app/tools/activeTool";
-import { slotOf } from "../../app/tools/registry";
 import type {
     Tool,
     ToolAction,
@@ -8,20 +20,10 @@ import type {
     ToolOptionValue,
     ToolReadout,
 } from "../../app/tools/types";
-import { runCommand } from "../commands/runCommand";
-import { useCommands } from "../commands/useCommands";
-import { Button } from "../primitives/Button";
-import { Icon } from "../primitives/Icon";
-import { IconButton } from "../primitives/IconButton";
-import { NumberField } from "../primitives/NumberField";
-import { SegmentedControl } from "../primitives/SegmentedControl";
-import { Select } from "../primitives/Select";
-import { Tooltip } from "../primitives/Tooltip";
-import { Toggle } from "../primitives/Toggle";
 
 // The controls the context bar shows for the active tool (DESIGN §7): an option by its kind,
 // the variants of its rail slot, its command buttons and its readouts. Used by the context bar
-// (`shell/regions/ContextBar.tsx`) and by context bar content that shows a tool's options with
+// readouts (`ToolReadouts.tsx`) and by context bar content that shows a tool's options with
 // more of its own (`fillMode.contextbar.tsx`); kept apart from the context bar, which loads the
 // registered content, so that content does not import the module that discovers it.
 
@@ -48,13 +50,14 @@ export function Readout({ readout }: { readout: ToolReadout }) {
  */
 export function Actions({ actions }: { actions: readonly ToolAction[] }) {
     const commands = useCommands();
+    const registry = useEditorUi().commands;
     return (
         <span className="context-actions">
             {actions.map((action) => {
                 const command = commands.find((each) => each.id === action.command);
                 const data = { "data-tool-action": action.command };
                 const disabled = !command || !command.enabled();
-                const run = () => void runCommand(action.command);
+                const run = () => void runCommand(registry, action.command);
                 return action.icon ? (
                     <IconButton
                         key={action.command}

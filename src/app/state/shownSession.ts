@@ -35,6 +35,12 @@ export type AfterFrame = (update: () => void) => () => void;
 const LATEST_MS = 50;
 
 const afterFrame: AfterFrame = (update) => {
+    // Without animation frames (a unit test under Node) there is no frame to wait for: the
+    // sections follow in the next task.
+    if (typeof requestAnimationFrame === "undefined") {
+        const timer = setTimeout(update, 0);
+        return () => clearTimeout(timer);
+    }
     let idle: number | null = null;
     let frame: number | null = requestAnimationFrame(() => {
         frame = requestAnimationFrame(() => {

@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../../commands/types";
+import type { CommandSpec } from "../../commands/commandTypes";
 import { TILESET_MENU } from "../edit/tilesetEdit";
 import { canUpdateCurrentTileset, updateCurrentTileset } from "./updateFromSource";
 

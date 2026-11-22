@@ -1,4 +1,4 @@
-import type { MenuBarMenu, PlannedCommandSpec } from "./types";
+import type { MenuBarMenu, PlannedCommandSpec } from "./commandTypes";
 
 /**
  * Menu items of commands that later tickets implement: the menus of DESIGN §5. Each is shown

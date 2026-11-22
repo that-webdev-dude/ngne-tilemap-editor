@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type * as CommandTypes from "../../src/app/commands/types";
+import type * as CommandTypes from "../../src/app/commands/commandTypes";
 import { collectErrors, region } from "./te-003-support";
 import { menuTrigger, settleTimers } from "./te-007-support";
 import {
@@ -108,7 +108,7 @@ for (const theme of THEMES) {
         await startEditor(page, { theme });
         await loadAudit(page);
         const { menus, submenus } = await page.evaluate(async () => {
-            const path = "/src/app/commands/types.ts";
+            const path = "/src/app/commands/commandTypes.ts";
             const { MENU_BAR } = (await import(/* @vite-ignore */ path)) as typeof CommandTypes;
             const paths = new Set<string>();
             for (const command of window.__ngneTest!.commands.list()) {

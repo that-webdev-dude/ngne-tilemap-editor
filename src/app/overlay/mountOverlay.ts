@@ -1,10 +1,10 @@
 import type { DeviceSize } from "../../engine/viewport/geometry";
 import type {} from "../../import-meta";
+import { editorUiInstance } from "../editorUiHub";
 import { sessionStore } from "../state/session";
 import type { ViewMapping } from "../view/coordinates";
 import { currentViewMapping } from "../view/viewNavigation";
 import { createOverlayController } from "./overlayController";
-import { overlayLayers } from "./overlayLayers";
 import type { OverlayLayer, OverlayTheme } from "./types";
 
 /** What tests read of the overlay on screen (TE-014). */
@@ -57,7 +57,7 @@ const MIDDLE_BUTTON = 1;
 export function mountOverlay(
     canvas: HTMLCanvasElement,
     container: HTMLElement,
-    layers: readonly OverlayLayer[] = overlayLayers,
+    layers: readonly OverlayLayer[] = editorUiInstance().overlayLayers,
 ): MountedOverlay {
     const context = canvas.getContext("2d");
     if (!context) throw new Error("The overlay canvas has no 2D context.");

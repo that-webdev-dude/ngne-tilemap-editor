@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { JSHandle, Locator, Page } from "@playwright/test";
-import type * as CommandTypes from "../../src/app/commands/types";
+import type * as CommandTypes from "../../src/app/commands/commandTypes";
 import type { WalkState } from "./harness/te-065-page";
 import { collectErrors, region, REGIONS } from "./te-003-support";
 import { menuTrigger, settleTimers } from "./te-007-support";
@@ -146,7 +146,7 @@ test("every enabled command of the menu bar is reached with the arrow keys", asy
     await startEditor(page);
     await loadAudit(page);
     const { menus, expected } = await page.evaluate(async () => {
-        const path = "/src/app/commands/types.ts";
+        const path = "/src/app/commands/commandTypes.ts";
         const { MENU_BAR } = (await import(/* @vite-ignore */ path)) as typeof CommandTypes;
         return {
             menus: [...MENU_BAR],

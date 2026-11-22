@@ -3,12 +3,12 @@ import type { ResizeMapRequest } from "../../app/maps/mapDialogs";
 import { RESIZE_ANCHORS, anchorOffset, clampOffset, offsetRange } from "../../core/maps";
 import type { ResizeMapValues } from "../../core/maps";
 import type { PixelBuffer } from "../../core/model";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { NumberField } from "../primitives/NumberField";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { NumberField } from "@ngne/editor-ui/primitives";
 import { PivotGrid } from "../sprite/PivotGrid";
 import type { Pivot } from "../sprite/PivotGrid";
-import "../primitives/field.css";
+
 import "./mapDialogs.css";
 
 /** The largest box the preview takes, in CSS pixels. */

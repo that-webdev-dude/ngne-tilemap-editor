@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { createStore } from "zustand/vanilla";
-import { rgbToHsv } from "../../src/core/color";
+import { rgbToHsv } from "@ngne/editor-ui/colour";
 import {
     changeHsv,
     keyAlpha,

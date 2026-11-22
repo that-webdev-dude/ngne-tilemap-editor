@@ -1,5 +1,5 @@
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { historySteps } from "../state/historySteps";
 import { tilesetPanelStore } from "../tilesets/panel/tilesetPanel";
 import {

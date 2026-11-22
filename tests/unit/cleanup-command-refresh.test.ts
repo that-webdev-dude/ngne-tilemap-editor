@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { createCommandRegistry } from "../../src/app/commands/registry";
-import { createCommandTracker } from "../../src/ui/commands/commandTracker";
+import { createCommandRegistry } from "@ngne/editor-ui/commands";
+import { createCommandTracker } from "@ngne/editor-ui/commands";
 
 // TE-053 measurement: every refresh of the command registry rendered every component of
 // `useCommands` again (about 13 ms on reference hardware), so a file operation starting (its

@@ -1,4 +1,4 @@
-import { commandDialogs } from "../../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import type { ImportSession } from "./importSession";
 
 // The request of the Import Tileset dialog (DESIGN §9; TE-024). The workflow opens it and

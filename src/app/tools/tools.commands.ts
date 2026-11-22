@@ -1,10 +1,11 @@
-import { normalizeChord } from "../commands/chord";
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
-import { isNativeKeyChord } from "../keymap/keyClasses";
+import { normalizeChord } from "@ngne/editor-ui/commands";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
+import { isNativeKeyChord } from "@ngne/editor-ui/commands";
 import { viewSurface } from "../view/viewNavigation";
 import { toolState } from "./activeTool";
 import { toolPipeline } from "./appPipeline";
+import { toolKey } from "./toolKeys";
 import { toolRegistry } from "./toolRegistry";
 import type { Tool } from "./types";
 
@@ -51,7 +52,7 @@ function selectCommand(tool: Tool): CommandSpec {
     return {
         id: selectCommandId(tool),
         title: `${tool.label} Tool`,
-        shortcut: tool.shortcut,
+        shortcut: toolKey(tool),
         context: "canvas",
         // Exactly this tool, while the active layer's set holds it. While its key switches
         // the variant instead, the command of that takes the key, and this one is inert.
@@ -61,12 +62,13 @@ function selectCommand(tool: Tool): CommandSpec {
 }
 
 function nextVariantCommand(tool: Tool): CommandSpec[] {
-    if (!tool.shortcut || toolState.nextVariant(tool.id) === null) return [];
+    const key = toolKey(tool);
+    if (!key || toolState.nextVariant(tool.id) === null) return [];
     return [
         {
             id: nextVariantCommandId(tool),
             title: `${tool.label} Tool: Next Variant`,
-            shortcut: tool.shortcut,
+            shortcut: key,
             context: "canvas",
             enabled: () => switches(tool),
             run() {

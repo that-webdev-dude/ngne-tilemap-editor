@@ -1,4 +1,4 @@
-import type { DockPanel } from "../dock/registry";
+import type { DockPanel } from "../registryTypes";
 import { PreviewPanel } from "../preview/PreviewPanel";
 
 /** The game preview (DESIGN §8.4; TE-056). */

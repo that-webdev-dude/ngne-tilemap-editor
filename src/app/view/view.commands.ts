@@ -1,5 +1,5 @@
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { setPanHeld } from "./panHold";
 import { activeScale, canNavigate, fitActiveView, zoomBy, zoomTo } from "./viewNavigation";
 import { viewportSize } from "./viewportSize";

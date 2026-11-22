@@ -4,8 +4,8 @@ import { LayerEditError, layerNameProblem } from "../../core/layers";
 import type { Command } from "../../core/history";
 import { findLayer } from "../../core/model";
 import type { Layer, Project } from "../../core/model";
-import { PANEL_SELECTOR } from "../keymap/environment";
-import { notices } from "../notices/notices";
+import { PANEL_SELECTOR } from "../commands/commandTypes";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../state/session";
 import {
     activeMap,

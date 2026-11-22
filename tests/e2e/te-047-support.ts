@@ -168,9 +168,9 @@ export function projectState(page: Page): Promise<ProjectState> {
 export const emptyState = (page: Page): Locator =>
     region(page, "viewport").locator("[data-empty-state]");
 export const projectName = (page: Page): Locator =>
-    region(page, "menu-bar").locator(".map-tabs__project-name");
+    region(page, "menu-bar").locator(".tab-strip__leading-label");
 export const unsavedMarker = (page: Page): Locator =>
-    region(page, "menu-bar").locator("[data-unsaved-marker]");
+    region(page, "menu-bar").locator("[data-tab-unsaved]");
 export const recentButtons = (page: Page): Locator =>
     emptyState(page).locator("[data-recent-file]");
 export const saveDialog = (page: Page): Locator =>

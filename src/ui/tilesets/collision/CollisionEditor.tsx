@@ -1,3 +1,4 @@
+import { editorUiInstance } from "../../../app/editorUiHub";
 import {
     Circle,
     Magnet,
@@ -12,7 +13,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
-import { isTextField } from "../../../app/keymap/environment";
+import { isTextField } from "@ngne/editor-ui/commands";
 import {
     HANDLE_REACH,
     HANDLE_SIZE,
@@ -48,7 +49,7 @@ import {
 } from "../../../core/model";
 import type { Shape, ShapeBox, ShapePoint, Tileset } from "../../../core/model";
 import type { CollisionEdit } from "../../../core/tileset";
-import { runCommand } from "../../commands/runCommand";
+import { runCommand } from "@ngne/editor-ui/commands";
 import { PixelCanvas } from "../../import/PixelCanvas";
 import {
     Button,
@@ -58,7 +59,7 @@ import {
     NumberField,
     Toggle,
     ToolButton,
-} from "../../primitives";
+} from "@ngne/editor-ui/primitives";
 import { tilePixels } from "../tilePixels";
 import "./collision.css";
 
@@ -460,7 +461,8 @@ function CollisionEditorBody({
             event.preventDefault();
             if (drag.current || polygon) return;
             const redo = key.toLowerCase() === "y" || event.shiftKey;
-            if (runCommand(redo ? "edit.redo" : "edit.undo")) setMessage(null);
+            if (runCommand(editorUiInstance().commands, redo ? "edit.redo" : "edit.undo"))
+                setMessage(null);
             return;
         }
         if (ctrl || event.altKey) return;

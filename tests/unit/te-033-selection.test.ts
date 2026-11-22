@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import { clipboardContent, clipboardStore } from "../../src/app/clipboard/clipboard";
-import { appCommands } from "../../src/app/commands/appCommands";
+import { appCommands } from "../../src/app/editorUi";
 import { sessionStore } from "../../src/app/state/session";
 import { cellValue } from "../../src/core/cells";
 import { resizeMapCommand } from "../../src/core/maps";

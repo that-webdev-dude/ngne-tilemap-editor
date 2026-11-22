@@ -4,7 +4,7 @@ import { DEFAULT_FRAME_MS, isFrameMs } from "../../../core/model";
 import type { AnimationFrame, Tile, Tileset } from "../../../core/model";
 import { animationCommand } from "../../../core/tileset";
 import type { AnimationEdit } from "../../../core/tileset";
-import { commandDialogs } from "../../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../../state/session";
 import { currentTileset, historyIdle, runTilesetCommand } from "../edit/tilesetEdit";
 import { focusTile, selectedTiles, selectionRect, tilesetPanelStore } from "../panel/tilesetPanel";

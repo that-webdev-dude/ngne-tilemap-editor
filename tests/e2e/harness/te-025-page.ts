@@ -1,6 +1,6 @@
 // Declares `window.__ngneTest`, the development-only test hook of the app.
 import type {} from "../../../src/app/testing/testHooks";
-import { appCommands } from "../../../src/app/commands/appCommands";
+import { appCommands } from "../../../src/app/editorUi";
 import { tilesetPanelStore } from "../../../src/app/tilesets/panel/tilesetPanel";
 import { toolState } from "../../../src/app/tools/activeTool";
 import { currentStamp, setCurrentStamp } from "../../../src/app/tools/stamp/currentStamp";

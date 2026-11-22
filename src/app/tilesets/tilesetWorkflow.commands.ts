@@ -1,5 +1,5 @@
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { subscribeTilesetWorkflow } from "./tilesetWorkflow";
 
 // No command of its own: the commands that wait for a tileset file operation to end read

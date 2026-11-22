@@ -1,5 +1,5 @@
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { OPEN_RECENT_PATH, openRecentId, recentFiles } from "./recentFiles";
 import type { RecentEntry } from "./recentFiles";
 import { fileWorkflows } from "./workflows";

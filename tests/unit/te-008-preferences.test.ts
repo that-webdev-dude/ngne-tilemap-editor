@@ -15,9 +15,9 @@ import {
     VIEW_PREFERENCE_KEYS,
     VIEW_PREFERENCES_STORAGE_KEY,
 } from "../../src/app/view/viewPreferences";
-import type { KeyValueStorage } from "../../src/app/platform/storage";
-import { formatHexColour, parseHexColour } from "../../src/ui/preferences/hexColour";
-import { createThemeStore, DEFAULT_THEME, THEME_STORAGE_KEY } from "../../src/ui/theme/theme";
+import type { KeyValueStorage } from "@ngne/editor-ui/platform";
+import { formatHexColour, parseHexColour } from "@ngne/editor-ui/colour";
+import { createThemeStore, DEFAULT_THEME, THEME_STORAGE_KEY } from "@ngne/editor-ui";
 
 // TE-008: the stores behind the Preferences dialog and the view preferences of SPEC §3 — the
 // ranges the dialog offers are the ranges the store accepts, every field notifies a subscriber

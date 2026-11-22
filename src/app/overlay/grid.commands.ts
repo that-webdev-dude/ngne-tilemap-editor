@@ -1,5 +1,5 @@
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { viewPreferences } from "../view/viewPreferences";
 
 // Show Grid of the View menu (TE-014), bound to the `grid` view preference (SPEC §3): the same

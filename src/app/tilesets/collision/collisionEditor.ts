@@ -1,7 +1,7 @@
 import type { Shape, Tile, Tileset } from "../../../core/model";
 import { collisionCommand } from "../../../core/tileset";
 import type { CollisionEdit } from "../../../core/tileset";
-import { commandDialogs } from "../../dialogs/dialogRequests";
+import { commandDialogs } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../../state/session";
 import { currentTileset, historyIdle, runTilesetCommand } from "../edit/tilesetEdit";
 import { focusTile, selectedTiles } from "../panel/tilesetPanel";

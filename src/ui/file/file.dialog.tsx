@@ -3,8 +3,8 @@ import type {
     NewProjectRequest,
     SaveChangesRequest,
 } from "../../app/file/dialogs";
-import { commandDialog } from "../dialogs/registry";
-import { DiscardChangesDialog } from "./DiscardChangesDialog";
+import { commandDialog } from "@ngne/editor-ui/messages";
+import { DiscardChangesDialog } from "@ngne/editor-ui/messages";
 import { NewProjectDialog } from "./NewProjectDialog";
 import { SaveChangesDialog } from "./SaveChangesDialog";
 

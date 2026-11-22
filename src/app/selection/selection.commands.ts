@@ -6,7 +6,7 @@ import {
     selectNoneCommand,
     tileSelectionOf,
 } from "../../core/selection";
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { activeHistory, sessionStore } from "../state/session";
 import { toolState } from "../tools/activeTool";
 import { toolPipeline } from "../tools/appPipeline";

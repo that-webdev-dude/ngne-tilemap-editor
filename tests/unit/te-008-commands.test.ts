@@ -1,23 +1,23 @@
 import { afterEach, describe, expect, it } from "vitest";
-import { fuzzyScore } from "../../src/app/commandPalette/fuzzy";
-import { paletteEntries, runPaletteCommand } from "../../src/app/commandPalette/paletteModel";
+import { fuzzyScore } from "@ngne/editor-ui/commands";
+import { paletteEntries, runPaletteCommand } from "@ngne/editor-ui/commands";
 import {
     createRecentCommandsStore,
     MAX_RECENT_COMMANDS,
     parseRecentCommands,
-} from "../../src/app/commandPalette/recentCommands";
-import { appCommands } from "../../src/app/commands/appCommands";
-import { buildMenu } from "../../src/app/commands/menuModel";
-import type { MenuNode } from "../../src/app/commands/menuModel";
+} from "@ngne/editor-ui/commands";
+import { appCommands } from "../../src/app/editorUi";
+import { buildMenu } from "@ngne/editor-ui/commands";
+import type { MenuNode } from "@ngne/editor-ui/commands";
 import { plannedCommands } from "../../src/app/commands/planned.commands";
-import { createCommandRegistry } from "../../src/app/commands/registry";
-import type { CommandRegistry } from "../../src/app/commands/registry";
-import type { Command, CommandSpec } from "../../src/app/commands/types";
-import { resolveKey } from "../../src/app/keymap/resolve";
-import type { KeyEnvironment } from "../../src/app/keymap/resolve";
-import { OTHER_SHORTCUTS, shortcutGroups } from "../../src/app/shortcuts/shortcutSheet";
-import { SURFACE_IDS, surfaces } from "../../src/app/surfaces/surfaces";
-import type { SurfaceId } from "../../src/app/surfaces/surfaces";
+import { createCommandRegistry } from "@ngne/editor-ui/commands";
+import type { CommandRegistry } from "@ngne/editor-ui/commands";
+import type { Command, CommandSpec } from "../../src/app/commands/commandTypes";
+import { resolveKey } from "@ngne/editor-ui/commands";
+import type { KeyEnvironment } from "@ngne/editor-ui/commands";
+import { OTHER_SHORTCUTS, shortcutGroups } from "@ngne/editor-ui/commands";
+import { SURFACE_IDS, surfaces } from "../e2e/harness/pageModules";
+import type { SurfaceId } from "../e2e/harness/pageModules";
 
 // TE-008: the three commands of this ticket in the registry (their planned menu items, their
 // chords from DESIGN §10.3, the surfaces they open), and the palette and sheet models over the

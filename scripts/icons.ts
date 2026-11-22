@@ -2,18 +2,19 @@ import { readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { encode } from "fast-png";
 
-// TE-066: the app's icons and the colours of its web manifest, from the design tokens
-// (src/ui/styles/tokens.css, dark set: the default theme). The icons are drawn here, pixel by
-// pixel, so the same tokens always give the same files; the PNG files in public/icons are the
-// output of this script, committed, and a unit test (tests/unit/te-066-pwa.test.ts) fails when
-// they differ from it. After a change of the tokens or of the drawing, write them again with
+// TE-066: the app's icons and the colours of its web manifest, from the design tokens of
+// @ngne/editor-ui (the first `:root` block of its stylesheet, `tokens.css`: the dark set, the
+// default theme). The icons are drawn here, pixel by pixel, so the same tokens always give the
+// same files; the PNG files in public/icons are the output of this script, committed, and a
+// unit test (tests/unit/te-066-pwa.test.ts) fails when they differ from it. After a change of
+// the tokens or of the drawing, write them again with
 //
 //     node scripts/icons.ts
 //
 // (Node 24 runs the TypeScript directly; this file imports nothing relative for that reason.)
 
 const ROOT = new URL("../", import.meta.url);
-const TOKENS_FILE = new URL("src/ui/styles/tokens.css", ROOT);
+const TOKENS_FILE = new URL("node_modules/@ngne/editor-ui/dist/styles.css", ROOT);
 export const ICONS_DIR = new URL("public/icons/", ROOT);
 
 export type Rgb = readonly [number, number, number];

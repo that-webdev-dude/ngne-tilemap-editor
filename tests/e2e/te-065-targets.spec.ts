@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
-import type * as ChordModule from "../../src/app/commands/chord";
+import type * as PageModules from "./harness/pageModules";
 import type * as ToolRegistryModule from "../../src/app/tools/toolRegistry";
 import { boxOf, collectErrors, region } from "./te-003-support";
 import {
@@ -94,7 +94,9 @@ async function iconButtonProblems(
     // keys) are not the rail's tools.
     const keys = await page.evaluate(async () => {
         const load = (path: string) => import(/* @vite-ignore */ path);
-        const { formatChord } = (await load("/src/app/commands/chord.ts")) as typeof ChordModule;
+        const { formatChord } = (await load(
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
         const { toolRegistry } = (await load(
             "/src/app/tools/toolRegistry.ts",
         )) as typeof ToolRegistryModule;
@@ -369,7 +371,7 @@ test("the bottom panel's splitter takes the presses 4 px above its border under 
         const bottom = document.querySelector('[aria-label="Resize bottom panel"]')!;
         const side = document.querySelector('[aria-label="Resize panels"]')!;
         const dock = document.querySelector('[data-region="dock"]')!.getBoundingClientRect();
-        const border = document.querySelector(".shell-panel")!.getBoundingClientRect().top;
+        const border = document.querySelector(".shell-bottom")!.getBoundingClientRect().top;
         const row = document.querySelector('[data-region="dock"] [role="option"]')!;
         const rowBox = row.getBoundingClientRect();
         const at = (x: number, y: number) => document.elementFromPoint(x, y);

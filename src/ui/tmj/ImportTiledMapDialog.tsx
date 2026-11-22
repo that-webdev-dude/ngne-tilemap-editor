@@ -3,10 +3,10 @@ import type { ImportTiledMapRequest } from "../../app/tmj/importTiledMap";
 import { summaryLines } from "../../app/tmj/reportText";
 import { pickTmjFiles } from "../../app/tmj/tmjFiles";
 import type { TmjFileRow, TmjImportSessionState } from "../../app/tmj/tmjImportSession";
-import { Button } from "../primitives/Button";
-import { Dialog } from "../primitives/Dialog";
-import { Select } from "../primitives/Select";
-import "../primitives/field.css";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { Select } from "@ngne/editor-ui/primitives";
+
 import "../import/import.css";
 import "./tmj.css";
 

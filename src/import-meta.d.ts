@@ -9,6 +9,15 @@ declare global {
         readonly BASE_URL: string;
         /** True in a build, which has the service worker beside it (vite.config.ts, TE-066). */
         readonly SERVICE_WORKER: boolean;
+        /**
+         * The build facts the About dialog shows: package.json name, version and licence, and
+         * the engine package with the version it pins (vite.config.ts, `appInfoDefines`).
+         */
+        readonly APP_PACKAGE: string;
+        readonly APP_VERSION: string;
+        readonly APP_LICENSE: string;
+        readonly ENGINE_PACKAGE: string;
+        readonly ENGINE_VERSION: string;
     }
 
     interface ImportMeta {

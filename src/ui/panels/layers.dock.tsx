@@ -1,4 +1,4 @@
-import type { DockPanel } from "../dock/registry";
+import type { DockPanel } from "../registryTypes";
 import { LayersHeader, LayersPanel } from "../layers/LayersPanel";
 import { showsActiveMap } from "./showsActiveMap";
 

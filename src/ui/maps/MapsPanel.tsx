@@ -1,4 +1,5 @@
 import { Ellipsis, Plus } from "lucide-react";
+import { editorUiInstance } from "../../app/editorUiHub";
 import { DropdownMenu } from "radix-ui";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
@@ -15,11 +16,11 @@ import {
 import { useShownSession } from "../../app/state/shownSession";
 import { activateMap, useMapTabs } from "../../app/tabs/tabs";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import { contextMenuEntries } from "../commands/contextMenu";
-import { runCommand } from "../commands/runCommand";
-import { useCommands } from "../commands/useCommands";
-import { ContextMenu, Icon, IconButton } from "../primitives";
-import type { ContextMenuEntry } from "../primitives";
+import { contextMenuEntries } from "@ngne/editor-ui/commands";
+import { runCommand } from "@ngne/editor-ui/commands";
+import { useCommands } from "@ngne/editor-ui/commands";
+import { ContextMenu, Icon, IconButton } from "@ngne/editor-ui/primitives";
+import type { ContextMenuEntry } from "@ngne/editor-ui/primitives";
 import "./maps.css";
 
 // The Maps dock section (DESIGN §8.1; TE-032): one row per map of the project in list order,
@@ -347,7 +348,7 @@ export function NewMapButton() {
             shortcut="Ctrl+Alt+M"
             disabled={!enabled}
             data-new-map=""
-            onClick={() => runCommand("file.newMap")}
+            onClick={() => runCommand(editorUiInstance().commands, "file.newMap")}
         >
             <Icon icon={Plus} />
         </IconButton>

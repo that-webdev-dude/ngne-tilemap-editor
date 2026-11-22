@@ -1,11 +1,7 @@
 import { AxeBuilder } from "@axe-core/playwright";
 import { expect } from "@playwright/test";
 import type { Locator, Page } from "@playwright/test";
-import type * as DialogRequestsModule from "../../src/app/dialogs/dialogRequests";
-import type * as StorageModule from "../../src/app/platform/storage";
-import type * as SurfacesModule from "../../src/app/surfaces/surfaces";
-import type * as DialogRegistryModule from "../../src/ui/dialogs/registry";
-import type * as ToastModule from "../../src/ui/toast/toast";
+import type * as PageModules from "./harness/pageModules";
 import { openEmptyApp } from "./support/wait";
 import { region, THEME_KEY } from "./te-003-support";
 import { rename, settleTimers } from "./te-007-support";
@@ -372,9 +368,11 @@ export function openKind(page: Page): Promise<string | null> {
     return page.evaluate(async () => {
         const load = (path: string) => import(/* @vite-ignore */ path);
         const { commandDialogs } = (await load(
-            "/src/app/dialogs/dialogRequests.ts",
-        )) as typeof DialogRequestsModule;
-        const { surfaces } = (await load("/src/app/surfaces/surfaces.ts")) as typeof SurfacesModule;
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
+        const { surfaces } = (await load(
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
         return commandDialogs.store.getState().request?.kind ?? surfaces.store.getState().open;
     });
 }
@@ -384,11 +382,11 @@ export function registeredSurfaceKinds(page: Page): Promise<string[]> {
     return page.evaluate(async () => {
         const load = (path: string) => import(/* @vite-ignore */ path);
         const { registeredDialogs } = (await load(
-            "/src/ui/dialogs/registry.ts",
-        )) as typeof DialogRegistryModule;
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
         const { SURFACE_IDS } = (await load(
-            "/src/app/surfaces/surfaces.ts",
-        )) as typeof SurfacesModule;
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
         return [...registeredDialogs.keys(), ...SURFACE_IDS].sort((a, b) =>
             a < b ? -1 : a > b ? 1 : 0,
         );
@@ -828,7 +826,7 @@ function isCut(page: Page, selector: string): Promise<boolean> {
 }
 
 /** The region that holds the toasts. */
-export const NOTIFICATIONS = '[role="region"][aria-label="Notifications"]';
+export const NOTIFICATIONS = 'section.ui-toasts[aria-label="Notifications"]';
 
 /**
  * Shows a toast of each kind the app shows: information, an error with the app's storage
@@ -837,10 +835,10 @@ export const NOTIFICATIONS = '[role="region"][aria-label="Notifications"]';
 export async function showEveryToast(page: Page): Promise<number> {
     await page.evaluate(async () => {
         const load = (path: string) => import(/* @vite-ignore */ path);
-        const { toast } = (await load("/src/ui/toast/toast.ts")) as typeof ToastModule;
+        const { toast } = (await load("/tests/e2e/harness/pageModules.ts")) as typeof PageModules;
         const { STORAGE_WRITE_FAILED_MESSAGE } = (await load(
-            "/src/app/platform/storage.ts",
-        )) as typeof StorageModule;
+            "/tests/e2e/harness/pageModules.ts",
+        )) as typeof PageModules;
         toast.info("Saved audit.ngtilemap");
         toast.error(STORAGE_WRITE_FAILED_MESSAGE);
         toast.info("A new version is ready.", { action: { label: "Reload", run() {} } });

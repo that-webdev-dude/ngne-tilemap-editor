@@ -16,8 +16,8 @@ import type { Project, ProjectSession } from "../../core/model";
 import { MAX_CONTENT_BYTES, PROJECT_FILE_EXTENSION } from "../../core/project";
 import { fitWhenShown, newMapDefaults } from "../maps/maps";
 import { reason } from "../worker/errorReason";
-import { notices as appNotices } from "../notices/notices";
-import type { Notices } from "../notices/notices";
+import { notices as appNotices } from "@ngne/editor-ui/messages";
+import type { Notices } from "@ngne/editor-ui/messages";
 import { browserProjectFiles } from "../platform/projectFiles";
 import type {
     ChosenFile,

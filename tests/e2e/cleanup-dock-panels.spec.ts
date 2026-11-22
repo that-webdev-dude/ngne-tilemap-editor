@@ -33,7 +33,7 @@ test("a section that shows the map before a switch takes no input for the new ma
     const first = await call<string>(page, "load");
     const second = await call<string>(page, "addMap");
     await expect(rows(page)).toHaveCount(1);
-    await page.locator(`[data-map-tab="${first}"]`).click();
+    await page.locator(`[data-tab="${first}"]`).click();
     await expect(rows(page)).toHaveCount(2);
 
     // The switch and, one animation frame later, a press on the visibility toggle of the row

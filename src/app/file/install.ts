@@ -1,6 +1,6 @@
 import type { StoreApi } from "zustand/vanilla";
 import { tmjFileKind } from "../../core/tmj";
-import { OVERLAY_SELECTOR } from "../keymap/environment";
+import { OVERLAY_SELECTOR } from "@ngne/editor-ui/commands";
 import { carriesFiles, droppedFiles } from "../platform/projectFiles";
 import type { ChosenFile } from "../platform/projectFiles";
 import { sessionStore } from "../state/session";

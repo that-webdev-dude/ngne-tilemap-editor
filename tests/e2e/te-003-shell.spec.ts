@@ -1,11 +1,11 @@
 import { expect, test } from "@playwright/test";
 import type { Page } from "@playwright/test";
 import {
+    BOTTOM_HEIGHT as TIMELINE_HEIGHT,
+    bottomMaxHeight as timelineMaxHeight,
+    defaultBottomHeight as defaultTimelineHeight,
     DOCK_WIDTH,
-    defaultTimelineHeight,
-    TIMELINE_HEIGHT,
-    timelineMaxHeight,
-} from "../../src/ui/shell/layout";
+} from "@ngne/editor-ui/shell";
 import {
     boxOf,
     collectErrors,

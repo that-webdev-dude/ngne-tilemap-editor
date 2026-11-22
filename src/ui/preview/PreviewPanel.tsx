@@ -5,7 +5,7 @@ import { mountPreview } from "../../app/preview/mountPreview";
 import { PREVIEW_RESOLUTIONS, PREVIEW_SCALES, previewState } from "../../app/preview/previewState";
 import type { PreviewLayers, PreviewScale } from "../../app/preview/previewState";
 import { useSession } from "../../app/state/session";
-import { Icon, IconButton, Select } from "../primitives";
+import { Icon, IconButton, Select } from "@ngne/editor-ui/primitives";
 import "./preview.css";
 
 // The Preview dock section (DESIGN §8.4; TE-056): the sprite editor's preview stage and row

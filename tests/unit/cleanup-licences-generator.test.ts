@@ -26,8 +26,8 @@ import {
     runtimePackageDirs,
     strayPackages,
     unknownModules,
-} from "../../scripts/licences";
-import { LICENCES_PATH } from "../../src/app/licences/openLicences";
+} from "@ngne/editor-ui/licences/build";
+import { LICENCES_PATH } from "@ngne/editor-ui/licences";
 
 // The open-source licences file of the build (scripts/licences.ts): which packages it lists,
 // which licences it accepts, and what it holds. The packages of the fixtures are written to

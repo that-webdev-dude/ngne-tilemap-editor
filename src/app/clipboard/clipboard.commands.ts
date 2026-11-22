@@ -9,8 +9,8 @@ import {
 } from "../../core/selection";
 import { effectiveValues, findLayer, walkLayers } from "../../core/model";
 import type { Marker, Region } from "../../core/model";
-import { appCommands } from "../commands/appCommands";
-import type { CommandSpec } from "../commands/types";
+import { appCommands } from "../editorUiHub";
+import type { CommandSpec } from "../commands/commandTypes";
 import { activeHistory, sessionStore } from "../state/session";
 import { statusStore } from "../state/status";
 import { toolState } from "../tools/activeTool";

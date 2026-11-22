@@ -24,8 +24,8 @@ function call<T>(page: Page, name: string, ...args: unknown[]): Promise<T> {
 const snapshot = (page: Page) => call<Snapshot>(page, "snapshot");
 const mapSession = (page: Page, id: string) =>
     call<{ layer: number | null; view: MapView | null }>(page, "mapSession", id);
-const strip = (page: Page) => page.locator("[data-map-tabs]");
-const tab = (page: Page, id: string) => page.locator(`[data-map-tab="${id}"]`);
+const strip = (page: Page) => page.locator("[data-tab-strip]");
+const tab = (page: Page, id: string) => page.locator(`[data-tab="${id}"]`);
 const tabNames = (page: Page) => strip(page).getByRole("tab").allTextContents();
 
 /** Opens the editor on the test project; returns the ID of "Overworld". */
@@ -44,7 +44,7 @@ async function mapMenu(page: Page, commandId: string): Promise<void> {
 
 /** Presses `key` with the focus on the selected tab: no text field, so the global keys apply. */
 async function press(page: Page, key: string): Promise<void> {
-    await page.locator('[data-map-tab][aria-selected="true"]').focus();
+    await page.locator('[data-tab][aria-selected="true"]').focus();
     await page.keyboard.press(key);
 }
 
@@ -58,13 +58,13 @@ test("new, duplicate, rename and delete; undo restores each step and redo repeat
     page,
 }) => {
     const overworld = await load(page);
-    await expect(page.locator("[data-project-name]")).toHaveText("Quest");
+    await expect(page.locator("[data-tab-leading]")).toHaveText("Quest");
 
     const cave = await call<string>(page, "addMap", { name: "Cave", width: 20, height: 10 });
     await expect(tab(page, cave)).toHaveAttribute("aria-selected", "true");
     expect(await tabNames(page)).toEqual(["Overworld", "Cave"]);
     // The project's unsaved marker sits before the first tab.
-    await expect(page.locator("[data-project-name] [data-unsaved-marker]")).toHaveCount(1);
+    await expect(page.locator("[data-tab-leading] [data-tab-unsaved]")).toHaveCount(1);
 
     await mapMenu(page, "map.duplicate");
     let state = await snapshot(page);
@@ -99,7 +99,7 @@ test("new, duplicate, rename and delete; undo restores each step and redo repeat
     state = await snapshot(page);
     expect(state.maps.map((map) => map.id)).toEqual([overworld]);
     expect(state).toMatchObject({ active: overworld, open: [overworld], undo: 0, dirty: false });
-    await expect(page.locator("[data-project-name] [data-unsaved-marker]")).toHaveCount(0);
+    await expect(page.locator("[data-tab-leading] [data-tab-unsaved]")).toHaveCount(0);
 
     // Redo repeats them.
     for (let step = 0; step < 4; step++) await press(page, "Control+y");

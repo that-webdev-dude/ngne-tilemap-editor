@@ -2,10 +2,17 @@ import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
-import { formatHex, hsvToRgb, packRgba, parseHex, rgbToHsv, unpackRgba } from "../../core/color";
-import type { Hsv } from "../../core/color";
-import { NumberField } from "../primitives/NumberField";
-import { SegmentedControl } from "../primitives/SegmentedControl";
+import {
+    formatHex,
+    hsvToRgb,
+    packRgba,
+    parseHex,
+    rgbToHsv,
+    unpackRgba,
+} from "@ngne/editor-ui/colour";
+import type { Hsv } from "@ngne/editor-ui/colour";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { SegmentedControl } from "@ngne/editor-ui/primitives";
 import { cancelNextContextMenu } from "./cancelContextMenu";
 import {
     changeHsv,

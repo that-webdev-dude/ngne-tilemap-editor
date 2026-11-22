@@ -1,4 +1,4 @@
-import { normalizeChord } from "../../../src/app/commands/chord";
+import { normalizeChord } from "@ngne/editor-ui/commands";
 
 // TE-007: the key table of DESIGN §10.3, parsed from the text of docs/DESIGN.md. Pure, so the
 // chord harness page can run it in the browser; te-007-design-keys.ts reads the file for the

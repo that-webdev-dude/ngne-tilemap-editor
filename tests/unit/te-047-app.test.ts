@@ -4,7 +4,7 @@ import {
     copyCellsToClipboard,
     copyMarkersToClipboard,
 } from "../../src/app/clipboard/clipboard";
-import { appCommands } from "../../src/app/commands/appCommands";
+import { appCommands } from "../../src/app/editorUi";
 import { isProjectFileName, projectFileName } from "../../src/app/file/fileName";
 import { RECENT_FILES_LIMIT, createRecentFiles } from "../../src/app/file/recentFiles";
 import type { RecentFileStorage } from "../../src/app/file/recentFiles";

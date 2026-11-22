@@ -5,9 +5,9 @@ import { subscribeMarkerDraft } from "../../app/markers/markerSelection";
 import { sessionStore } from "../../app/state/session";
 import { toolState } from "../../app/tools/activeTool";
 import { useViewPreference, viewPreferences } from "../../app/view/viewPreferences";
-import { NumberField } from "../primitives/NumberField";
-import { Toggle } from "../primitives/Toggle";
-import type { ContextBarContent } from "../tools/contextBarRegistry";
+import { NumberField } from "@ngne/editor-ui/primitives";
+import { Toggle } from "@ngne/editor-ui/primitives";
+import type { ContextBarContent } from "../registryTypes";
 
 // The context bars of the marker tools (DESIGN §7; TE-038): the select tool shows X, Y, W and H
 // of the selection's box (px) and Snap; the create tools show Snap. Snap is the Snap to Grid view

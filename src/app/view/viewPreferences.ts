@@ -1,8 +1,8 @@
 import { useStore } from "zustand";
 import { createStore } from "zustand/vanilla";
 import type { StoreApi } from "zustand/vanilla";
-import { browserStorage, readJson, writeItem } from "../platform/storage";
-import type { KeyValueStorage } from "../platform/storage";
+import { browserStorage, readJson, writeItem } from "@ngne/editor-ui/platform";
+import type { KeyValueStorage } from "@ngne/editor-ui/platform";
 
 /**
  * The view preferences of SPEC §3: Show Grid, Show Collision, Highlight Current Layer and Snap

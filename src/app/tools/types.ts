@@ -1,3 +1,8 @@
+import type {
+    RailSlot as PackageRailSlot,
+    RegisteredTool,
+    ToolRegistry as PackageToolRegistry,
+} from "@ngne/editor-ui/shell";
 import type { LucideIcon } from "lucide-react";
 import type { PixelPoint } from "../../core/raster/line";
 import type { History } from "../../core/history";
@@ -337,14 +342,8 @@ export interface ToolSpec {
     onCommit?(context: ToolContext, recorded: boolean): void;
 }
 
-/** A registered tool: its spec, with what its planned slot supplies. */
-export interface Tool extends ToolSpec {
-    /** The module that registered it; used in error messages. */
-    readonly source: string;
-    readonly options: readonly ToolOptionSpec[];
-    /** Its position in the rail, or null when it is not in the rail. */
-    readonly railOrder: number | undefined;
-}
+/** A registered tool: its spec, with what its planned slot supplies (the package registry's). */
+export type Tool = RegisteredTool<ToolSpec>;
 
 /**
  * A slot of the tool rail for a tool a later ticket implements (DESIGN §6): shown disabled
@@ -367,21 +366,7 @@ export interface ToolModule {
 }
 
 /** One button of the tool rail: a registered tool, or the planned slot of one. */
-export interface RailSlot {
-    readonly id: string;
-    readonly label: string;
-    readonly shortcut: string | undefined;
-    readonly icon: LucideIcon | undefined;
-    readonly railOrder: number;
-    /**
-     * The tool of the slot's id, or the first of its variants when there is none; null while
-     * the slot is planned only.
-     */
-    readonly tool: Tool | null;
-    /**
-     * Every tool of the slot: the tool of its id first, then the tools that name it in
-     * `variantOf`, by their `railOrder` and then their id. More than one means the button
-     * switches between them.
-     */
-    readonly variants: readonly Tool[];
-}
+export type RailSlot = PackageRailSlot<ToolSpec>;
+
+/** The tools of the editor: the rail, the context bar, the tool keys and the pointer pipeline read it. */
+export type ToolRegistry = PackageToolRegistry<ToolSpec>;

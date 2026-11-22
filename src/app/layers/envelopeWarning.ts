@@ -1,8 +1,8 @@
 import { envelopeProblems } from "../../core/layers";
 import type { EnvelopeProblem } from "../../core/layers";
 import type { ProjectMap } from "../../core/model";
-import { notices } from "../notices/notices";
-import type { Notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
+import type { Notices } from "@ngne/editor-ui/messages";
 import type { SessionState } from "../state/session";
 import type { StoreApi } from "zustand/vanilla";
 

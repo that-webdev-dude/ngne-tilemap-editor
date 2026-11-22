@@ -11,10 +11,10 @@ import type {
 } from "../../../app/tilesets/update/updateSession";
 import type { SourceTiles } from "../../../core/tileset";
 import { PixelCanvas } from "../../import/PixelCanvas";
-import { Button } from "../../primitives/Button";
-import { Dialog } from "../../primitives/Dialog";
-import { Popover } from "../../primitives/Popover";
-import { Select } from "../../primitives/Select";
+import { Button } from "@ngne/editor-ui/primitives";
+import { Dialog } from "@ngne/editor-ui/primitives";
+import { Popover } from "@ngne/editor-ui/primitives";
+import { Select } from "@ngne/editor-ui/primitives";
 import { rowStatusText } from "./rowText";
 import { sheetBacking, sheetLayout } from "./sheetBacking";
 import "./update.css";

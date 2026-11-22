@@ -7,7 +7,7 @@ import {
     updateRows,
 } from "../../src/app/tilesets/update/updateSession";
 import type { RowChoice } from "../../src/app/tilesets/update/updateSession";
-import { notices } from "../../src/app/notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../../src/app/state/session";
 import {
     summaryText,

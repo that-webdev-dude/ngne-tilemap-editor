@@ -3,8 +3,8 @@ import { repeatFieldCommand } from "../../app/images/imageLayers";
 import type { ImageRepeat } from "../../core/images";
 import type { ImageLayer } from "../../core/model";
 import type { LayerField, LayerFieldProps } from "../layers/layerFields";
-import { Icon } from "../primitives/Icon";
-import { Toggle } from "../primitives/Toggle";
+import { Icon } from "@ngne/editor-ui/primitives";
+import { Toggle } from "@ngne/editor-ui/primitives";
 import "./images.css";
 
 // Repeat X and Repeat Y of an image layer in the layer properties popover (DESIGN §8.2; FORMAT

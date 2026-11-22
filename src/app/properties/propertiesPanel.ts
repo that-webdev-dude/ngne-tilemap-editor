@@ -45,7 +45,7 @@ import type { CommonProperty, PropertyTarget } from "../../core/properties";
 import { TilesetEditError, setTilesetFieldsCommand } from "../../core/tileset";
 import type { TilesetFields } from "../../core/tileset";
 import { selectedMarkerIds } from "../markers/markerSelection";
-import { notices } from "../notices/notices";
+import { notices } from "@ngne/editor-ui/messages";
 import { sessionStore } from "../state/session";
 import { tilesetRenameStore } from "../tilesets/edit/tilesetEdit";
 import { selectedTiles, shownTileset, tilesetPanelStore } from "../tilesets/panel/tilesetPanel";

@@ -1,4 +1,4 @@
-import type { CommandSpec } from "../commands/types";
+import type { CommandSpec } from "../commands/commandTypes";
 import { canAddLayer } from "../layers/layers";
 import { newImageLayerFromDialog } from "./imageLayers";
 

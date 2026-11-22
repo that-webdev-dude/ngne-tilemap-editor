@@ -1,5 +1,5 @@
 import { isProjectFileName } from "../../file/fileName";
-import { OVERLAY_SELECTOR } from "../../keymap/environment";
+import { OVERLAY_SELECTOR } from "@ngne/editor-ui/commands";
 import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 import { importTilesetFiles } from "./importTileset";
 import type { PickedFile } from "./importSources";
