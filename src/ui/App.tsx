@@ -11,9 +11,10 @@ import { FileWorkflows } from "./file/FileWorkflows";
 import { useTilesetDrop } from "./import/useTilesetDrop";
 import { EditorShell } from "./shell/EditorShell";
 
-// Development route: the package's gallery, left out of the production bundle.
+// Development route: the package's gallery (`galleryRoute.tsx`), left out of the production
+// bundle.
 const Gallery = import.meta.env.DEV
-    ? lazy(() => import("@ngne/editor-ui/gallery").then((module) => ({ default: module.Gallery })))
+    ? lazy(() => import("./galleryRoute").then((module) => ({ default: module.Gallery })))
     : null;
 
 // Development builds only: end-to-end tests reach the stores through `window.__ngneTest`.

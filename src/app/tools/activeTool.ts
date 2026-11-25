@@ -8,7 +8,6 @@ import type { StatusState } from "../state/status";
 import { optionValues } from "./options";
 import type { ToolOptions } from "./options";
 import { slotOf } from "@ngne/editor-ui/shell";
-import { toolKey } from "./toolKeys";
 import { toolRegistry } from "./toolRegistry";
 import { activeLayerKind, offersTool } from "./toolSets";
 import type { RailSlot, Tool, ToolLayerKind, ToolOptionValue, ToolRegistry } from "./types";
@@ -90,8 +89,7 @@ export interface ToolState {
 
 /** The key of a tool's chord without its modifiers ("U" for Shift+U); null without a key. */
 function keyOf(tool: Tool | undefined): string | null {
-    const key = tool && toolKey(tool);
-    return key === undefined ? null : chordKey(normalizeChord(key));
+    return tool?.shortcut === undefined ? null : chordKey(normalizeChord(tool.shortcut));
 }
 
 /** The tool state of a session store and a registry. The app has one: `toolState`. */
@@ -110,7 +108,7 @@ export function createToolState(
 
     const kindOf = () => activeLayerKind(session.getState().session);
     const selectedId = () => store.getState().selected[kindOf()];
-    const activeId = () => held[held.length - 1] ?? selectedId();
+    const activeId = () => held.at(-1) ?? selectedId();
     const offered = (id: string) => {
         const tool = registry.get(id);
         return tool !== undefined && offersTool(tool, kindOf());
@@ -176,11 +174,8 @@ export function createToolState(
             return group[(index + 1) % group.length] ?? null;
         },
         shownInSlot(slot) {
-            // By id: the slot may come from the editor UI instance's registry, whose tools are
-            // other objects of the same modules (`toolRegistry.ts`).
-            const active = activeId();
-            const shown = slot.variants.find((variant) => variant.id === active);
-            if (shown) return shown;
+            const active = registry.get(activeId());
+            if (active && slot.variants.includes(active)) return active;
             const last = lastInSlot.get(slot.id);
             const remembered = slot.variants.find((variant) => variant.id === last);
             return remembered ?? slot.tool;

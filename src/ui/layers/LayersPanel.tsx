@@ -1,4 +1,4 @@
-import { editorUiInstance } from "../../app/editorUiHub";
+import { commandRunner } from "../../app/uiState";
 import {
     ChevronDown,
     ChevronRight,
@@ -38,7 +38,6 @@ import type { DropZone, LayerRow } from "../../app/layers/layerTree";
 import { useShownSession } from "../../app/state/shownSession";
 import { activeLayerId } from "../../app/tools/toolSets";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import { runCommand } from "@ngne/editor-ui/commands";
 import { useCommands } from "@ngne/editor-ui/commands";
 import { Icon, IconButton, Toggle } from "@ngne/editor-ui/primitives";
 import { LayerPropertiesHost } from "./LayerProperties";
@@ -80,9 +79,9 @@ const TYPE_NAMES: Record<LayerRow["type"], string> = {
  * switch: `shownSession`); renders again only when they change.
  */
 function useRows(): { mapId: string | null; rows: readonly LayerRow[]; activeId: number | null } {
-    const collapsed = useLayersPanel((state) => state.collapsed);
+    useLayersPanel((state) => state.collapsed);
     // The selector also reads the collapsed groups: a change of them renders the panel again
-    // (`collapsed` above), and the render runs the selector again.
+    // (the store read above), and the render runs the selector again.
     const key = useShownSession((state) => {
         const { session } = state;
         const map = session.project.maps.find((each) => each.id === state.mapId);
@@ -93,7 +92,6 @@ function useRows(): { mapId: string | null; rows: readonly LayerRow[]; activeId:
             rows: layerRows(map.layers, collapsedGroups(map.id)),
         });
     });
-    void collapsed;
     return useMemo(() => {
         const parsed = JSON.parse(key) as {
             mapId: string;
@@ -104,10 +102,17 @@ function useRows(): { mapId: string | null; rows: readonly LayerRow[]; activeId:
     }, [key]);
 }
 
+/** The row that takes the tab stop: the focused row, else the active one, else the first. */
+function rovingStop(ids: readonly number[], focusedId: number | null, activeId: number | null) {
+    if (focusedId !== null && ids.includes(focusedId)) return focusedId;
+    if (activeId !== null && ids.includes(activeId)) return activeId;
+    return ids[0] ?? null;
+}
+
 const rowSelector = (id: number) => `[data-layer-row="${id}"]`;
 
 /** The in-place rename of a row (double click, F2): Enter or leaving applies, Escape keeps. */
-function RenameField({ text, onEnd }: { text: string; onEnd(): void }) {
+function RenameField({ text, onEnd }: Readonly<{ text: string; onEnd(): void }>) {
     return (
         <input
             className="layers-panel__rename"
@@ -134,7 +139,9 @@ function RenameField({ text, onEnd }: { text: string; onEnd(): void }) {
                     onEnd();
                 }
             }}
-            onBlur={() => void applyLayerRename()}
+            onBlur={() => {
+                applyLayerRename();
+            }}
             onPointerDown={(event) => event.stopPropagation()}
             onDoubleClick={(event) => event.stopPropagation()}
         />
@@ -174,12 +181,7 @@ export function LayersPanel() {
     /** A row that must have the focus once the tree has rendered (after a rename). */
     const refocus = useRef<number | null>(null);
     const ids = rows.map((row) => row.id);
-    const stopId =
-        focusedId !== null && ids.includes(focusedId)
-            ? focusedId
-            : activeId !== null && ids.includes(activeId)
-              ? activeId
-              : (ids[0] ?? null);
+    const stopId = rovingStop(ids, focusedId, activeId);
 
     useEffect(() => {
         setLayersPanelMounted(true);
@@ -461,7 +463,7 @@ export function LayersHeader() {
                 shortcut="Shift+N"
                 disabled={!enabled("layer.newTile")}
                 data-new-layer=""
-                onClick={() => runCommand(editorUiInstance().commands, "layer.newTile")}
+                onClick={() => commandRunner.run("layer.newTile")}
             >
                 <Icon icon={Plus} />
             </IconButton>
@@ -484,7 +486,7 @@ export function LayersHeader() {
                                 className="ui-menu__item"
                                 disabled={!command.enabled()}
                                 data-new-layer-kind={command.id}
-                                onSelect={() => runCommand(editorUiInstance().commands, command.id)}
+                                onSelect={() => commandRunner.run(command.id)}
                             >
                                 {command.title()}
                             </DropdownMenu.Item>
@@ -496,7 +498,7 @@ export function LayersHeader() {
                 label="Delete Layer"
                 disabled={!enabled("layer.delete")}
                 data-delete-layer=""
-                onClick={() => runCommand(editorUiInstance().commands, "layer.delete")}
+                onClick={() => commandRunner.run("layer.delete")}
             >
                 <Icon icon={Trash2} />
             </IconButton>

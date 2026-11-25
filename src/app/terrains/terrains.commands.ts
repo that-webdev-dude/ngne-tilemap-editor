@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { historySteps } from "../state/historySteps";
 import { tilesetPanelStore } from "../tilesets/panel/tilesetPanel";
@@ -147,9 +147,9 @@ export const commands: CommandSpec[] = [
 // The enabled states follow the selection, the active tileset and the history; an open menu
 // is told. Not the hover, which changes with every pointer move.
 terrainsPanelStore.subscribe((state, previous) => {
-    if (state.selections !== previous.selections) appCommands.refresh();
+    if (state.selections !== previous.selections) refreshCommands();
 });
 tilesetPanelStore.subscribe((state, previous) => {
-    if (state.activeTilesetId !== previous.activeTilesetId) appCommands.refresh();
+    if (state.activeTilesetId !== previous.activeTilesetId) refreshCommands();
 });
-historySteps.subscribe(() => appCommands.refresh());
+historySteps.subscribe(() => refreshCommands());

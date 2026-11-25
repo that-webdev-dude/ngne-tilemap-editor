@@ -23,8 +23,9 @@ import type { PlannedToolSpec } from "./types";
  * disabled button until a tool with the same id is registered from its ticket's own
  * `*.tools.ts` module; the tool then takes the slot over, its position, key and icon included
  * unless it names its own. Positions are spaced by 10; the hundreds are the rail's groups:
- * tile paint · terrain · tile select · marker select · marker create · navigate. `layers`
- * names the tool set a slot belongs to; the navigate group is in every set.
+ * tile paint · terrain · tile select · marker select · marker create · navigate. `toolSets`
+ * names the tool set a slot belongs to, so slots of different sets may share a key (U); the
+ * navigate group is in every set.
  */
 export const plannedTools: PlannedToolSpec[] = [
     tile("stamp", "Stamp Brush", "B", Stamp, 100),
@@ -47,11 +48,11 @@ export const plannedTools: PlannedToolSpec[] = [
 ];
 
 function tile(...[id, label, shortcut, icon, railOrder]: SlotArgs): PlannedToolSpec {
-    return { id, label, shortcut, icon, railOrder, layers: ["tile"] };
+    return { id, label, shortcut, icon, railOrder, toolSets: ["tile"] };
 }
 
 function marker(...[id, label, shortcut, icon, railOrder]: SlotArgs): PlannedToolSpec {
-    return { id, label, shortcut, icon, railOrder, layers: ["marker"] };
+    return { id, label, shortcut, icon, railOrder, toolSets: ["marker"] };
 }
 
 type SlotArgs = [string, string, string, PlannedToolSpec["icon"], number];

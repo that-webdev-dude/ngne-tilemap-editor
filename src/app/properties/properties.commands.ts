@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { sessionStore } from "../state/session";
 import { selectedTiles, shownTileset, tilesetPanelStore } from "../tilesets/panel/tilesetPanel";
@@ -87,7 +87,7 @@ const follow = () => {
     const next = JSON.stringify([pinnedSubject(), hasTileset(), hasSelectedTiles()]);
     if (next === last) return;
     last = next;
-    appCommands.refresh();
+    refreshCommands();
 };
 sessionStore.subscribe(follow);
 tilesetPanelStore.subscribe(follow);

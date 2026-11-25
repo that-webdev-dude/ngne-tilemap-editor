@@ -1,5 +1,5 @@
 import { MAX_MAPS } from "../../core/model";
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { sessionStore } from "../state/session";
 import { editMapProperties, newMapFromDialog, resizeMapFromDialog } from "./mapDialogs";
@@ -24,34 +24,44 @@ export const commands: CommandSpec[] = [
         shortcut: "Ctrl+Alt+M",
         context: ["global", "text"],
         enabled: () => mapsIdle() && sessionStore.getState().session.project.maps.length < MAX_MAPS,
-        run: async () => void (await newMapFromDialog()),
+        run: async () => {
+            await newMapFromDialog();
+        },
     },
     {
         id: "map.properties",
         title: "Map Properties…",
         enabled: hasActive,
         contextMenus: [{ menu: MAP_MENU, order: 100 }],
-        run: async () => void (await editMapProperties()),
+        run: async () => {
+            await editMapProperties();
+        },
     },
     {
         id: "map.resize",
         title: "Resize / Offset Map…",
         enabled: hasActive,
-        run: async () => void (await resizeMapFromDialog()),
+        run: async () => {
+            await resizeMapFromDialog();
+        },
     },
     {
         id: "map.duplicate",
         title: "Duplicate Map",
         enabled: hasActive,
         contextMenus: [{ menu: MAP_MENU, order: 200 }],
-        run: () => void duplicateMap(),
+        run: () => {
+            duplicateMap();
+        },
     },
     {
         id: "map.delete",
         title: "Delete Map",
         enabled: () => hasActive() && sessionStore.getState().session.project.maps.length > 1,
         contextMenus: [{ menu: MAP_MENU, order: 210 }],
-        run: () => void deleteMap(),
+        run: () => {
+            deleteMap();
+        },
     },
     {
         id: "map.rename",
@@ -68,15 +78,19 @@ export const commands: CommandSpec[] = [
         id: "map.moveUp",
         title: "Move Map Up",
         enabled: () => mapsIdle() && canMoveMap(activeMap()?.id, -1),
-        run: () => void moveMap(-1),
+        run: () => {
+            moveMap(-1);
+        },
     },
     {
         id: "map.moveDown",
         title: "Move Map Down",
         enabled: () => mapsIdle() && canMoveMap(activeMap()?.id, 1),
-        run: () => void moveMap(1),
+        run: () => {
+            moveMap(1);
+        },
     },
 ];
 
 // F2 follows the focus and the rename; an open menu is told.
-mapsPanelStore.subscribe(() => appCommands.refresh());
+mapsPanelStore.subscribe(() => refreshCommands());

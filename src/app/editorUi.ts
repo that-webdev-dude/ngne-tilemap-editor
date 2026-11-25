@@ -1,26 +1,36 @@
 // Declares `import.meta.glob` and the build facts wherever this module is compiled.
 import type {} from "../import-meta";
 import { createEditorUi } from "@ngne/editor-ui";
-import type { AppInfo, EditorUiModules } from "@ngne/editor-ui";
-import { setKeyContext } from "@ngne/editor-ui/commands";
+import type { AppInfo, EditorUi, EditorUiModules } from "@ngne/editor-ui";
 import { PreferencesDialog } from "../ui/preferences/PreferencesDialog";
 import type { StatusFieldInput } from "../ui/status/statusInput";
 import { STAMP_PREVIEW_SIZE } from "../ui/tools/StampPreview";
 import { EDITOR_CONTEXTS, MENU_BAR, PANEL_SELECTOR, STATE_CONTEXTS } from "./commands/commandTypes";
 import type { Command, EditorContext, MenuBarMenu } from "./commands/commandTypes";
-import { attachEditorUi } from "./editorUiHub";
-import type { TilemapEditorUi } from "./editorUiHub";
 import { keyContextStore } from "./keymap/contextState";
 import type { OverlayFrame } from "./overlay/types";
 import { projectOpen, sessionStore } from "./state/session";
-import { withoutToolKeys } from "./tools/toolKeys";
-import type { ToolModule, ToolSpec } from "./tools/types";
+import { toolRegistry } from "./tools/toolRegistry";
+import type { ToolSpec } from "./tools/types";
+import { commandRefresh, commandRunner } from "./uiState";
 
 // The editor UI instance of the app (@ngne/editor-ui SPEC §5): identity, menus, key contexts,
 // the bottom panel, the stamp preview's rail footer, the "no project open" gate and the module
 // maps of the registries. Each registry's modules are found by one `import.meta.glob` line, so
 // a feature joins as a new file with the registry's suffix (RULES 6). The modules it finds are
-// evaluated while this module loads: they reach the instance through `editorUiHub.ts`.
+// evaluated while this module loads, so none of them uses the instance then: they switch the
+// key contexts, run and refresh commands and read the tools through the state the app passes
+// as `sources` (`keymap/contextState.ts`, `uiState.ts`, `tools/toolRegistry.ts`), and the
+// components read the instance from `UiRoot` (`useEditorUi`).
+
+/** This editor's instance of `@ngne/editor-ui`, with its menus, contexts, tools and inputs. */
+export type TilemapEditorUi = EditorUi<
+    MenuBarMenu,
+    EditorContext,
+    ToolSpec,
+    OverlayFrame,
+    StatusFieldInput
+>;
 
 type Modules = EditorUiModules<
     MenuBarMenu,
@@ -86,11 +96,6 @@ export const editorUi: TilemapEditorUi = createEditorUi<
         contextBars: import.meta.glob<ModuleOf<"contextBars">>("../ui/**/*.contextbar.tsx", {
             eager: true,
         }),
-        // Without their keys, which the package's registry would refuse where the tool sets of
-        // the layer kinds share them (`tools/toolKeys.ts`).
-        tools: withoutToolKeys(
-            import.meta.glob<ToolModule>("../**/*.tools.{ts,tsx}", { eager: true }),
-        ),
         overlays: import.meta.glob<ModuleOf<"overlays">>("../**/*.overlay.{ts,tsx}", {
             eager: true,
         }),
@@ -99,22 +104,13 @@ export const editorUi: TilemapEditorUi = createEditorUi<
         }),
     },
     // `enabled` and `title` functions read these stores; an open menu follows their changes. A
-    // feature whose commands depend on a store of its own calls `appCommands.refresh()`.
-    refreshOn: [sessionStore, keyContextStore],
+    // feature whose commands depend on a store of its own calls `refreshCommands()`
+    // (`uiState.ts`). The key contexts' store refreshes them as the instance's source.
+    refreshOn: [sessionStore, commandRefresh],
     commandGate: (command: Command) => WITHOUT_PROJECT.test(command.id) || projectOpen(),
     surfaces: { preferences: PreferencesDialog },
+    sources: { keyContextState: keyContextStore, commandRunner, tools: toolRegistry },
 });
-
-attachEditorUi(editorUi);
-
-// The state contexts follow the app's store (`keymap/contextState.ts`), which the features
-// that own the state switch without importing this module.
-function followKeyContexts(): void {
-    const state = keyContextStore.getState();
-    for (const context of STATE_CONTEXTS) setKeyContext(editorUi, context, state[context]);
-}
-followKeyContexts();
-keyContextStore.subscribe(followKeyContexts);
 
 /** The instance's command registry. */
 export const appCommands = editorUi.commands;

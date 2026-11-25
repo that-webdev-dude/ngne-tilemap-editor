@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { subscribeTilesetWorkflow } from "./tilesetWorkflow";
 
@@ -6,4 +6,4 @@ import { subscribeTilesetWorkflow } from "./tilesetWorkflow";
 // `tilesetWorkflowBusy()` in their `enabled`, and an open menu is told when it changes.
 export const commands: CommandSpec[] = [];
 
-subscribeTilesetWorkflow(() => appCommands.refresh());
+subscribeTilesetWorkflow(() => refreshCommands());

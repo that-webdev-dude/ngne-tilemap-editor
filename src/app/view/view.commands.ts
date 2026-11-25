@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { setPanHeld } from "./panHold";
 import { activeScale, canNavigate, fitActiveView, zoomBy, zoomTo } from "./viewNavigation";
@@ -67,4 +67,4 @@ export const commands: CommandSpec[] = [
 ];
 
 // The commands are enabled while the viewport has a size.
-viewportSize.subscribe(() => appCommands.refresh());
+viewportSize.subscribe(() => refreshCommands());

@@ -1,4 +1,4 @@
-import { editorUiInstance } from "../../../app/editorUiHub";
+import { commandRunner } from "../../../app/uiState";
 import {
     Circle,
     Magnet,
@@ -49,7 +49,6 @@ import {
 } from "../../../core/model";
 import type { Shape, ShapeBox, ShapePoint, Tileset } from "../../../core/model";
 import type { CollisionEdit } from "../../../core/tileset";
-import { runCommand } from "@ngne/editor-ui/commands";
 import { PixelCanvas } from "../../import/PixelCanvas";
 import {
     Button,
@@ -461,8 +460,7 @@ function CollisionEditorBody({
             event.preventDefault();
             if (drag.current || polygon) return;
             const redo = key.toLowerCase() === "y" || event.shiftKey;
-            if (runCommand(editorUiInstance().commands, redo ? "edit.redo" : "edit.undo"))
-                setMessage(null);
+            if (commandRunner.run(redo ? "edit.redo" : "edit.undo")) setMessage(null);
             return;
         }
         if (ctrl || event.altKey) return;

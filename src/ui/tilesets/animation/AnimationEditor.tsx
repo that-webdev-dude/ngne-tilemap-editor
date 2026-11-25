@@ -1,5 +1,5 @@
 import { GripVertical, Trash2 } from "lucide-react";
-import { editorUiInstance } from "../../../app/editorUiHub";
+import { commandRunner } from "../../../app/uiState";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, MouseEvent, PointerEvent } from "react";
 import { isTextField } from "@ngne/editor-ui/commands";
@@ -33,7 +33,6 @@ import {
 } from "../../../core/model";
 import type { AnimationFrame, Tileset } from "../../../core/model";
 import type { AnimationEdit } from "../../../core/tileset";
-import { runCommand } from "@ngne/editor-ui/commands";
 import { PixelCanvas } from "../../import/PixelCanvas";
 import { Button, Dialog, Icon, IconButton, NumberField, Select } from "@ngne/editor-ui/primitives";
 import { useTheme } from "@ngne/editor-ui";
@@ -81,7 +80,7 @@ function defaultScale(tileset: Tileset): PreviewScale {
     );
 }
 
-export function AnimationEditor({ request }: { request: AnimationEditorRequest }) {
+export function AnimationEditor({ request }: Readonly<{ request: AnimationEditorRequest }>) {
     useSession((state) => state.revision);
     const edited = animatedTile(request);
     // The tileset or the tile went away (an undo of its import): the editor closes.
@@ -102,11 +101,11 @@ function AnimationEditorBody({
     request,
     tileset,
     frames,
-}: {
+}: Readonly<{
     request: AnimationEditorRequest;
     tileset: Tileset;
     frames: readonly AnimationFrame[];
-}) {
+}>) {
     const duration = useFrameDuration();
     const [chosen, setChosen] = useState<readonly number[]>([]);
     const [anchor, setAnchor] = useState<number | null>(null);
@@ -204,7 +203,7 @@ function AnimationEditorBody({
     /** Follows a drag; returns whether the pointer moved far enough to be dragging. */
     const followDrag = (event: PointerEvent<HTMLElement>): boolean => {
         const current = drag.current;
-        if (!current || current.pointerId !== event.pointerId) return false;
+        if (current?.pointerId !== event.pointerId) return false;
         if (!current.dragging) {
             const far =
                 Math.hypot(event.clientX - current.x, event.clientY - current.y) >= DRAG_START;
@@ -218,7 +217,7 @@ function AnimationEditorBody({
     /** Ends a drag: drops its payload where the pointer is. Returns whether it was dragging. */
     const endDrag = (event: PointerEvent<HTMLElement>): boolean => {
         const current = drag.current;
-        if (!current || current.pointerId !== event.pointerId) return false;
+        if (current?.pointerId !== event.pointerId) return false;
         drag.current = null;
         setDropAt(null);
         if (!current.dragging) return false;
@@ -268,7 +267,7 @@ function AnimationEditorBody({
             event.preventDefault();
             if (drag.current) return;
             const redo = key.toLowerCase() === "y" || event.shiftKey;
-            if (!runCommand(editorUiInstance().commands, redo ? "edit.redo" : "edit.undo")) return;
+            if (!commandRunner.run(redo ? "edit.redo" : "edit.undo")) return;
             setMessage(null);
             // The list is replaced: no frame stays selected (Tiled resets its frame list).
             select([], null);
@@ -434,7 +433,7 @@ function FrameRow({
     onHandleMove,
     onHandleUp,
     onHandleCancel,
-}: {
+}: Readonly<{
     tileset: Tileset;
     frame: AnimationFrame;
     index: number;
@@ -446,7 +445,7 @@ function FrameRow({
     onHandleMove(event: PointerEvent<HTMLElement>): boolean;
     onHandleUp(event: PointerEvent<HTMLElement>): boolean;
     onHandleCancel(): void;
-}) {
+}>) {
     const pixels = useTilePixels(tileset, frame.tile);
     return (
         <li
@@ -534,7 +533,7 @@ function TilePicker({
     onDragMove,
     onDragEnd,
     onDragCancel,
-}: {
+}: Readonly<{
     tileset: Tileset;
     selection: GridSelection | null;
     onSelect(selection: GridSelection | null): void;
@@ -544,9 +543,9 @@ function TilePicker({
     onDragMove(event: PointerEvent<HTMLElement>): boolean;
     onDragEnd(event: PointerEvent<HTMLElement>): boolean;
     onDragCancel(): void;
-}) {
+}>) {
     const zoom = useTilesetPanel((state) => state.zoom);
-    const theme = useTheme();
+    useTheme();
     const checkerboard = usePreference("checkerboard");
     const scroller = useRef<HTMLDivElement>(null);
     const sizer = useRef<HTMLDivElement>(null);
@@ -616,7 +615,6 @@ function TilePicker({
             zoom,
         });
     });
-    void theme;
 
     const reveal = (point: GridPoint) => {
         const element = scroller.current;
@@ -755,7 +753,10 @@ function TilePicker({
  * changed (Tiled restarts its preview on every change), read from `performance.now()` on each
  * animation frame, at 1×–4× the tile's size.
  */
-function Preview({ tileset, frames }: { tileset: Tileset; frames: readonly AnimationFrame[] }) {
+function Preview({
+    tileset,
+    frames,
+}: Readonly<{ tileset: Tileset; frames: readonly AnimationFrame[] }>) {
     const [scale, setScale] = useState<PreviewScale>(() => defaultScale(tileset));
     // The frame shown, for the list it was found in: a new list starts at its first frame.
     const [played, setPlayed] = useState({ frames, index: animationFrameAt(frames, 0) });

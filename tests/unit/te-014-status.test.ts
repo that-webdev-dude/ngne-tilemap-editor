@@ -3,6 +3,7 @@ import { createStatusStore } from "../../src/app/state/status";
 import { RegistrationError as StatusFieldError, collectStatusFields } from "@ngne/editor-ui/shell";
 import type { StatusField, StatusFieldInput } from "../../src/ui/status/statusInput";
 import { tileUnderCursor } from "../../src/ui/status/view.status";
+import { statusFields } from "../../src/app/editorUi";
 import { newSession, tile, tileLayer } from "./te-006-support";
 
 // The status bar's field registry and the tile field (TE-014).
@@ -35,7 +36,6 @@ describe("status field registry", () => {
     });
 
     it("finds the fields of this ticket in the app's own registry", async () => {
-        const { statusFields } = await import("../../src/app/editorUi");
         expect(statusFields.map((each) => each.id)).toEqual([
             "cell",
             "tile",

@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { viewPreferences } from "../view/viewPreferences";
 
@@ -20,4 +20,4 @@ export const commands: CommandSpec[] = [
 ];
 
 // The title follows the preference; an open View menu is told of the change.
-viewPreferences.subscribe(() => appCommands.refresh());
+viewPreferences.subscribe(() => refreshCommands());

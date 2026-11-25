@@ -1,11 +1,9 @@
-import { normalizeChord } from "@ngne/editor-ui/commands";
-import { appCommands } from "../editorUiHub";
+import { normalizeChord, isNativeKeyChord } from "@ngne/editor-ui/commands";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
-import { isNativeKeyChord } from "@ngne/editor-ui/commands";
 import { viewSurface } from "../view/viewNavigation";
 import { toolState } from "./activeTool";
 import { toolPipeline } from "./appPipeline";
-import { toolKey } from "./toolKeys";
 import { toolRegistry } from "./toolRegistry";
 import type { Tool } from "./types";
 
@@ -52,23 +50,24 @@ function selectCommand(tool: Tool): CommandSpec {
     return {
         id: selectCommandId(tool),
         title: `${tool.label} Tool`,
-        shortcut: toolKey(tool),
+        shortcut: tool.shortcut,
         context: "canvas",
         // Exactly this tool, while the active layer's set holds it. While its key switches
         // the variant instead, the command of that takes the key, and this one is inert.
         enabled: () => toolState.offered(tool.id) && !switches(tool),
-        run: () => void toolState.select(tool.id),
+        run: () => {
+            toolState.select(tool.id);
+        },
     };
 }
 
 function nextVariantCommand(tool: Tool): CommandSpec[] {
-    const key = toolKey(tool);
-    if (!key || toolState.nextVariant(tool.id) === null) return [];
+    if (!tool.shortcut || toolState.nextVariant(tool.id) === null) return [];
     return [
         {
             id: nextVariantCommandId(tool),
             title: `${tool.label} Tool: Next Variant`,
-            shortcut: key,
+            shortcut: tool.shortcut,
             context: "canvas",
             enabled: () => switches(tool),
             run() {
@@ -114,9 +113,11 @@ export const commands: CommandSpec[] = [
         shortcut: "Escape",
         context: "canvas",
         enabled: () => toolPipeline.stroking,
-        run: () => void toolPipeline.cancel(),
+        run: () => {
+            toolPipeline.cancel();
+        },
     },
 ];
 
 // The commands are enabled by the tool state: the active layer's kind and the selected tool.
-toolState.subscribe(() => appCommands.refresh());
+toolState.subscribe(() => refreshCommands());

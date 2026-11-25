@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import { VIEWPORT_FOCUS_ATTRIBUTE } from "@ngne/editor-ui/commands";
 import { REGION_FOCUS_ATTRIBUTE } from "@ngne/editor-ui/shell";
 import { notices } from "@ngne/editor-ui/messages";
-import { editorUiInstance } from "../../app/editorUiHub";
 import { mountOverlay } from "../../app/overlay/mountOverlay";
 import type { MountedOverlay } from "../../app/overlay/mountOverlay";
 import { DEFAULT_OVERLAY_THEME } from "../../app/overlay/types";
@@ -23,7 +22,7 @@ import { Viewport, rendererCreations } from "../../engine/viewport";
 import type { ViewportStatus } from "../../engine/viewport";
 import { parseHexColour } from "@ngne/editor-ui/colour";
 import { Button } from "@ngne/editor-ui/primitives";
-import { useTheme } from "@ngne/editor-ui";
+import { useEditorUi, useTheme } from "@ngne/editor-ui";
 import type { Theme } from "@ngne/editor-ui";
 import "./viewportArea.css";
 
@@ -82,6 +81,7 @@ function deviceSizeOf(entry: ResizeObserverEntry): { width: number; height: numb
 export function ViewportArea() {
     const element = useRef<HTMLDivElement>(null);
     const overlay = useRef<MountedOverlay | null>(null);
+    const editorUi = useEditorUi();
     const theme = useTheme();
     const colours = useRef<{ checker: ThemeChecker; workspace: number }>({
         checker: { a: 0, b: 0 },
@@ -116,9 +116,9 @@ export function ViewportArea() {
         // Chrome only; the viewport element is what assistive technology is told about.
         overlayCanvas.setAttribute("aria-hidden", "true");
         host.append(overlayCanvas);
-        const mounted = mountOverlay(overlayCanvas, host);
+        const mounted = mountOverlay(overlayCanvas, host, editorUi.overlayLayers);
         overlay.current = mounted;
-        mounted.setTheme(overlayTheme(editorUiInstance().theme.getState().theme));
+        mounted.setTheme(overlayTheme(editorUi.theme.getState().theme));
         const detachNavigation = attachViewNavigation(host);
         // The tools take the overlay's presses (SPEC §4.1), mapped as the map is on screen.
         const detachTools = attachToolPointer(overlayCanvas, host, () => mounted.mapping());
@@ -233,7 +233,7 @@ export function ViewportArea() {
             overlayCanvas.remove();
             canvas.remove();
         };
-    }, []);
+    }, [editorUi]);
 
     return (
         <div

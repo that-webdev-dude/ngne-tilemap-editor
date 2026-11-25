@@ -1,34 +1,41 @@
 import { afterEach, describe, expect, it } from "vitest";
 import { fuzzyScore } from "@ngne/editor-ui/commands";
 import { paletteEntries, runPaletteCommand } from "@ngne/editor-ui/commands";
-import {
-    createRecentCommandsStore,
-    MAX_RECENT_COMMANDS,
-    parseRecentCommands,
-} from "@ngne/editor-ui/commands";
+import { MAX_RECENT_COMMANDS, parseRecentCommands } from "@ngne/editor-ui/commands";
+import { createRecentCommandsStore, persistedNames } from "@ngne/editor-ui";
 import { appCommands } from "../../src/app/editorUi";
 import { buildMenu } from "@ngne/editor-ui/commands";
 import type { MenuNode } from "@ngne/editor-ui/commands";
 import { plannedCommands } from "../../src/app/commands/planned.commands";
 import { createCommandRegistry } from "@ngne/editor-ui/commands";
 import type { CommandRegistry } from "@ngne/editor-ui/commands";
-import type { Command, CommandSpec } from "../../src/app/commands/commandTypes";
+import { EDITOR_CONTEXTS, MENU_BAR } from "../../src/app/commands/commandTypes";
+import type {
+    Command,
+    CommandSpec,
+    EditorContext,
+    MenuBarMenu,
+} from "../../src/app/commands/commandTypes";
 import { resolveKey } from "@ngne/editor-ui/commands";
 import type { KeyEnvironment } from "@ngne/editor-ui/commands";
 import { OTHER_SHORTCUTS, shortcutGroups } from "@ngne/editor-ui/commands";
 import { SURFACE_IDS, surfaces } from "../e2e/harness/pageModules";
-import type { SurfaceId } from "../e2e/harness/pageModules";
 
 // TE-008: the three commands of this ticket in the registry (their planned menu items, their
 // chords from DESIGN §10.3, the surfaces they open), and the palette and sheet models over the
 // app's registry. Adapted from the sprite editor's se-064-commands.test.ts, se-064-palette.test.ts
 // and se-064-shortcut-sheet.test.ts; the verbatim models keep their own tests there.
 
-const COMMANDS: Record<SurfaceId, string> = {
+/** The command of each surface of the app; About is the package's, in Help. */
+const COMMANDS: Record<string, string> = {
     "command-palette": "edit.commandPalette",
     preferences: "edit.preferences",
     "shortcut-sheet": "edit.shortcuts",
+    about: "help.about",
 };
+
+/** The commands that plan their menu items in Edit. */
+const EDIT_COMMANDS = ["edit.commandPalette", "edit.preferences"];
 
 function command(id: string): Command {
     const found = appCommands.get(id);
@@ -41,26 +48,39 @@ function outline(nodes: readonly MenuNode[]): string[] {
     return nodes.map((node) => (node.kind === "command" ? node.command.id : "---"));
 }
 
+/** A key environment as these cases state it: the package's, and focus in the panel. */
+interface EditorKeyEnvironment extends KeyEnvironment {
+    inPanel: boolean;
+}
+
 /** A key pressed with nothing open, on the viewport unless stated otherwise. */
-function environment(overrides: Partial<KeyEnvironment> = {}): KeyEnvironment {
+function environment(overrides: Partial<EditorKeyEnvironment> = {}): EditorKeyEnvironment {
     return {
         overlayOpen: false,
         focus: "viewport",
         inPanel: false,
         nativeKeys: new Set(),
         typeahead: false,
-        gesture: false,
-        markers: false,
         ...overrides,
     };
 }
+
+/** How the app's keymap resolves `chord` in `environment`; no state context is on. */
+function resolveIn(chord: string, { inPanel, ...rest }: EditorKeyEnvironment) {
+    return resolveKey(appCommands, chord, rest, inPanel ? ["panel"] : []);
+}
+
+type Registry = CommandRegistry<MenuBarMenu, EditorContext>;
 
 function spec(id: string, overrides: Partial<CommandSpec> = {}): CommandSpec {
     return { id, title: id, run() {}, ...overrides };
 }
 
-function registryOf(...specs: CommandSpec[]): CommandRegistry {
-    const registry = createCommandRegistry();
+function registryOf(...specs: CommandSpec[]): Registry {
+    const registry = createCommandRegistry<MenuBarMenu, EditorContext>({
+        menus: MENU_BAR,
+        contexts: EDITOR_CONTEXTS,
+    });
     for (const each of specs) registry.register(each);
     return registry;
 }
@@ -71,7 +91,7 @@ afterEach(() => {
 
 describe("the commands of TE-008 in the registry", () => {
     it("take the menu items planned for them, at the end of Edit", () => {
-        for (const id of Object.values(COMMANDS)) {
+        for (const id of EDIT_COMMANDS) {
             const plan = plannedCommands.find((entry) => entry.id === id);
             expect(plan, id).toBeDefined();
             expect(command(id), id).toMatchObject({
@@ -83,20 +103,38 @@ describe("the commands of TE-008 in the registry", () => {
             // Always available: none of them needs a map.
             expect(command(id).enabled(), id).toBe(true);
         }
-        expect(outline(buildMenu(appCommands.list(), ["Edit"])).slice(-4)).toEqual([
+        expect(outline(buildMenu(appCommands.list(), ["Edit"])).slice(-3)).toEqual([
             "---",
             "edit.commandPalette",
-            "edit.shortcuts",
             "edit.preferences",
+        ]);
+        // The shortcut sheet is first in Help, and About last (the package's Help menu).
+        expect(command("edit.shortcuts")).toMatchObject({
+            planned: false,
+            menuPath: ["Help"],
+            menuOrder: 0,
+        });
+        expect(command("edit.shortcuts").title()).toBe(
+            plannedCommands.find((entry) => entry.id === "edit.shortcuts")?.title,
+        );
+        for (const id of ["edit.shortcuts", "help.about"]) {
+            expect(command(id).enabled(), id).toBe(true);
+        }
+        expect(outline(buildMenu(appCommands.list(), ["Help"]))).toEqual([
+            "edit.shortcuts",
+            "---",
+            "help.about",
         ]);
     });
 
     it("each registers from a module of its own", () => {
         expect(command("edit.commandPalette").source).toBe(
-            "../commandPalette/commandPalette.commands.ts",
+            "@ngne/editor-ui/commands/commandPalette.commands.ts",
         );
-        expect(command("edit.preferences").source).toBe("../preferences/preferences.commands.ts");
-        expect(command("edit.shortcuts").source).toBe("../shortcuts/shortcuts.commands.ts");
+        expect(command("edit.preferences").source).toBe("./preferences/preferences.commands.ts");
+        expect(command("edit.shortcuts").source).toBe(
+            "@ngne/editor-ui/commands/shortcutSheet.commands.ts",
+        );
     });
 
     it("the command palette binds the chord of DESIGN §10.3: Ctrl+K †, also in text fields", () => {
@@ -120,8 +158,8 @@ describe("the commands of TE-008 in the registry", () => {
     });
 
     it("Ctrl+K reaches the palette everywhere but under a menu or a dialog", () => {
-        const resolved = (overrides: Partial<KeyEnvironment>) =>
-            resolveKey(appCommands, "Ctrl+K", environment(overrides));
+        const resolved = (overrides: Partial<EditorKeyEnvironment>) =>
+            resolveIn("Ctrl+K", environment(overrides));
         const palette = command("edit.commandPalette");
         expect(resolved({})).toMatchObject({ action: "run", command: palette });
         expect(resolved({ focus: "none" })).toMatchObject({ action: "run", command: palette });
@@ -138,8 +176,8 @@ describe("the commands of TE-008 in the registry", () => {
     });
 
     it("? reaches the shortcut sheet in the canvas context, and is typed in a text field", () => {
-        const resolved = (overrides: Partial<KeyEnvironment>) =>
-            resolveKey(appCommands, "?", environment(overrides));
+        const resolved = (overrides: Partial<EditorKeyEnvironment>) =>
+            resolveIn("?", environment(overrides));
         const sheet = command("edit.shortcuts");
         expect(resolved({})).toMatchObject({ action: "run", command: sheet, context: "canvas" });
         expect(resolved({ focus: "none" })).toMatchObject({ action: "run", command: sheet });
@@ -165,8 +203,11 @@ describe("the commands of TE-008 in the registry", () => {
 });
 
 describe("the palette over the app's registry", () => {
+    /** The app's recent-commands name (@ngne/editor-ui SPEC §5); `null` keeps it in memory. */
+    const RECENT_COMMANDS = persistedNames("ngne-tilemap-editor").recentCommands;
+
     it("lists every command, in menu order, and finds one by a fuzzy query", () => {
-        const all = paletteEntries(appCommands.list(), [], "");
+        const all = paletteEntries(appCommands.list(), MENU_BAR, [], "");
         expect(all.map((entry) => entry.command.id).sort()).toEqual(
             appCommands
                 .list()
@@ -175,24 +216,24 @@ describe("the palette over the app's registry", () => {
         );
         expect(all[0]?.command.id).toBe("file.newProject");
         expect(fuzzyScore("cmdpal", "Command Palette…")).not.toBeNull();
-        const found = paletteEntries(appCommands.list(), [], "cmdpal");
+        const found = paletteEntries(appCommands.list(), MENU_BAR, [], "cmdpal");
         expect(found[0]?.command.id).toBe("edit.commandPalette");
         expect(found[0]).toMatchObject({ title: "Command Palette…", group: "Edit" });
     });
 
     it("puts recent commands first and records a run", () => {
-        const recent = createRecentCommandsStore(null);
+        const recent = createRecentCommandsStore(null, RECENT_COMMANDS);
         expect(runPaletteCommand(command("edit.shortcuts"), () => {}, recent.getState())).toBe(
             true,
         );
         expect(surfaces.store.getState().open).toBe("shortcut-sheet");
         expect(recent.getState().ids).toEqual(["edit.shortcuts"]);
-        const rows = paletteEntries(appCommands.list(), recent.getState().ids, "");
+        const rows = paletteEntries(appCommands.list(), MENU_BAR, recent.getState().ids, "");
         expect(rows[0]?.command.id).toBe("edit.shortcuts");
     });
 
     it("keeps at most eight recent commands, each once, and reads bad records as empty", () => {
-        const store = createRecentCommandsStore(null);
+        const store = createRecentCommandsStore(null, RECENT_COMMANDS);
         for (let index = 0; index < 12; index++) store.getState().record(`command-${index}`);
         store.getState().record("command-11");
         expect(MAX_RECENT_COMMANDS).toBe(8);
@@ -206,14 +247,14 @@ describe("the palette over the app's registry", () => {
 });
 
 describe("the shortcut sheet over the app's registry", () => {
-    const bindings = (registry: CommandRegistry) =>
+    const bindings = (registry: Registry) =>
         registry
             .list()
             .flatMap((entry) => entry.shortcuts.map((chord) => `${entry.id} ${chord}`))
             .sort();
 
     it("lists exactly the registry's shortcuts, grouped by menu in menu-bar order", () => {
-        const groups = shortcutGroups(appCommands.list());
+        const groups = shortcutGroups(appCommands.list(), MENU_BAR);
         const listed = groups
             .flatMap((group) =>
                 group.rows.flatMap((row) =>
@@ -246,14 +287,15 @@ describe("the shortcut sheet over the app's registry", () => {
             "edit.paste",
             "edit.delete",
             "edit.commandPalette",
-            "edit.shortcuts",
         ]);
+        const help = groups.find((group) => group.title === "Help");
+        expect(help?.rows.map((row) => row.command.id)).toEqual(["edit.shortcuts"]);
     });
 
     it("follows a registry: a command registered later is on the sheet, a removed one is not", () => {
         const own = registryOf(spec("edit.undo", { shortcut: "Ctrl+Z", menuPath: ["Edit"] }));
         const sheet = () =>
-            shortcutGroups(own.list()).flatMap((group) =>
+            shortcutGroups(own.list(), MENU_BAR).flatMap((group) =>
                 group.rows.map(
                     (row) => `${group.title}: ${row.command.id} ${row.chords.join(",")}`,
                 ),
@@ -263,7 +305,7 @@ describe("the shortcut sheet over the app's registry", () => {
             spec("tool.hand", { shortcut: "Space", context: "canvas", release() {} }),
         );
         expect(sheet()).toEqual(["Edit: edit.undo Ctrl+Z", `${OTHER_SHORTCUTS}: tool.hand Space`]);
-        expect(shortcutGroups(own.list()).at(-1)?.rows[0]?.hold).toBe(true);
+        expect(shortcutGroups(own.list(), MENU_BAR).at(-1)?.rows[0]?.hold).toBe(true);
         remove();
         expect(sheet()).toEqual(["Edit: edit.undo Ctrl+Z"]);
     });

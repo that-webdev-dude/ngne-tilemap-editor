@@ -1,5 +1,5 @@
 import { Ellipsis, Plus } from "lucide-react";
-import { editorUiInstance } from "../../app/editorUiHub";
+import { commandRunner } from "../../app/uiState";
 import { DropdownMenu } from "radix-ui";
 import { useLayoutEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent as ReactPointerEvent } from "react";
@@ -16,9 +16,7 @@ import {
 import { useShownSession } from "../../app/state/shownSession";
 import { activateMap, useMapTabs } from "../../app/tabs/tabs";
 import { MAX_TEXT_LENGTH } from "../../core/model";
-import { contextMenuEntries } from "@ngne/editor-ui/commands";
-import { runCommand } from "@ngne/editor-ui/commands";
-import { useCommands } from "@ngne/editor-ui/commands";
+import { contextMenuEntries, useCommands } from "@ngne/editor-ui/commands";
 import { ContextMenu, Icon, IconButton } from "@ngne/editor-ui/primitives";
 import type { ContextMenuEntry } from "@ngne/editor-ui/primitives";
 import "./maps.css";
@@ -63,10 +61,33 @@ function useRows(): { rows: readonly Row[]; activeId: string } {
     }, [key]);
 }
 
+/** The row that takes the tab stop: the focused row, else the active one, else the first. */
+function rovingStop(ids: readonly string[], focusedId: string | null, activeId: string) {
+    if (ids.includes(focusedId ?? "")) return focusedId;
+    if (ids.includes(activeId)) return activeId;
+    return ids[0] ?? null;
+}
+
+/** The row a navigation key moves the focus to, of rows 0 to `last`; null for other keys. */
+function keyTarget(key: string, index: number, last: number): number | null {
+    switch (key) {
+        case "ArrowUp":
+            return Math.max(0, index - 1);
+        case "ArrowDown":
+            return Math.min(last, index + 1);
+        case "Home":
+            return 0;
+        case "End":
+            return last;
+        default:
+            return null;
+    }
+}
+
 const rowSelector = (id: string) => `[data-map-row="${CSS.escape(id)}"]`;
 
 /** The in-place rename of a row (double click, F2): Enter or leaving applies, Escape keeps. */
-function RenameField({ text, onEnd }: { text: string; onEnd(): void }) {
+function RenameField({ text, onEnd }: Readonly<{ text: string; onEnd(): void }>) {
     return (
         <input
             className="maps-panel__rename"
@@ -93,7 +114,9 @@ function RenameField({ text, onEnd }: { text: string; onEnd(): void }) {
                     onEnd();
                 }
             }}
-            onBlur={() => void applyMapRename()}
+            onBlur={() => {
+                applyMapRename();
+            }}
             onPointerDown={(event) => event.stopPropagation()}
             onDoubleClick={(event) => event.stopPropagation()}
         />
@@ -105,7 +128,10 @@ function RenameField({ text, onEnd }: { text: string; onEnd(): void }) {
  * option holds none), as a map tab's close control: the keyboard opens the same menu with the
  * Menu key on the row.
  */
-function RowMenuButton({ id, entries }: { id: string; entries: readonly ContextMenuEntry[] }) {
+function RowMenuButton({
+    id,
+    entries,
+}: Readonly<{ id: string; entries: readonly ContextMenuEntry[] }>) {
     return (
         <DropdownMenu.Root
             modal={false}
@@ -175,11 +201,7 @@ export function MapsPanel() {
     /** A row that must have the focus once the list has rendered (after a rename). */
     const refocus = useRef<string | null>(null);
     const ids = rows.map((row) => row.id);
-    const stopId = ids.includes(focusedId ?? "")
-        ? focusedId
-        : ids.includes(activeId)
-          ? activeId
-          : (ids[0] ?? null);
+    const stopId = rovingStop(ids, focusedId, activeId);
 
     // A drag that is still going when the panel goes away ends with it.
     useLayoutEffect(() => () => stop.current?.(), []);
@@ -198,16 +220,7 @@ export function MapsPanel() {
         if (event.target !== event.currentTarget) return;
         if (event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
         const last = rows.length - 1;
-        const target =
-            event.key === "ArrowUp"
-                ? Math.max(0, index - 1)
-                : event.key === "ArrowDown"
-                  ? Math.min(last, index + 1)
-                  : event.key === "Home"
-                    ? 0
-                    : event.key === "End"
-                      ? last
-                      : null;
+        const target = keyTarget(event.key, index, last);
         if (target !== null) {
             event.preventDefault();
             focusRow(rows[target]!.id);
@@ -348,7 +361,7 @@ export function NewMapButton() {
             shortcut="Ctrl+Alt+M"
             disabled={!enabled}
             data-new-map=""
-            onClick={() => runCommand(editorUiInstance().commands, "file.newMap")}
+            onClick={() => commandRunner.run("file.newMap")}
         >
             <Icon icon={Plus} />
         </IconButton>

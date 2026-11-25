@@ -1,6 +1,5 @@
 import type { DeviceSize } from "../../engine/viewport/geometry";
 import type {} from "../../import-meta";
-import { editorUiInstance } from "../editorUiHub";
 import { sessionStore } from "../state/session";
 import type { ViewMapping } from "../view/coordinates";
 import { currentViewMapping } from "../view/viewNavigation";
@@ -45,11 +44,11 @@ const MIDDLE_BUTTON = 1;
 
 /**
  * Makes `canvas` the overlay of the viewport element `container` (ENGINE §4, TE-014): it is
- * drawn by the registered draw layers over the NGNE canvas. It is the pointer target of the
- * viewport: a pointer down on it focuses `container`, except with the middle button, which pans
- * and moves no focus. It stops no event: wheel and pointer events reach the listeners of view
- * navigation on `container` by bubbling. In development builds its probe is put on
- * `window.__ngneTest`.
+ * drawn by `layers`, the instance's overlay layers, over the NGNE canvas. It is the pointer
+ * target of the viewport: a pointer down on it focuses `container`, except with the middle
+ * button, which pans and moves no focus. It stops no event: wheel and pointer events reach the
+ * listeners of view navigation on `container` by bubbling. In development builds its probe is
+ * put on `window.__ngneTest`.
  *
  * Its backing size is that of the NGNE canvas (`resize`, called with the size the viewport
  * host measured), and both fill the same box.
@@ -57,7 +56,7 @@ const MIDDLE_BUTTON = 1;
 export function mountOverlay(
     canvas: HTMLCanvasElement,
     container: HTMLElement,
-    layers: readonly OverlayLayer[] = editorUiInstance().overlayLayers,
+    layers: readonly OverlayLayer[],
 ): MountedOverlay {
     const context = canvas.getContext("2d");
     if (!context) throw new Error("The overlay canvas has no 2D context.");

@@ -6,6 +6,7 @@ import {
     collectOverlayLayers,
 } from "@ngne/editor-ui/overlay";
 import type { OverlayFrame, OverlayLayer } from "../../src/app/overlay/types";
+import { overlayLayers } from "../../src/app/editorUi";
 import { createSessionStore } from "../../src/app/state/session";
 import { createViewMapping } from "../../src/app/view/coordinates";
 import { newSession } from "./te-006-support";
@@ -208,7 +209,6 @@ describe("overlay layer registry", () => {
     });
 
     it("finds the cell grid in the app's own registry, at order 300", async () => {
-        const { overlayLayers } = await import("../../src/app/editorUi");
         expect(overlayLayers.map((each) => [each.id, each.order])).toEqual([
             ["cell-grid", 300],
             ["collision-outlines", 400],

@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { projectOpen } from "../state/session";
 import { fileWorkflows } from "./workflows";
@@ -21,7 +21,9 @@ export const commands: CommandSpec[] = [
         shortcut: "Ctrl+Alt+N",
         context: TEXT_TOO,
         enabled: idle,
-        run: async () => void (await fileWorkflows.newProject()),
+        run: async () => {
+            await fileWorkflows.newProject();
+        },
     },
     {
         id: "file.open",
@@ -29,7 +31,9 @@ export const commands: CommandSpec[] = [
         shortcut: "Ctrl+O",
         context: TEXT_TOO,
         enabled: idle,
-        run: async () => void (await fileWorkflows.open()),
+        run: async () => {
+            await fileWorkflows.open();
+        },
     },
     {
         id: "file.save",
@@ -37,7 +41,9 @@ export const commands: CommandSpec[] = [
         shortcut: "Ctrl+S",
         context: TEXT_TOO,
         enabled: () => fileWorkflows.canSave(),
-        run: async () => void (await fileWorkflows.save()),
+        run: async () => {
+            await fileWorkflows.save();
+        },
     },
     {
         id: "file.saveAs",
@@ -45,22 +51,28 @@ export const commands: CommandSpec[] = [
         shortcut: "Ctrl+Shift+S",
         context: TEXT_TOO,
         enabled: () => fileWorkflows.canSave(),
-        run: async () => void (await fileWorkflows.saveAs()),
+        run: async () => {
+            await fileWorkflows.saveAs();
+        },
     },
     {
         id: "file.revert",
         title: "Revert",
         // Only a project with a file has something to go back to.
         enabled: () => projectOpen() && idle() && fileWorkflows.file() !== null,
-        run: async () => void (await fileWorkflows.revert()),
+        run: async () => {
+            await fileWorkflows.revert();
+        },
     },
     {
         id: "file.closeProject",
         title: "Close Project",
         enabled: () => projectOpen() && idle(),
-        run: async () => void (await fileWorkflows.close()),
+        run: async () => {
+            await fileWorkflows.close();
+        },
     },
 ];
 
 // `enabled` reads the workflows' state: an open menu follows it.
-fileWorkflows.subscribe(() => appCommands.refresh());
+fileWorkflows.subscribe(() => refreshCommands());

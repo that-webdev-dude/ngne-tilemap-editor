@@ -1,6 +1,7 @@
 import type {
     RailSlot as PackageRailSlot,
     RegisteredTool,
+    ToolAction as PackageToolAction,
     ToolRegistry as PackageToolRegistry,
 } from "@ngne/editor-ui/shell";
 import type { LucideIcon } from "lucide-react";
@@ -208,17 +209,11 @@ export interface ToolReadout {
 
 /**
  * A button of the context bar that runs a registered command (DESIGN §7: the stamp brush's
- * rotate and flip buttons). Shown after the tool's options, before its readouts; disabled
+ * rotate and flip buttons), the package's `ToolAction` (@ngne/editor-ui SPEC §8): its
+ * `commandId` names the command. Shown after the tool's options, before its readouts; disabled
  * while the command is.
  */
-export interface ToolAction {
-    /** The id of the command it runs: "stamp.rotateLeft". */
-    command: string;
-    /** Text of a text button, or the tooltip and accessible name of an icon button. */
-    label: string;
-    /** Makes it an icon button. */
-    icon?: LucideIcon;
-}
+export type ToolAction = PackageToolAction<LucideIcon>;
 
 /**
  * A key that makes a tool the active one while it is held. It acts in the `canvas` context;
@@ -278,6 +273,13 @@ export interface ToolSpec {
      * of its rail slot.
      */
     layers?: readonly ToolLayerKind[];
+    /**
+     * The layer kinds whose tool set holds this tool, as the package's tool registry checks
+     * keys (@ngne/editor-ui SPEC §8: two tools of one set may not share a key). A tool takes
+     * its planned slot's; a variant with a key of its own and no planned slot of its id names
+     * them. Every kind when absent.
+     */
+    toolSets?: readonly ToolLayerKind[];
     /** One-line hint for the tool's modifiers, shown in the status bar while it is active. */
     hint?: string;
     /** The options the context bar shows while the tool is active. */
@@ -355,8 +357,11 @@ export interface PlannedToolSpec {
     shortcut?: string;
     icon: LucideIcon;
     railOrder: number;
-    /** The layer kinds whose tool set holds the slot; every kind when absent. */
-    layers?: readonly ToolLayerKind[];
+    /**
+     * The layer kinds whose tool set holds the slot, the package's tool sets (@ngne/editor-ui
+     * SPEC §8): a key may be shared by slots of different kinds. Every kind when absent.
+     */
+    toolSets?: readonly ToolLayerKind[];
 }
 
 /** What a `*.tools.ts` module exports (at least one of the two). */

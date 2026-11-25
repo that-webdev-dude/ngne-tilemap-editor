@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { sessionStore } from "../state/session";
 import { viewPreferences } from "../view/viewPreferences";
@@ -166,7 +166,7 @@ export const commands: CommandSpec[] = [
 ];
 
 // The title of Highlight Current Layer follows the preference; an open View menu is told.
-viewPreferences.subscribe(() => appCommands.refresh());
+viewPreferences.subscribe(() => refreshCommands());
 
 // The D1 envelope warning, once per map (SPEC §7.2).
 watchEnvelope(sessionStore);

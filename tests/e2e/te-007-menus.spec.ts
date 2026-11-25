@@ -20,7 +20,7 @@ import {
 // keep their meaning when later tickets implement the planned commands.
 
 /** DESIGN §5. */
-const MENUS = ["File", "Edit", "Map", "Layer", "Tileset", "Select", "View"];
+const MENUS = ["File", "Edit", "Map", "Layer", "Tileset", "Select", "View", "Help"];
 
 interface RenderedItem {
     command: string | null;
@@ -166,7 +166,6 @@ test("every menu holds the items of DESIGN §5, each a registry entry", async ({
         "Paste",
         "Delete",
         "Command Palette…",
-        "Keyboard Shortcuts…",
         "Preferences…",
     ]);
     expect(titles.Map).toEqual([
@@ -224,6 +223,7 @@ test("every menu holds the items of DESIGN §5, each a registry entry", async ({
         "Focus Previous Region",
         "Open Source Licences…",
     ]);
+    expect(titles.Help).toEqual(["Keyboard Shortcuts…", "About NGNE Tilemap Editor…"]);
 
     // And the other way round: every registry entry with a menu is shown, once.
     const expected = registry.filter((entry) => entry.menu !== null).map((entry) => entry.id);
@@ -334,7 +334,7 @@ test("the menus work from the keyboard", async ({ page }) => {
     await page.keyboard.press("ArrowLeft");
     await expect(menuTrigger(page, "File")).toBeFocused();
     await page.keyboard.press("ArrowLeft");
-    await expect(menuTrigger(page, "View")).toBeFocused();
+    await expect(menuTrigger(page, "Help")).toBeFocused();
     await page.keyboard.press("ArrowRight");
     await expect(menuTrigger(page, "File")).toBeFocused();
     await page.keyboard.press("ArrowRight");

@@ -2,8 +2,7 @@ import { useId, useRef, useState } from "react";
 import type { CSSProperties, ReactNode } from "react";
 import { PREFERENCE_RANGES, preferences, usePreference } from "../../app/preferences/preferences";
 import type { CheckerboardPreference, GridPreference } from "../../app/preferences/preferences";
-import { editorUiInstance } from "../../app/editorUiHub";
-import { setTheme, useEditorUi, useTheme } from "@ngne/editor-ui";
+import { DEFAULT_THEME, setTheme, useEditorUi, useTheme } from "@ngne/editor-ui";
 import type { Theme } from "@ngne/editor-ui";
 import { formatHexColour, parseHexColour } from "@ngne/editor-ui/colour";
 import { Button, Dialog, NumberField, SegmentedControl, Toggle } from "@ngne/editor-ui/primitives";
@@ -20,14 +19,6 @@ const COLOUR_SOURCES: readonly SegmentedOption<"theme" | "custom">[] = [
     { value: "theme", label: "Theme" },
     { value: "custom", label: "Custom" },
 ];
-
-const close = () => editorUiInstance().surfaces.close("preferences");
-
-/**
- * The theme Restore defaults returns to: the package's default (DESIGN §3), which it does not
- * export (@ngne/editor-ui findings, gap 8).
- */
-const DEFAULT_THEME: Theme = "dark";
 
 /** A colour token of the current theme as 0xRRGGBB. */
 function themeColour(name: string): number {
@@ -46,7 +37,7 @@ function themeGridColour(theme: Theme): number {
 }
 
 /** One preference: its name in the label column, its controls as a named group. */
-function Section({ label, children }: { label: string; children: ReactNode }) {
+function Section({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
     const labelId = useId();
     return (
         <>
@@ -60,12 +51,12 @@ function Section({ label, children }: { label: string; children: ReactNode }) {
     );
 }
 
-function Row({ children }: { children: ReactNode }) {
+function Row({ children }: Readonly<{ children: ReactNode }>) {
     return <div className="preferences__row">{children}</div>;
 }
 
 /** A segmented control with its name shown before it, as the fields show theirs. */
-function LabelledSegments<Value extends string>(props: SegmentedControlProps<Value>) {
+function LabelledSegments<Value extends string>(props: Readonly<SegmentedControlProps<Value>>) {
     return (
         <span className="ui-field">
             <span className="ui-field__label" aria-hidden="true">
@@ -87,7 +78,7 @@ interface HexFieldProps {
  * A colour as hex text. Like the number field, what is typed applies on Enter or when the
  * field is left, and text that is not a colour is dropped.
  */
-function HexField({ label, value, onChange }: HexFieldProps) {
+function HexField({ label, value, onChange }: Readonly<HexFieldProps>) {
     const inputId = useId();
     const [draft, setDraft] = useState<string | null>(null);
     const commit = () => {
@@ -278,6 +269,7 @@ function AutosaveSection() {
 export function PreferencesDialog() {
     const editorUi = useEditorUi();
     const theme = useTheme();
+    const close = () => editorUi.surfaces.close("preferences");
     const restoreDefaults = () => {
         preferences.reset();
         setTheme(editorUi, DEFAULT_THEME);

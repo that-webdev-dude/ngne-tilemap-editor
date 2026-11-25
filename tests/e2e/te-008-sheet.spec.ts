@@ -15,7 +15,6 @@ import {
 import {
     dialogButton,
     expectShellUsable,
-    openFromEditMenu,
     openPreferences,
     openShortcutSheet,
     preferencesDialog,
@@ -34,7 +33,7 @@ import type { Probe } from "./te-008-support";
 // Adapted from the sprite editor's se-064-shortcut-sheet.spec.ts.
 
 /** DESIGN §5. */
-const MENUS = ["File", "Edit", "Map", "Layer", "Tileset", "Select", "View"];
+const MENUS = ["File", "Edit", "Map", "Layer", "Tileset", "Select", "View", "Help"];
 
 /** Commands with shortcuts that only these tests have: in a menu, in a submenu, outside. */
 const PROBES: readonly Probe[] = [
@@ -183,11 +182,13 @@ test("the sheet is grouped by menu, in the order of the menu bar and of each men
         sheet.getByRole("heading", { name: "Keyboard shortcuts", level: 2 }),
     ).toBeVisible();
 
-    // Inside a menu, the order of the menu: Undo before Redo, the palette before the sheet.
+    // Inside a menu, the order of the menu: Undo before Redo, then the palette; the sheet is
+    // in Help.
     const inGroup = (group: string) =>
         rows.filter((row) => row.group === group).map((row) => row.id);
-    const known = ["edit.undo", "edit.redo", "edit.commandPalette", "edit.shortcuts"];
+    const known = ["edit.undo", "edit.redo", "edit.commandPalette"];
     expect(inGroup("Edit").filter((id) => known.includes(id))).toEqual(known);
+    expect(inGroup("Help")).toEqual(["edit.shortcuts"]);
     // A command of a submenu belongs to its menu.
     expect(inGroup("View").slice(-2)).toEqual(["te008.viewKey", "te008.nested"]);
     // Outside the menus: by title.
@@ -261,19 +262,26 @@ test("? opens the shortcut sheet in the canvas context; in a text field it is ty
 test("the Edit menu opens the sheet and shows its key; focus returns to the menu", async ({
     page,
 }) => {
+    // The item is the package's, first in Help.
+    const openFromHelpMenu = async () => {
+        await openMenu(page, "Help");
+        await menuItem(page, SHORTCUTS_COMMAND).click();
+        await expect(shortcutSheet(page)).toBeVisible();
+        return shortcutSheet(page);
+    };
     await openEditor(page);
-    await openMenu(page, "Edit");
+    await openMenu(page, "Help");
     await expect(menuItem(page, SHORTCUTS_COMMAND)).toHaveText("Keyboard Shortcuts…?");
     await page.keyboard.press("Escape");
-    const sheet = await openFromEditMenu(page, SHORTCUTS_COMMAND, shortcutSheet(page));
+    const sheet = await openFromHelpMenu();
     expect((await boxOf(sheet)).width).toBe(560);
     await dialogButton(sheet, "Close").click();
     await expect(sheet).toBeHidden();
-    await expect(menuTrigger(page, "Edit")).toBeFocused();
+    await expect(menuTrigger(page, "Help")).toBeFocused();
     await expectShellUsable(page);
 
     // A click outside closes it as well.
-    await openFromEditMenu(page, SHORTCUTS_COMMAND, shortcutSheet(page));
+    await openFromHelpMenu();
     await settleTimers(page);
     await page.mouse.click(8, 600);
     await expect(sheet).toBeHidden();

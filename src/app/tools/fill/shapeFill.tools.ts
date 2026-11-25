@@ -145,7 +145,10 @@ export function shapeDragPlan(
 
 function shapeFillTool(
     shape: FillShape,
-    spec: Pick<ToolSpec, "id" | "label" | "variantLabel" | "variantOf" | "shortcut" | "icon">,
+    spec: Pick<
+        ToolSpec,
+        "id" | "label" | "variantLabel" | "variantOf" | "shortcut" | "icon" | "toolSets"
+    >,
 ): ToolSpec {
     return withCapture({
         ...spec,
@@ -206,6 +209,8 @@ export const ellipseFillTool = shapeFillTool("ellipse", {
     variantOf: "shapeFill",
     shortcut: "Shift+U",
     icon: Circle,
+    // The marker Ellipse shares Shift+U in the marker set (DESIGN §10.2).
+    toolSets: ["tile"],
 });
 
 export const tools: ToolSpec[] = [rectangleFillTool, ellipseFillTool];

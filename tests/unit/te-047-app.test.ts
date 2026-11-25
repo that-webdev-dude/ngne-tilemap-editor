@@ -51,6 +51,7 @@ describe("te-047 empty state", () => {
             "file.open",
             "focus.nextRegion",
             "focus.previousRegion",
+            "help.about",
             "view.bottomPanel",
         ]);
         sessionStore.getState().replace(createProjectSession(createProject()));

@@ -2,7 +2,6 @@ import { readdirSync, readFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { createRecentCommandsStore, RECENT_COMMANDS_STORAGE_KEY } from "@ngne/editor-ui/commands";
 import type { KeyValueStorage } from "@ngne/editor-ui/platform";
 import {
     createPreferenceStore,
@@ -12,16 +11,24 @@ import {
     createViewPreferenceStore,
     VIEW_PREFERENCES_STORAGE_KEY,
 } from "../../src/app/view/viewPreferences";
-import { createLayoutStore, LAYOUT_STORAGE_KEY } from "@ngne/editor-ui/shell";
-import { createThemeStore, THEME_STORAGE_KEY } from "@ngne/editor-ui";
+import { createLayoutStore } from "@ngne/editor-ui/shell";
+import { createRecentCommandsStore, createThemeStore, persistedNames } from "@ngne/editor-ui";
 
 // TE-008: every localStorage key the app writes starts with `ngne-tilemap-editor.` (SUITE §7:
-// both apps of the suite share one origin). Three checks: every store writes prefixed keys
-// when it is driven; every `*_STORAGE_KEY` constant under src is prefixed and is one of the
-// stores driven here; and `localStorage` is reached through app/platform/storage.ts only, so a
-// store cannot write past these checks.
+// both apps of the suite share one origin). Two checks: every store writes prefixed keys
+// when it is driven; and every `*_STORAGE_KEY` constant under src is prefixed and is one of the
+// stores driven here. `localStorage` is reached through the package's storage module only
+// (@ngne/editor-ui `platform-storage` test), so a store cannot write past these checks.
 
 const PREFIX = "ngne-tilemap-editor.";
+
+// The names of the stores the editor UI instance keeps for the editor's id (@ngne/editor-ui
+// SPEC §5), which builds them with these factories over the browser's storage.
+const {
+    theme: THEME_STORAGE_KEY,
+    layout: LAYOUT_STORAGE_KEY,
+    recentCommands: RECENT_COMMANDS_STORAGE_KEY,
+} = persistedNames("ngne-tilemap-editor");
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 
 /** A storage that records every key written to it. */
@@ -41,8 +48,14 @@ function recordingStorage(): KeyValueStorage & { written: string[] } {
 
 /** Every store kept in localStorage, with its key and a write that reaches the storage. */
 const STORES: [key: string, write: (storage: KeyValueStorage) => void][] = [
-    [THEME_STORAGE_KEY, (storage) => createThemeStore(storage).getState().setTheme("light")],
-    [LAYOUT_STORAGE_KEY, (storage) => createLayoutStore(storage).getState().setDockWidth(300)],
+    [
+        THEME_STORAGE_KEY,
+        (storage) => createThemeStore(storage, THEME_STORAGE_KEY).getState().setTheme("light"),
+    ],
+    [
+        LAYOUT_STORAGE_KEY,
+        (storage) => createLayoutStore(storage, LAYOUT_STORAGE_KEY).getState().setDockWidth(300),
+    ],
     [
         PREFERENCES_STORAGE_KEY,
         (storage) => createPreferenceStore(storage).set("autosave", { enabled: false }),
@@ -53,7 +66,10 @@ const STORES: [key: string, write: (storage: KeyValueStorage) => void][] = [
     ],
     [
         RECENT_COMMANDS_STORAGE_KEY,
-        (storage) => createRecentCommandsStore(storage).getState().record("edit.undo"),
+        (storage) =>
+            createRecentCommandsStore(storage, RECENT_COMMANDS_STORAGE_KEY)
+                .getState()
+                .record("edit.undo"),
     ],
 ];
 
@@ -133,20 +149,5 @@ describe("localStorage keys", () => {
             }
         }
         expect(offenders).toEqual([]);
-    });
-
-    it("only app/platform/storage.ts touches localStorage", () => {
-        // Comments may name the storage; code outside storage.ts may not.
-        const code = (file: string) =>
-            readFileSync(join(ROOT, file), "utf8")
-                .replace(/\/\*[\s\S]*?\*\//g, "")
-                .replace(/\/\/.*$/gm, "");
-        const offenders = sourceFiles().filter(
-            (file) =>
-                file !== "src/app/platform/storage.ts" &&
-                /\b(localStorage|sessionStorage)\b/.test(code(file)),
-        );
-        expect(offenders).toEqual([]);
-        expect(/\blocalStorage\b/.test(code("src/app/platform/storage.ts"))).toBe(true);
     });
 });

@@ -23,9 +23,10 @@ import type {
 
 // The controls the context bar shows for the active tool (DESIGN §7): an option by its kind,
 // the variants of its rail slot, its command buttons and its readouts. Used by the context bar
-// readouts (`ToolReadouts.tsx`) and by context bar content that shows a tool's options with
-// more of its own (`fillMode.contextbar.tsx`); kept apart from the context bar, which loads the
-// registered content, so that content does not import the module that discovers it.
+// readouts (`ToolReadouts.tsx`: variants and readouts) and by context bar content that shows a
+// tool's options with more of its own (`fillMode.contextbar.tsx`), which takes the place of the
+// package's options and buttons; kept apart from the context bar, which loads the registered
+// content, so that content does not import the module that discovers it.
 
 interface OptionControlProps {
     option: ToolOptionSpec;
@@ -34,7 +35,7 @@ interface OptionControlProps {
 }
 
 /** A readout of the active tool: its label and the text it reads now (DESIGN §7). */
-export function Readout({ readout }: { readout: ToolReadout }) {
+export function Readout({ readout }: Readonly<{ readout: ToolReadout }>) {
     const text = useSyncExternalStore(readout.subscribe, readout.read);
     return (
         <span className="ui-field" data-tool-readout={readout.key}>
@@ -45,22 +46,25 @@ export function Readout({ readout }: { readout: ToolReadout }) {
 }
 
 /**
- * The command buttons of the active tool (DESIGN §7: rotate and flip the stamp): an icon
- * button or a text button each, disabled while its command is.
+ * The command buttons of the active tool (DESIGN §7: rotate and flip the stamp) in context bar
+ * content of the editor's own: an icon button or a text button each, disabled while its
+ * command is. Elsewhere the package's context bar draws them from the tool's `actions`.
  */
-export function Actions({ actions }: { actions: readonly ToolAction[] }) {
+export function Actions({ actions }: Readonly<{ actions: readonly ToolAction[] }>) {
     const commands = useCommands();
     const registry = useEditorUi().commands;
     return (
         <span className="context-actions">
             {actions.map((action) => {
-                const command = commands.find((each) => each.id === action.command);
-                const data = { "data-tool-action": action.command };
-                const disabled = !command || !command.enabled();
-                const run = () => void runCommand(registry, action.command);
+                const command = commands.find((each) => each.id === action.commandId);
+                const data = { "data-tool-action": action.commandId };
+                const disabled = !command?.enabled();
+                const run = () => {
+                    runCommand(registry, action.commandId);
+                };
                 return action.icon ? (
                     <IconButton
-                        key={action.command}
+                        key={action.commandId}
                         {...data}
                         label={action.label}
                         shortcut={command?.shortcuts[0]}
@@ -71,7 +75,7 @@ export function Actions({ actions }: { actions: readonly ToolAction[] }) {
                     </IconButton>
                 ) : (
                     <Tooltip
-                        key={action.command}
+                        key={action.commandId}
                         label={command?.title() ?? action.label}
                         shortcut={command?.shortcuts[0]}
                     >
@@ -89,7 +93,7 @@ export function Actions({ actions }: { actions: readonly ToolAction[] }) {
  * The variants of the active tool's rail slot that name themselves in the context bar (DESIGN
  * §7: the shape fill's Rectangle / Ellipse), as a segmented control that selects one.
  */
-export function VariantChoice({ tool, tools }: { tool: Tool; tools: ToolState }) {
+export function VariantChoice({ tool, tools }: Readonly<{ tool: Tool; tools: ToolState }>) {
     const slotId = slotOf(tool);
     const slot = tools.registry.railSlots().find((each) => each.id === slotId);
     const variants = (slot?.variants ?? []).filter((each) => each.variantLabel !== undefined);
@@ -99,7 +103,9 @@ export function VariantChoice({ tool, tools }: { tool: Tool; tools: ToolState })
             <SegmentedControl
                 label={slot.label}
                 value={tool.id}
-                onChange={(id) => void tools.select(id)}
+                onChange={(id) => {
+                    tools.select(id);
+                }}
                 options={variants.map((each) => ({ value: each.id, label: each.variantLabel! }))}
             />
         </span>
@@ -107,7 +113,7 @@ export function VariantChoice({ tool, tools }: { tool: Tool; tools: ToolState })
 }
 
 /** One option of the active tool, as the control its kind calls for (DESIGN §7). */
-export function OptionControl({ option, value, onChange }: OptionControlProps) {
+export function OptionControl({ option, value, onChange }: Readonly<OptionControlProps>) {
     const data = { "data-tool-option": option.key };
     switch (option.kind) {
         case "number":

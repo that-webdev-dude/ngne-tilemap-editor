@@ -1,6 +1,6 @@
 import { transformStamp } from "../../../core/cells";
 import type { StampTransform } from "../../../core/cells";
-import { appCommands } from "../../editorUiHub";
+import { refreshCommands } from "../../uiState";
 import type { CommandSpec } from "../../commands/commandTypes";
 import { toolState } from "../activeTool";
 import { currentStamp, currentStampStore, setCurrentStamp } from "./currentStamp";
@@ -38,4 +38,4 @@ export const commands: CommandSpec[] = [
 ];
 
 // The commands are enabled by the current stamp.
-currentStampStore.subscribe(() => appCommands.refresh());
+currentStampStore.subscribe(() => refreshCommands());

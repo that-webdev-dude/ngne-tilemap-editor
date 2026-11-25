@@ -9,7 +9,7 @@ import {
 } from "../../core/selection";
 import { effectiveValues, findLayer, walkLayers } from "../../core/model";
 import type { Marker, Region } from "../../core/model";
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { activeHistory, sessionStore } from "../state/session";
 import { statusStore } from "../state/status";
@@ -321,4 +321,4 @@ export const commands: CommandSpec[] = [
 ];
 
 // Paste is enabled by the clipboard.
-clipboardStore.subscribe(() => appCommands.refresh());
+clipboardStore.subscribe(() => refreshCommands());

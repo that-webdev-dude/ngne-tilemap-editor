@@ -1,9 +1,21 @@
 import { describe, expect, it } from "vitest";
 import { createCommandRegistry } from "@ngne/editor-ui/commands";
 import type { CommandRegistry } from "@ngne/editor-ui/commands";
-import { KEY_CONTEXTS, MENU_BAR, PANEL_SELECTOR } from "../../src/app/commands/commandTypes";
-import type { CommandSpec, KeyContext } from "../../src/app/commands/commandTypes";
 import {
+    EDITOR_CONTEXTS,
+    KEY_CONTEXTS,
+    MENU_BAR,
+    PANEL_SELECTOR,
+    STATE_CONTEXTS,
+} from "../../src/app/commands/commandTypes";
+import type {
+    CommandSpec,
+    EditorContext,
+    KeyContext,
+    MenuBarMenu,
+} from "../../src/app/commands/commandTypes";
+import {
+    activeKeyContexts,
     isTextField,
     nativeKeysOf,
     OVERLAY_SELECTOR,
@@ -17,10 +29,54 @@ import type { KeyEnvironment } from "@ngne/editor-ui/commands";
 
 // TE-007: the keymap contexts of DESIGN §10.1, their resolution and the keyboard listener.
 // Adapted from the sprite editor's se-007-keymap.test.ts: `markers` and `panel` take the
-// place of `floating` and `timeline`.
+// place of `floating` and `timeline`. The cases state each environment with the conditions of
+// the editor's contexts beside the package's key environment; the package takes those as the
+// active contexts (@ngne/editor-ui SPEC §7.2).
+
+/** A key environment as these cases state it: the package's, with the editor's conditions. */
+interface EditorKeyEnvironment extends KeyEnvironment {
+    /** Focus is inside the panel selector (the `panel` context). */
+    inPanel: boolean;
+    gesture: boolean;
+    markers: boolean;
+}
+
+/** The package's part of `environment`. */
+function keyEnvironment(environment: EditorKeyEnvironment): KeyEnvironment {
+    const { overlayOpen, focus, nativeKeys, typeahead } = environment;
+    return { overlayOpen, focus, nativeKeys, typeahead };
+}
+
+/** The editor's contexts active in `environment`, in their order. */
+function activeContexts(environment: EditorKeyEnvironment): EditorContext[] {
+    const on: Record<EditorContext, boolean> = {
+        gesture: environment.gesture,
+        markers: environment.markers,
+        panel: environment.inPanel,
+    };
+    return EDITOR_CONTEXTS.filter((context) => on[context]);
+}
+
+/** The contexts that apply in `environment`, highest priority first. */
+function applicable(environment: EditorKeyEnvironment): KeyContext[] {
+    return applicableContexts(
+        KEY_CONTEXTS,
+        activeContexts(environment),
+        keyEnvironment(environment),
+    );
+}
+
+type Registry = CommandRegistry<MenuBarMenu, EditorContext>;
+
+/** A registry with the editor's menus and contexts. */
+const editorRegistry = (): Registry =>
+    createCommandRegistry<MenuBarMenu, EditorContext>({
+        menus: MENU_BAR,
+        contexts: EDITOR_CONTEXTS,
+    });
 
 /** Focus on the viewport, nothing open, no gesture and no marker selection. */
-const VIEWPORT: KeyEnvironment = {
+const VIEWPORT: EditorKeyEnvironment = {
     overlayOpen: false,
     focus: "viewport",
     inPanel: false,
@@ -29,14 +85,14 @@ const VIEWPORT: KeyEnvironment = {
     gesture: false,
     markers: false,
 };
-const TEXT: KeyEnvironment = { ...VIEWPORT, focus: "text" };
-const BODY: KeyEnvironment = { ...VIEWPORT, focus: "none", nativeKeys: new Set(["Tab"]) };
-const BUTTON: KeyEnvironment = {
+const TEXT: EditorKeyEnvironment = { ...VIEWPORT, focus: "text" };
+const BODY: EditorKeyEnvironment = { ...VIEWPORT, focus: "none", nativeKeys: new Set(["Tab"]) };
+const BUTTON: EditorKeyEnvironment = {
     ...VIEWPORT,
     focus: "control",
     nativeKeys: new Set(["Enter", "Space", "Tab"]),
 };
-const SLIDER: KeyEnvironment = {
+const SLIDER: EditorKeyEnvironment = {
     ...VIEWPORT,
     focus: "control",
     nativeKeys: new Set([
@@ -51,9 +107,9 @@ const SLIDER: KeyEnvironment = {
         "End",
     ]),
 };
-const SELECT: KeyEnvironment = { ...SLIDER, typeahead: true };
+const SELECT: EditorKeyEnvironment = { ...SLIDER, typeahead: true };
 /** Focus on a tile of the Tilesets panel: a focusable element without keys of its own. */
-const PANEL_CELL: KeyEnvironment = {
+const PANEL_CELL: EditorKeyEnvironment = {
     ...VIEWPORT,
     focus: "control",
     inPanel: true,
@@ -61,7 +117,7 @@ const PANEL_CELL: KeyEnvironment = {
 };
 
 interface Fixture {
-    registry: CommandRegistry;
+    registry: Registry;
     calls: string[];
     /** Adds a command whose run is recorded under its id. */
     add(id: string, shortcut: string | string[], context?: KeyContext | KeyContext[]): void;
@@ -70,7 +126,7 @@ interface Fixture {
 }
 
 function fixture(): Fixture {
-    const registry = createCommandRegistry();
+    const registry = editorRegistry();
     const calls: string[] = [];
     const disabled = new Set<string>();
     return {
@@ -92,8 +148,13 @@ function fixture(): Fixture {
 }
 
 /** The id the chord resolves to, or the action when it resolves to no command. */
-function resolved(registry: CommandRegistry, chord: string, environment: KeyEnvironment): string {
-    const resolution = resolveKey(registry, chord, environment);
+function resolved(registry: Registry, chord: string, environment: EditorKeyEnvironment): string {
+    const resolution = resolveKey(
+        registry,
+        chord,
+        keyEnvironment(environment),
+        activeContexts(environment),
+    );
     return resolution.action === "run"
         ? `${resolution.context}:${resolution.command.id}`
         : resolution.action;
@@ -102,7 +163,7 @@ function resolved(registry: CommandRegistry, chord: string, environment: KeyEnvi
 describe("applicable contexts (DESIGN §10.1)", () => {
     it("lists the contexts in the priority order of DESIGN §10.1", () => {
         expect(KEY_CONTEXTS).toEqual(["text", "gesture", "markers", "panel", "canvas", "global"]);
-        expect(applicableContexts({ ...PANEL_CELL, gesture: true, markers: true })).toEqual([
+        expect(applicable({ ...PANEL_CELL, gesture: true, markers: true })).toEqual([
             "gesture",
             "markers",
             "panel",
@@ -112,36 +173,37 @@ describe("applicable contexts (DESIGN §10.1)", () => {
     });
 
     it("names the menus of DESIGN §5 in order", () => {
-        expect(MENU_BAR).toEqual(["File", "Edit", "Map", "Layer", "Tileset", "Select", "View"]);
+        expect(MENU_BAR).toEqual([
+            "File",
+            "Edit",
+            "Map",
+            "Layer",
+            "Tileset",
+            "Select",
+            "View",
+            "Help",
+        ]);
     });
 
     it("applies canvas and global in the normal state", () => {
-        expect(applicableContexts(VIEWPORT)).toEqual(["canvas", "global"]);
-        expect(applicableContexts(BUTTON)).toEqual(["canvas", "global"]);
-        expect(applicableContexts(BODY)).toEqual(["canvas", "global"]);
+        expect(applicable(VIEWPORT)).toEqual(["canvas", "global"]);
+        expect(applicable(BUTTON)).toEqual(["canvas", "global"]);
+        expect(applicable(BODY)).toEqual(["canvas", "global"]);
     });
 
     it("adds panel, markers and gesture when their conditions hold", () => {
-        expect(applicableContexts(PANEL_CELL)).toEqual(["panel", "canvas", "global"]);
-        expect(applicableContexts({ ...VIEWPORT, markers: true })).toEqual([
-            "markers",
-            "canvas",
-            "global",
-        ]);
-        expect(applicableContexts({ ...VIEWPORT, gesture: true })).toEqual([
-            "gesture",
-            "canvas",
-            "global",
-        ]);
+        expect(applicable(PANEL_CELL)).toEqual(["panel", "canvas", "global"]);
+        expect(applicable({ ...VIEWPORT, markers: true })).toEqual(["markers", "canvas", "global"]);
+        expect(applicable({ ...VIEWPORT, gesture: true })).toEqual(["gesture", "canvas", "global"]);
     });
 
     it("applies only text while a text field has focus", () => {
-        expect(applicableContexts({ ...TEXT, inPanel: true, markers: true })).toEqual(["text"]);
+        expect(applicable({ ...TEXT, inPanel: true, markers: true })).toEqual(["text"]);
     });
 
     it("applies none while a menu, dialog or popover is open", () => {
-        expect(applicableContexts({ ...VIEWPORT, overlayOpen: true })).toEqual([]);
-        expect(applicableContexts({ ...TEXT, overlayOpen: true })).toEqual([]);
+        expect(applicable({ ...VIEWPORT, overlayOpen: true })).toEqual([]);
+        expect(applicable({ ...TEXT, overlayOpen: true })).toEqual([]);
     });
 });
 
@@ -166,7 +228,7 @@ describe("keymap resolution follows context priority", () => {
     });
 
     it("orders every pair of contexts: the higher one wins", () => {
-        const environments: Record<Exclude<KeyContext, "text">, Partial<KeyEnvironment>> = {
+        const environments: Record<Exclude<KeyContext, "text">, Partial<EditorKeyEnvironment>> = {
             gesture: { gesture: true },
             markers: { markers: true },
             panel: { inPanel: true },
@@ -207,7 +269,13 @@ describe("keymap resolution follows context priority", () => {
         add("nudge", "ArrowLeft", "markers");
         add("select-layer", "ArrowLeft", "canvas");
         disabled.add("nudge");
-        const resolution = resolveKey(registry, "ArrowLeft", { ...VIEWPORT, markers: true });
+        const markers = { ...VIEWPORT, markers: true };
+        const resolution = resolveKey(
+            registry,
+            "ArrowLeft",
+            keyEnvironment(markers),
+            activeContexts(markers),
+        );
         expect(resolution).toMatchObject({ action: "run", context: "markers" });
         expect(resolution.action === "run" && resolution.command.enabled()).toBe(false);
         expect(resolved(registry, "ArrowLeft", VIEWPORT)).toBe("canvas:select-layer");
@@ -316,7 +384,7 @@ describe("text context: † chords act while a text field has focus (DESIGN §10
     });
 
     it("rejects a text binding that would take a key from the field", () => {
-        const registry = createCommandRegistry();
+        const registry = editorRegistry();
         const bind = (shortcut: string) =>
             registry.register({ id: shortcut, title: "x", shortcut, context: "text", run() {} });
         for (const chord of [
@@ -455,6 +523,27 @@ function page(active: FocusedElement | null, open: string[] = []): KeymapDocumen
 
 const IDLE = { gesture: false, markers: false };
 
+/** The editor's key contexts as the keymap reads them (src/app/editorUi.ts). */
+const KEY_CONTEXT_LISTS = {
+    order: EDITOR_CONTEXTS,
+    state: STATE_CONTEXTS,
+    focus: { panel: PANEL_SELECTOR },
+};
+
+/** The environment of a key pressed in `document` with the state contexts `state`. */
+function readEnvironment(
+    document: KeymapDocument,
+    state: { gesture: boolean; markers: boolean },
+): EditorKeyEnvironment {
+    const active = activeKeyContexts(document, KEY_CONTEXT_LISTS, state);
+    return {
+        ...readKeyEnvironment(document),
+        inPanel: active.includes("panel"),
+        gesture: active.includes("gesture"),
+        markers: active.includes("markers"),
+    };
+}
+
 describe("reading the environment from the page", () => {
     it("recognises text and number fields", () => {
         for (const field of [
@@ -467,7 +556,7 @@ describe("reading the environment from the page", () => {
             element("div", { role: "textbox" }),
         ]) {
             expect(isTextField(field)).toBe(true);
-            expect(readKeyEnvironment(page(field), IDLE).focus).toBe("text");
+            expect(readEnvironment(page(field), IDLE).focus).toBe("text");
         }
         for (const control of [
             element("input", { type: "checkbox" }),
@@ -481,15 +570,15 @@ describe("reading the environment from the page", () => {
 
     it("tells the viewport, a control and no focus apart", () => {
         const viewport = element("div", { tabindex: "0", [VIEWPORT_FOCUS_ATTRIBUTE]: "" });
-        expect(readKeyEnvironment(page(viewport), IDLE)).toMatchObject({
+        expect(readEnvironment(page(viewport), IDLE)).toMatchObject({
             focus: "viewport",
             inPanel: false,
             overlayOpen: false,
         });
-        expect(readKeyEnvironment(page(viewport), IDLE).nativeKeys.size).toBe(0);
-        expect(readKeyEnvironment(page(element("button")), IDLE).focus).toBe("control");
+        expect(readEnvironment(page(viewport), IDLE).nativeKeys.size).toBe(0);
+        expect(readEnvironment(page(element("button")), IDLE).focus).toBe("control");
         for (const none of [null, element("body"), element("html")]) {
-            const environment = readKeyEnvironment(page(none), IDLE);
+            const environment = readEnvironment(page(none), IDLE);
             expect(environment.focus).toBe("none");
             expect([...environment.nativeKeys]).toEqual(["Tab"]);
         }
@@ -528,8 +617,7 @@ describe("reading the environment from the page", () => {
     });
 
     it("gives typeahead to selects and trees only", () => {
-        const typeahead = (target: FocusedElement) =>
-            readKeyEnvironment(page(target), IDLE).typeahead;
+        const typeahead = (target: FocusedElement) => readEnvironment(page(target), IDLE).typeahead;
         expect(typeahead(element("button", { role: "combobox" }))).toBe(true);
         expect(typeahead(element("select"))).toBe(true);
         expect(typeahead(element("div", { role: "treeitem" }))).toBe(true);
@@ -539,12 +627,10 @@ describe("reading the environment from the page", () => {
 
     it("reads the panel, an open overlay and the context state", () => {
         const cell = element("div", { tabindex: "0" }, [PANEL_SELECTOR]);
-        expect(readKeyEnvironment(page(cell), IDLE).inPanel).toBe(true);
-        expect(readKeyEnvironment(page(element("div", { tabindex: "0" })), IDLE).inPanel).toBe(
-            false,
-        );
-        expect(readKeyEnvironment(page(cell, [OVERLAY_SELECTOR]), IDLE).overlayOpen).toBe(true);
-        expect(readKeyEnvironment(page(cell), { gesture: true, markers: true })).toMatchObject({
+        expect(readEnvironment(page(cell), IDLE).inPanel).toBe(true);
+        expect(readEnvironment(page(element("div", { tabindex: "0" })), IDLE).inPanel).toBe(false);
+        expect(readEnvironment(page(cell, [OVERLAY_SELECTOR]), IDLE).overlayOpen).toBe(true);
+        expect(readEnvironment(page(cell), { gesture: true, markers: true })).toMatchObject({
             gesture: true,
             markers: true,
         });
@@ -594,7 +680,7 @@ function dispatch(
 }
 
 describe("keyboard listener", () => {
-    const setup = (environment: KeyEnvironment = VIEWPORT) => {
+    const setup = (environment: EditorKeyEnvironment = VIEWPORT) => {
         const value = fixture();
         const target = new EventTarget();
         const errors: string[] = [];
@@ -602,7 +688,8 @@ describe("keyboard listener", () => {
         const uninstall = installKeymap({
             registry: value.registry,
             target,
-            environment: () => state.environment,
+            environment: () => keyEnvironment(state.environment),
+            activeContexts: () => activeContexts(state.environment),
             onError: (error, command) => void errors.push(`${command.id}: ${String(error)}`),
         });
         return { ...value, target, errors, state, uninstall };

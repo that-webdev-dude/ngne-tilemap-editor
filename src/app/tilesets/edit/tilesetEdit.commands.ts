@@ -1,4 +1,4 @@
-import { appCommands } from "../../editorUiHub";
+import { refreshCommands } from "../../uiState";
 import type { CommandSpec } from "../../commands/commandTypes";
 import { tilesetWorkflowBusy } from "../tilesetWorkflow";
 import {
@@ -27,7 +27,9 @@ export const commands: CommandSpec[] = [
         title: "Tileset Properties…",
         enabled: () => editable() && !tilesetWorkflowBusy(),
         contextMenus: [{ menu: TILESET_MENU, order: 100 }],
-        run: async () => void (await editTilesetProperties()),
+        run: async () => {
+            await editTilesetProperties();
+        },
     },
     {
         id: "tileset.rename",
@@ -38,30 +40,38 @@ export const commands: CommandSpec[] = [
             editable() &&
             tilesetRenameStore.getState().panelFocused &&
             !tilesetRenameStore.getState().renaming,
-        run: () => void startTilesetRename(),
+        run: () => {
+            startTilesetRename();
+        },
     },
     {
         id: "tileset.moveLeft",
         title: "Move Tileset Left",
         enabled: () => editable() && canMoveCurrentTileset(-1),
         contextMenus: [{ menu: TILESET_MENU, order: 200 }],
-        run: () => void moveCurrentTileset(-1),
+        run: () => {
+            moveCurrentTileset(-1);
+        },
     },
     {
         id: "tileset.moveRight",
         title: "Move Tileset Right",
         enabled: () => editable() && canMoveCurrentTileset(1),
         contextMenus: [{ menu: TILESET_MENU, order: 210 }],
-        run: () => void moveCurrentTileset(1),
+        run: () => {
+            moveCurrentTileset(1);
+        },
     },
     {
         id: "tileset.delete",
         title: "Delete Tileset",
         enabled: editable,
         contextMenus: [{ menu: TILESET_MENU, order: 300 }],
-        run: () => void deleteCurrentTileset(),
+        run: () => {
+            deleteCurrentTileset();
+        },
     },
 ];
 
 // F2 follows the focus and the rename; an open menu is told.
-tilesetRenameStore.subscribe(() => appCommands.refresh());
+tilesetRenameStore.subscribe(() => refreshCommands());

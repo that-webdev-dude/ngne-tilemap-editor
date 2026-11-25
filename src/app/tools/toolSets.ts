@@ -8,7 +8,7 @@ import type { RailSlot, Tool, ToolLayerKind, ToolRegistry } from "./types";
 // Tiled enables tools per layer type, and the navigate group in every set. Pure: no store.
 
 /** The kinds of the planned slots, by slot id. */
-const plannedLayers = new Map(plannedTools.map((spec) => [spec.id, spec.layers]));
+const plannedLayers = new Map(plannedTools.map((spec) => [spec.id, spec.toolSets]));
 
 /** The active map of a session, or null when it has none. */
 export function activeMap(session: ProjectSession): ProjectMap | null {
@@ -34,7 +34,7 @@ export function activeLayerKind(session: ProjectSession): ToolLayerKind {
 
 /** The kinds whose tool set holds `tool`: its own, else its rail slot's planned ones. */
 function toolLayers(tool: Tool): readonly ToolLayerKind[] | undefined {
-    return tool.layers ?? plannedLayers.get(slotOf(tool));
+    return tool.layers ?? tool.toolSets ?? plannedLayers.get(slotOf(tool));
 }
 
 /** Whether the tool set of `kind` holds `tool`. */

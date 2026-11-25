@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { editorUi } from "../editorUi";
 import type { CommandSpec } from "../commands/commandTypes";
 import { OPEN_RECENT_PATH, openRecentId, recentFiles } from "./recentFiles";
 import type { RecentEntry } from "./recentFiles";
@@ -8,6 +8,8 @@ import { fileWorkflows } from "./workflows";
 // registered and removed as the list changes, and Clear Recent Files, which keeps the submenu
 // there while the list is empty and replaces its placeholder (commands/planned.commands.ts).
 // The submenu follows Open… (File menu order 120); the empty state lists the same commands.
+// The list is read once it has loaded, after `editorUi.ts`, which loads this module, is built,
+// so the instance's registry is read only then.
 
 /** Order of the first file in the File menu, and so of the submenu; files follow it. */
 const FIRST_ORDER = 125;
@@ -33,7 +35,7 @@ let registered: (() => void)[] = [];
 function registerEntries(entries: readonly RecentEntry[]): void {
     for (const unregister of registered) unregister();
     registered = entries.map((entry, index) =>
-        appCommands.register(
+        editorUi.commands.register(
             {
                 id: openRecentId(entry),
                 title: entry.name,
@@ -41,7 +43,9 @@ function registerEntries(entries: readonly RecentEntry[]): void {
                 // Newest first, all in one group.
                 menuOrder: FIRST_ORDER + index / 100,
                 enabled: idle,
-                run: async () => void (await fileWorkflows.openRecent(entry)),
+                run: async () => {
+                    await fileWorkflows.openRecent(entry);
+                },
             },
             "../file/recent.commands.ts",
         ),

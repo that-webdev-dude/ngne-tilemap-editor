@@ -6,6 +6,7 @@ import { defineConfig } from "vite";
 import type { AliasOptions, PluginOption } from "vite";
 import { appInfoDefines } from "@ngne/editor-ui/about/build";
 import { generateLicences } from "@ngne/editor-ui/licences/build";
+import type { LicencesServiceWorkerPlugin } from "@ngne/editor-ui/licences/build";
 
 /**
  * `@ngne/core` from another install, when `NGNE_CORE_DIR` names one: the weekly runtime-latest
@@ -34,6 +35,7 @@ interface PwaOptions {
     injectManifest: {
         globPatterns: string[];
         maximumFileSizeToCacheInBytes: number;
+        buildPlugins: { vite: LicencesServiceWorkerPlugin[] };
     };
     manifest: Record<string, unknown>;
 }
@@ -126,7 +128,8 @@ const ROOT = fileURLToPath(new URL(".", import.meta.url));
  * with the licence of every package whose code the build bundled, each of them a runtime
  * dependency of package-lock.json, and of rolldown, whose virtual modules the bundler writes
  * into every build. The development server answers the same address. The build fails on a
- * package without an allowed licence and its text.
+ * package without an allowed licence and its text, and the service worker's build on code of a
+ * package the file does not list.
  */
 const licences = generateLicences({
     root: ROOT,
@@ -170,6 +173,8 @@ export default defineConfig(({ command }) => ({
                 // The main chunk holds NGNE and React; a build with the development test hooks
                 // (tests/e2e/te-066-support.ts) is several times larger.
                 maximumFileSizeToCacheInBytes: 32 * 1024 * 1024,
+                // The worker's own build, after the app's: only what licences.txt lists.
+                buildPlugins: { vite: [licences.serviceWorkerPlugin] },
             },
             manifest,
         }),

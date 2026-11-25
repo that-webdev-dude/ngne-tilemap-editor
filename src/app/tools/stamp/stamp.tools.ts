@@ -35,10 +35,10 @@ import { placedCells, separatePlacements, stampIsEmpty } from "./placement";
  * stamp: the stamp brush, the bucket and shape fill (TE-019).
  */
 export const STAMP_TRANSFORM_ACTIONS: readonly ToolAction[] = [
-    { command: "stamp.rotateLeft", label: "Rotate Stamp Left", icon: RotateCcwSquare },
-    { command: "stamp.rotateRight", label: "Rotate Stamp Right", icon: RotateCwSquare },
-    { command: "stamp.flipHorizontal", label: "Flip H" },
-    { command: "stamp.flipVertical", label: "Flip V" },
+    { commandId: "stamp.rotateLeft", label: "Rotate Stamp Left", icon: RotateCcwSquare },
+    { commandId: "stamp.rotateRight", label: "Rotate Stamp Right", icon: RotateCwSquare },
+    { commandId: "stamp.flipHorizontal", label: "Flip H" },
+    { commandId: "stamp.flipVertical", label: "Flip V" },
 ];
 
 /** How a press of the brush paints, by its modifiers. */

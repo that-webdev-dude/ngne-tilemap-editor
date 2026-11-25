@@ -1,4 +1,4 @@
-import { appCommands } from "../../editorUiHub";
+import { refreshCommands } from "../../uiState";
 import type { CommandSpec } from "../../commands/commandTypes";
 import { sessionStore } from "../../state/session";
 import { tilesetPanelStore } from "../panel/tilesetPanel";
@@ -17,7 +17,9 @@ export const commands: CommandSpec[] = [
         title: "Edit Animation…",
         enabled: canEditAnimation,
         contextMenus: [{ menu: "tile", order: TILE_MENU_ORDER }],
-        run: async () => void (await editAnimation()),
+        run: async () => {
+            await editAnimation();
+        },
     },
 ];
 
@@ -27,7 +29,7 @@ const follow = () => {
     const next = canEditAnimation();
     if (next === editable) return;
     editable = next;
-    appCommands.refresh();
+    refreshCommands();
 };
 sessionStore.subscribe(follow);
 tilesetPanelStore.subscribe(follow);

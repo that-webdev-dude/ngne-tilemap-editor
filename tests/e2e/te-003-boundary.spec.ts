@@ -15,7 +15,7 @@ const NAMES: Record<Region, string> = {
     "context-bar": "Context bar",
     viewport: "Viewport",
     dock: "Panels",
-    "bottom-panel": "Bottom panel",
+    "bottom-panel": "Bottom Panel",
     "status-bar": "Status bar",
 };
 

@@ -3,13 +3,12 @@ import { matchesGlob } from "node:path";
 import { describe, expect, it, vi } from "vitest";
 import { ICONS, ICONS_DIR, drawIcon, iconPng, pwaColours } from "../../scripts/icons";
 import {
-    CACHE_PREFIX,
-    SKIP_WAITING,
     cacheName,
     cacheable,
     mayDeleteStale,
     olderFile,
     precacheUrls,
+    pwaNames,
     route,
     searchOrder,
     staleCaches,
@@ -32,6 +31,10 @@ import { LICENCES_FILE } from "@ngne/editor-ui/licences/build";
 // output) and the launch queue.
 
 const SCOPE = "https://example.test/sub/path/";
+
+/** The editor's id, from which the worker's names derive (@ngne/editor-ui SPEC §5). */
+const ID = "ngne-tilemap-editor";
+const { cachePrefix: CACHE_PREFIX, skipWaiting: SKIP_WAITING } = pwaNames(ID);
 const ENTRIES: PrecacheEntry[] = [
     { url: "index.html", revision: "a1" },
     { url: "assets/index-abc.js", revision: null },
@@ -124,7 +127,7 @@ describe("service worker precache (src/app/pwa/precache.ts)", () => {
     it("prefixes its caches and messages with the app's name (SUITE §7)", () => {
         expect(CACHE_PREFIX).toBe("ngne-tilemap-editor-");
         expect(SKIP_WAITING).toBe("ngne-tilemap-editor:skip-waiting");
-        expect(cacheName(ENTRIES)).toMatch(/^ngne-tilemap-editor-[0-9a-f]{8}$/);
+        expect(cacheName(ID, ENTRIES)).toMatch(/^ngne-tilemap-editor-[0-9a-f]{8}$/);
     });
 
     it("keeps each URL once, the first entry", () => {
@@ -132,11 +135,11 @@ describe("service worker precache (src/app/pwa/precache.ts)", () => {
     });
 
     it("names one cache per build, the same name for the same build", () => {
-        const name = cacheName(ENTRIES);
+        const name = cacheName(ID, ENTRIES);
         expect(name.startsWith(CACHE_PREFIX)).toBe(true);
-        expect(cacheName([...ENTRIES])).toBe(name);
+        expect(cacheName(ID, [...ENTRIES])).toBe(name);
         const changed = [{ url: "index.html", revision: "a2" }, ...ENTRIES.slice(1)];
-        expect(cacheName(changed)).not.toBe(name);
+        expect(cacheName(ID, changed)).not.toBe(name);
     });
 
     it("resolves the entries in the worker's scope, the app's base", () => {
@@ -147,10 +150,12 @@ describe("service worker precache (src/app/pwa/precache.ts)", () => {
     });
 
     it("deletes only its own older caches", () => {
-        const current = cacheName(ENTRIES);
+        const current = cacheName(ID, ENTRIES);
         // The sprite editor shares the origin on GitHub Pages (SUITE §7): its caches stay.
         const names = [current, `${CACHE_PREFIX}00000000`, "ngne-sprite-editor-12345678"];
-        expect(staleCaches([...names, "other-app"], current)).toEqual([`${CACHE_PREFIX}00000000`]);
+        expect(staleCaches(ID, [...names, "other-app"], current)).toEqual([
+            `${CACHE_PREFIX}00000000`,
+        ]);
     });
 
     it("answers navigations to the app with the cached shell and build files from the cache", () => {
@@ -176,12 +181,12 @@ describe("service worker precache (src/app/pwa/precache.ts)", () => {
     it("looks for a file in its own cache, then the older ones, newest first", () => {
         const current = `${CACHE_PREFIX}cccccccc`;
         const names = [`${CACHE_PREFIX}aaaaaaaa`, "other-app", current, `${CACHE_PREFIX}bbbbbbbb`];
-        expect(searchOrder(names, current)).toEqual([
+        expect(searchOrder(ID, names, current)).toEqual([
             current,
             `${CACHE_PREFIX}bbbbbbbb`,
             `${CACHE_PREFIX}aaaaaaaa`,
         ]);
-        expect(searchOrder([current], current)).toEqual([current]);
+        expect(searchOrder(ID, [current], current)).toEqual([current]);
     });
 
     it("looks for a file of the scope that is not this build's in the older caches (a window of an older deployment)", () => {
@@ -268,13 +273,27 @@ class FakeRegistration implements RegistrationLike {
     }
 }
 
+/**
+ * The worker that controls the page, as the container hands it out: the update flow posts it
+ * the started message (`pwaNames(id).started`), which a plain object stands for receiving.
+ */
+function controllerOf(value: unknown): ContainerLike["controller"] {
+    if (value === null) return null;
+    const controller = value as { postMessage?: (message: unknown) => void };
+    controller.postMessage ??= () => {};
+    return controller as ContainerLike["controller"];
+}
+
 class FakeContainer implements ContainerLike {
     registered: { url: string; scope: string }[] = [];
+    controller: ContainerLike["controller"];
     private changes: (() => void)[] = [];
     constructor(
-        public controller: unknown,
+        controller: unknown,
         public registration = new FakeRegistration(),
-    ) {}
+    ) {
+        this.controller = controllerOf(controller);
+    }
     async register(url: string, options: { scope: string }) {
         this.registered.push({ url, ...options });
         return this.registration;
@@ -284,7 +303,7 @@ class FakeContainer implements ContainerLike {
     }
     /** A new worker controls the page. */
     change(controller: unknown) {
-        this.controller = controller;
+        this.controller = controllerOf(controller);
         for (const listener of this.changes) listener();
     }
 }
@@ -296,6 +315,7 @@ describe("update flow (src/app/pwa/updates.ts)", () => {
         const container = new FakeContainer(controller);
         const reload = vi.fn();
         const updates = registerAppUpdates({
+            id: ID,
             container,
             url: "/sub/path/sw.js",
             scope: "/sub/path/",
@@ -342,6 +362,7 @@ describe("update flow (src/app/pwa/updates.ts)", () => {
         waiting.state = "installed";
         container.registration.waiting = waiting;
         const updates = registerAppUpdates({
+            id: ID,
             container,
             url: "sw.js",
             scope: "/",
@@ -430,6 +451,7 @@ describe("update flow (src/app/pwa/updates.ts)", () => {
         container.register = () => Promise.reject(new Error("no worker"));
         const report = vi.fn();
         const updates = registerAppUpdates({
+            id: ID,
             container,
             url: "sw.js",
             scope: "/",

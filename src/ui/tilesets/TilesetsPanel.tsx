@@ -1,5 +1,5 @@
 import { Ellipsis, Plus } from "lucide-react";
-import { editorUiInstance } from "../../app/editorUiHub";
+import { commandRunner } from "../../app/uiState";
 import { DropdownMenu } from "radix-ui";
 import { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import type { KeyboardEvent, PointerEvent } from "react";
@@ -37,9 +37,7 @@ import {
 } from "../../app/tilesets/panel/tilesetPanel";
 import { MAX_TEXT_LENGTH } from "../../core/model";
 import type { Tile, Tileset } from "../../core/model";
-import { contextMenuEntries } from "@ngne/editor-ui/commands";
-import { runCommand } from "@ngne/editor-ui/commands";
-import { useCommands } from "@ngne/editor-ui/commands";
+import { contextMenuEntries, useCommands } from "@ngne/editor-ui/commands";
 import { ContextMenu, Icon, IconButton, Select } from "@ngne/editor-ui/primitives";
 import { useTheme } from "@ngne/editor-ui";
 import { paintTileGrid } from "./paintTileGrid";
@@ -447,9 +445,7 @@ function TileGrid({ tileset }: Readonly<{ tileset: Tileset }>) {
                 onPointerCancel={endDrag}
                 onLostPointerCapture={endDrag}
                 onPointerLeave={() => tilesetPanel.setHovered(null)}
-                onDoubleClick={() =>
-                    runCommand(editorUiInstance().commands, "tileset.editCollision")
-                }
+                onDoubleClick={() => commandRunner.run("tileset.editCollision")}
             >
                 <div
                     ref={sizer}
@@ -504,7 +500,7 @@ export function TilesetsPanel() {
                 <IconButton
                     label="New Tileset"
                     data-new-tileset=""
-                    onClick={() => runCommand(editorUiInstance().commands, "file.importTileset")}
+                    onClick={() => commandRunner.run("file.importTileset")}
                 >
                     <Icon icon={Plus} />
                 </IconButton>

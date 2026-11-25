@@ -1,9 +1,9 @@
 import { assertInvariants, createProject, createProjectSession } from "../../core/model";
 import type { RecentCommandsState } from "@ngne/editor-ui";
-import type { CommandRegistry } from "@ngne/editor-ui/commands";
+import type { CommandRegistry, CommandSpec } from "@ngne/editor-ui/commands";
 import type { BottomRegionState } from "@ngne/editor-ui/shell";
 import type { StoreApi } from "zustand/vanilla";
-import type { TilemapEditorUi } from "../editorUiHub";
+import type { TilemapEditorUi } from "../editorUi";
 import { keyContextStore } from "../keymap/contextState";
 import { preferences } from "../preferences/preferences";
 import type { PreferenceStore } from "../preferences/preferences";
@@ -69,6 +69,17 @@ export interface ViewportProbe {
 }
 
 /**
+ * The instance's command registry as end-to-end probes register on it: a probe's menu path is
+ * any list of names, which the registry checks when the probe registers.
+ */
+export type TestCommandRegistry = Omit<CommandRegistry, "register"> & {
+    register(
+        spec: Omit<CommandSpec, "menuPath"> & { menuPath?: readonly string[] },
+        source?: string,
+    ): () => void;
+};
+
+/**
  * What end-to-end tests reach in the page: the stores and the registry themselves. `App.tsx`
  * installs it in development builds only; the production bundle has no such global.
  */
@@ -77,7 +88,7 @@ export interface EditorTestHooks {
     readonly keyContexts: typeof keyContextStore;
     /** The bottom panel's visibility: the editor UI instance's bottom region. */
     readonly bottomPanel: StoreApi<BottomRegionState>;
-    readonly commands: CommandRegistry;
+    readonly commands: TestCommandRegistry;
     readonly preferences: PreferenceStore;
     readonly viewPreferences: typeof viewPreferences;
     readonly recentCommands: StoreApi<RecentCommandsState>;
@@ -107,7 +118,7 @@ export function installTestHooks(
         session: sessionStore,
         keyContexts: keyContextStore,
         bottomPanel: editorUi.bottomRegion,
-        commands: editorUi.commands as unknown as CommandRegistry,
+        commands: editorUi.commands as unknown as TestCommandRegistry,
         preferences,
         viewPreferences,
         recentCommands: editorUi.recentCommands,

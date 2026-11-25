@@ -1,4 +1,4 @@
-import { appCommands } from "../editorUiHub";
+import { refreshCommands } from "../uiState";
 import type { CommandSpec } from "../commands/commandTypes";
 import { layersIdle } from "./layers";
 import {
@@ -47,4 +47,4 @@ export const commands: CommandSpec[] = [
 ];
 
 // F2 follows the focus, the rename and the popover; an open menu is told.
-layersPanelStore.subscribe(() => appCommands.refresh());
+layersPanelStore.subscribe(() => refreshCommands());

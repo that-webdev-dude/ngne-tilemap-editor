@@ -1,4 +1,4 @@
-import { appCommands } from "../../editorUiHub";
+import { refreshCommands } from "../../uiState";
 import type { CommandSpec } from "../../commands/commandTypes";
 import { sessionStore } from "../../state/session";
 import { viewPreferences } from "../../view/viewPreferences";
@@ -20,7 +20,9 @@ export const commands: CommandSpec[] = [
         title: "Edit Collision…",
         enabled: canEditCollision,
         contextMenus: [{ menu: "tile", order: TILE_MENU_ORDER }],
-        run: async () => void (await editCollision()),
+        run: async () => {
+            await editCollision();
+        },
     },
     {
         id: "view.collision",
@@ -36,10 +38,10 @@ const follow = () => {
     const next = canEditCollision();
     if (next === editable) return;
     editable = next;
-    appCommands.refresh();
+    refreshCommands();
 };
 sessionStore.subscribe(follow);
 tilesetPanelStore.subscribe(follow);
 viewPreferences.subscribe((state, previous) => {
-    if (state.collision !== previous.collision) appCommands.refresh();
+    if (state.collision !== previous.collision) refreshCommands();
 });

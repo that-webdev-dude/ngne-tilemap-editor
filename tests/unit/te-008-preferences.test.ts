@@ -17,7 +17,10 @@ import {
 } from "../../src/app/view/viewPreferences";
 import type { KeyValueStorage } from "@ngne/editor-ui/platform";
 import { formatHexColour, parseHexColour } from "@ngne/editor-ui/colour";
-import { createThemeStore, DEFAULT_THEME, THEME_STORAGE_KEY } from "@ngne/editor-ui";
+import { createThemeStore, DEFAULT_THEME, persistedNames } from "@ngne/editor-ui";
+
+/** The theme's name for the editor's id (@ngne/editor-ui SPEC §5). */
+const THEME_STORAGE_KEY = persistedNames("ngne-tilemap-editor").theme;
 
 // TE-008: the stores behind the Preferences dialog and the view preferences of SPEC §3 — the
 // ranges the dialog offers are the ranges the store accepts, every field notifies a subscriber
@@ -243,7 +246,7 @@ describe("the theme and the preference store", () => {
 
     it("a change of theme and a change of preference do not touch each other's record", () => {
         const storage = memoryStorage();
-        const theme = createThemeStore(storage);
+        const theme = createThemeStore(storage, THEME_STORAGE_KEY);
         const store = createPreferenceStore(storage);
         theme.getState().setTheme("light");
         expect([...storage.data.keys()]).toEqual([THEME_STORAGE_KEY]);
@@ -253,7 +256,7 @@ describe("the theme and the preference store", () => {
         store.reset();
         theme.getState().setTheme(DEFAULT_THEME);
         expect(createPreferenceStore(storage).all()).toEqual(DEFAULTS);
-        expect(createThemeStore(storage).getState().theme).toBe("dark");
+        expect(createThemeStore(storage, THEME_STORAGE_KEY).getState().theme).toBe("dark");
     });
 });
 

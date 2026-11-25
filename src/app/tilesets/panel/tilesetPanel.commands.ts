@@ -1,4 +1,4 @@
-import { appCommands } from "../../editorUiHub";
+import { refreshCommands } from "../../uiState";
 import type { CommandSpec } from "../../commands/commandTypes";
 import { sessionStore } from "../../state/session";
 import { shownTileset, tilesetPanel, tilesetPanelStore } from "./tilesetPanel";
@@ -38,7 +38,7 @@ const follow = () => {
     const next = position();
     if (next === last) return;
     last = next;
-    appCommands.refresh();
+    refreshCommands();
 };
 sessionStore.subscribe(follow);
 tilesetPanelStore.subscribe(follow);
