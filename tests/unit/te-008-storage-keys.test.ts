@@ -16,9 +16,10 @@ import { createRecentCommandsStore, createThemeStore, persistedNames } from "@ng
 
 // TE-008: every localStorage key the app writes starts with `ngne-tilemap-editor.` (SUITE §7:
 // both apps of the suite share one origin). Two checks: every store writes prefixed keys
-// when it is driven; and every `*_STORAGE_KEY` constant under src is prefixed and is one of the
-// stores driven here. `localStorage` is reached through the package's storage module only
-// (@ngne/editor-ui `platform-storage` test), so a store cannot write past these checks.
+// when it is driven; and every `*_STORAGE_KEY` constant under src is prefixed and, with the
+// instance's names from `persistedNames`, makes up the stores driven here. `localStorage` is
+// reached through the package's storage module only (@ngne/editor-ui `platform-storage`
+// test), so a store cannot write past these checks.
 
 const PREFIX = "ngne-tilemap-editor.";
 
@@ -118,12 +119,15 @@ describe("localStorage keys", () => {
     });
 
     it("every STORAGE_KEY constant under src is prefixed and belongs to a store driven here", () => {
+        // The app declares its own stores' keys; the instance's stores take theirs from
+        // persistedNames(id) (@ngne/editor-ui SPEC §5).
         const declared = declaredKeys();
-        expect(declared.length).toBeGreaterThanOrEqual(STORES.length);
+        const packageNames = [THEME_STORAGE_KEY, LAYOUT_STORAGE_KEY, RECENT_COMMANDS_STORAGE_KEY];
+        expect(declared.length).toBeGreaterThanOrEqual(STORES.length - packageNames.length);
         for (const { file, name, value } of declared) {
             expect(value.startsWith(PREFIX), `${file}: ${name} = "${value}"`).toBe(true);
         }
-        expect(declared.map((entry) => entry.value).sort()).toEqual(
+        expect([...declared.map((entry) => entry.value), ...packageNames].sort()).toEqual(
             STORES.map(([key]) => key).sort(),
         );
     });
