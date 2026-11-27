@@ -1,5 +1,31 @@
 # Changelog
 
+## Unreleased
+
+### Interface: `@ngne/editor-ui` 0.1.0
+
+- The editor's shell and shared interface now come from `@ngne/editor-ui` 0.1.0, the NGNE editor
+  suite's package, pinned exactly: the menu bar and its menus, the map tab strip, the tool rail,
+  the context bar, the dock, the Bottom Panel, the status bar, toasts, the command palette and
+  shortcut sheet, the update notice and the Open Source Licences dialog. Themes, layout, recent
+  commands and the offline cache carry over from earlier versions.
+- A new Help menu, last in the menu bar: Keyboard Shortcuts… (still on `?`) moves there from
+  the Edit menu, and Help → About NGNE Tilemap Editor… shows the editor's version, licence and
+  engine version, with links to the repository and the changelog and a Copy version info button.
+  About works with no project open.
+- The bottom region is named "Bottom Panel", in title case, wherever the editor names it (for
+  example when it fails to render).
+- A control other than a text field, activated with the pointer, gives the keyboard focus back
+  to the viewport, so tool and view keys work at once; a tool chosen with the pointer on the tool
+  rail does the same.
+- In development builds, the gallery route shows the package's gallery of components.
+
+### Known limitations
+
+- On the RTX 4060 reference machine, one cold load of 10 took 2.5 s, over the 2 s budget, most
+  of it before the window showed the editor; the median load is 0.8 s
+  ([ENGINE.md §6](docs/ENGINE.md#6-budgets-and-spikes)). Its cause is not identified.
+
 ## 1.1.0 – 2026-11-20
 
 - Uses `@ngne/core` 0.4.0. The editor draws maps as before.

@@ -175,4 +175,4 @@ export const CHROME_RESERVED_CHORDS: readonly string[] = [
     "Ctrl+PageUp",
     "Ctrl+F4",
     "Alt+F4",
-].map(normalizeChord);
+].map((chord) => normalizeChord(chord));

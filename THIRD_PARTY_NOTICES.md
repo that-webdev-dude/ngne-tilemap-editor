@@ -3,9 +3,12 @@
 Parts of this repository are derived from third-party source code. Each part and its licence
 is listed below. Runtime dependencies installed through npm carry their own licences in
 `node_modules`; the build writes this file, the program's licence, the licence of every npm
-package it bundles and the licence of rolldown, the bundler, to `licences.txt`, which the app
-shows in a dialog (View → Open Source Licences…). Code that a bundled package credits to another
-project is listed here too (UZIP.js, react-merge-refs, smooth-ui).
+package it bundles (`@ngne/editor-ui` included) and the licences of the build tools whose code
+a build holds (rolldown, the bundler, and vite) to `licences.txt`, which the app shows in a
+dialog (View → Open Source Licences…). `react-remove-scroll-bar`, bundled through Radix, ships
+no licence file: its MIT licence text in `licences.txt` is the stand-in that the licence helper
+of `@ngne/editor-ui` ships, the `LICENSE` of its repository. Code that a bundled package
+credits to another project is listed here too (UZIP.js, react-merge-refs, smooth-ui).
 
 NGNE Tilemap Editor is not affiliated with or endorsed by Tiled or Thorbjørn Lindeijer, nor by
 Aseprite or Igara Studio S.A. "Tiled" and "Aseprite" are used only to name the programs whose

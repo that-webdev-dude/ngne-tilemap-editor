@@ -4,33 +4,33 @@
     "measurement": "Cold load of the production build served locally (vite preview), navigation start to interactive (the first animation frame with the New Project dialog on screen, its button clicked at every frame from the first one that shows it); new Chrome with a fresh profile per load; Intel UHD, window 1920 × 1080, DPR 1",
     "statistic": "max of 10 loads",
     "budgetMs": 2000,
-    "resultMs": 260,
+    "resultMs": 223.60000002384186,
     "details": {
         "adapter": "intel gen-12lp",
-        "medianMs": 236.30000001192093,
+        "medianMs": 217.39999997615814,
         "interactiveMs": [
-            260,
-            236.30000001192093,
-            243.30000001192093,
-            232.80000001192093,
-            232.0999999642372,
-            241,
-            231.4000000357628,
-            236.19999998807907,
-            236.30000001192093,
-            238
+            223.60000002384186,
+            217.39999997615814,
+            219,
+            217.70000004768372,
+            213.70000004768372,
+            219.5,
+            216.0999999642372,
+            207.69999998807907,
+            215.4000000357628,
+            213.20000004768372
         ],
         "shellMs": [
-            235.30000001192093,
-            215.9000000357628,
-            219.9000000357628,
-            212.80000001192093,
-            211.5,
-            220.39999997615814,
-            211,
-            215.39999997615814,
-            215.5,
-            218.30000001192093
+            202.80000001192093,
+            195.19999998807907,
+            197.39999997615814,
+            196.10000002384186,
+            192.80000001192093,
+            195.70000004768372,
+            194.5999999642372,
+            185.39999997615814,
+            193.9000000357628,
+            191.9000000357628
         ],
         "clicks": [
             1,
@@ -44,13 +44,13 @@
             1,
             1
         ],
-        "appReadyMedianMs": 158.0999999642372,
-        "firstContentfulPaintMedianMs": 304,
-        "domContentLoadedMedianMs": 110.80000001192093,
-        "loadEventMedianMs": 111.80000001192093,
+        "appReadyMedianMs": 141.80000001192093,
+        "firstContentfulPaintMedianMs": 284,
+        "domContentLoadedMedianMs": 127.20000004768372,
+        "loadEventMedianMs": 127.70000004768372,
         "longTasksMax": 1,
-        "longestTaskMs": 64,
-        "transferBytes": 389085
+        "longestTaskMs": 56,
+        "transferBytes": 400851
     },
     "benchmarkId": "te-064-cold-load",
     "pass": true,
@@ -60,7 +60,7 @@
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.79",
+        "chrome": "158.0.8127.38",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -68,5 +68,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:40:35.452Z"
+    "date": "2026-11-27T09:35:40.976Z"
 }

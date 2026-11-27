@@ -14,16 +14,17 @@ import {
 
 // This app's open-source licences file (`licences.txt`), as @ngne/editor-ui's build helper
 // writes it with the options of vite.config.ts: the app's licence and its notices
-// (THIRD_PARTY_NOTICES.md), the runtime dependencies of package-lock.json and rolldown, the
-// bundler, whose virtual modules every build renders. The packages are those the development
-// server lists, which hold every package a build can bundle.
+// (THIRD_PARTY_NOTICES.md), the runtime dependencies of package-lock.json, rolldown, the
+// bundler, whose virtual modules every build renders, and vite, whose preload helper a build
+// with a dynamic import renders. The packages are those the development server lists, which
+// hold every package a build can bundle.
 
 const ROOT = fileURLToPath(new URL("../../", import.meta.url));
 /** The options vite.config.ts passes to `generateLicences`. */
 const OPTIONS = {
     root: ROOT,
     title: "NGNE Tilemap Editor",
-    buildPackages: ["node_modules/rolldown"],
+    buildPackages: ["node_modules/rolldown", "node_modules/vite"],
 };
 
 const lock = readFileSync(join(ROOT, "package-lock.json"), "utf8");
@@ -48,8 +49,11 @@ describe("the app's licences file", () => {
     });
 
     it("lists rolldown, the bundler, with its licence and its third-party licence", () => {
-        // A development dependency, listed as a build-only package alone.
-        expect(strayPackages(bundler, runtime)).toEqual(["node_modules/rolldown"]);
+        // Development dependencies, listed as build-only packages alone.
+        expect(strayPackages(bundler, runtime)).toEqual([
+            "node_modules/rolldown",
+            "node_modules/vite",
+        ]);
         const [rolldown] = bundler;
         const entry = readPackageLicence(rolldown!, [PACKAGE_STAND_IN_TEXTS]);
         expect(entry.texts.map(({ file }) => file)).toEqual(["LICENSE", "THIRD-PARTY-LICENSE"]);

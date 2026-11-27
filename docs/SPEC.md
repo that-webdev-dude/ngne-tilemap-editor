@@ -769,7 +769,7 @@ differences:
   `.ngtilemap`; `Untitled.ngtilemap` when nothing is left of the name.
 - The app starts on the empty state (no project open), and Close Project returns to it. While
   no project is open only New Project, Open, Open Recent, Import Tiled Map and the window's own
-  commands (command palette, shortcut sheet, preferences, regions, bottom panel) act.
+  commands (command palette, shortcut sheet, About, preferences, regions, bottom panel) act.
 - New Project, Open (picker, drop, recent file) and Close Project ask Save / Discard / Cancel
   before an unsaved project goes, as Tiled asks before a document with changes is closed; Save
   saves it first and goes on only when that save succeeds. New Project asks once its dialog is
@@ -1071,10 +1071,12 @@ until the user accepts the report.
 
 The budgets are ENGINE §6, unchanged; the ticket that builds a feature writes its row's
 benchmark, and TE-064 measured every row on the finished build on reference hardware (RULES 8).
-One ENGINE §6 row is over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060): the initial
-overview build after a map opens (longest task 20.1 / 18.0 ms, against 16 ms). The owner
+Two ENGINE §6 rows are over budget with `@ngne/core` 0.4.0 (Intel UHD / RTX 4060). The initial
+overview build after a map opens (longest task 20.1 / 18.0 ms, against 16 ms): the owner
 accepted it for v1.0.1 (2026-11-15), measured on 0.3.1 at 28.6 / 23.2 ms, and for v1.1.0
-(2026-11-19), measured on 0.4.0 at 20.9 / 19.0 ms. Feature budgets ENGINE does not list,
+(2026-11-19), measured on 0.4.0 at 20.9 / 19.0 ms. The cold load on the RTX 4060 (2,503 ms, the
+first of 10 loads, against 2 s; median 809 ms): the owner accepted it as recorded for the move
+onto `@ngne/editor-ui` 0.1.0 (2026-11-27). Feature budgets ENGINE does not list,
 measured the same way on the reference map:
 
 | Metric | Budget | Measured (Intel UHD / RTX 4060) |

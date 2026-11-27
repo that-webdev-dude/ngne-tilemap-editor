@@ -4,33 +4,33 @@
     "measurement": "Cold load of the production build served locally (vite preview), navigation start to interactive (the first animation frame with the New Project dialog on screen, its button clicked at every frame from the first one that shows it); new Chrome with a fresh profile per load; RTX 4060, window 1920 × 1080, DPR 1",
     "statistic": "max of 10 loads",
     "budgetMs": 2000,
-    "resultMs": 940.3999999761581,
+    "resultMs": 2503.100000023842,
     "details": {
         "adapter": "nvidia lovelace",
-        "medianMs": 925.5999999642372,
+        "medianMs": 808.8000000119209,
         "interactiveMs": [
-            827.6999999880791,
-            919.1000000238419,
-            916.7000000476837,
-            899.5,
-            938.6999999880791,
-            938,
-            927.7999999523163,
-            460,
-            925.5999999642372,
-            940.3999999761581
+            2503.100000023842,
+            775.6999999880791,
+            786.4000000357628,
+            808.8000000119209,
+            835.5999999642372,
+            790.8000000119209,
+            1342.800000011921,
+            736.1999999880791,
+            841.3000000119209,
+            775.3000000119209
         ],
         "shellMs": [
-            807.8999999761581,
-            900,
-            896.9000000357628,
-            879.7999999523163,
-            919.7999999523163,
-            918.1999999880791,
-            908.8999999761581,
-            439.4000000357628,
-            905.5999999642372,
-            920.8999999761581
+            2482.199999988079,
+            755.4000000357628,
+            766.7000000476837,
+            786.8000000119209,
+            816.0999999642372,
+            771.1999999880791,
+            1323.5,
+            716.5,
+            820.6000000238419,
+            755.6000000238419
         ],
         "clicks": [
             1,
@@ -44,23 +44,23 @@
             1,
             1
         ],
-        "appReadyMedianMs": 122.69999998807907,
-        "firstContentfulPaintMedianMs": 988,
-        "domContentLoadedMedianMs": 112.69999998807907,
-        "loadEventMedianMs": 113.5,
+        "appReadyMedianMs": 134.30000001192093,
+        "firstContentfulPaintMedianMs": 912,
+        "domContentLoadedMedianMs": 128.20000004768372,
+        "loadEventMedianMs": 129.20000004768372,
         "longTasksMax": 1,
-        "longestTaskMs": 60,
-        "transferBytes": 390723
+        "longestTaskMs": 70,
+        "transferBytes": 400551
     },
     "benchmarkId": "te-064-cold-load",
-    "pass": true,
+    "pass": false,
     "environment": {
         "node": "v24.15.0",
         "platform": "win32 10.0.26200",
         "cpu": "12th Gen Intel(R) Core(TM) i7-12650H",
         "cores": 16,
         "memoryGb": 16,
-        "chrome": "157.0.8103.79",
+        "chrome": "158.0.8127.38",
         "powerPlan": "Balanced",
         "powerMode": "Best performance",
         "power": "AC",
@@ -68,5 +68,5 @@
             "Intel(R) UHD Graphics: 1920x1080 at 144 Hz"
         ]
     },
-    "date": "2026-11-19T08:48:16.385Z"
+    "date": "2026-11-27T09:36:02.314Z"
 }

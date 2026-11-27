@@ -175,16 +175,17 @@ feature wrote it).
 | Chunk-tier memory, GPU (NGNE retains the same again on the CPU) | ≤ 64 MB | 32 / 32 MB (T = 8, 128 chunks) |
 | Overview rebuild after a layer visibility/opacity change | ≤ 500 ms, no task > 16 ms | 298 / 313 ms; longest build slice 3.7 / 3.7 ms; the live-tier frame drawn meanwhile 112 / 108 ms (§4) |
 | Initial overview build after a map opens (background) | no task > 16 ms | 0.39 / 0.40 s total, longest task 20.1 / 18.0 ms, **over budget** (build slices ≤ 7.3 / 7.5 ms) |
-| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 86.4 / 83.2 ms (median 80.2 / 80.2 ms); 100% view 27.8 / 24.2 ms (median 23.8 / 21.7 ms) |
+| Tab switch to an open map: first frame submitted, p95 | ≤ 100 ms | fitted view 80.6 / 82.6 ms (median 77.3 / 78.2 ms); 100% view 22.7 / 24.4 ms (median 20.3 / 20.7 ms) |
 | GPU frames in flight during a scripted pan, overview pan or paint, max | ≤ 2 | pan 2 / 2 (p95 2 / 2); overview pan 2 / 2 (p95 1 / 1); paint 2 / 2 (p95 2 / 2); last submit → GPU idle 2.4–7.1 ms |
 | Idle editor: frames submitted per second | 0 | 0 / 0 (live tier at 100% and chunk tier fitted; pointer outside the viewport and resting on the canvas) |
-| Cold load to interactive (production build, local) | ≤ 2 s | 260 / 940 ms (median 236 / 926 ms) |
+| Cold load to interactive (production build, local) | ≤ 2 s | 224 / 2,503 ms, **over budget** on the RTX 4060 (median 217 / 809 ms) |
 
 All rows: `@ngne/core` 0.4.0, i7-12650H, Balanced power plan with the Best performance power
 mode, on AC, 144 Hz panel, 1920×1080 window at DPR 1 (canvas 1612×784) unless the row says
 otherwise; the pan, dropped-frame and chunk-tier rows (paint at overview, patch, memory, rebuild,
-initial build) on 2026-11-20 with Chrome 157.0.8103.80, the others on 2026-11-19 with Chrome
-157.0.8103.79; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
+initial build) on 2026-11-20 with Chrome 157.0.8103.80; the tab-switch and cold-load rows on
+2026-11-27 with Chrome 158.0.8127.38 and `@ngne/editor-ui` 0.1.0; the others on 2026-11-19 with
+Chrome 157.0.8103.79; each record holds these facts. Raw data: `<benchmark id>-intel-uhd.json`
 and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
 `tests/perf/te-064-record-all.ts`.
 
@@ -206,9 +207,9 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
 - Tab switch: `te-031-tab-switch-{fit,100}`. Two open tabs each hold the reference map; a switch
   is timed from the call that shows the other map to the return of the first frame submitted
   after it, 40 switches 1 s apart after 4 warm-up switches. At the fitted view the first frame is
-  a live-tier frame of all 524,289 cells (median draw 64 / 65 ms): the previous map's chunk tier
+  a live-tier frame of all 524,289 cells (median draw 62 / 63 ms): the previous map's chunk tier
   is released on the switch and the new one is built in the background (§4). At 100% the median
-  draw is 5.8 / 6.0 ms of the switch's 23.8 / 21.7 ms.
+  draw is 5.3 / 5.4 ms of the switch's 20.3 / 20.7 ms.
 - Frames in flight: `te-068-frames-in-flight-{pan,overview,paint}`. Counted right after each of
   the viewport's submits, that frame included, as the `onSubmittedWorkDone()` promises of its
   queue still pending; the preview's queue is counted apart. Scenarios: the pan above (5 s) at
@@ -230,10 +231,12 @@ and `<benchmark id>-rtx-4060.json` in [evidence/](evidence/), recorded by
   Chrome with a fresh profile (no cache, no service worker). From the navigation's start, the
   empty state's New Project button is clicked at every animation frame (at most every 50 ms) from
   the first one that shows it; "interactive" is the first animation frame that shows the New
-  Project dialog. The maximum of 10 loads. The app commits at a median 158 / 123 ms and shows the
-  empty state at 216 / 903 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
-  most of the load. The loads took 231–260 ms on Intel UHD and 460–940 ms on the RTX 4060 (one
-  load at 460 ms, the others 828–940 ms).
+  Project dialog. The maximum of 10 loads. The app commits at a median 142 / 134 ms and shows the
+  empty state at 195 / 779 ms (medians): on the RTX 4060 the WebGPU check before the shell takes
+  most of the load. The loads took 208–224 ms on Intel UHD and 736–2,503 ms on the RTX 4060: the
+  first load 2,503 ms, of which 2,482 ms before the shell showed, one more 1,343 ms, the others
+  736–841 ms. Owner: the RTX 4060's over-budget maximum is accepted as recorded for the move onto
+  `@ngne/editor-ui` 0.1.0 (2026-11-27, #19); its cause is not identified.
 
 ### Game runtime budget
 

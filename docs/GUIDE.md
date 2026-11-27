@@ -6,8 +6,13 @@
 The NGNE Tilemap Editor builds orthogonal tile maps for NGNE games. A project holds maps and the
 tilesets they share; an export writes a folder that a game loads with the generated
 `ngne-tilemap.ts`. Menus, tools and keys follow the NGNE Sprite Editor, and Tiled where the sprite
-editor has no equivalent. Ctrl+K opens the command palette and `?` the shortcut sheet;
-[DESIGN §10.3](DESIGN.md#103-table) lists every key.
+editor has no equivalent. Ctrl+K opens the command palette and `?` (**Help → Keyboard
+Shortcuts…**) the shortcut sheet; [DESIGN §10.3](DESIGN.md#103-table) lists every key. **Help →
+About NGNE Tilemap Editor…** shows the version, the licence and the engine version, with **Copy
+version info** for a bug report. After a click on a button, a tool or another control that takes
+no text, the keyboard focus goes back to the map, so tool and view keys work at once. The
+**Bottom Panel** under the map holds the Tilesets and Terrains tabs; Tab, with the map focused,
+hides and shows it.
 
 ## Projects
 

@@ -1,32 +1,33 @@
 # NGNE Tilemap Editor — Interface design
 
-The interface of the tilemap editor as **deltas from the sprite editor**. Behaviour is
-[SPEC.md](SPEC.md); identity, stack and layout frame are [SUITE.md](SUITE.md). `se/` is the
-sprite editor at the commit SUITE §1 names; `se-design` is its `docs/DESIGN.md`.
+Targets **`@ngne/editor-ui` 0.1.0**. The suite's design canon — principles, layout, tokens,
+components, messages, viewport chrome, shared surfaces, interaction and accessibility rules —
+is that package's
+[DESIGN.md](https://github.com/that-webdev-dude/ngne-editor-ui/blob/v0.1.0/docs/DESIGN.md)
+("the canon" below), and the package draws it. This file describes only the tilemap editor's
+own interface and its exceptions to the canon; it never restates or changes a rule of the
+canon. Behaviour is [SPEC.md](SPEC.md); identity, stack and layout frame are
+[SUITE.md](SUITE.md). `se/` is the sprite editor at the commit SUITE §1 names; `se-design` is
+its `docs/DESIGN.md` there, cited for the panels and tools this editor rebuilds from it.
 
-## 1. Inherited unchanged
+## 1. The canon here
 
-These parts of `se-design` apply to this editor as written; this file does not repeat them.
-
-| `se-design` | Content |
-| ----------- | ------- |
-| §1 Principles | All five, with principle 4 read as "Tiled's map, the sprite editor's manners": Tiled's regions, tools and modifiers; the sprite editor's look, menus, command palette and keyboard rules |
-| §3 Tokens | Colour (both themes), type, space, shape, motion, icons, checkerboard, reduced motion |
-| §4 Components | Every component and the message channels (toast, status bar, dialog), error boundary per region |
-| §2 Overflow rules | Tool rail one/two columns, dock scroll, context bar overflow menu, tab strip, window-too-small notice. The tab strip holds map tabs (§2) |
-| §6 Viewport | Workspace colour, 1 px document outline, grid alphas (12% / 25%), marching ants painter, handle style, zoom and Fit in the status bar only, plain-text empty state |
-| §7 Shared surfaces | Preferences, Shortcut sheet, Recovery, WebGPU required, overwrite confirm, the "confirm only what undo cannot reverse" rule |
-| §8 Accessibility | All rules; this editor's exceptions to the 24 px target are in §10 |
-
-Where this file and `se-design` disagree, this file governs for the tilemap editor.
+| Canon | Here |
+| ----- | ---- |
+| §1 Principles | All five, with principle 4 read as "Tiled's map, the sprite editor's manners": Tiled's regions, tools and modifiers; the suite's look, menus, command palette and keyboard rules |
+| §2 Layout | Regions, sizes and overflow rules; the tab strip holds map tabs, the bottom region the Bottom Panel (§2) |
+| §3 Tokens, §4 Components, §5 Messages | As written |
+| §6 Viewport chrome | Workspace colour, grid alphas, marching ants, handle style, zoom and Fit in the status bar only, plain-text empty state |
+| §7 Shared surfaces | Preferences, Shortcut sheet, Open Source Licences, About, Recovery, overwrite and discard questions, WebGPU required, window too small (§9) |
+| §8 Interaction rules, §9 Accessibility | All rules; this editor's exceptions to the 24 px target are in §10.4 |
 
 ## 2. Layout
 
-SUITE §3 is the frame; sizes are `se/src/ui/shell/layout.ts`.
+SUITE §3 is the frame; regions and sizes are the canon's §2.
 
 ```text
 +------------------------------------------------------------------------+
-| File Edit Map Layer Tileset Select View   [Overworld*][Cave]    Ctrl K | 36 menu bar
+| File Edit Map Layer Tileset Select View Help [Overworld*][Cave] Ctrl K | 36 menu bar
 +----+------------------------------------------------------+------------+
 | B  | Stamp  Fill:Tile|Terrain  Rot ⟲ ⟳  Flip H  Flip V     | Maps       | 36 context bar
 | E  +------------------------------------------------------+------------+
@@ -45,26 +46,28 @@ SUITE §3 is the frame; sizes are `se/src/ui/shell/layout.ts`.
 +------------------------------------------------------------------------+
 ```
 
-| Region | Delta from the sprite editor |
-| ------ | ---------------------------- |
-| Menu bar | Menus of §5; **map tabs** in the centre (the sprite editor's document tabs, holding the open maps of the project); the project name and unsaved marker sit before the first tab in `--text-muted` |
-| Tool rail | Tools of the active layer's kind (§6); at the bottom, in place of the colour chips, the **stamp preview**: the current stamp at up to 28 × 28 px, a click selects the stamp brush |
+| Region | Content |
+| ------ | ------- |
+| Menu bar | Menus of §5; **map tabs** in the centre (the canon's tab strip, holding the open maps of the project); the project name and unsaved marker sit before the first tab in `--text-muted` |
+| Tool rail | Tools of the active layer's kind (§6); its footer (28 px) holds the **stamp preview**: the current stamp at up to 28 × 28 px, a click selects the stamp brush |
 | Context bar | Options of §7, from the `*.contextbar.tsx` registry |
 | Right dock | Sections, top to bottom: Maps, Layers, Properties, Preview, Minimap; each collapsible. At window heights under 800 px Preview and Minimap start collapsed |
-| Bottom panel | In the timeline's slot with its splitter, sizes and Tab toggle: tabs **Tilesets** and **Terrains** (§8.5, §8.6) |
+| Bottom region | The **Bottom Panel**, labelled "Bottom Panel", with the canon's splitter, sizes and Tab toggle: tabs **Tilesets** and **Terrains** (§8.5, §8.6) |
 | Status bar | Fields of §8.7 |
 
 ## 3. Reused components
 
-What this editor takes from `se/`. Three kinds, recorded per file in `docs/PROVENANCE.md` at
-scaffold with the `se/` commit; `scripts/drift.ts` reports later changes to the verbatim rows.
+What this editor takes from `@ngne/editor-ui` 0.1.0 and from `se/`. The package is a
+dependency (SUITE §5): its code is imported from its subpaths, never copied or edited (§3.2).
+Files taken from `se/` are of three kinds, recorded per file in `docs/PROVENANCE.md` with the
+`se/` commit; `scripts/drift.ts` reports later changes to the verbatim rows.
 
 - **Verbatim**: byte-identical to its `se/` source, drift-checked. Every module it imports
-  exists here with the same exports (verbatim, or adapted without changing its exports); the
-  scaffold ticket checks this per row and moves a row that cannot hold to Adapt.
+  exists here with the same exports (verbatim, or adapted without changing its exports); a row
+  that cannot hold moves to Adapt.
 - **Adapt**: copied, then changed only as the row states; its exports stay those of `se/`
   unless the row says otherwise.
-- **Pattern**: rebuilt for this editor following the `se/` file's structure and `se-design`'s
+- **Pattern**: rebuilt for this editor following the `se/` file's structure and the canon's
   rules; no code copied.
 
 Paths are under `se/src/`; the tilemap editor keeps the same path unless the row names another.
@@ -83,58 +86,44 @@ closure with a script and records every file in `docs/PROVENANCE.md`. When the s
 changes these files (its move to a newer NGNE does not touch `core/`), `scripts/drift.ts`
 reports it and a ticket takes the new versions deliberately.
 
-### 3.2 Design system and primitives — verbatim
+### 3.2 `@ngne/editor-ui` 0.1.0
 
-| `se/src/` | Use here |
-| --------- | -------- |
-| `ui/styles/tokens.css`, `ui/styles/base.css` (+ token test) | All styling |
-| `ui/primitives/*` — `Button`, `IconButton`, `ToolButton`, `Toggle`, `SegmentedControl`, `NumberField` (+ `numberMath`), `Slider`, `Select`, `Popover`, `Dialog`, `ContextMenu`, `Tooltip`, `Splitter` (+ `splitterMath`), `Icon`, `cx`, their CSS | Every control |
-| `ui/focus/*` — `inertOutside`, `menuOpener`, `modality`, `returnFocus` | Focus rules |
-| `ui/toast/*` | Toasts |
-| `ui/dialogs/DialogHost.tsx`, `ui/dialogs/registry.ts`, `app/dialogs/dialogRequests.ts` | Dialog host and `*.dialog.tsx` registry |
-| `ui/platform/useWindowSize.ts`, `ui/platform/webgpu.ts` | Window size, WebGPU check |
-| `ui/shell/RegionBoundary.tsx`, `ui/shell/layout.ts`, `ui/shell/notices/WindowTooSmall.tsx`, `ui/shell/notices/notice.css` | Error boundary, region sizes, window-too-small notice |
-| `ui/gallery/Gallery.tsx` | Dev gallery of primitives; this editor's new components are added to it |
-| `ui/timeline/useClosingPopover.ts` | Popovers that apply on close (layer properties, colour edits) |
-| `ui/file/DiscardChangesDialog.tsx` | Discard / Cancel question |
-| `ui/pwa/updateToast.ts`, `app/pwa/updates.ts` | PWA update flow |
-| `app/notices/notices.ts`, `app/platform/storage.ts` | Notices, storage access |
-| `app/commands/chord.ts`, `menuModel.ts`, `registry.ts` | Command registry |
-| `app/keymap/keyClasses.ts`, `regions.ts`, `regions.commands.ts` | Key classes, F6 regions |
-| `app/commandPalette/fuzzy.ts`, `paletteModel.ts` | Command palette model |
-| `ui/commands/Chord.tsx` | Key chord display |
-| `ui/menubar/MenubarItems.tsx` + CSS | Menus from the registry |
-| `app/shortcuts/shortcutSheet.ts`, `ui/shortcuts/ShortcutSheet.tsx` | Shortcut sheet |
-| `app/surfaces/surfaces.ts` | Open-surface tracking for key contexts |
-| `ui/dock/DockSection.tsx`, `ui/dock/registry.ts` | Collapsible dock sections, `*.dock.tsx` registry |
-| `ui/tools/contextBarRegistry.ts`, `app/tools/registry.ts`, `app/tools/toolRegistry.ts` | Context bar and tool registries |
-| `app/overlay/overlayLayers.ts` | `*.overlay.ts` registry with draw orders |
-| `app/view/wheel.ts` | Wheel travel → zoom steps and pan |
-| `core/color/*` (`hex`, `hsv`, `rgba`, `oklab`, `contrast`) | Colour maths for pickers and properties |
-| `engine/testing/readCanvas.ts` | Canvas readback in E2E |
-| `app/keymap/install.ts`, `ui/commands/runCommand.ts`, `useEditorKeymap.ts`, `contextMenu.ts`, `ui/tools/VariantToolButton.tsx`, `useToolState.ts`, `ui/colour/pickerMath.ts` | Unchanged: the adapted modules they import (§3.3) keep their exports |
+`src/app/editorUi.ts` creates the editor's one instance (`createEditorUi`): id
+`ngne-tilemap-editor` (the storage names of SUITE §7), product name, the menus of §5 ending with
+Help, the key contexts of §10.1 with the panel selector, the Bottom Panel (`bottom-panel`,
+"Bottom Panel"), a 28 px rail footer, the module maps of the registries (RULES 6), the refresh
+stores and the "no project open" gate. `src/ui/shell/EditorShell.tsx` fills the shell's slots.
 
-PNG codec, zip container and strict JSON reader come from `core/sprite` (§3.1).
+| Subpath | Use here |
+| ------- | -------- |
+| `@ngne/editor-ui` | The instance, `UiRoot`; theme, layout and recent-command stores |
+| `@ngne/editor-ui/styles.css` | All styling: tokens and component styles |
+| `@ngne/editor-ui/primitives` | Every control, popovers that apply on close (layer properties, colour edits) |
+| `@ngne/editor-ui/focus` | Focus rules |
+| `@ngne/editor-ui/messages` | Toasts, dialog host and `*.dialog.tsx` registry, notices, the Discard / Cancel question, the error boundary per region, the WebGPU-required and window-too-small notices |
+| `@ngne/editor-ui/shell` | The shell and its regions; the map tabs on its tab strip (`ui/tabs/MapTabStrip.tsx`); the tool registry (`app/tools/toolRegistry.ts`), context bar, dock and status-field registries |
+| `@ngne/editor-ui/commands` | Command registry, keymap and key contexts (`app/keymap/contextState.ts`), menus from the registry, command palette, shortcut sheet, surfaces, key chord display |
+| `@ngne/editor-ui/overlay` | `*.overlay.ts` registry with draw orders; wheel travel → zoom steps and pan |
+| `@ngne/editor-ui/platform` | Window size, WebGPU check, storage access |
+| `@ngne/editor-ui/pwa`, `pwa/worker` | PWA update flow; the service worker (`app/pwa/sw.ts`) |
+| `@ngne/editor-ui/about`, `licences` and their `build` subpaths | About and Open Source Licences dialogs and commands; the build facts and `licences.txt` (`vite.config.ts`) |
+| `@ngne/editor-ui/colour` | Colour maths for pickers and properties |
+| `@ngne/editor-ui/gallery`, `gallery.css` | The development gallery route (`ui/galleryRoute.tsx`) |
+
+Kept verbatim from `se/`: `engine/testing/readCanvas.ts` (canvas readback in E2E) and
+`ui/colour/cancelContextMenu.ts`, `colourPicker.css` (the colour panel). PNG codec, zip
+container and strict JSON reader come from `core/sprite` (§3.1).
 
 ### 3.3 Adapt
 
 | `se/src/` | Change |
 | --------- | ------ |
-| `ui/theme/theme.ts`, `app/commandPalette/recentCommands.ts` | Storage keys `ngne-tilemap-editor.*` (SUITE §7) |
-| `app/pwa/precache.ts`, `app/pwa/sw.ts` | Cache and message names `ngne-tilemap-editor-*` (SUITE §7) |
-| `ui/shell/notices/WebGpuRequired.tsx` | Product name |
-| `app/commands/types.ts` | `MENU_BAR` = this editor's menus (§5) |
-| `app/keymap/contextState.ts`, `app/keymap/environment.ts`, `app/keymap/resolve.ts` | This editor's contexts (§10.1): `markers` and `panel` instead of `floating` and `timeline` |
-| `app/commands/invoke.ts` | Drop the playback-state dependency |
-| `app/commands/appCommands.ts` | Bind to this editor's session store |
-| `ui/commands/useCommands.ts` | Follow the adapted `appCommands` |
-| `ui/commandPalette/CommandPalette.tsx`, `CommandPaletteTrigger.tsx`, `app/commandPalette/commandPalette.commands.ts` | Follow the adapted commands |
-| `ui/shell/AppShell.tsx`, `ui/shell/layoutStore.ts`, `ui/shell/RailFrame.tsx` | Bottom panel in the timeline's slot; rail fed by the active layer's tool set |
-| `ui/shell/regions/MenuBar.tsx`, `ContextBar.tsx`, `Dock.tsx`, `StatusBar.tsx`, `ToolRail.tsx`, `Viewport.tsx` | Map tabs; stamp preview instead of colour chips; this editor's status fields and empty state |
-| `ui/tabs/DocumentTabs.tsx`, `ui/tabs/tabs.css`, `app/tabs/*` → `ui/tabs/MapTabs.tsx` | Tabs are maps of the open project; same metrics, keys, drag, overflow menu ("All maps") |
-| `ui/tools/toolRail.css`, `contextBar.css` | Bound to this editor's active-tool store |
-| `ui/colour/ColourPicker.tsx` (+ `pickerEdits`) | Edits a value given by its caller instead of FG/BG: background colour, layer colours, terrain colours, colour properties |
-| `ui/preferences/hexColour.ts`, `ui/preferences/PreferencesDialog.tsx` | This editor's preferences (theme, checkerboard, grid colour and opacity, highlight-layer opacity, autosave) |
+| `app/pwa/sw.ts` | The package's service worker, run with the editor's id (cache and message names `ngne-tilemap-editor-*`, SUITE §7) |
+| `app/keymap/contextState.ts` | This editor's state contexts (§10.1), `gesture` and `markers` instead of `floating`, in the package's key-context store |
+| `app/tools/toolRegistry.ts` | The editor's one tool registry, on the package's factory |
+| `app/tabs/*` | Tabs are maps of the open project, shown on the package's tab strip; overflow menu "All maps" |
+| `ui/colour/ColourPicker.tsx` (+ `pickerEdits`, `pickerMath`) | Edits a value given by its caller instead of FG/BG: background colour, layer colours, terrain colours, colour properties; `Hsv` from the package's colour subpath |
+| `ui/preferences/PreferencesDialog.tsx` | This editor's preferences (theme, checkerboard, grid colour and opacity, highlight-layer opacity, autosave) |
 | `ui/sprite/EmptyState.tsx` | Actions New Project, Open, Import Tiled Map; recent projects |
 | `ui/sprite/PivotGrid.tsx` (+ `pivotGridKeys`) | Anchor grid of the Resize / Offset Map dialog |
 | `ui/autosave/RecoveryDialog.tsx`, `app/autosave/*` | Project snapshots with map thumbnails |
@@ -209,12 +198,13 @@ Order and items. Keys are §10. Every item is a registered command; disabled ite
 | Menu | Items |
 | ---- | ----- |
 | File | New Project…, New Map…, Open…, Open Recent ▸, Save, Save As…, Revert · Import Tileset…, Import Tiled Map… · Export…, Export Again · Close Map, Close Project |
-| Edit | Undo, Redo · Cut, Copy, Paste, Delete · Command Palette…, Keyboard Shortcuts…, Preferences… |
+| Edit | Undo, Redo · Cut, Copy, Paste, Delete · Command Palette…, Preferences… |
 | Map | Map Properties…, Resize / Offset Map…, Duplicate Map, Delete Map · Previous Map, Next Map |
 | Layer | New Tile Layer, New Marker Layer, New Image Layer…, New Group · Group Layers, Ungroup · Duplicate Layer, Delete Layer, Rename Layer · Layer Properties… · Move Layer Up, Move Layer Down, Select Layer Above, Select Layer Below · Show/Hide Other Layers, Lock/Unlock Other Layers |
 | Tileset | Tileset Properties…, Update Tileset from Source…, Delete Tileset · Edit Collision…, Edit Animation… (selected tile) · Previous Tileset, Next Tileset · Flip Stamp Horizontally, Flip Stamp Vertically, Rotate Stamp Right, Rotate Stamp Left |
 | Select | Select All, Select None, Invert Selection |
 | View | Zoom In, Zoom Out, Fit, 100% · Hide Grid, Show Collision, Highlight Current Layer · Snap to Grid · Hide Bottom Panel · Focus Next Region, Focus Previous Region · Open Source Licences… |
+| Help | Keyboard Shortcuts… · About NGNE Tilemap Editor… |
 
 ## 6. Tool rail
 
@@ -376,7 +366,7 @@ a redraw starts shows with the next: at most 500 ms plus that redraw's time.
 | Import Tiled Map | Large dialog | Files: folder or files picked, the map (a select when they hold several), required files with status (found, missing) and Add files…; then the report: summary, groups per BRIEF §7 row with counts and locations; Cancel / Import |
 | Export | Large dialog | Left: destination folder, project export name, Export on save; right: file list with sizes grouped (tilemaps, tilesets, images, runtime), tileset atlas thumbnails, errors in `--danger`; Close / Export |
 | Open Source Licences | Large dialog | View → Open Source Licences…, the last item of the View menu. The text of `licences.txt` ([SUITE.md](SUITE.md) §7) in a monospaced block that keeps its line breaks and scrolls; Close. When the file cannot be read, a line saying so with a link to its address. A dialog, not a tab: a tab the page opens holds the editor's heap (as in the sprite editor) |
-| Preferences, Shortcut sheet, Recovery, WebGPU required | As `se-design` §7 | Preferences fields per §3.3. WebGPU required also shows when the adapter request does not settle: each request has 5 s, a pending one is retried once (an earlier request that answers late still counts), and after the retry the notice shows reason "no adapter" with the detail "WebGPU adapter request timed out". Until then the window stays blank, as in the sprite editor |
+| Preferences, Shortcut sheet, About, Recovery, WebGPU required | As the canon's §7 | Preferences fields per §3.3. Shortcut sheet: Help → Keyboard Shortcuts… and `?`. About: Help → About NGNE Tilemap Editor…, enabled with no project open. WebGPU required also shows when the adapter request does not settle: each request has 5 s, a pending one is retried once (an earlier request that answers late still counts), and after the retry the notice shows reason "no adapter" with the detail "WebGPU adapter request timed out". Until then the window stays blank, as in the sprite editor |
 
 Only actions undo cannot reverse confirm: discarding an unsaved project, discarding a recovery
 snapshot, replacing files in an export folder. Delete Map, Delete Layer and Update Tileset rely

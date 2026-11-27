@@ -126,15 +126,17 @@ const ROOT = fileURLToPath(new URL(".", import.meta.url));
 /**
  * The open-source licences file (@ngne/editor-ui SPEC §11): `licences.txt` beside `index.html`,
  * with the licence of every package whose code the build bundled, each of them a runtime
- * dependency of package-lock.json, and of rolldown, whose virtual modules the bundler writes
- * into every build. The development server answers the same address. The build fails on a
- * package without an allowed licence and its text, and the service worker's build on code of a
- * package the file does not list.
+ * dependency of package-lock.json, and of the build tools whose own code a build can hold:
+ * rolldown, whose virtual modules the bundler writes into every build, and vite, whose preload
+ * helper a build with a dynamic import holds (the development gallery route,
+ * src/ui/galleryRoute.tsx). The development server answers the same address. The build fails on
+ * a package without an allowed licence and its text, and the service worker's build on code of
+ * a package the file does not list.
  */
 const licences = generateLicences({
     root: ROOT,
     title: "NGNE Tilemap Editor",
-    buildPackages: ["node_modules/rolldown"],
+    buildPackages: ["node_modules/rolldown", "node_modules/vite"],
 });
 
 // Ports apart from the sprite editor's 5173/4173, so the two apps' service workers stay apart
